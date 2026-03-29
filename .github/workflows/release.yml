@@ -3,33 +3,67 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to build (for example v1.0.1)"
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.release.tag_name || github.ref || inputs.tag }}
+  cancel-in-progress: true
 
 jobs:
   build-release:
     name: Build & Release
     runs-on: macos-15
+    env:
+      PROJECT_PATH: Reader for Language Learner/Reader for Language Learner.xcodeproj
+      SCHEME_NAME: Reader for Language Learner
+      DERIVED_DATA_PATH: ./DerivedData
+      TEST_RESULTS_PATH: ./TestResults.xcresult
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)/Contents/Developer"
 
-      - name: Extract version from tag
+      - name: Resolve tag and version
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            RAW_TAG="${{ inputs.tag }}"
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            RAW_TAG="${{ github.event.release.tag_name }}"
+          else
+            RAW_TAG="${{ github.ref_name }}"
+          fi
+
+          VERSION="${RAW_TAG#v}"
+
+          echo "RAW_TAG=$RAW_TAG" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved tag: $RAW_TAG"
+          echo "Resolved version: $VERSION"
 
       - name: Build Release
         run: |
           xcodebuild build \
-            -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
-            -scheme "Reader for Language Learner" \
+            -project "$PROJECT_PATH" \
+            -scheme "$SCHEME_NAME" \
             -destination 'platform=macOS' \
             -configuration Release \
-            -derivedDataPath ./DerivedData \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -39,35 +73,39 @@ jobs:
 
       - name: Run Unit Tests
         run: |
+          rm -rf "$TEST_RESULTS_PATH"
           xcodebuild test \
-            -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
-            -scheme "Reader for Language Learner" \
+            -project "$PROJECT_PATH" \
+            -scheme "$SCHEME_NAME" \
             -destination 'platform=macOS' \
             -configuration Debug \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
             -parallel-testing-enabled NO \
             -only-testing:"Reader for Language LearnerTests" \
+            -resultBundlePath "$TEST_RESULTS_PATH" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             MACOSX_DEPLOYMENT_TARGET=15.0 \
             IPHONEOS_DEPLOYMENT_TARGET=15.0
 
-      - name: Create DMG
+      - name: Create DMG and ZIP
+        shell: bash
         run: |
-          APP_PATH=$(find ./DerivedData -name "Reader for Language Learner.app" -type d | head -1)
-          if [ -z "$APP_PATH" ]; then
-            echo "App bundle not found"
+          APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release/Reader for Language Learner.app"
+          if [[ ! -d "$APP_PATH" ]]; then
+            echo "App bundle not found at $APP_PATH"
+            find "$DERIVED_DATA_PATH" -maxdepth 4 -type d -name "*.app" || true
             exit 1
           fi
 
           DMG_NAME="RELL-${{ steps.version.outputs.VERSION }}-macOS"
 
-          # Create a temporary directory for DMG contents
+          rm -rf dmg_contents
           mkdir -p dmg_contents
           cp -R "$APP_PATH" dmg_contents/
           ln -s /Applications dmg_contents/Applications
 
-          # Create DMG
           hdiutil create \
             -volname "RELL" \
             -srcfolder dmg_contents \
@@ -75,12 +113,25 @@ jobs:
             -format UDZO \
             "${DMG_NAME}.dmg"
 
-          # Also create a zip for users who prefer it
           ditto -c -k --keepParent "$APP_PATH" "${DMG_NAME}.zip"
 
-      - name: Create GitHub Release
+      - name: Upload release artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-${{ steps.version.outputs.VERSION }}
+          path: |
+            RELL-${{ steps.version.outputs.VERSION }}-macOS.dmg
+            RELL-${{ steps.version.outputs.VERSION }}-macOS.zip
+            ${{ env.TEST_RESULTS_PATH }}
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Create or update GitHub Release
+        if: github.event_name != 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.RAW_TAG }}
           name: RELL v${{ steps.version.outputs.VERSION }}
           generate_release_notes: true
           body: |
@@ -101,3 +152,4 @@ jobs:
           files: |
             RELL-${{ steps.version.outputs.VERSION }}-macOS.dmg
             RELL-${{ steps.version.outputs.VERSION }}-macOS.zip
+          fail_on_unmatched_files: true

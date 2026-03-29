@@ -18,7 +18,7 @@ final class InspectorViewModel {
     var activeTasks: [ModuleType: Task<Void, Never>] = [:]
 
     /// LRU output cache — survives word-to-word navigation.
-    let cache = LRUCache<OutputCacheKey, [ModuleType: String]>(capacity: 20)
+    var cache = LRUCache<OutputCacheKey, [ModuleType: String]>(capacity: 20)
 
     // MARK: - Reset
 

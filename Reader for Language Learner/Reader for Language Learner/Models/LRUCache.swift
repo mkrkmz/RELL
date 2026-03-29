@@ -10,7 +10,7 @@ import Foundation
 // MARK: - LRU Cache
 
 /// Lightweight LRU cache backed by an ordered dictionary (insertion order = LRU order).
-final class LRUCache<Key: Hashable, Value> {
+struct LRUCache<Key: Hashable, Value> {
     private let capacity: Int
     private var store: [Key: Value] = [:]
     private var order: [Key] = []   // front = oldest, back = most recent
@@ -19,13 +19,13 @@ final class LRUCache<Key: Hashable, Value> {
         self.capacity = max(1, capacity)
     }
 
-    func get(_ key: Key) -> Value? {
+    mutating func get(_ key: Key) -> Value? {
         guard let value = store[key] else { return nil }
         touch(key)
         return value
     }
 
-    func set(_ key: Key, _ value: Value) {
+    mutating func set(_ key: Key, _ value: Value) {
         if store[key] != nil {
             touch(key)
         } else {
@@ -38,13 +38,15 @@ final class LRUCache<Key: Hashable, Value> {
         store[key] = value
     }
 
-    func removeAll() {
+    mutating func removeAll() {
         store.removeAll()
         order.removeAll()
     }
 
-    private func touch(_ key: Key) {
-        order.removeAll { $0 == key }
+    private mutating func touch(_ key: Key) {
+        if let index = order.firstIndex(of: key) {
+            order.remove(at: index)
+        }
         order.append(key)
     }
 }
