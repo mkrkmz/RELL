@@ -19,6 +19,20 @@
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/1.jpg" width="900" alt="RELL screenshot 1" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/2.jpg" width="900" alt="RELL screenshot 2" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/3.jpg" width="900" alt="RELL screenshot 3" />
+</p>
+
 ## Features
 
 - **PDF Reader** — Full-featured viewer built on PDFKit: page navigation, search, bookmarks, zoom, reading position memory
