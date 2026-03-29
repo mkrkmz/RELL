@@ -10,12 +10,12 @@ import XCTest
 final class LRUCacheTests: XCTestCase {
 
     func testGetReturnsNilForMissingKey() {
-        let cache = LRUCache<String, Int>(capacity: 3)
+        var cache = LRUCache<String, Int>(capacity: 3)
         XCTAssertNil(cache.get("missing"))
     }
 
     func testSetAndGet() {
-        let cache = LRUCache<String, Int>(capacity: 3)
+        var cache = LRUCache<String, Int>(capacity: 3)
         cache.set("a", 1)
         cache.set("b", 2)
         XCTAssertEqual(cache.get("a"), 1)
@@ -23,7 +23,7 @@ final class LRUCacheTests: XCTestCase {
     }
 
     func testEvictsOldestWhenFull() {
-        let cache = LRUCache<String, Int>(capacity: 2)
+        var cache = LRUCache<String, Int>(capacity: 2)
         cache.set("a", 1)
         cache.set("b", 2)
         cache.set("c", 3) // should evict "a"
@@ -33,7 +33,7 @@ final class LRUCacheTests: XCTestCase {
     }
 
     func testGetTouchesEntry() {
-        let cache = LRUCache<String, Int>(capacity: 2)
+        var cache = LRUCache<String, Int>(capacity: 2)
         cache.set("a", 1)
         cache.set("b", 2)
         _ = cache.get("a") // touch "a", making "b" the oldest
@@ -44,14 +44,14 @@ final class LRUCacheTests: XCTestCase {
     }
 
     func testOverwriteExistingKey() {
-        let cache = LRUCache<String, Int>(capacity: 2)
+        var cache = LRUCache<String, Int>(capacity: 2)
         cache.set("a", 1)
         cache.set("a", 99)
         XCTAssertEqual(cache.get("a"), 99)
     }
 
     func testRemoveAll() {
-        let cache = LRUCache<String, Int>(capacity: 5)
+        var cache = LRUCache<String, Int>(capacity: 5)
         cache.set("a", 1)
         cache.set("b", 2)
         cache.removeAll()
@@ -60,7 +60,7 @@ final class LRUCacheTests: XCTestCase {
     }
 
     func testCapacityOfOne() {
-        let cache = LRUCache<String, Int>(capacity: 1)
+        var cache = LRUCache<String, Int>(capacity: 1)
         cache.set("a", 1)
         cache.set("b", 2)
         XCTAssertNil(cache.get("a"))
@@ -68,7 +68,7 @@ final class LRUCacheTests: XCTestCase {
     }
 
     func testCapacityClampedToMinimumOne() {
-        let cache = LRUCache<String, Int>(capacity: 0)
+        var cache = LRUCache<String, Int>(capacity: 0)
         cache.set("a", 1)
         XCTAssertEqual(cache.get("a"), 1, "Capacity should be clamped to 1")
     }
