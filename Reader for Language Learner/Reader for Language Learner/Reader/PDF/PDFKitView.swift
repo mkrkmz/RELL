@@ -143,7 +143,9 @@ struct PDFKitView: NSViewRepresentable {
                 object: pdfView,
                 queue: .main
             ) { [weak self] _ in
-                self?.refreshHighlights()
+                Task { @MainActor in
+                    self?.refreshHighlights()
+                }
             }
         }
 
@@ -278,7 +280,7 @@ struct PDFKitView: NSViewRepresentable {
         
         // MARK: - Auto Highlighting
         
-        func refreshHighlights(force: Bool = false) {
+        @MainActor func refreshHighlights(force: Bool = false) {
             guard let pdfView = pdfView else { return }
             
             var effectiveForce = force
@@ -300,7 +302,7 @@ struct PDFKitView: NSViewRepresentable {
             }
         }
         
-        private func resetHighlightsCache() {
+        @MainActor private func resetHighlightsCache() {
             processedPages.removeAll()
             refreshHighlights(force: true)
         }
