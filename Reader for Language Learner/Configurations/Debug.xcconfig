@@ -1,0 +1,20 @@
+// Debug.xcconfig
+// Debug build'e ozel ayarlar
+
+#include "Shared.xcconfig"
+
+// Optimizasyon
+SWIFT_OPTIMIZATION_LEVEL = -Onone
+GCC_OPTIMIZATION_LEVEL = 0
+
+// Debug
+DEBUG_INFORMATION_FORMAT = dwarf
+ENABLE_TESTABILITY = YES
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG
+
+// LLM Varsayilanlari (Debug)
+// LM Studio yerel sunucu
+// Bu degerler uygulama icinden de degistirilebilir
+RELL_DEFAULT_LLM_SERVER = http://127.0.0.1:1234
+RELL_DEFAULT_LLM_MODEL = google/gemma-3-4b
+RELL_DEFAULT_LLM_TIMEOUT = 30

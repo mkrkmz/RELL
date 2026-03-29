@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build & Release
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build Release
+        run: |
+          xcodebuild build \
+            -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
+            -scheme "Reader for Language Learner" \
+            -destination 'platform=macOS' \
+            -configuration Release \
+            -derivedDataPath ./DerivedData \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            MARKETING_VERSION=${{ steps.version.outputs.VERSION }}
+
+      - name: Run Tests
+        run: |
+          xcodebuild test \
+            -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
+            -scheme "Reader for Language Learner" \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            -parallel-testing-enabled NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Create DMG
+        run: |
+          APP_PATH=$(find ./DerivedData -name "Reader for Language Learner.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "App bundle not found"
+            exit 1
+          fi
+
+          DMG_NAME="RELL-${{ steps.version.outputs.VERSION }}-macOS"
+
+          # Create a temporary directory for DMG contents
+          mkdir -p dmg_contents
+          cp -R "$APP_PATH" dmg_contents/
+          ln -s /Applications dmg_contents/Applications
+
+          # Create DMG
+          hdiutil create \
+            -volname "RELL" \
+            -srcfolder dmg_contents \
+            -ov \
+            -format UDZO \
+            "${DMG_NAME}.dmg"
+
+          # Also create a zip for users who prefer it
+          ditto -c -k --keepParent "$APP_PATH" "${DMG_NAME}.zip"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RELL v${{ steps.version.outputs.VERSION }}
+          generate_release_notes: true
+          body: |
+            ## RELL v${{ steps.version.outputs.VERSION }}
+
+            ### Installation
+            1. Download `RELL-${{ steps.version.outputs.VERSION }}-macOS.dmg`
+            2. Open the DMG file
+            3. Drag **Reader for Language Learner** to Applications
+            4. On first launch: Right-click > Open (macOS Gatekeeper bypass for unsigned apps)
+
+            ### Requirements
+            - macOS 15 (Sequoia) or later
+            - LM Studio, Ollama, or an OpenAI/Anthropic API key for LLM features
+
+            > **Note:** This app is not code-signed with an Apple Developer certificate.
+            > macOS will show a warning on first launch. Use Right-click > Open to bypass.
+          files: |
+            RELL-${{ steps.version.outputs.VERSION }}-macOS.dmg
+            RELL-${{ steps.version.outputs.VERSION }}-macOS.zip

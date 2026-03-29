@@ -1,0 +1,23 @@
+// Release.xcconfig
+// Release build'e ozel ayarlar
+
+#include "Shared.xcconfig"
+
+// Optimizasyon
+SWIFT_OPTIMIZATION_LEVEL = -O
+GCC_OPTIMIZATION_LEVEL = s
+
+// Debug bilgisi
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+ENABLE_TESTABILITY = NO
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = RELEASE
+
+// Strip
+STRIP_INSTALLED_PRODUCT = YES
+COPY_PHASE_STRIP = YES
+STRIP_SWIFT_SYMBOLS = YES
+
+// LLM Varsayilanlari (Release)
+RELL_DEFAULT_LLM_SERVER = http://127.0.0.1:1234
+RELL_DEFAULT_LLM_MODEL = google/gemma-3-4b
+RELL_DEFAULT_LLM_TIMEOUT = 30

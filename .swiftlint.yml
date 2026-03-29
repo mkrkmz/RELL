@@ -1,0 +1,92 @@
+# SwiftLint Configuration for RELL
+# macOS-only SwiftUI + PDFKit app
+
+included:
+  - "Reader for Language Learner/Reader for Language Learner"
+
+excluded:
+  - "Reader for Language Learner/Reader for Language LearnerTests"
+  - "Reader for Language Learner/Reader for Language LearnerUITests"
+  - ".build"
+  - "DerivedData"
+
+# MARK: - Enabled Rules
+
+opt_in_rules:
+  - collection_alignment
+  - contains_over_filter_count
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - first_where
+  - last_where
+  - overridden_super_call
+  - prefer_zero_over_explicit_init
+  - redundant_nil_coalescing
+  - sorted_first_last
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+
+disabled_rules:
+  - trailing_comma
+  - todo
+  - opening_brace        # conflicts with multiline closures
+  - type_body_length     # large ViewModels and enums are expected
+  - file_length          # will address in decomposition phase
+  - function_body_length # some prompt builders are long by design
+  - colon               # project uses alignment-style spacing in enums/structs
+  - large_tuple
+  - cyclomatic_complexity # complex switch statements in prompt builders
+  - trailing_whitespace  # noisy — will fix incrementally
+  - multiline_arguments  # SwiftUI trailing closure style
+  - implicit_return
+  - redundant_string_enum_value  # explicit enum rawValues are intentional
+  - statement_position
+
+# MARK: - Rule Configuration
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 60
+    error: 80
+  excluded:
+    - id
+    - i
+    - x
+    - y
+    - max_tokens  # API JSON keys
+    - top_p       # API JSON keys
+
+type_name:
+  min_length:
+    warning: 3
+  max_length:
+    warning: 50
+  excluded:
+    - Reader_for_Language_LearnerApp  # Xcode-generated app entry point
+
+nesting:
+  type_level: 3
+  function_level: 3
+
+large_tuple:
+  warning: 4
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+function_parameter_count:
+  warning: 8
+  error: 12
+
+reporter: "xcode"

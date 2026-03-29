@@ -1,0 +1,25 @@
+// Shared.xcconfig
+// Tum build konfigurasyonlari icin ortak ayarlar
+
+// Platform
+MACOSX_DEPLOYMENT_TARGET = 15.0
+SDKROOT = macosx
+SUPPORTED_PLATFORMS = macosx
+TARGETED_DEVICE_FAMILY = 2
+
+// Swift
+SWIFT_VERSION = 5.0
+SWIFT_APPROACHABLE_CONCURRENCY = YES
+SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor
+
+// App Identity
+PRODUCT_BUNDLE_IDENTIFIER = Reader-for-Language-Learner.Reader-for-Language-Learner
+MARKETING_VERSION = 1.0
+CURRENT_PROJECT_VERSION = 1
+
+// Sandbox
+ENABLE_APP_SANDBOX = YES
+ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES
+
+// Code Gen
+DEAD_CODE_STRIPPING = YES
