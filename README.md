@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://developer.apple.com/assets/elements/icons/swiftui/swiftui-96x96_2x.png" width="80" alt="RELL icon" />
+  <img src="docs/rell-logo.png" width="280" alt="RELL Logo" />
 </p>
 
 <h1 align="center">RELL</h1>
