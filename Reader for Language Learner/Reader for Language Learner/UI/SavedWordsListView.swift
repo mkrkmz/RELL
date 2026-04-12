@@ -209,6 +209,17 @@ struct SavedWordsListView: View {
                                 Label("Copy Term", systemImage: "doc.on.doc")
                             }
                             Divider()
+                            Menu("Mark as…") {
+                                ForEach(MasteryLevel.allCases, id: \.rawValue) { level in
+                                    Button {
+                                        store.setMastery(level, for: word)
+                                    } label: {
+                                        Label(level.label, systemImage: level.icon)
+                                    }
+                                    .disabled(word.masteryLevel == level)
+                                }
+                            }
+                            Divider()
                             Button("Delete", role: .destructive) { store.delete(word) }
                         }
                 }
@@ -302,11 +313,12 @@ private struct SavedWordRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: DS.Spacing.sm) {
-            // Accent dot
+            // Mastery dot — color reflects learning progress
             Circle()
-                .fill(DS.Color.accent.opacity(0.5))
+                .fill(word.masteryLevel.color.opacity(0.7))
                 .frame(width: 6, height: 6)
                 .padding(.top, 5)
+                .help(word.masteryLevel.label)
 
             VStack(alignment: .leading, spacing: DS.Spacing.xxs + 1) {
                 // Term
@@ -397,6 +409,10 @@ private struct SavedWordRow: View {
         .background(isHovered ? DS.Color.hoverOverlay : .clear)
         .onHover { isHovered = $0 }
         .animation(DS.Animation.fast, value: isHovered)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(word.term), \(word.masteryLevel.label)")
+        .accessibilityHint("Tap to view details")
+        .accessibilityValue(word.pdfFilename.map { "from \($0)" } ?? "")
     }
 }
 

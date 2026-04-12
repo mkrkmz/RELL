@@ -13,6 +13,7 @@ enum SidebarTab: String, CaseIterable, Identifiable {
     case outline    = "Contents"
     case bookmarks  = "Marks"
     case saved      = "Saved"
+    case quiz       = "Quiz"
     case stats      = "Stats"
     var id: String { rawValue }
 
@@ -22,6 +23,7 @@ enum SidebarTab: String, CaseIterable, Identifiable {
         case .outline:    return "list.bullet.indent"
         case .bookmarks:  return "bookmark"
         case .saved:      return "star"
+        case .quiz:       return "brain.head.profile"
         case .stats:      return "chart.bar"
         }
     }
@@ -82,6 +84,7 @@ struct SidebarView: View {
                     let badgeCount: Int = {
                         switch tab {
                         case .saved:      return savedWordsStore.words.count
+                        case .quiz:       return savedWordsStore.words.filter { $0.masteryLevel != .mastered }.count
                         case .bookmarks:
                             if let name = currentDocumentName {
                                 return bookmarkStore.bookmarks(for: name).count
@@ -117,6 +120,9 @@ struct SidebarView: View {
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(tab.rawValue)
+        .accessibilityValue(isSelected ? "Selected" : "")
+        .accessibilityHint("Switch to \(tab.rawValue) tab")
     }
 
     // MARK: - Tab Content
@@ -160,6 +166,8 @@ struct SidebarView: View {
                 store: savedWordsStore,
                 currentDocumentName: currentDocumentName
             )
+        case .quiz:
+            QuizView(store: savedWordsStore)
         case .stats:
             ReadingStatsView(
                 sessionStore: sessionStore,

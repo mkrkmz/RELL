@@ -66,6 +66,24 @@ struct ReadingStatsView: View {
                         .lineLimit(1)
                 }
             }
+
+            let streak = sessionStore.currentStreak
+            if streak > 0 {
+                HStack(spacing: DS.Spacing.xs) {
+                    Image(systemName: "flame.fill")
+                        .foregroundStyle(.orange)
+                        .font(.system(size: 11))
+                    Text("\(streak) day streak")
+                        .font(DS.Typography.caption2.weight(.semibold))
+                        .foregroundStyle(DS.Color.textSecondary)
+                    let longest = sessionStore.longestStreak
+                    if longest > streak {
+                        Text("· best \(longest)")
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+            }
         }
         .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -17,6 +17,9 @@ struct SettingsView: View {
             LLMSettingsView()
                 .tabItem { Label("LLM", systemImage: "cpu") }
 
+            PromptSettingsView()
+                .tabItem { Label("Prompts", systemImage: "text.bubble") }
+
             AppearanceSettingsView()
                 .tabItem { Label("Appearance", systemImage: "paintpalette") }
         }

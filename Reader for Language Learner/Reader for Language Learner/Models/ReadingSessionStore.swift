@@ -82,6 +82,51 @@ final class ReadingSessionStore {
             .reduce(0.0) { $0 + $1.durationSeconds }
     }
 
+    // MARK: - Streak
+
+    /// Consecutive days (ending today or yesterday) with at least one reading session.
+    var currentStreak: Int {
+        let cal = Calendar.current
+        var checkDate = cal.startOfDay(for: Date())
+
+        let todayHasSession = sessions.contains { cal.isDate($0.startedAt, inSameDayAs: Date()) }
+        if !todayHasSession {
+            guard let yesterday = cal.date(byAdding: .day, value: -1, to: checkDate) else { return 0 }
+            let yesterdayHasSession = sessions.contains { cal.isDate($0.startedAt, inSameDayAs: yesterday) }
+            guard yesterdayHasSession else { return 0 }
+            checkDate = yesterday
+        }
+
+        var streak = 0
+        while true {
+            guard let dayEnd = cal.date(byAdding: .day, value: 1, to: checkDate) else { break }
+            let hasSession = sessions.contains { $0.startedAt >= checkDate && $0.startedAt < dayEnd }
+            guard hasSession else { break }
+            streak += 1
+            guard let prevDay = cal.date(byAdding: .day, value: -1, to: checkDate) else { break }
+            checkDate = prevDay
+        }
+        return streak
+    }
+
+    /// All-time longest reading streak (in days).
+    var longestStreak: Int {
+        guard !sessions.isEmpty else { return 0 }
+        let cal = Calendar.current
+        let days = Set(sessions.map { cal.startOfDay(for: $0.startedAt) }).sorted()
+        var best = 1, current = 1
+        for i in 1..<days.count {
+            if let expected = cal.date(byAdding: .day, value: 1, to: days[i - 1]),
+               cal.isDate(expected, inSameDayAs: days[i]) {
+                current += 1
+                best = max(best, current)
+            } else {
+                current = 1
+            }
+        }
+        return best
+    }
+
     // MARK: - 7-Day Breakdown (for bar chart)
 
     struct DayStats: Identifiable {

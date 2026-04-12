@@ -5,6 +5,7 @@
 //  Created by Codex on 10.02.2026.
 //
 
+import NaturalLanguage
 import os
 import PDFKit
 import QuartzCore // For CIFilter
@@ -248,33 +249,17 @@ struct PDFKitView: NSViewRepresentable {
 
             guard let match = bestMatchRange else { return nil }
 
-            // Expand to sentence boundaries
-            var start = match.location
-            var end = match.location + match.length
+            // Use NLTokenizer for accurate sentence boundary detection
+            let swiftText = pageText as String
+            let tokenizer = NLTokenizer(unit: .sentence)
+            tokenizer.string = swiftText
 
-            // Scan backward for sentence start
-            while start > 0 {
-                let charRange = NSRange(location: start - 1, length: 1)
-                let char = nsText.substring(with: charRange)
-                if char == "." || char == "!" || char == "?" || char == "\n" {
-                    break
-                }
-                start -= 1
-            }
+            // Convert NSRange to Swift String.Index
+            guard let matchSwiftRange = Range(match, in: swiftText) else { return nil }
 
-            // Scan forward for sentence end
-            while end < nsText.length {
-                let charRange = NSRange(location: end, length: 1)
-                let char = nsText.substring(with: charRange)
-                if char == "." || char == "!" || char == "?" || char == "\n" {
-                    end += 1 // Include the punctuation
-                    break
-                }
-                end += 1
-            }
-
-            let sentenceRange = NSRange(location: start, length: end - start)
-            let sentence = nsText.substring(with: sentenceRange)
+            // Find the sentence that contains the match
+            let sentenceRange = tokenizer.tokenRange(for: matchSwiftRange)
+            let sentence = String(swiftText[sentenceRange])
             return sentence.trimmingCharacters(in: .whitespacesAndNewlines)
         }
         

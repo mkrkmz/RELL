@@ -26,7 +26,7 @@ struct InspectorView: View {
     }
     @State var activeModule: ModuleType?
     @State var voiceOption: VoiceOption = .englishUS
-    @State var speechRate: Double = 0.5
+    @AppStorage("speechRate") var speechRate: Double = 0.5
     @State var lastUsedModule: ModuleType = .definitionEN
     @State var showAnkiExport = false
     @State var showToast      = false
@@ -35,6 +35,7 @@ struct InspectorView: View {
     @State var moduleElapsed: [ModuleType: Double] = [:]
     @State var displayedText: String = ""
     @State var selectionDebounceTask: Task<Void, Never>?
+    @AppStorage("autoRunEnabled") var autoRunEnabled: Bool = true
 
     @State var circuitBreaker = CircuitBreaker()
     @Namespace var moduleNamespace
@@ -102,13 +103,39 @@ struct InspectorView: View {
                 displayedText = newText
                 viewModel.resetAll()
                 let trimmed = newText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty { refreshCache(term: trimmed) }
-                else { activeModule = nil }
+                if !trimmed.isEmpty {
+                    refreshCache(term: trimmed)
+                    viewModel.addToRecents(trimmed)
+                    // Auto-run: if cache missed (no outputs loaded) and feature is on, trigger last module
+                    if autoRunEnabled && viewModel.outputs.isEmpty {
+                        let module = lastUsedModule
+                        if module.isEnabled(mode: explainMode) {
+                            activeModule = module
+                            Task { await runModule(module, forceRefresh: false) }
+                        }
+                    }
+                } else {
+                    activeModule = nil
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in
             guard hasSelection else { return }
             focusAndRunLast()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .inspectorRecentTermSelected)) { note in
+            guard let term = note.object as? String else { return }
+            displayedText = term
+            viewModel.resetAll()
+            refreshCache(term: term)
+            viewModel.addToRecents(term)
+            if autoRunEnabled && viewModel.outputs.isEmpty {
+                let module = lastUsedModule
+                if module.isEnabled(mode: explainMode) {
+                    activeModule = module
+                    Task { await runModule(module, forceRefresh: false) }
+                }
+            }
         }
         .onChange(of: explainMode)  { _, _ in refreshCache(term: trimmedSelection) }
         .onChange(of: explainDetail){ _, _ in refreshCache(term: trimmedSelection) }
@@ -123,6 +150,16 @@ struct InspectorView: View {
             viewModel.outputs[.collocations] = nil
             viewModel.errors[.meaningTR]     = nil
             viewModel.errors[.collocations]  = nil
+            viewModel.cache.removeAll()
+            refreshCache(term: trimmedSelection)
+        }
+        .onChange(of: llmProviderTypeRaw) { _, _ in
+            // Provider change: cached outputs from the old provider are no longer valid
+            viewModel.cache.removeAll()
+            refreshCache(term: trimmedSelection)
+        }
+        .onChange(of: llmModel) { _, _ in
+            // Model change: same provider but different model may yield different outputs
             viewModel.cache.removeAll()
             refreshCache(term: trimmedSelection)
         }
@@ -175,6 +212,7 @@ struct InspectorView: View {
     var selectionContent: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             selectionHeader
+            recentTermsStrip
             modeBar
             moduleGrid
             Divider().padding(.horizontal, DS.Spacing.xs)
@@ -288,7 +326,8 @@ struct InspectorView: View {
         guard !term.isEmpty else { return }
         let key = OutputCacheKey(
             term: term, mode: explainMode.rawValue,
-            detail: explainDetail.rawValue, domain: domainPreference.rawValue
+            detail: explainDetail.rawValue, domain: domainPreference.rawValue,
+            provider: llmProviderTypeRaw, model: llmModel
         )
         let loaded = viewModel.loadFromCache(key: key)
         if !loaded, let activeModule, !activeModule.isEnabled(mode: explainMode) {
@@ -325,7 +364,8 @@ struct InspectorView: View {
         viewModel.outputs[module] = ""
 
         let client       = llmProvider
-        let systemPrompt = module.systemPrompt
+        let customPreamble = UserDefaults.standard.string(forKey: "customSystemPreamble") ?? ""
+        let systemPrompt = module.systemPrompt(customPreamble: customPreamble)
         let userPrompt   = module.userPrompt(
             term: trimmedSelection,
             mode: explainMode,
@@ -336,32 +376,71 @@ struct InspectorView: View {
         )
         let cacheKey = OutputCacheKey(
             term: trimmedSelection, mode: explainMode.rawValue,
-            detail: explainDetail.rawValue, domain: domainPreference.rawValue
+            detail: explainDetail.rawValue, domain: domainPreference.rawValue,
+            provider: llmProviderTypeRaw, model: llmModel
         )
 
-        let task = Task { @MainActor in
+        let resolvedMaxTokens = module.recommendedMaxTokens(
+            mode: explainMode,
+            detail: explainDetail,
+            modelIdentifier: llmModel
+        )
+
+        // Use temperature override from Prompt settings if set, otherwise module default
+        let resolvedTemperature: Double = {
+            guard let data = UserDefaults.standard.string(forKey: "temperatureOverrides")?.data(using: .utf8),
+                  let overrides = try? JSONDecoder().decode([String: Double].self, from: data),
+                  let custom = overrides[module.rawValue]
+            else { return module.recommendedTemperature }
+            return custom
+        }()
+
+        let task = Task {
             do {
                 try await client.stream(
                     system: systemPrompt,
                     user: userPrompt,
-                    temperature: module.recommendedTemperature,
-                    maxTokens: module.recommendedMaxTokens(mode: explainMode, detail: explainDetail),
+                    temperature: resolvedTemperature,
+                    maxTokens: resolvedMaxTokens,
                     topP: 0.9
                 ) { token in
                     self.viewModel.outputs[module, default: ""] += token
                 }
             } catch {
-                if !Task.isCancelled { viewModel.errors[module] = error.localizedDescription }
+                if !Task.isCancelled {
+                    await MainActor.run {
+                        viewModel.errors[module] = error.localizedDescription
+                    }
+                }
             }
 
-            if !Task.isCancelled { viewModel.snapshotToCache(key: cacheKey) }
-            if let start = moduleStartTimes[module] {
-                moduleElapsed[module] = Date().timeIntervalSince(start)
+            if !Task.isCancelled {
+                await MainActor.run {
+                    // Heuristic: avg ~3.5 chars/token. If output is ≥90% of the token budget,
+                    // the model likely hit the limit and the response may be incomplete.
+                    let outputLength = viewModel.outputs[module]?.count ?? 0
+                    let tokenBudgetChars = Int(Double(resolvedMaxTokens) * 3.5)
+                    viewModel.wasTruncated[module] = outputLength >= Int(Double(tokenBudgetChars) * 0.90)
+                    viewModel.snapshotToCache(key: cacheKey)
+                }
             }
-            viewModel.loading[module] = false
-            viewModel.activeTasks[module] = nil
+            await MainActor.run {
+                if let start = moduleStartTimes[module] {
+                    moduleElapsed[module] = Date().timeIntervalSince(start)
+                }
+                viewModel.loading[module] = false
+                viewModel.activeTasks[module] = nil
+            }
         }
         viewModel.activeTasks[module] = task
+    }
+
+    func runAllPrimaryModules() {
+        for module in primaryModules where module.isEnabled(mode: explainMode) {
+            if (viewModel.outputs[module] ?? "").isEmpty {
+                Task { await runModule(module, forceRefresh: false) }
+            }
+        }
     }
 
     func showToastBriefly(_ message: String, variant: DSToast.Variant = .success) {
@@ -456,5 +535,6 @@ struct PulsingDot: View {
 // MARK: - Notification Names
 
 extension Notification.Name {
-    static let inspectorRunLastModule = Notification.Name("inspectorRunLastModule")
+    static let inspectorRunLastModule    = Notification.Name("inspectorRunLastModule")
+    static let inspectorRecentTermSelected = Notification.Name("inspectorRecentTermSelected")
 }

@@ -6,8 +6,14 @@
 //
 
 import Foundation
+import os
 
 struct LLMClient {
+    nonisolated static let streamFlushInterval: Duration = .milliseconds(80)
+    nonisolated static let preferredFlushCharacterCount = 50
+    nonisolated static let streamGapWarningThreshold: TimeInterval = 1.5
+    nonisolated static let logger = Logger(subsystem: "com.rell.app", category: "llm")
+
     enum ClientError: LocalizedError {
         case invalidURL
         case serverNotReachable
@@ -18,17 +24,27 @@ struct LLMClient {
         var errorDescription: String? {
             switch self {
             case .invalidURL:
-                return "Invalid LLM server URL."
+                return "The server URL in Settings is invalid. Check for typos and make sure it starts with http://."
             case .serverNotReachable:
-                return "LLM server not reachable. Check that the server is running and the URL in Settings is correct."
+                return "Cannot reach the AI server. Make sure LM Studio (or your chosen provider) is running, then try again."
             case .unauthorized:
-                return "Authentication failed. Check your API key in Settings."
+                return "Authentication failed. Check that your API key in Settings is correct and hasn't expired."
             case .badStatusCode(let status, let body):
-                let truncated = body.count > 120 ? String(body.prefix(120)) + "…" : body
-                if truncated.isEmpty {
-                    return "LLM request failed (HTTP \(status))."
+                switch status {
+                case 400:
+                    return "The request was rejected by the server (400). The model may not support the selected parameters."
+                case 404:
+                    return "Model not found (404). Check the model name in Settings — it may be misspelled or not loaded."
+                case 429:
+                    return "Too many requests (429). You've hit a rate limit. Wait a moment and try again."
+                case 500...599:
+                    return "The AI server encountered an error (\(status)). Try restarting the server or switching to a different model."
+                default:
+                    let hint = body.count > 80 ? String(body.prefix(80)) + "…" : body
+                    return hint.isEmpty
+                        ? "Unexpected server response (HTTP \(status))."
+                        : "Server error (\(status)): \(hint)"
                 }
-                return "LLM request failed (HTTP \(status)): \(truncated)"
             case .invalidResponse(let details):
                 return details
             }
@@ -39,6 +55,22 @@ struct LLMClient {
     var model: String = LLMConfiguration.defaultModel
     var apiKey: String?
     var session: URLSession = LLMClient.makeSession()
+
+    private var reasoningEffort: String? {
+        guard shouldDisableReasoning else { return nil }
+        return "none"
+    }
+
+    private var shouldDisableReasoning: Bool {
+        isLMStudioLocalServer
+    }
+
+    private var isLMStudioLocalServer: Bool {
+        guard let url = URL(string: baseURLString),
+              let host = url.host?.lowercased() else { return false }
+        let isLocalHost = host == "127.0.0.1" || host == "localhost"
+        return isLocalHost && url.port == 1234
+    }
 
     /// URLSession configured with the given request timeout.
     static func makeSession(timeout: Double = LLMConfiguration.defaultTimeout) -> URLSession {
@@ -70,7 +102,8 @@ struct LLMClient {
             temperature: temperature,
             max_tokens: maxTokens,
             top_p: topP,
-            stream: false
+            stream: false,
+            reasoning_effort: reasoningEffort
         )
         let bodyData = try JSONEncoder().encode(requestBody)
 
@@ -135,6 +168,10 @@ struct LLMClient {
             throw ClientError.invalidURL
         }
 
+        LLMClient.logger.info(
+            "Starting stream model=\(self.model, privacy: .public) url=\(self.baseURLString, privacy: .public) reasoning_effort=\(self.reasoningEffort ?? "default", privacy: .public) max_tokens=\(maxTokens)"
+        )
+
         let requestBody = ChatRequest(
             model: model,
             messages: [
@@ -144,7 +181,8 @@ struct LLMClient {
             temperature: temperature,
             max_tokens: maxTokens,
             top_p: topP,
-            stream: true
+            stream: true,
+            reasoning_effort: reasoningEffort
         )
         let bodyData = try JSONEncoder().encode(requestBody)
 
@@ -158,6 +196,8 @@ struct LLMClient {
 
         do {
             let (asyncBytes, response) = try await session.bytes(for: request)
+            let flushState = StreamFlushState()
+            let diagnostics = StreamDiagnostics()
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw ClientError.invalidResponse("Received an unexpected response from the LLM server.")
@@ -184,8 +224,12 @@ struct LLMClient {
                       !delta.isEmpty
                 else { continue }
 
-                await onToken(delta)
+                await diagnostics.recordChunk(delta)
+                await flushState.append(delta, deliver: onToken)
             }
+
+            await flushState.flush(force: true, deliver: onToken)
+            await diagnostics.finish()
         } catch let urlError as URLError {
             switch urlError.code {
             case .cannotFindHost, .cannotConnectToHost, .networkConnectionLost,
@@ -203,6 +247,91 @@ struct LLMClient {
     }
 }
 
+private actor StreamFlushState {
+    private var buffer = ""
+    private var lastFlush = ContinuousClock.now
+
+    func append(
+        _ delta: String,
+        deliver: @MainActor @escaping (String) -> Void
+    ) async {
+        buffer += delta
+
+        let elapsed = ContinuousClock.now - lastFlush
+        let timerExpired = elapsed >= LLMClient.streamFlushInterval
+        let bufferFull = buffer.count >= LLMClient.preferredFlushCharacterCount
+
+        // Flush on boundary chars only when the minimum interval has passed,
+        // preventing micro-flushes that choke SwiftUI with re-renders.
+        let boundaryReady = timerExpired && (
+            buffer.last?.isWhitespace == true ||
+            buffer.last.map(isBoundaryCharacter(_:)) == true
+        )
+
+        if bufferFull || boundaryReady {
+            await flush(force: false, deliver: deliver)
+        }
+    }
+
+    func flush(
+        force: Bool,
+        deliver: @MainActor @escaping (String) -> Void
+    ) async {
+        guard force || !buffer.isEmpty else { return }
+        guard !buffer.isEmpty else { return }
+
+        let chunk = buffer
+        buffer.removeAll(keepingCapacity: true)
+        lastFlush = ContinuousClock.now
+        await deliver(chunk)
+    }
+
+    private func isBoundaryCharacter(_ character: Character) -> Bool {
+        switch character {
+        case ".", ",", "!", "?", ":", ";", "\n":
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+private actor StreamDiagnostics {
+    private let start = Date()
+    private var lastChunkAt: Date?
+    private var chunkCount = 0
+    private var characterCount = 0
+
+    func recordChunk(_ delta: String) {
+        let now = Date()
+        chunkCount += 1
+        characterCount += delta.count
+
+        if let lastChunkAt {
+            let gap = now.timeIntervalSince(lastChunkAt)
+            if gap >= LLMClient.streamGapWarningThreshold {
+                LLMClient.logger.warning(
+                    "Stream gap detected: \(String(format: "%.2f", gap), privacy: .public)s after chunk \(self.chunkCount - 1)"
+                )
+            }
+        } else {
+            let firstChunkLatency = now.timeIntervalSince(start)
+            LLMClient.logger.info(
+                "First stream chunk after \(String(format: "%.2f", firstChunkLatency), privacy: .public)s"
+            )
+        }
+
+        lastChunkAt = now
+    }
+
+    func finish() {
+        let total = Date().timeIntervalSince(start)
+        LLMClient.logger.info(
+            "Stream finished in \(String(format: "%.2f", total), privacy: .public)s chunks=\(self.chunkCount) chars=\(self.characterCount)"
+        )
+    }
+}
+
 // MARK: - Request / Response models
 
 private struct ChatRequest: Codable {
@@ -212,6 +341,7 @@ private struct ChatRequest: Codable {
     let max_tokens: Int
     let top_p: Double
     let stream: Bool
+    let reasoning_effort: String?
 }
 
 private struct ChatMessage: Codable {

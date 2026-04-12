@@ -16,6 +16,9 @@ struct LLMSettingsView: View {
     @AppStorage(LLMConfiguration.apiKeyKey)       private var apiKey    = ""
 
     @State private var connectionStatus: ConnectionStatus = .idle
+    @State private var discoveredModels: [String] = []
+    @State private var isLoadingModels = false
+    @State private var showModelPicker = false
 
     private var providerType: LLMProviderType {
         LLMProviderType(rawValue: providerTypeRaw) ?? .lmStudio
@@ -89,10 +92,78 @@ struct LLMSettingsView: View {
 
     private var modelRow: some View {
         LabeledContent("Model") {
-            TextField(providerType.defaultModel, text: $model)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 260)
+            HStack(spacing: DS.Spacing.xs) {
+                TextField(providerType.defaultModel, text: $model)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 196)
+
+                // Only local/openai-compatible servers expose /v1/models
+                if providerType != .anthropic {
+                    Button {
+                        Task { await fetchModels() }
+                    } label: {
+                        if isLoadingModels {
+                            ProgressView().controlSize(.mini).frame(width: 56)
+                        } else {
+                            Text("Browse…").frame(width: 56)
+                        }
+                    }
+                    .disabled(isLoadingModels)
+                    .popover(isPresented: $showModelPicker, arrowEdge: .bottom) {
+                        modelPickerPopover
+                    }
+                }
+            }
         }
+    }
+
+    private var modelPickerPopover: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Available Models")
+                .font(DS.Typography.caption.weight(.semibold))
+                .foregroundStyle(DS.Color.textSecondary)
+                .padding(.horizontal, DS.Spacing.md)
+                .padding(.vertical, DS.Spacing.sm)
+            Divider()
+            if discoveredModels.isEmpty {
+                Text("No models found.\nIs the server running?")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(DS.Spacing.lg)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(discoveredModels, id: \.self) { m in
+                            Button {
+                                model = m
+                                showModelPicker = false
+                            } label: {
+                                HStack {
+                                    Text(m)
+                                        .font(DS.Typography.callout)
+                                        .foregroundStyle(DS.Color.textPrimary)
+                                        .lineLimit(1)
+                                    Spacer()
+                                    if model == m {
+                                        Image(systemName: "checkmark")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(DS.Color.accent)
+                                    }
+                                }
+                                .padding(.horizontal, DS.Spacing.md)
+                                .padding(.vertical, DS.Spacing.sm)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            Divider().padding(.leading, DS.Spacing.md)
+                        }
+                    }
+                }
+                .frame(maxHeight: 240)
+            }
+        }
+        .frame(width: 320)
     }
 
     // MARK: - API Key
@@ -195,6 +266,31 @@ struct LLMSettingsView: View {
         guard let type = LLMProviderType(rawValue: rawValue) else { return }
         serverURL = type.defaultServerURL
         model     = type.defaultModel
+    }
+
+    // MARK: - Model discovery
+
+    private func fetchModels() async {
+        isLoadingModels = true
+        defer { isLoadingModels = false }
+
+        guard let url = URL(string: "\(serverURL)/v1/models") else { return }
+        var req = URLRequest(url: url, timeoutInterval: 8)
+        if providerType.requiresAPIKey && !apiKey.isEmpty {
+            req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        struct ModelsResponse: Decodable {
+            struct ModelEntry: Decodable { let id: String }
+            let data: [ModelEntry]
+        }
+
+        guard let (data, _) = try? await URLSession.shared.data(for: req),
+              let response = try? JSONDecoder().decode(ModelsResponse.self, from: data)
+        else { return }
+
+        discoveredModels = response.data.map(\.id).sorted()
+        showModelPicker = true
     }
 
     // MARK: - Test logic

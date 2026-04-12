@@ -13,12 +13,23 @@ final class InspectorViewModel {
     var outputs: [ModuleType: String] = [:]
     var loading: [ModuleType: Bool] = [:]
     var errors: [ModuleType: String] = [:]
+    /// True if the module's output was likely cut off due to the token limit.
+    var wasTruncated: [ModuleType: Bool] = [:]
 
     /// Cancellable task handles per module.
     var activeTasks: [ModuleType: Task<Void, Never>] = [:]
 
     /// LRU output cache — survives word-to-word navigation.
     var cache = LRUCache<OutputCacheKey, [ModuleType: String]>(capacity: 20)
+
+    /// Session-scoped history of the last 20 looked-up terms (most recent first).
+    private(set) var recentTerms: [String] = []
+
+    func addToRecents(_ term: String) {
+        recentTerms.removeAll { $0.lowercased() == term.lowercased() }
+        recentTerms.insert(term, at: 0)
+        if recentTerms.count > 20 { recentTerms.removeLast() }
+    }
 
     // MARK: - Reset
 
@@ -28,6 +39,7 @@ final class InspectorViewModel {
         outputs.removeAll()
         loading.removeAll()
         errors.removeAll()
+        wasTruncated.removeAll()
     }
 
     // MARK: - Cache helpers

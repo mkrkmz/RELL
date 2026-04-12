@@ -52,9 +52,12 @@ struct LRUCache<Key: Hashable, Value> {
 }
 
 /// Uniquely identifies a lookup context for cache keying.
+/// Includes provider + model so that switching LLM backends invalidates stale outputs.
 struct OutputCacheKey: Hashable {
     let term: String
     let mode: String
     let detail: String
     let domain: String
+    let provider: String
+    let model: String
 }

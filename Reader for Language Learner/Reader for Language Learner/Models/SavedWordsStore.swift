@@ -84,6 +84,12 @@ final class SavedWordsStore {
         save()
     }
 
+    func setMastery(_ level: MasteryLevel, for word: SavedWord) {
+        guard let index = words.firstIndex(where: { $0.id == word.id }) else { return }
+        words[index].masteryLevel = level
+        save()
+    }
+
     // MARK: - Persistence
 
     private func save() {

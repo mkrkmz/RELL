@@ -6,6 +6,42 @@
 //
 
 import Foundation
+import SwiftUI
+
+/// How well the user knows a saved word. Raw value is persisted as Int.
+enum MasteryLevel: Int, Codable, CaseIterable {
+    case new      = 0  // Just saved, not yet reviewed
+    case learning = 1  // Actively studying
+    case mastered = 2  // Confident with this word
+
+    var label: String {
+        switch self {
+        case .new:      return "New"
+        case .learning: return "Learning"
+        case .mastered: return "Mastered"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .new:      return "sparkle"
+        case .learning: return "brain"
+        case .mastered: return "checkmark.seal.fill"
+        }
+    }
+
+    var color: SwiftUI.Color {
+        switch self {
+        case .new:      return .blue
+        case .learning: return .orange
+        case .mastered: return .green
+        }
+    }
+
+    var next: MasteryLevel {
+        MasteryLevel(rawValue: rawValue + 1) ?? .mastered
+    }
+}
 
 /// A single word or phrase saved by the user during reading.
 struct SavedWord: Identifiable, Codable, Equatable, Hashable {
@@ -20,6 +56,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     /// Snapshot of LLM outputs at save time. Key = ModuleType.rawValue.
     var llmOutputs: [String: String]
     var savedAt: Date
+    var masteryLevel: MasteryLevel
 
     init(
         id: UUID = UUID(),
@@ -31,7 +68,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         domain: String = DomainPreference.general.rawValue,
         notes: String = "",
         llmOutputs: [String: String] = [:],
-        savedAt: Date = Date()
+        savedAt: Date = Date(),
+        masteryLevel: MasteryLevel = .new
     ) {
         self.id = id
         self.term = term
@@ -43,5 +81,6 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.notes = notes
         self.llmOutputs = llmOutputs
         self.savedAt = savedAt
+        self.masteryLevel = masteryLevel
     }
 }

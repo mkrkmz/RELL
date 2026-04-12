@@ -148,7 +148,11 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
     }
 
     var systemPrompt: String {
-        PromptTemplates.system(lang: outputLanguage, format: outputFormat)
+        systemPrompt(customPreamble: "")
+    }
+
+    func systemPrompt(customPreamble: String) -> String {
+        PromptTemplates.system(lang: outputLanguage, format: outputFormat, customPreamble: customPreamble)
     }
 
     func isEnabled(mode: ExplainMode) -> Bool {
@@ -161,52 +165,103 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
     }
 
     /// Recommended max_tokens cap per module/mode/detail to keep Gemma fast.
-    func recommendedMaxTokens(mode: ExplainMode, detail: ExplainDetail) -> Int {
+    func recommendedMaxTokens(
+        mode: ExplainMode,
+        detail: ExplainDetail,
+        modelIdentifier: String? = nil
+    ) -> Int {
+        let base: Int
         switch (self, mode, detail) {
         // Definition
-        case (.definitionEN, .word, .short):        return 160
-        case (.definitionEN, .word, .detailed):     return 280
-        case (.definitionEN, .sentence, .short):    return 160
-        case (.definitionEN, .sentence, .detailed): return 280
+        case (.definitionEN, .word, .short):        base = 160
+        case (.definitionEN, .word, .detailed):     base = 280
+        case (.definitionEN, .sentence, .short):    base = 160
+        case (.definitionEN, .sentence, .detailed): base = 280
         // TR Meaning — Turkish prose needs more room than English
-        case (.meaningTR, .word, .short):           return 220
-        case (.meaningTR, .word, .detailed):        return 380
-        case (.meaningTR, .sentence, .short):       return 220
-        case (.meaningTR, .sentence, .detailed):    return 380
+        case (.meaningTR, .word, .short):           base = 220
+        case (.meaningTR, .word, .detailed):        base = 380
+        case (.meaningTR, .sentence, .short):       base = 220
+        case (.meaningTR, .sentence, .detailed):    base = 380
         // Collocations — markdown numbered list format needs more room
-        case (.collocations, .word, .short):        return 550
-        case (.collocations, .word, .detailed):     return 900
-        case (.collocations, .sentence, .short):    return 400
-        case (.collocations, .sentence, .detailed): return 700
+        case (.collocations, .word, .short):        base = 550
+        case (.collocations, .word, .detailed):     base = 900
+        case (.collocations, .sentence, .short):    base = 400
+        case (.collocations, .sentence, .detailed): base = 700
         // Examples
-        case (.examplesEN, .word, .short):          return 120
-        case (.examplesEN, .word, .detailed):       return 180
-        case (.examplesEN, .sentence, .short):      return 120
-        case (.examplesEN, .sentence, .detailed):   return 150
+        case (.examplesEN, .word, .short):          base = 120
+        case (.examplesEN, .word, .detailed):       base = 180
+        case (.examplesEN, .sentence, .short):      base = 120
+        case (.examplesEN, .sentence, .detailed):   base = 150
         // Etymology (word only)
-        case (.etymologyEN, _, .short):             return 100
-        case (.etymologyEN, _, .detailed):          return 160
+        case (.etymologyEN, _, .short):             base = 100
+        case (.etymologyEN, _, .detailed):          base = 160
         // Pronunciation
-        case (.pronunciationEN, .word, .short):     return 40
-        case (.pronunciationEN, .word, .detailed):  return 40
-        case (.pronunciationEN, .sentence, .short): return 80
-        case (.pronunciationEN, .sentence, .detailed): return 120
+        case (.pronunciationEN, .word, .short):     base = 40
+        case (.pronunciationEN, .word, .detailed):  base = 40
+        case (.pronunciationEN, .sentence, .short): base = 80
+        case (.pronunciationEN, .sentence, .detailed): base = 120
         // Mnemonic (word only)
-        case (.mnemonicEN, _, .short):              return 60
-        case (.mnemonicEN, _, .detailed):           return 100
+        case (.mnemonicEN, _, .short):              base = 60
+        case (.mnemonicEN, _, .detailed):           base = 100
         // Synonyms & Antonyms
-        case (.synonymsEN, .word, .short):          return 160
-        case (.synonymsEN, .word, .detailed):       return 280
-        case (.synonymsEN, .sentence, .short):      return 120
-        case (.synonymsEN, .sentence, .detailed):   return 180
+        case (.synonymsEN, .word, .short):          base = 160
+        case (.synonymsEN, .word, .detailed):       base = 280
+        case (.synonymsEN, .sentence, .short):      base = 120
+        case (.synonymsEN, .sentence, .detailed):   base = 180
         // Word Family (word only; sentence disabled but keep exhaustive)
-        case (.wordFamilyEN, _, .short):            return 160
-        case (.wordFamilyEN, _, .detailed):         return 260
+        case (.wordFamilyEN, _, .short):            base = 160
+        case (.wordFamilyEN, _, .detailed):         base = 260
         // Usage Notes
-        case (.usageNotesEN, .word, .short):        return 180
-        case (.usageNotesEN, .word, .detailed):     return 320
-        case (.usageNotesEN, .sentence, .short):    return 150
-        case (.usageNotesEN, .sentence, .detailed): return 240
+        case (.usageNotesEN, .word, .short):        base = 180
+        case (.usageNotesEN, .word, .detailed):     base = 320
+        case (.usageNotesEN, .sentence, .short):    base = 150
+        case (.usageNotesEN, .sentence, .detailed): base = 240
+        }
+
+        guard let modelIdentifier else { return base }
+        guard modelIdentifier.localizedCaseInsensitiveContains("gemma-4") else { return base }
+
+        switch (self, mode, detail) {
+        case (.definitionEN, .word, .short),
+             (.definitionEN, .sentence, .short):
+            return min(base, 96)
+        case (.definitionEN, _, .detailed):
+            return min(base, 160)
+        case (.meaningTR, .word, .short),
+             (.meaningTR, .sentence, .short):
+            return min(base, 120)
+        case (.meaningTR, _, .detailed):
+            return min(base, 180)
+        case (.collocations, .word, .short):
+            return min(base, 220)
+        case (.collocations, .sentence, .short):
+            return min(base, 180)
+        case (.collocations, _, .detailed):
+            return min(base, 320)
+        case (.examplesEN, _, .short):
+            return min(base, 80)
+        case (.examplesEN, _, .detailed):
+            return min(base, 120)
+        case (.usageNotesEN, .word, .short),
+             (.usageNotesEN, .sentence, .short):
+            return min(base, 110)
+        case (.usageNotesEN, _, .detailed):
+            return min(base, 180)
+        case (.synonymsEN, .word, .short),
+             (.synonymsEN, .sentence, .short),
+             (.wordFamilyEN, _, .short):
+            return min(base, 100)
+        case (.synonymsEN, _, .detailed),
+             (.wordFamilyEN, _, .detailed):
+            return min(base, 150)
+        case (.etymologyEN, _, .short),
+             (.mnemonicEN, _, .short):
+            return min(base, 70)
+        case (.etymologyEN, _, .detailed),
+             (.mnemonicEN, _, .detailed):
+            return min(base, 100)
+        case (.pronunciationEN, _, _):
+            return base
         }
     }
 
@@ -235,14 +290,12 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
         nativeLanguage: Language = Language.storedNative
     ) -> String {
         let domainLine = domain != .general
-            ? "\nContext: \(domain.rawValue) domain. Tailor vocabulary and examples accordingly. Do not mention domain in output."
+            ? "\nDomain: \(domain.rawValue). Adapt the explanation."
             : ""
         
-        // If context is provided, we ask the model to consider it.
         let ctxBlock = context.map {
             """
-            \nContext Sentence: "\($0)"
-            (Explain the meaning/usage of the term specifically as it appears in this sentence.)
+            \nContext sentence: "\($0)"
             """
         } ?? ""
 
@@ -256,17 +309,18 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            Give a plain-text definition in English. No headings, labels, or bullet points.
-            \(context != nil ? "Start by briefly explaining how it is used in the context sentence, then give the general definition." : "")
-            \(detail == .short ? "Exactly 1 paragraph." : "Max 2 paragraphs.")
+            Define it in English.
+            \(context != nil
+                ? "Write exactly 2 short paragraphs: first this context, then general meaning."
+                : (detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs."))
             """
 
         case (.definitionEN, .sentence):
             return """
             Sentence: \(term)\(domainLine)
 
-            Explain the meaning of this sentence in plain English. No headings, labels, or bullet points.
-            \(detail == .short ? "Exactly 1 paragraph." : "Max 2 paragraphs.")
+            Explain this sentence in plain English.
+            \(detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs.")
             """
 
         // ──────────────────────────────────────
@@ -277,19 +331,20 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            Explain the meaning in \(nativeLanguage.rawValue). Plain text only, no headings, no labels, no bullet points.
+            Explain it in \(nativeLanguage.rawValue).
             \(nativeLanguage.promptInstruction)
-            \(context != nil ? "First explain the contextual usage, then the general meaning." : "")
-            \(detail == .short ? "Exactly 1 paragraph." : "Max 2 paragraphs.")
+            \(context != nil
+                ? "Write exactly 2 short paragraphs: first this context, then general meaning."
+                : (detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs."))
             """
 
         case (.meaningTR, .sentence):
             return """
             Sentence: \(term)\(domainLine)
 
-            Explain the meaning of this sentence in \(nativeLanguage.rawValue). Plain text only, no headings, no labels.
+            Explain this sentence in \(nativeLanguage.rawValue).
             \(nativeLanguage.promptInstruction)
-            \(detail == .short ? "Exactly 1 paragraph." : "Max 2 paragraphs.")
+            \(detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs.")
             """
 
         // ──────────────────────────────────────
@@ -302,13 +357,13 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             Word: \(term)\(domainLine)
 
-            List \(count) common collocations using exactly this markdown format for each item:
+            List \(count) common collocations. Use exactly this format:
 
             N. **[collocation]:** [meaning in \(native), \(native) only]
                - *Örnek Cümle:* "[one English example sentence]"
                - *Türkçe Çeviri:* "[Turkish translation of the example]"
 
-            Put a blank line between items. Number each item starting from 1. No introduction, no commentary, nothing else.
+            Blank line between items. Start numbering at 1.
             """
 
         case (.collocations, .sentence):
@@ -317,13 +372,13 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             Sentence: \(term)\(domainLine)
 
-            Extract \(count) key collocations or phrases from this sentence. Use exactly this markdown format for each item:
+            Extract \(count) key collocations or phrases from this sentence. Use exactly this format:
 
             N. **[collocation/phrase]:** [meaning in \(native), \(native) only]
                - *Örnek Cümle:* "[one short English example sentence using this collocation]"
                - *Türkçe Çeviri:* "[Turkish translation of the example]"
 
-            Put a blank line between items. Number each item starting from 1. No introduction, no commentary, nothing else.
+            Blank line between items. Start numbering at 1.
             """
 
         // ──────────────────────────────────────
@@ -335,7 +390,8 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             \(term)\(domainLine)
 
-            Write exactly \(count) example sentences using this word/phrase. Each sentence on its own line. No numbering, no labels, no extra text.
+            Write exactly \(count) example sentences using this word/phrase.
+            One sentence per line.
             """
 
         case (.examplesEN, .sentence):
@@ -343,7 +399,8 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             \(term)\(domainLine)
 
-            Paraphrase this sentence \(count) different ways. Each paraphrase on its own line. No numbering, no labels, no extra text.
+            Paraphrase this sentence \(count) different ways.
+            One paraphrase per line.
             """
 
         // ──────────────────────────────────────
@@ -354,8 +411,8 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             \(term)
 
-            Give the etymology of this word in plain text. No headings, no labels, no bullet points.
-            \(detail == .short ? "Exactly 1 paragraph." : "Max 2 short paragraphs.")
+            Give the etymology of this word.
+            \(detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs.")
             """
 
         // ──────────────────────────────────────
@@ -366,7 +423,7 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             \(term)
 
-            Output only the IPA transcription followed by a simple respelling in parentheses on the same line. Example format: /ˈwɜːrd/ (WURD). Nothing else.
+            Output only: /IPA/ (RESPelling)
             """
 
         case (.pronunciationEN, .sentence):
@@ -374,7 +431,8 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             \(term)
 
-            Pick \(count) tricky-to-pronounce words from this sentence. For each word, output IPA + respelling on one line. Example format: word — /ˈwɜːrd/ (WURD). Each on its own line. Nothing else.
+            Pick \(count) tricky words from this sentence.
+            Format each line: word — /IPA/ (RESPelling)
             """
 
         // ──────────────────────────────────────
@@ -385,8 +443,8 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             \(term)
 
-            Write a short mnemonic to remember this word. Use sound similarity or a mini-story. No labels, no headings.
-            \(detail == .short ? "1-2 sentences only." : "Max 3 sentences.")
+            Write a short mnemonic using sound similarity or a mini-story.
+            \(detail == .short ? "Use 1-2 sentences." : "Use at most 3 sentences.")
             """
 
         // ──────────────────────────────────────
@@ -398,9 +456,10 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            List \(synCount) synonyms with a one-line nuance note for each (format: word — note).
-            Then, after a blank line, list 1–2 antonyms with a brief note, each prefixed with "≠".
-            Skip antonyms if none exist. No headings, no bullet points, no extra labels.
+            List \(synCount) synonyms with a short nuance note for each.
+            Format: word — note
+            Then add a blank line and list 1-2 antonyms, each prefixed with "≠".
+            Skip antonyms if none exist.
             """
 
         case (.synonymsEN, .sentence):
@@ -408,7 +467,7 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             Sentence: \(term)
 
             Pick 3 key words from this sentence and provide one synonym for each.
-            Format: original → synonym — brief nuance note. One per line. No extra text.
+            Format: original → synonym — brief nuance note
             """
 
         // ──────────────────────────────────────
@@ -419,9 +478,8 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             Word/Phrase: \(term)
 
-            List all common derived forms of this word that exist in English.
-            Format: (part of speech) form — one short example sentence.
-            One per line. No headings, no extra labels.
+            List common derived forms of this word.
+            Format: (part of speech) form — one short example sentence
             \(detail == .short ? "Include the 3–4 most useful forms." : "Include all common forms: noun, verb, adjective, adverb, and any notable compounds.")
             """
 
@@ -433,7 +491,7 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            Provide usage notes in this exact format, one per line, using these labels:
+            Provide usage notes using exactly these labels, one per line:
             FREQ: [very common / common / uncommon / rare] — brief reason
             REG: [formal / neutral / informal / slang] — typical context\(detail == .detailed ?
             """
@@ -442,15 +500,16 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
             CAUTION: common learner mistake, regional note, or usage restriction (write CAUTION: none if not applicable)
             """ : "")
 
-            No headings, no bullet points. Use only the labels above.
+            Use only these labels.
             """
 
         case (.usageNotesEN, .sentence):
             return """
             Sentence: \(term)
 
-            Analyze the register and style of this sentence. Cover: register (formal/informal/neutral), any notable vocabulary or structures, and the contexts where it would be appropriate.
-            Plain text only. \(detail == .short ? "Exactly 1 paragraph." : "Max 2 paragraphs.")
+            Analyze the register and style of this sentence.
+            Cover register, notable vocabulary or structure, and where it fits.
+            \(detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs.")
             """
 
         // ──────────────────────────────────────

@@ -23,25 +23,31 @@ enum PromptTemplates {
 
     /// System prompt parameterized by language constraint and output format.
     /// Kept concise for fast prefill on small local models (Gemma 3 4B etc.).
-    static func system(lang: OutputLanguage, format: OutputFormat = .plain) -> String {
+    static func system(lang: OutputLanguage, format: OutputFormat = .plain, customPreamble: String = "") -> String {
         let formatRule: String
         switch format {
         case .plain:
-            formatRule = "- Plain text only. No markdown, no headings, no bullets, no numbered lists."
+            formatRule = "Plain text only."
         case .markdown:
-            formatRule = "- Use markdown exactly as shown in the user prompt: bold with **, italic with *, numbered lists (1. 2. 3.), bullets with -. No code fences or triple backticks."
+            formatRule = "Use only the markdown pattern requested by the user prompt."
         }
 
-        return """
-        You are a lexicologist and language coach.
-        RULES:
+        var base = """
+        You are a fast dictionary assistant for language learners.
         \(lang.constraint)
         \(formatRule)
-        - No greetings, introductions, or commentary.
-        - No code fences or triple backticks.
-        - If unsure about a fact, write "\(lang.unknownFallback)" instead of guessing.
-        - Output ONLY the requested content. Stop immediately after.
+        Start with the answer immediately.
+        Be compact and direct.
+        No preamble, no commentary, no code fences.
+        If unsure, write "\(lang.unknownFallback)".
         """
+
+        let trimmedPreamble = customPreamble.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedPreamble.isEmpty {
+            base += "\n\(trimmedPreamble)"
+        }
+
+        return base
     }
 
     // MARK: - Output Language
@@ -54,11 +60,11 @@ enum PromptTemplates {
         var constraint: String {
             switch self {
             case .englishOnly:
-                return "- Output ONLY in English. No other languages."
+                return "Output only in English."
             case .turkishOnly:
-                return "- Output ONLY in Turkish. No English words."
+                return "Output only in Turkish."
             case .mixed:
-                return "- EN-labeled fields must be English only. TR-labeled fields must be Turkish only. Never mix languages within a field."
+                return "EN fields in English only. TR fields in Turkish only."
             }
         }
 

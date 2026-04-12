@@ -26,6 +26,27 @@ extension InspectorView {
             .background(DS.Color.surfaceElevated)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
 
+            // Run All button
+            Button {
+                runAllPrimaryModules()
+            } label: {
+                HStack(spacing: DS.Spacing.xs) {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text("Run All")
+                        .font(DS.Typography.caption2.weight(.semibold))
+                }
+                .foregroundStyle(DS.Color.accent)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, DS.Spacing.xs)
+                .background(DS.Color.accentSubtle)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(!hasSelection)
+            .keyboardShortcut("r", modifiers: [.command, .shift])
+            .help("Run all primary modules (⇧⌘R)")
+
             // Overflow row — compact, ⌘6…⌘0
             let overflowKeys: [Character] = ["6", "7", "8", "9", "0"]
             HStack(spacing: DS.Spacing.xs) {
@@ -56,6 +77,7 @@ extension InspectorView {
         let isActive  = activeModule == module
         let hasOutput = !(viewModel.outputs[module] ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasError  = viewModel.errors[module] != nil
         let isEnabled = isModuleEnabled(module) || isLoading
 
         Button { toggleModule(module) } label: {
@@ -71,13 +93,25 @@ extension InspectorView {
                             .fill(module.accentColor)
                             .frame(width: 5, height: 5)
                             .offset(x: 3, y: -3)
+                    } else if hasError {
+                        Circle()
+                            .fill(DS.Color.danger)
+                            .frame(width: 5, height: 5)
+                            .offset(x: 3, y: -3)
                     }
                 }
+
                 Text(module.shortTitle)
                     .font(compact
                           ? DS.Typography.caption2
                           : .system(size: 10, weight: .regular))
                     .lineLimit(1)
+
+                if let shortcut, !compact {
+                    Text("⌘\(shortcut.character)")
+                        .font(.system(size: 8, weight: .regular, design: .monospaced))
+                        .foregroundStyle(DS.Color.textTertiary)
+                }
             }
             .frame(maxWidth: .infinity, minHeight: compact ? 36 : 52)
             .foregroundStyle(
@@ -95,6 +129,7 @@ extension InspectorView {
             .overlay {
                 RoundedRectangle(cornerRadius: DS.Radius.sm)
                     .stroke(
+                        hasError && !isActive ? DS.Color.danger.opacity(0.25) :
                         isActive ? module.accentColor.opacity(0.30) : .clear,
                         lineWidth: 1
                     )
@@ -108,5 +143,12 @@ extension InspectorView {
             view.keyboardShortcut(shortcut!, modifiers: [.command])
         }
         .disabled(!isEnabled)
+        .accessibilityLabel(module.shortTitle)
+        .accessibilityHint(isActive ? "Active module, tap to deselect" : "Tap to run \(module.shortTitle) analysis")
+        .accessibilityValue(
+            isLoading ? "Loading" :
+            hasError  ? "Error" :
+            hasOutput ? "Has output" : "No output"
+        )
     }
 }
