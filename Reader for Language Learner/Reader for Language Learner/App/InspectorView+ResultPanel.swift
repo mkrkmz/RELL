@@ -57,123 +57,81 @@ extension InspectorView {
 
         VStack(alignment: .leading, spacing: 0) {
 
-            // ── Result header ─────────────────────────────────────────────
-            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                HStack(alignment: .top, spacing: DS.Spacing.md) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: DS.Radius.sm)
-                            .fill(module.accentColor.opacity(0.12))
-                            .frame(width: 32, height: 32)
-                        Image(systemName: module.iconName)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(module.accentColor)
-                    }
+            // ── Result toolbar (single row) ──────────────────────────────
+            HStack(spacing: DS.Spacing.sm) {
+                Image(systemName: module.iconName)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(module.accentColor)
+                    .frame(width: 20, height: 20)
+                    .background(module.accentColor.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
 
-                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                        Text(sectionTitle)
-                            .dsOverlineLabel()
+                Text(module.title(nativeLanguage: nativeLanguage))
+                    .font(DS.Typography.subhead.weight(.semibold))
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .lineLimit(1)
 
-                        Text(module.title(nativeLanguage: nativeLanguage))
-                            .font(DS.Typography.headline)
-                            .foregroundStyle(DS.Color.textPrimary)
-                    }
-
-                    Spacer()
-
-                    HStack(spacing: DS.Spacing.xxs) {
-                        Button {
-                            Task { await runModule(module, forceRefresh: true) }
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                        }
-                        .help("Refresh (⌘R)")
-                        .keyboardShortcut("r", modifiers: [.command])
-                        .disabled(isLoading || !isModuleEnabled(module))
-
-                        Button { copyToClipboard(renderedOutput, showFeedback: true) } label: {
-                            Image(systemName: "doc.on.doc")
-                        }
-                        .help("Copy result (⇧⌘C)")
-                        .keyboardShortcut("c", modifiers: [.command, .shift])
-                        .disabled(renderedOutput.isEmpty)
-
-                        if isLoading {
-                            Button {
-                                viewModel.cancel(module: module)
-                                moduleElapsed[module] = nil
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(DS.Color.danger.opacity(0.7))
-                            }
-                            .buttonStyle(.plain)
-                            .help("Cancel")
-                        } else {
-                            Button { activeModule = nil } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(DS.Color.textTertiary)
-                            }
-                            .buttonStyle(.plain)
-                            .help("Close (Esc)")
-                        }
-                    }
-                    .controlSize(.small)
+                if isLoading {
+                    liveStatusBadge
                 }
 
-                HStack(spacing: DS.Spacing.xs) {
-                    resultMetaPill(
-                        title: isLoading ? "Status" : "Output",
-                        value: isLoading ? "Generating" : "\((outputLineCount ?? 0)) lines",
-                        tint: isLoading ? DS.Color.accent : module.accentColor
-                    )
+                Spacer(minLength: 0)
+
+                if let elapsed, !isLoading {
+                    Text(String(format: "%.1fs", elapsed))
+                        .font(DS.Typography.caption2.weight(.medium))
+                        .foregroundStyle(DS.Color.textTertiary)
+                }
+
+                if isTruncated && !isLoading {
+                    truncationWarningBadge
+                }
+
+                HStack(spacing: DS.Spacing.xxs) {
+                    Button {
+                        Task { await runModule(module, forceRefresh: true) }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .help("Refresh (⌘R)")
+                    .keyboardShortcut("r", modifiers: [.command])
+                    .disabled(isLoading || !isModuleEnabled(module))
+
+                    Button { copyToClipboard(renderedOutput, showFeedback: true) } label: {
+                        Image(systemName: "doc.on.doc")
+                    }
+                    .help("Copy result (⇧⌘C)")
+                    .keyboardShortcut("c", modifiers: [.command, .shift])
+                    .disabled(renderedOutput.isEmpty)
 
                     if isLoading {
-                        liveStatusBadge
+                        Button {
+                            viewModel.cancel(module: module)
+                            moduleElapsed[module] = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(DS.Color.danger.opacity(0.7))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Cancel")
+                    } else {
+                        Button { activeModule = nil } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(DS.Color.textTertiary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Close (Esc)")
                     }
-
-                    if let elapsed, !isLoading {
-                        resultMetaPill(
-                            title: "Time",
-                            value: String(format: "%.1fs", elapsed),
-                            tint: DS.Color.textSecondary
-                        )
-                    }
-
-                    if !isLoading && !renderedOutput.isEmpty {
-                        resultMetaPill(
-                            title: "Chars",
-                            value: "\(renderedOutput.count)",
-                            tint: DS.Color.textSecondary
-                        )
-                    }
-
-                    if isTruncated && !isLoading {
-                        truncationWarningBadge
-                    }
-
-                    Spacer(minLength: 0)
                 }
-
-                if hasSourceContext {
-                    sourceContextPanel
-                }
+                .controlSize(.small)
             }
-            .padding(.horizontal, DS.Spacing.md)
-            .padding(.vertical, DS.Spacing.md)
-            .background(
-                RoundedRectangle(cornerRadius: DS.Radius.lg)
-                    .fill(DS.Color.surfaceElevated)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.lg)
-                    .strokeBorder(DS.Color.separator.opacity(0.35), lineWidth: 0.8)
-            )
-            .overlay(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: DS.Radius.lg)
-                    .fill(module.accentColor.opacity(0.12))
-                    .frame(height: 4)
-                    .padding(.horizontal, 1)
-                    .padding(.top, 1)
+            .padding(.horizontal, DS.Spacing.sm)
+            .padding(.vertical, DS.Spacing.xs)
+            .background(DS.Color.surfaceElevated)
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .fill(module.accentColor)
+                    .frame(height: 2)
             }
 
             // ── Result body ───────────────────────────────────────────────
@@ -181,9 +139,9 @@ extension InspectorView {
                 output: renderedOutput,
                 error: viewModel.errors[module],
                 isLoading: isLoading,
-                module: module
+                module: module,
+                showSourceContext: hasSourceContext
             )
-            .padding(.top, DS.Spacing.sm)
         }
     }
 
@@ -194,24 +152,23 @@ extension InspectorView {
         output: String,
         error: String?,
         isLoading: Bool,
-        module: ModuleType
+        module: ModuleType,
+        showSourceContext: Bool = false
     ) -> some View {
         if let error {
             errorView(error: error, module: module)
         } else if !output.isEmpty {
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                    VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                         Color.clear.frame(height: 1).id("top")
-                        if !isLoading {
-                            HStack {
-                                Text("Generated Content")
-                                    .dsOverlineLabel()
-                                Spacer()
-                            }
-                            .padding(.horizontal, DS.Spacing.md)
-                            .padding(.top, DS.Spacing.md)
+
+                        if showSourceContext {
+                            sourceContextPanel
+                                .padding(.horizontal, DS.Spacing.md)
+                                .padding(.top, DS.Spacing.sm)
                         }
+
                         ResultRenderer(
                             content: output,
                             module: module,
@@ -235,34 +192,13 @@ extension InspectorView {
             }
             .textSelection(.enabled)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: DS.Radius.lg)
-                    .fill(DS.Color.surfaceInset)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.lg)
-                    .strokeBorder(DS.Color.separator.opacity(0.28), lineWidth: 0.8)
-            )
+            .background(DS.Color.surfaceInset)
             .lineSpacing(4)
         } else if isLoading {
             loadingView
         } else {
             emptyOutputView(module: module)
         }
-    }
-
-    func resultMetaPill(title: String, value: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(title.uppercased())
-                .font(DS.Typography.caption2.weight(.bold))
-            Text(value)
-                .font(DS.Typography.caption.weight(.medium))
-        }
-        .foregroundStyle(tint)
-        .padding(.horizontal, DS.Spacing.sm)
-        .padding(.vertical, DS.Spacing.xs)
-        .background(DS.Color.surface.opacity(0.75))
-        .clipShape(Capsule())
     }
 
     var hasSourceContext: Bool {
@@ -339,36 +275,20 @@ extension InspectorView {
     }
 
     var liveStatusBadge: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            Circle()
-                .fill(DS.Color.accent)
-                .frame(width: 7, height: 7)
-                .symbolEffect(.pulse)
-            Text("Streaming")
-                .font(DS.Typography.caption.weight(.semibold))
-        }
-        .foregroundStyle(DS.Color.accent)
-        .padding(.horizontal, DS.Spacing.sm)
-        .padding(.vertical, DS.Spacing.xs)
-        .background(DS.Color.accentSubtle)
-        .clipShape(Capsule())
-        .accessibilityLabel("Streaming output in progress")
+        Circle()
+            .fill(DS.Color.accent)
+            .frame(width: 6, height: 6)
+            .scaleEffect(1.0)
+            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: true)
+            .accessibilityLabel("Streaming output in progress")
     }
 
     var truncationWarningBadge: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 9, weight: .semibold))
-            Text("May be incomplete")
-                .font(DS.Typography.caption.weight(.semibold))
-        }
-        .foregroundStyle(DS.Color.warning)
-        .padding(.horizontal, DS.Spacing.sm)
-        .padding(.vertical, DS.Spacing.xs)
-        .background(DS.Color.warning.opacity(0.12))
-        .clipShape(Capsule())
-        .help("The output may have been cut off due to the token limit. Try switching to 'Detailed' mode or increase max tokens in Settings.")
-        .accessibilityLabel("Warning: output may be incomplete due to token limit")
+        Image(systemName: "exclamationmark.triangle.fill")
+            .font(.system(size: 10))
+            .foregroundStyle(DS.Color.warning)
+            .help("Output may be incomplete — try 'Detailed' mode or increase max tokens in Settings.")
+            .accessibilityLabel("Warning: output may be incomplete due to token limit")
     }
 
     // MARK: - Loading View

@@ -2,7 +2,7 @@
 //  InspectorView+Grid.swift
 //  Reader for Language Learner
 //
-//  Module grid — primary row + secondary overflow row.
+//  Module grid — primary row + overflow row, compact layout.
 //
 
 import SwiftUI
@@ -12,44 +12,40 @@ extension InspectorView {
     // MARK: - Module Grid
 
     var moduleGrid: some View {
-        VStack(spacing: DS.Spacing.sm) {
-            // Primary row — keyboard shortcuts ⌘1…⌘5
-            HStack(spacing: DS.Spacing.xs) {
+        VStack(spacing: DS.Spacing.xs) {
+            // Primary row — keyboard shortcuts ⌘1…⌘5 + Run All button
+            HStack(spacing: DS.Spacing.xxs) {
                 ForEach(Array(primaryModules.enumerated()), id: \.element) { index, module in
                     moduleButton(
                         for: module,
                         shortcut: KeyEquivalent(Character(String(index + 1)))
                     )
                 }
-            }
-            .padding(DS.Spacing.xs)
-            .background(DS.Color.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
 
-            // Run All button
-            Button {
-                runAllPrimaryModules()
-            } label: {
-                HStack(spacing: DS.Spacing.xs) {
+                // Run All — compact circular button at trailing edge
+                Button {
+                    runAllPrimaryModules()
+                } label: {
                     Image(systemName: "play.fill")
-                        .font(.system(size: 9, weight: .semibold))
-                    Text("Run All")
-                        .font(DS.Typography.caption2.weight(.semibold))
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(DS.Color.accent)
+                        .frame(width: 30, height: 30)
+                        .background(DS.Color.accentSubtle)
+                        .clipShape(Circle())
                 }
-                .foregroundStyle(DS.Color.accent)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, DS.Spacing.xs)
-                .background(DS.Color.accentSubtle)
-                .clipShape(Capsule())
+                .buttonStyle(.plain)
+                .disabled(!hasSelection)
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+                .help("Run All (⇧⌘R)")
+                .accessibilityLabel("Run All Modules")
             }
-            .buttonStyle(.plain)
-            .disabled(!hasSelection)
-            .keyboardShortcut("r", modifiers: [.command, .shift])
-            .help("Run all primary modules (⇧⌘R)")
+            .padding(DS.Spacing.xxs)
+            .background(DS.Color.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
 
             // Overflow row — compact, ⌘6…⌘0
             let overflowKeys: [Character] = ["6", "7", "8", "9", "0"]
-            HStack(spacing: DS.Spacing.xs) {
+            HStack(spacing: DS.Spacing.xxs) {
                 ForEach(Array(overflowModules.enumerated()), id: \.element) { index, module in
                     moduleButton(
                         for: module,
@@ -60,7 +56,7 @@ extension InspectorView {
                     )
                 }
             }
-            .padding(.horizontal, DS.Spacing.xs)
+            .padding(.horizontal, DS.Spacing.xxs)
         }
         .animation(DS.Animation.snappy, value: explainMode)
     }
@@ -81,39 +77,33 @@ extension InspectorView {
         let isEnabled = isModuleEnabled(module) || isLoading
 
         Button { toggleModule(module) } label: {
-            VStack(spacing: DS.Spacing.xxs + 1) {
+            VStack(spacing: DS.Spacing.xxs) {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: module.iconName)
-                        .font(.system(size: compact ? 13 : 16, weight: .medium))
+                        .font(.system(size: compact ? 12 : 14, weight: .medium))
                         .symbolEffect(.pulse, isActive: isLoading)
-                        .frame(width: compact ? 16 : 20, height: compact ? 16 : 20)
+                        .frame(width: compact ? 14 : 18, height: compact ? 14 : 18)
 
                     if hasOutput && !isLoading {
                         Circle()
                             .fill(module.accentColor)
-                            .frame(width: 5, height: 5)
-                            .offset(x: 3, y: -3)
+                            .frame(width: 4, height: 4)
+                            .offset(x: 2, y: -2)
                     } else if hasError {
                         Circle()
                             .fill(DS.Color.danger)
-                            .frame(width: 5, height: 5)
-                            .offset(x: 3, y: -3)
+                            .frame(width: 4, height: 4)
+                            .offset(x: 2, y: -2)
                     }
                 }
 
                 Text(module.shortTitle)
                     .font(compact
-                          ? DS.Typography.caption2
-                          : .system(size: 10, weight: .regular))
+                          ? .system(size: 8, weight: .regular)
+                          : DS.Typography.caption2)
                     .lineLimit(1)
-
-                if let shortcut, !compact {
-                    Text("⌘\(shortcut.character)")
-                        .font(.system(size: 8, weight: .regular, design: .monospaced))
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
             }
-            .frame(maxWidth: .infinity, minHeight: compact ? 36 : 52)
+            .frame(maxWidth: .infinity, minHeight: compact ? 28 : 40)
             .foregroundStyle(
                 !isEnabled ? DS.Color.textDisabled :
                 isActive   ? module.accentColor    :

@@ -210,10 +210,9 @@ struct InspectorView: View {
     // MARK: - Selection Content
 
     var selectionContent: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             selectionHeader
-            recentTermsStrip
-            modeBar
+            controlStrip
             moduleGrid
             Divider().padding(.horizontal, DS.Spacing.xs)
             resultPanel
@@ -223,50 +222,7 @@ struct InspectorView: View {
         .dsToast(isPresented: $showToast, message: toastMessage)
     }
 
-    // MARK: - Mode Bar (Word / Sentence)
-
-    var modeBar: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            ForEach(ExplainMode.allCases) { mode in
-                Button { explainMode = mode } label: {
-                    Text(mode.rawValue)
-                        .font(DS.Typography.caption.weight(explainMode == mode ? .semibold : .regular))
-                        .foregroundStyle(explainMode == mode ? DS.Color.accent : DS.Color.textSecondary)
-                        .padding(.horizontal, DS.Spacing.md)
-                        .padding(.vertical, DS.Spacing.xs)
-                        .background {
-                            if explainMode == mode {
-                                Capsule()
-                                    .fill(DS.Color.accentSubtle)
-                                    .matchedGeometryEffect(id: "modeBackground", in: moduleNamespace)
-                            }
-                        }
-                }
-                .buttonStyle(.plain)
-            }
-
-            Spacer()
-
-            // Detail toggle
-            Button {
-                explainDetail = explainDetail == .short ? .detailed : .short
-            } label: {
-                Label(
-                    explainDetail == .short ? "Short" : "Detailed",
-                    systemImage: explainDetail == .short ? "text.alignleft" : "text.alignjustify"
-                )
-                .font(DS.Typography.caption)
-                .foregroundStyle(DS.Color.textSecondary)
-                .padding(.horizontal, DS.Spacing.sm)
-                .padding(.vertical, DS.Spacing.xs)
-                .background(DS.Color.surfaceElevated)
-                .clipShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .help("Toggle output length")
-        }
-        .animation(DS.Animation.springFast, value: explainMode)
-    }
+    // MARK: - Mode Bar (moved to controlStrip in InspectorView+Header.swift)
 
     // MARK: - Connection Warning
 
