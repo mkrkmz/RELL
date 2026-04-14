@@ -9,6 +9,11 @@ import SwiftUI
 
 struct EmptyStateView: View {
     let onOpenPDF: () -> Void
+    var recentDocuments: [RecentDocument] = []
+    var noteStore: PDFNoteStore? = nil
+    var savedWordsStore: SavedWordsStore? = nil
+    var bookmarkStore: PDFBookmarkStore? = nil
+    var onOpenRecent: ((RecentDocument) -> Void)? = nil
 
     @State private var isHoveringButton = false
 
@@ -87,9 +92,114 @@ struct EmptyStateView: View {
                 }
                 .foregroundStyle(DS.Color.textTertiary)
 
+                if !recentDocuments.isEmpty {
+                    Spacer().frame(height: DS.Spacing.xxxl)
+                    recentDocumentsSection
+                }
+
                 Spacer()
             }
+            .padding(.horizontal, DS.Spacing.xl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var recentDocumentsSection: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            HStack {
+                Text("Continue Reading")
+                    .font(DS.Typography.headline)
+                    .foregroundStyle(DS.Color.textPrimary)
+                Spacer()
+                Text("\(recentDocuments.count) recent")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: 220, maximum: 280), spacing: DS.Spacing.md)],
+                spacing: DS.Spacing.md
+            ) {
+                ForEach(recentDocuments.prefix(4)) { document in
+                    RecentDocumentCard(
+                        document: document,
+                        noteCount: noteStore?.count(for: document.filename) ?? 0,
+                        savedWordCount: savedWordsStore?.words.filter { $0.pdfFilename == document.filename }.count ?? 0,
+                        bookmarkCount: bookmarkStore?.bookmarks(for: document.filename).count ?? 0,
+                        onOpen: { onOpenRecent?(document) }
+                    )
+                }
+            }
+        }
+        .frame(maxWidth: 980)
+    }
+}
+
+private struct RecentDocumentCard: View {
+    let document: RecentDocument
+    let noteCount: Int
+    let savedWordCount: Int
+    let bookmarkCount: Int
+    let onOpen: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: onOpen) {
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                        Text(document.filename)
+                            .font(DS.Typography.label)
+                            .foregroundStyle(DS.Color.textPrimary)
+                            .lineLimit(2)
+                        Text(document.lastOpenedAt, style: .relative)
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                    Spacer()
+                    Label(document.pageLabel, systemImage: "book.pages")
+                        .font(DS.Typography.caption.weight(.semibold))
+                        .foregroundStyle(DS.Color.accent)
+                }
+
+                HStack(spacing: DS.Spacing.sm) {
+                    statPill(icon: "note.text", text: "\(noteCount) notes")
+                    statPill(icon: "star", text: "\(savedWordCount) saved")
+                    statPill(icon: "bookmark", text: "\(bookmarkCount)")
+                }
+
+                Text(document.url.lastPathComponent)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(1)
+            }
+            .padding(DS.Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(isHovered ? DS.Color.accentSubtle : DS.Color.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.lg)
+                    .strokeBorder(isHovered ? DS.Color.accentMuted : DS.Color.separator, lineWidth: 1)
+            )
+            .dsShadow(isHovered ? DS.Shadow.float : DS.Shadow.card)
+            .contentShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+            .animation(DS.Animation.springFast, value: isHovered)
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+    }
+
+    private func statPill(icon: String, text: String) -> some View {
+        HStack(spacing: DS.Spacing.xs) {
+            Image(systemName: icon)
+            Text(text)
+        }
+        .font(DS.Typography.caption2.weight(.medium))
+        .foregroundStyle(DS.Color.textSecondary)
+        .padding(.horizontal, DS.Spacing.sm)
+        .padding(.vertical, 5)
+        .background(DS.Color.surfaceInset)
+        .clipShape(Capsule())
     }
 }

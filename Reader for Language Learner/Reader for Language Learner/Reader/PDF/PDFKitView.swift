@@ -18,13 +18,15 @@ struct PDFKitView: NSViewRepresentable {
     var searchManager: PDFSearchManager
     var pdfViewManager: PDFViewManager
     var savedWordsStore: SavedWordsStore
+    var noteStore: PDFNoteStore
     var pageTheme: PageTheme = .original
 
     func makeCoordinator() -> Coordinator {
         Coordinator(selectedText: $selectedText,
                     contextSentence: $contextSentence,
-                    searchManager: searchManager, 
-                    savedWordsStore: savedWordsStore)
+                    searchManager: searchManager,
+                    savedWordsStore: savedWordsStore,
+                    noteStore: noteStore)
     }
 
     func makeNSView(context: Context) -> PDFView {
@@ -47,6 +49,7 @@ struct PDFKitView: NSViewRepresentable {
         context.coordinator.contextSentence = $contextSentence
         context.coordinator.searchManager = searchManager
         context.coordinator.savedWordsStore = savedWordsStore
+        context.coordinator.noteStore = noteStore
         context.coordinator.requestDocumentUpdate(using: documentURL)
         context.coordinator.applyTheme(pageTheme)
         context.coordinator.refreshHighlights()
@@ -83,21 +86,25 @@ struct PDFKitView: NSViewRepresentable {
         var contextSentence: Binding<String?>
         var searchManager: PDFSearchManager
         var savedWordsStore: SavedWordsStore
+        var noteStore: PDFNoteStore
         
         /// Key for identifying auto-generated highlight annotations.
         private let kAutoHighlightKey = "RELL_AutoHighlight"
+        private let kNoteHighlightKey = "RELL_NoteHighlight"
         
         /// Cache of pages that have already been processed for the current set of saved words.
         private var processedPages = Set<PDFPage>()
         
         /// Track changes to saved words to trigger re-scan.
         private var lastSavedWordsCount: Int = 0
+        private var lastNotesCount: Int = 0
         
-        init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore) {
+        init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore) {
             self.selectedText = selectedText
             self.contextSentence = contextSentence
             self.searchManager = searchManager
             self.savedWordsStore = savedWordsStore
+            self.noteStore = noteStore
         }
 
         func attach(to pdfView: PDFView) {
@@ -108,6 +115,7 @@ struct PDFKitView: NSViewRepresentable {
             // Wire context-menu callbacks if using RELLPDFView
             if let rellView = pdfView as? RELLPDFView {
                 rellView.onContextSaveWord = { [weak self] in self?.contextSaveWord() }
+                rellView.onContextAddNote  = { [weak self] in self?.contextAddNote() }
                 rellView.onContextLookUp   = {
                     NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
                 }
@@ -275,13 +283,21 @@ struct PDFKitView: NSViewRepresentable {
                 lastSavedWordsCount = savedWordsStore.words.count
                 processedPages.removeAll()
             }
+            if noteStore.notes.count != lastNotesCount {
+                effectiveForce = true
+                lastNotesCount = noteStore.notes.count
+                processedPages.removeAll()
+            }
             
             let visiblePages = pdfView.visiblePages
             let savedTerms = savedWordsStore.words.map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            let currentFilename = loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? ""
+            let notesByPage = Dictionary(grouping: noteStore.notes(for: currentFilename), by: \.pageIndex)
             
             for page in visiblePages {
+                let pageIndex = pdfView.document?.index(for: page) ?? -1
                 if effectiveForce || !processedPages.contains(page) {
-                    processPage(page, savedTerms: savedTerms)
+                    processPage(page, savedTerms: savedTerms, notes: notesByPage[pageIndex] ?? [])
                     processedPages.insert(page)
                 }
             }
@@ -292,10 +308,10 @@ struct PDFKitView: NSViewRepresentable {
             refreshHighlights(force: true)
         }
         
-        private func processPage(_ page: PDFPage, savedTerms: [String]) {
-            removeAutoHighlights(from: page)
+        private func processPage(_ page: PDFPage, savedTerms: [String], notes: [PDFNote]) {
+            removeGeneratedHighlights(from: page)
             
-            guard !savedTerms.isEmpty, let text = page.string else { return }
+            guard let text = page.string else { return }
             let nsText = text as NSString
             let fullRange = NSRange(location: 0, length: nsText.length)
             
@@ -318,6 +334,15 @@ struct PDFKitView: NSViewRepresentable {
                     searchRange.length = nsText.length - searchRange.location
                 }
             }
+
+            for note in notes {
+                for rect in note.highlightRects {
+                    addNoteHighlight(
+                        to: page,
+                        rect: CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
+                    )
+                }
+            }
         }
         
         private func addHighlight(to page: PDFPage, selection: PDFSelection) {
@@ -333,10 +358,19 @@ struct PDFKitView: NSViewRepresentable {
             page.addAnnotation(annotation)
         }
         
-        private func removeAutoHighlights(from page: PDFPage) {
+        private func addNoteHighlight(to page: PDFPage, rect: CGRect) {
+            guard rect.width > 0, rect.height > 0 else { return }
+            let annotation = PDFAnnotation(bounds: rect, forType: .highlight, withProperties: nil)
+            annotation.color = .systemBlue.withAlphaComponent(0.22)
+            annotation.userName = kNoteHighlightKey
+            annotation.shouldPrint = false
+            page.addAnnotation(annotation)
+        }
+        
+        private func removeGeneratedHighlights(from page: PDFPage) {
             let annotations = page.annotations
             for annotation in annotations {
-                if annotation.userName == kAutoHighlightKey {
+                if annotation.userName == kAutoHighlightKey || annotation.userName == kNoteHighlightKey {
                     page.removeAnnotation(annotation)
                 }
             }
@@ -369,6 +403,45 @@ struct PDFKitView: NSViewRepresentable {
                     domain: "general",
                     llmOutputs: [:]
                 ))
+            }
+        }
+
+        private func contextAddNote() {
+            guard let pdfView = pdfView,
+                  let selection = pdfView.currentSelection,
+                  let raw = selection.string
+            else { return }
+            let selectedText = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !selectedText.isEmpty else { return }
+
+            guard let page = selection.pages.first ?? pdfView.currentPage,
+                  let document = pdfView.document
+            else { return }
+
+            let pageIndex = document.index(for: page)
+            let rects = selection.selectionsByLine().map { lineSelection in
+                let rect = lineSelection.bounds(for: page)
+                return PDFHighlightRect(
+                    x: rect.origin.x,
+                    y: rect.origin.y,
+                    width: rect.size.width,
+                    height: rect.size.height
+                )
+            }
+
+            let draft = PDFNote(
+                pdfFilename: loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? "Unknown PDF",
+                pageIndex: pageIndex,
+                pageLabel: page.label ?? "Page \(pageIndex + 1)",
+                selectedText: selectedText,
+                contextSentence: extractContext() ?? "",
+                note: "",
+                category: .vocabulary,
+                highlightRects: rects
+            )
+
+            Task { @MainActor in
+                self.noteStore.startDraft(draft)
             }
         }
 

@@ -12,6 +12,7 @@ enum SidebarTab: String, CaseIterable, Identifiable {
     case thumbnails = "Pages"
     case outline    = "Contents"
     case bookmarks  = "Marks"
+    case notes      = "Notes"
     case saved      = "Saved"
     case quiz       = "Quiz"
     case stats      = "Stats"
@@ -22,6 +23,7 @@ enum SidebarTab: String, CaseIterable, Identifiable {
         case .thumbnails: return "square.grid.2x2"
         case .outline:    return "list.bullet.indent"
         case .bookmarks:  return "bookmark"
+        case .notes:      return "note.text"
         case .saved:      return "star"
         case .quiz:       return "brain.head.profile"
         case .stats:      return "chart.bar"
@@ -35,6 +37,7 @@ struct SidebarView: View {
     var pdfViewManager:  PDFViewManager
     var savedWordsStore: SavedWordsStore
     var bookmarkStore:   PDFBookmarkStore
+    var noteStore:       PDFNoteStore
     var sessionStore:    ReadingSessionStore
     var currentDocumentName: String?
 
@@ -90,6 +93,8 @@ struct SidebarView: View {
                                 return bookmarkStore.bookmarks(for: name).count
                             }
                             return 0
+                        case .notes:
+                            return noteStore.count(for: currentDocumentName)
                         default: return 0
                         }
                     }()
@@ -159,6 +164,13 @@ struct SidebarView: View {
             PDFBookmarksView(
                 bookmarkStore:   bookmarkStore,
                 pdfViewManager:  pdfViewManager,
+                currentFilename: currentDocumentName
+            )
+        case .notes:
+            PDFNotesView(
+                noteStore: noteStore,
+                savedWordsStore: savedWordsStore,
+                pdfViewManager: pdfViewManager,
                 currentFilename: currentDocumentName
             )
         case .saved:

@@ -14,7 +14,9 @@ struct ContentView: View {
     @State private var pdfViewManager   = PDFViewManager()
     @State private var savedWordsStore  = SavedWordsStore()
     @State private var bookmarkStore    = PDFBookmarkStore()
+    @State private var noteStore        = PDFNoteStore()
     @State private var sessionStore     = ReadingSessionStore()
+    @State private var recentDocumentStore = RecentDocumentStore()
     @State private var ankiPrefs        = AnkiModulePreferences()
 
     @State private var showSidebar   = true
@@ -38,7 +40,14 @@ struct ContentView: View {
                 if selectionState.documentURL != nil {
                     readerLayout
                 } else {
-                    EmptyStateView(onOpenPDF: openPDF)
+                    EmptyStateView(
+                        onOpenPDF: openPDF,
+                        recentDocuments: recentDocumentStore.recentDocuments,
+                        noteStore: noteStore,
+                        savedWordsStore: savedWordsStore,
+                        bookmarkStore: bookmarkStore,
+                        onOpenRecent: { openDocument($0.url) }
+                    )
                         .onDrop(of: [.pdf], isTargeted: $isDropTargeted, perform: handleDrop)
                         .overlay { if isDropTargeted { dropOverlay } }
                 }
@@ -62,6 +71,9 @@ struct ContentView: View {
             if !showInspector { showInspector = true }
         }
         .onChange(of: selectionState.documentURL) { _, newURL in
+            if let newURL {
+                recentDocumentStore.registerOpen(url: newURL)
+            }
             if let filename = newURL?.lastPathComponent {
                 sessionStore.startSession(for: filename)
             } else {
@@ -70,6 +82,27 @@ struct ContentView: View {
         }
         .onDisappear {
             sessionStore.endActiveSession()
+        }
+        .task {
+            recentDocumentStore.removeMissingDocuments()
+        }
+        .sheet(item: Binding(
+            get: { noteStore.draftNote },
+            set: { noteStore.draftNote = $0 }
+        )) { draft in
+            PDFNoteEditorSheet(
+                note: draft,
+                savedWordsStore: savedWordsStore,
+                onJumpToPage: { note in
+                    guard let doc = pdfViewManager.pdfView?.document,
+                          note.pageIndex < doc.pageCount,
+                          let page = doc.page(at: note.pageIndex)
+                    else { return }
+                    pdfViewManager.pdfView?.go(to: page)
+                },
+                onSave: { noteStore.saveDraft($0) },
+                onCancel: { noteStore.cancelDraft() }
+            )
         }
     }
 
@@ -90,6 +123,7 @@ struct ContentView: View {
                         pdfViewManager:      pdfViewManager,
                         savedWordsStore:     savedWordsStore,
                         bookmarkStore:       bookmarkStore,
+                        noteStore:           noteStore,
                         sessionStore:        sessionStore,
                         currentDocumentName: selectionState.documentURL?.deletingPathExtension().lastPathComponent
                     )
@@ -124,6 +158,7 @@ struct ContentView: View {
                         searchManager: searchManager,
                         pdfViewManager: pdfViewManager,
                         savedWordsStore: savedWordsStore,
+                        noteStore: noteStore,
                         pageTheme: pageTheme
                     )
                     .onReceive(NotificationCenter.default.publisher(for: .PDFViewPageChanged)) { notification in
@@ -133,6 +168,9 @@ struct ContentView: View {
                               let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent
                         else { return }
                         persistPage(index, for: filename)
+                        if let currentURL = selectionState.documentURL {
+                            recentDocumentStore.updateLastPage(for: currentURL, pageIndex: index)
+                        }
                     }
                     .onChange(of: selectionState.documentURL) { _, newURL in
                         guard let newURL else { return }
@@ -340,6 +378,10 @@ struct ContentView: View {
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.pdf]
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        openDocument(url)
+    }
+
+    private func openDocument(_ url: URL) {
         selectionState.documentURL = url
         closeFindBar()
     }
@@ -384,8 +426,7 @@ struct ContentView: View {
             else { url = nil }
             if let url {
                 DispatchQueue.main.async {
-                    selectionState.documentURL = url
-                    closeFindBar()
+                    openDocument(url)
                 }
             }
         }

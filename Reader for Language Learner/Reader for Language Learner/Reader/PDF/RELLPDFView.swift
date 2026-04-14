@@ -14,6 +14,7 @@ final class RELLPDFView: PDFView {
     // MARK: - Callbacks (set by Coordinator)
 
     var onContextSaveWord: (() -> Void)?
+    var onContextAddNote:  (() -> Void)?
     var onContextLookUp:   (() -> Void)?
     var onContextCopy:     (() -> Void)?
     var onContextSpeak:    (() -> Void)?
@@ -40,6 +41,15 @@ final class RELLPDFView: PDFView {
         saveItem.target    = self
         saveItem.isEnabled = true
         menu.addItem(saveItem)
+
+        let noteItem = NSMenuItem(
+            title:         "Add Note",
+            action:        #selector(fireAddNote),
+            keyEquivalent: ""
+        )
+        noteItem.target    = self
+        noteItem.isEnabled = true
+        menu.addItem(noteItem)
 
         // ── Look Up ────────────────────────────────────────────────────
         let lookUpItem = NSMenuItem(
@@ -80,6 +90,7 @@ final class RELLPDFView: PDFView {
     // MARK: - Action Targets
 
     @objc private func fireSaveWord() { onContextSaveWord?() }
+    @objc private func fireAddNote()  { onContextAddNote?()  }
     @objc private func fireLookUp()   { onContextLookUp?()   }
     @objc private func fireCopy()     { onContextCopy?()     }
     @objc private func fireSpeak()    { onContextSpeak?()    }
