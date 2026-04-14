@@ -32,6 +32,10 @@ final class SavedWordTests: XCTestCase {
         XCTAssertEqual(decoded.domain, DomainPreference.academic.rawValue)
         XCTAssertEqual(decoded.notes, "Common GRE word")
         XCTAssertEqual(decoded.llmOutputs["definitionEN"], "Present everywhere.")
+        XCTAssertEqual(decoded.reviewCount, 0)
+        XCTAssertEqual(decoded.incorrectCount, 0)
+        XCTAssertNil(decoded.lastReviewedAt)
+        XCTAssertNil(decoded.nextReviewAt)
     }
 
     func testDefaultValues() {
@@ -43,6 +47,10 @@ final class SavedWordTests: XCTestCase {
         XCTAssertEqual(word.domain, DomainPreference.general.rawValue)
         XCTAssertEqual(word.notes, "")
         XCTAssertTrue(word.llmOutputs.isEmpty)
+        XCTAssertEqual(word.reviewCount, 0)
+        XCTAssertEqual(word.incorrectCount, 0)
+        XCTAssertTrue(word.isDue())
+        XCTAssertEqual(word.reviewStatus, .new)
     }
 
     func testEquality() {

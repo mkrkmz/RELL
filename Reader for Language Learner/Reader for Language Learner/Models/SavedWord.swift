@@ -43,6 +43,40 @@ enum MasteryLevel: Int, Codable, CaseIterable {
     }
 }
 
+enum ReviewStatus {
+    case new
+    case due
+    case scheduled
+    case mastered
+
+    var label: String {
+        switch self {
+        case .new: return "New"
+        case .due: return "Due"
+        case .scheduled: return "Scheduled"
+        case .mastered: return "Mastered"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .new: return "sparkles"
+        case .due: return "clock.badge.exclamationmark"
+        case .scheduled: return "clock"
+        case .mastered: return "checkmark.seal.fill"
+        }
+    }
+
+    var color: SwiftUI.Color {
+        switch self {
+        case .new: return .blue
+        case .due: return .orange
+        case .scheduled: return .secondary
+        case .mastered: return .green
+        }
+    }
+}
+
 /// A single word or phrase saved by the user during reading.
 struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     let id: UUID
@@ -57,6 +91,10 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     var llmOutputs: [String: String]
     var savedAt: Date
     var masteryLevel: MasteryLevel
+    var reviewCount: Int
+    var incorrectCount: Int
+    var lastReviewedAt: Date?
+    var nextReviewAt: Date?
 
     init(
         id: UUID = UUID(),
@@ -69,7 +107,11 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         notes: String = "",
         llmOutputs: [String: String] = [:],
         savedAt: Date = Date(),
-        masteryLevel: MasteryLevel = .new
+        masteryLevel: MasteryLevel = .new,
+        reviewCount: Int = 0,
+        incorrectCount: Int = 0,
+        lastReviewedAt: Date? = nil,
+        nextReviewAt: Date? = nil
     ) {
         self.id = id
         self.term = term
@@ -82,5 +124,33 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.llmOutputs = llmOutputs
         self.savedAt = savedAt
         self.masteryLevel = masteryLevel
+        self.reviewCount = reviewCount
+        self.incorrectCount = incorrectCount
+        self.lastReviewedAt = lastReviewedAt
+        self.nextReviewAt = nextReviewAt
+    }
+
+    var hasBeenReviewed: Bool {
+        reviewCount > 0 || lastReviewedAt != nil
+    }
+
+    func isDue(at referenceDate: Date = Date()) -> Bool {
+        if let nextReviewAt {
+            return nextReviewAt <= referenceDate
+        }
+        return masteryLevel != .mastered
+    }
+
+    var reviewStatus: ReviewStatus {
+        if masteryLevel == .mastered && !isDue() {
+            return .mastered
+        }
+        if !hasBeenReviewed {
+            return .new
+        }
+        if isDue() {
+            return .due
+        }
+        return .scheduled
     }
 }

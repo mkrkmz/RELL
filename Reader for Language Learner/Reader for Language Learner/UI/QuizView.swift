@@ -15,18 +15,22 @@ struct QuizView: View {
     @State private var queue: [SavedWord] = []
     @State private var currentIndex = 0
     @State private var isFlipped = false
-    @State private var sessionKnown = 0
     @State private var sessionAgain = 0
+    @State private var sessionGood = 0
+    @State private var sessionEasy = 0
     @State private var isFinished = false
-    @State private var flipRotation: Double = 0
 
-    // Filter: only non-mastered words by default
+    // Filter: due words only by default
     @State private var includeAll = false
+
+    private var dueWords: [SavedWord] {
+        store.words.filter { store.isDue($0) }
+    }
 
     private var wordsToQuiz: [SavedWord] {
         includeAll
             ? store.words
-            : store.words.filter { $0.masteryLevel != .mastered }
+            : (dueWords.isEmpty ? store.words.filter { $0.masteryLevel != .mastered } : dueWords)
     }
 
     var body: some View {
@@ -64,9 +68,15 @@ struct QuizView: View {
                 Text("\(wordsToQuiz.count) words ready")
                     .font(DS.Typography.caption)
                     .foregroundStyle(DS.Color.textTertiary)
+                if !includeAll {
+                    Text(dueWords.isEmpty ? "No due words right now, showing weak words instead." : "Starting with words that are due for review.")
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .multilineTextAlignment(.center)
+                }
             }
 
-            Toggle("Include mastered words", isOn: $includeAll)
+            Toggle("Include all saved words", isOn: $includeAll)
                 .toggleStyle(.switch)
                 .controlSize(.mini)
                 .font(DS.Typography.caption)
@@ -131,8 +141,14 @@ struct QuizView: View {
                     ) { handleAgain(word: word) }
 
                     actionButton(
-                        label: "Know it",
+                        label: "Good",
                         icon: "checkmark.circle.fill",
+                        color: DS.Color.accent
+                    ) { handleGood(word: word) }
+
+                    actionButton(
+                        label: "Easy",
+                        icon: "checkmark.seal.fill",
                         color: DS.Color.success
                     ) { handleKnown(word: word) }
                 }
@@ -245,9 +261,13 @@ struct QuizView: View {
                     .font(DS.Typography.headline)
                     .foregroundStyle(DS.Color.textPrimary)
                 HStack(spacing: DS.Spacing.lg) {
-                    resultStat(value: "\(sessionKnown)", label: "Known", color: DS.Color.success)
+                    resultStat(value: "\(sessionGood)", label: "Good", color: DS.Color.accent)
+                    resultStat(value: "\(sessionEasy)", label: "Easy", color: DS.Color.success)
                     resultStat(value: "\(sessionAgain)", label: "Again", color: DS.Color.danger)
                 }
+                Text("\(store.pendingReviewCount) words still due")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
             }
 
             Button("Start Over") {
@@ -326,8 +346,9 @@ struct QuizView: View {
         queue = wordsToQuiz.shuffled()
         currentIndex = 0
         isFlipped = false
-        sessionKnown = 0
         sessionAgain = 0
+        sessionGood = 0
+        sessionEasy = 0
         isFinished = false
     }
 
@@ -336,18 +357,22 @@ struct QuizView: View {
     }
 
     private func handleKnown(word: SavedWord) {
-        sessionKnown += 1
-        // Advance mastery (capped at .mastered)
-        if word.masteryLevel != .mastered {
-            store.setMastery(word.masteryLevel.next, for: word)
-        }
+        sessionEasy += 1
+        _ = store.applyReview(.easy, to: word)
         advance()
     }
 
     private func handleAgain(word: SavedWord) {
         sessionAgain += 1
-        // Move to end of queue for another shot
-        queue.append(word)
+        if let updated = store.applyReview(.again, to: word) {
+            queue.append(updated)
+        }
+        advance()
+    }
+
+    private func handleGood(word: SavedWord) {
+        sessionGood += 1
+        _ = store.applyReview(.good, to: word)
         advance()
     }
 

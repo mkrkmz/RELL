@@ -15,6 +15,16 @@ enum SavedWordsSortOrder: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum SavedWordsFilter: String, CaseIterable, Identifiable {
+    case all = "All"
+    case needsReview = "Needs Review"
+    case new = "New"
+    case mastered = "Mastered"
+    case thisPDF = "This PDF"
+
+    var id: String { rawValue }
+}
+
 // MARK: - SavedWordsListView
 
 struct SavedWordsListView: View {
@@ -23,7 +33,7 @@ struct SavedWordsListView: View {
 
     @AppStorage("savedWordsSortOrder") private var sortRaw = SavedWordsSortOrder.dateDesc.rawValue
     @State private var searchText    = ""
-    @State private var filterSource  = false
+    @State private var selectedFilter: SavedWordsFilter = .all
     @State private var selectedWord: SavedWord?
     @State private var showBulkExport = false
     @State private var showClearConfirm = false
@@ -35,9 +45,19 @@ struct SavedWordsListView: View {
     private var filteredWords: [SavedWord] {
         var result = store.words
 
-        // Source filter
-        if filterSource, let doc = currentDocumentName {
-            result = result.filter { $0.pdfFilename == doc }
+        switch selectedFilter {
+        case .all:
+            break
+        case .needsReview:
+            result = result.filter { store.isDue($0) }
+        case .new:
+            result = result.filter { $0.reviewStatus == .new }
+        case .mastered:
+            result = result.filter { $0.masteryLevel == .mastered }
+        case .thisPDF:
+            if let doc = currentDocumentName {
+                result = result.filter { $0.pdfFilename == doc }
+            }
         }
 
         // Search
@@ -59,6 +79,12 @@ struct SavedWordsListView: View {
         case .alphaDesc: result.sort { $0.term.localizedCaseInsensitiveCompare($1.term) == .orderedDescending }
         }
         return result
+    }
+
+    private var availableFilters: [SavedWordsFilter] {
+        currentDocumentName == nil
+            ? SavedWordsFilter.allCases.filter { $0 != .thisPDF }
+            : SavedWordsFilter.allCases
     }
 
     // MARK: - Body
@@ -144,6 +170,18 @@ struct SavedWordsListView: View {
         HStack(spacing: DS.Spacing.xs) {
             // Sort picker
             Picker("", selection: Binding(
+                get: { selectedFilter },
+                set: { selectedFilter = $0 }
+            )) {
+                ForEach(availableFilters) { filter in
+                    Text(filter.rawValue).tag(filter)
+                }
+            }
+            .labelsHidden()
+            .controlSize(.mini)
+            .frame(width: 110)
+
+            Picker("", selection: Binding(
                 get: { sortOrder },
                 set: { sortRaw = $0.rawValue }
             )) {
@@ -154,20 +192,6 @@ struct SavedWordsListView: View {
             .labelsHidden()
             .controlSize(.mini)
             .frame(width: 84)
-
-            // Source filter toggle
-            if let doc = currentDocumentName {
-                Spacer()
-                Toggle(isOn: $filterSource.animation(DS.Animation.springFast)) {
-                    Text("This PDF")
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(filterSource ? DS.Color.accent : DS.Color.textSecondary)
-                }
-                .toggleStyle(.button)
-                .controlSize(.mini)
-                .tint(DS.Color.accent)
-                .help("Show only words from \(doc)")
-            }
 
             Spacer()
 
@@ -184,6 +208,9 @@ struct SavedWordsListView: View {
     private var countLabel: String {
         let total = store.words.count
         let shown = filteredWords.count
+        if selectedFilter == .all {
+            return "\(store.pendingReviewCount) due · \(total) saved"
+        }
         if shown == total { return "\(total) saved" }
         return "\(shown) of \(total)"
     }
@@ -237,11 +264,11 @@ struct SavedWordsListView: View {
     private var emptyState: some View {
         VStack(spacing: DS.Spacing.md) {
             Spacer()
-            Image(systemName: searchText.isEmpty && !filterSource ? "star" : "magnifyingglass")
+            Image(systemName: searchText.isEmpty && selectedFilter == .all ? "star" : "magnifyingglass")
                 .font(.system(size: 28, weight: .ultraLight))
                 .foregroundStyle(DS.Color.textTertiary)
             VStack(spacing: DS.Spacing.xs) {
-                if searchText.isEmpty && !filterSource {
+                if searchText.isEmpty && selectedFilter == .all {
                     Text("No saved words yet")
                         .font(DS.Typography.subhead)
                         .foregroundStyle(DS.Color.textSecondary)
@@ -254,8 +281,16 @@ struct SavedWordsListView: View {
                     Text("No results")
                         .font(DS.Typography.subhead)
                         .foregroundStyle(DS.Color.textSecondary)
-                    if filterSource {
+                    if selectedFilter == .thisPDF {
                         Text("No saved words from this PDF.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    } else if selectedFilter == .needsReview {
+                        Text("Nothing is due right now.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    } else if !searchText.isEmpty {
+                        Text("Try a different search term.")
                             .font(DS.Typography.caption)
                             .foregroundStyle(DS.Color.textTertiary)
                     }
@@ -367,6 +402,18 @@ private struct SavedWordRow: View {
                         .foregroundStyle(DS.Color.textTertiary)
                 }
                 .font(DS.Typography.caption2)
+
+                HStack(spacing: DS.Spacing.xs) {
+                    Label(word.reviewStatus.label, systemImage: word.reviewStatus.icon)
+                        .font(DS.Typography.caption2.weight(.semibold))
+                        .foregroundStyle(word.reviewStatus.color)
+
+                    if let nextReviewAt = word.nextReviewAt, word.reviewStatus != .mastered {
+                        Text("Next \(Self.relativeFormatter.localizedString(for: nextReviewAt, relativeTo: Date()))")
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
 
                 // Notes snippet
                 if !word.notes.isEmpty {
@@ -526,6 +573,15 @@ private struct SavedWordDetailSheet: View {
             metaRow("Mode",   value: word.mode)
             metaRow("Domain", value: word.domain)
             metaRow("Saved",  value: Self.dateFormatter.string(from: word.savedAt))
+            metaRow("Status", value: word.reviewStatus.label)
+            metaRow("Reviews", value: "\(word.reviewCount)")
+            metaRow("Incorrect", value: "\(word.incorrectCount)")
+            if let lastReviewedAt = word.lastReviewedAt {
+                metaRow("Reviewed", value: Self.dateFormatter.string(from: lastReviewedAt))
+            }
+            if let nextReviewAt = word.nextReviewAt {
+                metaRow("Next", value: Self.dateFormatter.string(from: nextReviewAt))
+            }
 
             if !word.sentence.isEmpty {
                 VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
