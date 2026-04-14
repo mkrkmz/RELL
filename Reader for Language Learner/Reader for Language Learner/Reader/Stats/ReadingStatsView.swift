@@ -23,6 +23,7 @@ struct ReadingStatsView: View {
             VStack(alignment: .leading, spacing: DS.Spacing.lg) {
                 todayCard
                 weeklyChart
+                learningGrid
                 totalsGrid
             }
             .padding(DS.Spacing.md)
@@ -148,12 +149,46 @@ struct ReadingStatsView: View {
 
     // MARK: - Totals Grid
 
+    private var learningGrid: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            Text("LEARNING")
+                .dsOverlineLabel()
+
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sm) {
+                statCell(
+                    icon: "clock.badge.exclamationmark",
+                    value: "\(savedWordsStore.pendingReviewCount)",
+                    label: "Pending review",
+                    iconColor: .orange
+                )
+                statCell(
+                    icon: "checkmark.circle.fill",
+                    value: "\(savedWordsStore.reviewedTodayCount)",
+                    label: "Reviewed today",
+                    iconColor: DS.Color.accent
+                )
+                statCell(
+                    icon: "checkmark.seal.fill",
+                    value: "\(savedWordsStore.masteredCount)",
+                    label: "Mastered words",
+                    iconColor: DS.Color.success
+                )
+                statCell(
+                    icon: "brain",
+                    value: "\(savedWordsStore.learningCount)",
+                    label: "Learning now",
+                    iconColor: .orange
+                )
+            }
+        }
+    }
+
     private var totalsGrid: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             Text("ALL TIME")
                 .dsOverlineLabel()
 
-            HStack(spacing: DS.Spacing.sm) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sm) {
                 statCell(
                     icon: "clock.fill",
                     value: formatTotalTime(sessionStore.totalReadingTime),
@@ -169,6 +204,11 @@ struct ReadingStatsView: View {
                     icon: "doc.text.fill",
                     value: "\(sessionStore.uniqueDocumentsRead)",
                     label: "Docs opened"
+                )
+                statCell(
+                    icon: "sparkles",
+                    value: "\(savedWordsStore.newCount)",
+                    label: "New words"
                 )
             }
         }

@@ -84,7 +84,7 @@ struct SidebarView: View {
                     let badgeCount: Int = {
                         switch tab {
                         case .saved:      return savedWordsStore.words.count
-                        case .quiz:       return savedWordsStore.words.filter { $0.masteryLevel != .mastered }.count
+                        case .quiz:       return savedWordsStore.pendingReviewCount
                         case .bookmarks:
                             if let name = currentDocumentName {
                                 return bookmarkStore.bookmarks(for: name).count
