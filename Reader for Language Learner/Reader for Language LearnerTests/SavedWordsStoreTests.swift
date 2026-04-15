@@ -8,6 +8,7 @@ import XCTest
 
 @MainActor
 final class SavedWordsStoreTests: XCTestCase {
+    private static var retainedStores: [SavedWordsStore] = []
 
     func testPendingReviewCountsNewWords() {
         let store = makeStore()
@@ -55,6 +56,11 @@ final class SavedWordsStoreTests: XCTestCase {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("json")
-        return SavedWordsStore(fileURL: fileURL)
+        let store = SavedWordsStore(fileURL: fileURL)
+        Self.retainedStores.append(store)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+        return store
     }
 }
