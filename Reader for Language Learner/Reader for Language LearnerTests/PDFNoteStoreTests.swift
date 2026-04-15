@@ -8,6 +8,7 @@ import XCTest
 
 @MainActor
 final class PDFNoteStoreTests: XCTestCase {
+    private static var retainedStores: [PDFNoteStore] = []
 
     func testAddAndFilterNotesByDocument() {
         let store = makeStore()
@@ -64,6 +65,11 @@ final class PDFNoteStoreTests: XCTestCase {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("json")
-        return PDFNoteStore(fileURL: fileURL)
+        let store = PDFNoteStore(fileURL: fileURL)
+        Self.retainedStores.append(store)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+        return store
     }
 }

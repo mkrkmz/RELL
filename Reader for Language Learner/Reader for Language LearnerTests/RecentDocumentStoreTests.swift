@@ -8,6 +8,7 @@ import XCTest
 
 @MainActor
 final class RecentDocumentStoreTests: XCTestCase {
+    private static var retainedStores: [RecentDocumentStore] = []
 
     func testRegisterOpenTracksMostRecentDocument() throws {
         let store = makeStore()
@@ -36,7 +37,12 @@ final class RecentDocumentStoreTests: XCTestCase {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
             .appendingPathExtension("json")
-        return RecentDocumentStore(fileURL: fileURL)
+        let store = RecentDocumentStore(fileURL: fileURL)
+        Self.retainedStores.append(store)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+        return store
     }
 
     private func makeTempPDF(named name: String) throws -> URL {
