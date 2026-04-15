@@ -4,9 +4,6 @@ on:
   push:
     tags:
       - "v*"
-  release:
-    types:
-      - published
   workflow_dispatch:
     inputs:
       tag:
@@ -18,7 +15,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.release.tag_name || github.ref || inputs.tag }}
+  group: ${{ github.workflow }}-${{ github.ref || inputs.tag }}
   cancel-in-progress: true
 
 jobs:
@@ -32,7 +29,7 @@ jobs:
       TEST_RESULTS_PATH: ./TestResults.xcresult
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Select Xcode
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)/Contents/Developer"
@@ -43,8 +40,6 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             RAW_TAG="${{ inputs.tag }}"
-          elif [[ "${{ github.event_name }}" == "release" ]]; then
-            RAW_TAG="${{ github.event.release.tag_name }}"
           else
             RAW_TAG="${{ github.ref_name }}"
           fi
@@ -72,6 +67,7 @@ jobs:
 
       - name: Run Unit Tests
         run: |
+          set -o pipefail
           rm -rf "$TEST_RESULTS_PATH"
           xcodebuild test \
             -project "$PROJECT_PATH" \
@@ -81,6 +77,7 @@ jobs:
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -parallel-testing-enabled NO \
             -only-testing:"Reader for Language LearnerTests" \
+            -skip-testing:"Reader for Language LearnerUITests" \
             -resultBundlePath "$TEST_RESULTS_PATH" \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
@@ -115,7 +112,7 @@ jobs:
 
       - name: Upload release artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: release-assets-${{ steps.version.outputs.VERSION }}
           path: |

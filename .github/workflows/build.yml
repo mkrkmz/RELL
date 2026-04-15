@@ -15,7 +15,7 @@ jobs:
     name: Build macOS
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Select Xcode
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)/Contents/Developer"
@@ -25,6 +25,7 @@ jobs:
 
       - name: Build
         run: |
+          set -o pipefail
           xcodebuild build \
             -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
             -scheme "Reader for Language Learner" \
@@ -35,7 +36,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             MACOSX_DEPLOYMENT_TARGET=15.0 \
             IPHONEOS_DEPLOYMENT_TARGET=15.0 \
-            | xcpretty --color || true
+            | xcpretty --color
 
       - name: Build Result
         if: failure()

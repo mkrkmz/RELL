@@ -13,13 +13,15 @@ jobs:
     name: Test macOS
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Select Xcode
         run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)/Contents/Developer"
 
       - name: Run Tests
         run: |
+          set -o pipefail
+          rm -rf TestResults.xcresult
           xcodebuild test \
             -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
             -scheme "Reader for Language Learner" \
@@ -31,13 +33,14 @@ jobs:
             MACOSX_DEPLOYMENT_TARGET=15.0 \
             IPHONEOS_DEPLOYMENT_TARGET=15.0 \
             -only-testing:"Reader for Language LearnerTests" \
+            -skip-testing:"Reader for Language LearnerUITests" \
             -parallel-testing-enabled NO \
             -resultBundlePath TestResults.xcresult \
-            | xcpretty --color || true
+            | xcpretty --color
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-results
           path: TestResults.xcresult
