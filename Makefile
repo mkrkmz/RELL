@@ -4,7 +4,7 @@ DESTINATION = platform=macOS
 CONFIG = Debug
 SIGNING = CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-.PHONY: build test clean lint format open
+.PHONY: build test ui-test clean lint format open
 
 ## Derleme
 build:
@@ -15,14 +15,29 @@ build:
 		-configuration $(CONFIG) \
 		$(SIGNING)
 
-## Testleri calistir
+## Unit testleri calistir (CI ile ayni kapsam)
 test:
 	xcodebuild test \
 		-project "$(PROJECT)" \
 		-scheme "$(SCHEME)" \
 		-destination '$(DESTINATION)' \
 		-configuration $(CONFIG) \
-		$(SIGNING)
+		$(SIGNING) \
+		-only-testing:"Reader for Language LearnerTests" \
+		-skip-testing:"Reader for Language LearnerUITests" \
+		-parallel-testing-enabled NO
+
+## UI testleri calistir
+ui-test:
+	xcodebuild test \
+		-project "$(PROJECT)" \
+		-scheme "$(SCHEME)" \
+		-destination '$(DESTINATION)' \
+		-configuration $(CONFIG) \
+		$(SIGNING) \
+		-skip-testing:"Reader for Language LearnerTests" \
+		-only-testing:"Reader for Language LearnerUITests" \
+		-parallel-testing-enabled NO
 
 ## Release derleme
 release:
@@ -87,7 +102,8 @@ open:
 help:
 	@echo "Kullanilabilir komutlar:"
 	@echo "  make build    - Debug derleme"
-	@echo "  make test     - Testleri calistir"
+	@echo "  make test     - Unit testleri calistir"
+	@echo "  make ui-test  - UI testleri calistir"
 	@echo "  make release  - Release derleme"
 	@echo "  make dmg      - DMG olustur (release build + paketleme)"
 	@echo "  make clean    - Derleme artefaktlarini temizle"

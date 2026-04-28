@@ -246,21 +246,13 @@ final class PDFNoteStore {
 
     private func save() {
         do {
-            let data = try JSONEncoder().encode(notes)
-            try data.write(to: fileURL, options: .atomic)
+            try RELLJSONStore.save(notes, to: fileURL, storeName: "PDFNoteStore")
         } catch {
-            AppLogger.persistence.error("PDFNoteStore save failed: \(error.localizedDescription)")
+            AppLogger.persistence.error("PDFNoteStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
         }
     }
 
     private static func load(from url: URL) -> [PDFNote] {
-        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        do {
-            let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode([PDFNote].self, from: data)
-        } catch {
-            AppLogger.persistence.error("PDFNoteStore load failed: \(error.localizedDescription)")
-            return []
-        }
+        RELLJSONStore.load([PDFNote].self, from: url, storeName: "PDFNoteStore", defaultValue: [])
     }
 }

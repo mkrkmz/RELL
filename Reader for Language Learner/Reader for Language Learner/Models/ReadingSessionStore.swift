@@ -21,7 +21,13 @@ final class ReadingSessionStore {
 
     // MARK: - Init
 
-    init() {
+    init(fileURL customFileURL: URL? = nil) {
+        if let customFileURL {
+            self.fileURL = customFileURL
+            self.sessions = Self.load(from: customFileURL)
+            return
+        }
+
         guard let dir = FileManager.default.rellAppSupportDirectory() else {
             self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("reading_sessions.json")
             self.sessions = []
@@ -162,21 +168,13 @@ final class ReadingSessionStore {
 
     private func save() {
         do {
-            let data = try JSONEncoder().encode(sessions)
-            try data.write(to: fileURL, options: .atomic)
+            try RELLJSONStore.save(sessions, to: fileURL, storeName: "ReadingSessionStore")
         } catch {
-            AppLogger.persistence.error("ReadingSessionStore save failed: \(error.localizedDescription)")
+            AppLogger.persistence.error("ReadingSessionStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
         }
     }
 
     private static func load(from url: URL) -> [ReadingSession] {
-        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        do {
-            let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode([ReadingSession].self, from: data)
-        } catch {
-            AppLogger.persistence.error("ReadingSessionStore load failed: \(error.localizedDescription)")
-            return []
-        }
+        RELLJSONStore.load([ReadingSession].self, from: url, storeName: "ReadingSessionStore", defaultValue: [])
     }
 }

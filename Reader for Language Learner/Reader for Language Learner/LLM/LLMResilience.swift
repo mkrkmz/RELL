@@ -129,7 +129,7 @@ struct ResilientLLMProvider: LLMProvider {
     // MARK: - Retry Logic
 
     private func withRetry<T>(_ operation: () async throws -> T) async throws -> T {
-        guard await circuitBreaker.isAvailable else {
+        guard circuitBreaker.isAvailable else {
             throw LLMResilienceError.circuitOpen
         }
 
@@ -139,7 +139,7 @@ struct ResilientLLMProvider: LLMProvider {
             do {
                 try Task.checkCancellation()
                 let result = try await operation()
-                await circuitBreaker.recordSuccess()
+                circuitBreaker.recordSuccess()
                 return result
             } catch is CancellationError {
                 throw CancellationError()
@@ -148,11 +148,11 @@ struct ResilientLLMProvider: LLMProvider {
 
                 // Don't retry auth errors or invalid URLs
                 if isNonRetryable(error) {
-                    await circuitBreaker.recordFailure()
+                    AppLogger.llm.error("Non-retryable LLM error: \(LLMErrorMessage.userMessage(for: error), privacy: .public)")
                     throw error
                 }
 
-                await circuitBreaker.recordFailure()
+                circuitBreaker.recordFailure()
 
                 if attempt < maxRetries {
                     let delay = baseDelay * pow(2.0, Double(attempt))
@@ -199,5 +199,40 @@ enum LLMResilienceError: LocalizedError {
         case .allRetriesFailed:
             return "All retry attempts failed. Please check your LLM server connection."
         }
+    }
+}
+
+enum LLMErrorMessage {
+    static func userMessage(for error: Error) -> String {
+        if error is CancellationError {
+            return "Request cancelled."
+        }
+
+        if let resilienceError = error as? LLMResilienceError {
+            return resilienceError.localizedDescription
+        }
+
+        if let clientError = error as? LLMClient.ClientError {
+            return clientError.localizedDescription
+        }
+
+        if let anthropicError = error as? AnthropicClient.ClientError {
+            return anthropicError.localizedDescription
+        }
+
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .timedOut:
+                return "The AI request timed out. Increase the timeout in Settings or try a smaller model."
+            case .notConnectedToInternet:
+                return "No internet connection. Local models still work if your local server is running."
+            case .cannotFindHost, .cannotConnectToHost:
+                return "Cannot reach the AI server. Check the provider URL in Settings and make sure the server is running."
+            default:
+                return "Network error: \(urlError.localizedDescription)"
+            }
+        }
+
+        return error.localizedDescription
     }
 }

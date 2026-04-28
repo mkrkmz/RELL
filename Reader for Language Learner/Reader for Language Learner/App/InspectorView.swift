@@ -155,13 +155,26 @@ struct InspectorView: View {
         }
         .onChange(of: llmProviderTypeRaw) { _, _ in
             // Provider change: cached outputs from the old provider are no longer valid
+            circuitBreaker.reset()
             viewModel.cache.removeAll()
             refreshCache(term: trimmedSelection)
         }
         .onChange(of: llmModel) { _, _ in
             // Model change: same provider but different model may yield different outputs
+            circuitBreaker.reset()
             viewModel.cache.removeAll()
             refreshCache(term: trimmedSelection)
+        }
+        .onChange(of: llmServerURL) { _, _ in
+            circuitBreaker.reset()
+            viewModel.cache.removeAll()
+            refreshCache(term: trimmedSelection)
+        }
+        .onChange(of: llmAPIKey) { _, _ in
+            circuitBreaker.reset()
+        }
+        .onChange(of: llmTimeout) { _, _ in
+            circuitBreaker.reset()
         }
         .sheet(isPresented: $showAnkiExport) {
             AnkiExportView(
@@ -210,11 +223,13 @@ struct InspectorView: View {
     // MARK: - Selection Content
 
     var selectionContent: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             selectionHeader
             controlStrip
             moduleGrid
-            Divider().padding(.horizontal, DS.Spacing.xs)
+            Divider()
+                .padding(.horizontal, DS.Spacing.xs)
+                .padding(.vertical, DS.Spacing.xxs)
             resultPanel
         }
         .padding(DS.Spacing.md)
@@ -254,17 +269,25 @@ struct InspectorView: View {
     ) -> some View {
         Button(role: role, action: action) {
             Image(systemName: systemImage)
+                .font(.system(size: 12, weight: .medium))
                 .frame(width: 28, height: 28)
+                .background(DS.Color.surfaceInset)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .strokeBorder(DS.Color.separator.opacity(0.22), lineWidth: 0.5)
+                )
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .help(help)
+        .opacity(role == .destructive ? 0.94 : 1)
     }
 
     func actionSpacer() -> some View {
         Divider()
             .frame(height: 14)
-            .padding(.horizontal, DS.Spacing.xxs)
+            .padding(.horizontal, 6)
     }
 
     var isAnyLoading: Bool {
@@ -365,7 +388,7 @@ struct InspectorView: View {
             } catch {
                 if !Task.isCancelled {
                     await MainActor.run {
-                        viewModel.errors[module] = error.localizedDescription
+                        viewModel.errors[module] = LLMErrorMessage.userMessage(for: error)
                     }
                 }
             }

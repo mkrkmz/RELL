@@ -108,21 +108,13 @@ final class RecentDocumentStore {
 
     private func save() {
         do {
-            let data = try JSONEncoder().encode(documents)
-            try data.write(to: fileURL, options: .atomic)
+            try RELLJSONStore.save(documents, to: fileURL, storeName: "RecentDocumentStore")
         } catch {
-            AppLogger.persistence.error("RecentDocumentStore save failed: \(error.localizedDescription)")
+            AppLogger.persistence.error("RecentDocumentStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
         }
     }
 
     private static func load(from url: URL) -> [RecentDocument] {
-        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        do {
-            let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode([RecentDocument].self, from: data)
-        } catch {
-            AppLogger.persistence.error("RecentDocumentStore load failed: \(error.localizedDescription)")
-            return []
-        }
+        RELLJSONStore.load([RecentDocument].self, from: url, storeName: "RecentDocumentStore", defaultValue: [])
     }
 }

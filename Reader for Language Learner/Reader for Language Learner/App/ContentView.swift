@@ -145,6 +145,8 @@ struct ContentView: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
+                    readerContextStrip
+
                     PDFKitView(
                         documentURL: selectionState.documentURL,
                         selectedText: Binding(
@@ -210,6 +212,78 @@ struct ContentView: View {
               let idx     = pdfView.document?.index(for: page)
         else { return nil }
         return idx + 1
+    }
+
+    private var readerContextStrip: some View {
+        HStack(spacing: DS.Spacing.sm) {
+            readerContextChip(
+                icon: "doc.text",
+                text: selectionState.documentURL?.deletingPathExtension().lastPathComponent ?? "Open PDF"
+            )
+            readerContextDivider
+            readerContextChip(
+                icon: "book.pages",
+                text: pageStatusText
+            )
+
+            Spacer(minLength: DS.Spacing.sm)
+
+            readerContextChip(
+                icon: selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? "cursorarrow.click"
+                    : "text.cursor",
+                text: selectionSummaryText
+            )
+        }
+        .padding(.horizontal, DS.Spacing.md)
+        .padding(.vertical, 6)
+        .background(DS.Color.surfaceElevated.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.sm)
+                .strokeBorder(DS.Color.separator.opacity(0.30), lineWidth: 0.6)
+        )
+    }
+
+    private var pageStatusText: String {
+        guard pdfViewManager.pageCount > 0 else { return "PDF ready" }
+        if let currentPageNumber {
+            return "Page \(currentPageNumber) / \(pdfViewManager.pageCount)"
+        }
+        return "\(pdfViewManager.pageCount) pages"
+    }
+
+    private var selectionSummaryText: String {
+        let trimmedSelection = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedSelection.isEmpty else { return "Select text to analyze" }
+
+        let wordCount = trimmedSelection.split(whereSeparator: \.isWhitespace).count
+        if wordCount <= 1 {
+            return "1 word selected"
+        }
+        if wordCount <= 8 {
+            return "\(wordCount) words selected"
+        }
+        return "Sentence selection ready"
+    }
+
+    private var readerContextDivider: some View {
+        Divider()
+            .frame(height: 12)
+    }
+
+    private func readerContextChip(icon: String, text: String) -> some View {
+        HStack(spacing: DS.Spacing.xs) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(DS.Color.textTertiary)
+
+            Text(text)
+                .lineLimit(1)
+                .truncationMode(.tail)
+        }
+        .font(DS.Typography.caption)
+        .foregroundStyle(DS.Color.textSecondary)
     }
 
     // MARK: - Toolbar

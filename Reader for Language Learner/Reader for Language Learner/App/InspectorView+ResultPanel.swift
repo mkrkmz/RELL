@@ -38,9 +38,20 @@ extension InspectorView {
             Text("Choose a module above")
                 .font(DS.Typography.subhead)
                 .foregroundStyle(DS.Color.textTertiary)
+            Text("Results will stay here while you switch between modules.")
+                .font(DS.Typography.caption)
+                .foregroundStyle(DS.Color.textTertiary.opacity(0.78))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 220)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(DS.Color.surfaceInset.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.lg)
+                .strokeBorder(DS.Color.separator.opacity(0.24), lineWidth: 0.6)
+        )
     }
 
     // MARK: - Active Result
@@ -52,12 +63,10 @@ extension InspectorView {
         let elapsed         = moduleElapsed[module]
         let isTruncated     = viewModel.wasTruncated[module] == true
         let renderedOutput  = isLoading ? output : MarkdownUtils.sanitizeLLMOutput(output)
-        let outputLineCount = isLoading ? nil : (renderedOutput.isEmpty ? 0 : renderedOutput.components(separatedBy: .newlines).count)
         let sectionTitle    = isLoading ? "Live Output" : "Result"
 
         VStack(alignment: .leading, spacing: 0) {
 
-            // ── Result toolbar (single row) ──────────────────────────────
             HStack(spacing: DS.Spacing.sm) {
                 Image(systemName: module.iconName)
                     .font(.system(size: 11, weight: .semibold))
@@ -66,10 +75,14 @@ extension InspectorView {
                     .background(module.accentColor.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
 
-                Text(module.title(nativeLanguage: nativeLanguage))
-                    .font(DS.Typography.subhead.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(sectionTitle)
+                        .dsOverlineLabel()
+                    Text(module.title(nativeLanguage: nativeLanguage))
+                        .font(DS.Typography.subhead.weight(.semibold))
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .lineLimit(1)
+                }
 
                 if isLoading {
                     liveStatusBadge
@@ -88,38 +101,31 @@ extension InspectorView {
                 }
 
                 HStack(spacing: DS.Spacing.xxs) {
-                    Button {
+                    resultToolbarButton(systemImage: "arrow.clockwise") {
                         Task { await runModule(module, forceRefresh: true) }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
                     }
                     .help("Refresh (⌘R)")
                     .keyboardShortcut("r", modifiers: [.command])
                     .disabled(isLoading || !isModuleEnabled(module))
 
-                    Button { copyToClipboard(renderedOutput, showFeedback: true) } label: {
-                        Image(systemName: "doc.on.doc")
+                    resultToolbarButton(systemImage: "doc.on.doc") {
+                        copyToClipboard(renderedOutput, showFeedback: true)
                     }
                     .help("Copy result (⇧⌘C)")
                     .keyboardShortcut("c", modifiers: [.command, .shift])
                     .disabled(renderedOutput.isEmpty)
 
                     if isLoading {
-                        Button {
+                        resultToolbarButton(systemImage: "xmark.circle.fill") {
                             viewModel.cancel(module: module)
                             moduleElapsed[module] = nil
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(DS.Color.danger.opacity(0.7))
                         }
-                        .buttonStyle(.plain)
+                        .foregroundStyle(DS.Color.danger.opacity(0.78))
                         .help("Cancel")
                     } else {
-                        Button { activeModule = nil } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(DS.Color.textTertiary)
+                        resultToolbarButton(systemImage: "xmark.circle.fill") {
+                            activeModule = nil
                         }
-                        .buttonStyle(.plain)
                         .help("Close (Esc)")
                     }
                 }
@@ -143,6 +149,30 @@ extension InspectorView {
                 showSourceContext: hasSourceContext
             )
         }
+        .background(DS.Color.surface.opacity(0.72))
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.lg)
+                .strokeBorder(DS.Color.separator.opacity(0.24), lineWidth: 0.6)
+        )
+    }
+
+    private func resultToolbarButton(
+        systemImage: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 11, weight: .medium))
+                .frame(width: 26, height: 26)
+                .background(DS.Color.surfaceInset)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .strokeBorder(DS.Color.separator.opacity(0.18), lineWidth: 0.5)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Result Body
@@ -192,7 +222,8 @@ extension InspectorView {
             }
             .textSelection(.enabled)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(DS.Color.surfaceInset)
+            .background(DS.Color.surfaceInset.opacity(0.96))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
             .lineSpacing(4)
         } else if isLoading {
             loadingView
@@ -238,7 +269,7 @@ extension InspectorView {
             }
         }
         .padding(DS.Spacing.md)
-        .background(DS.Color.surface.opacity(0.72))
+        .background(DS.Color.surface.opacity(0.86))
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
@@ -312,7 +343,7 @@ extension InspectorView {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DS.Color.surfaceInset)
+        .background(DS.Color.surfaceInset.opacity(0.96))
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
     }
 
@@ -331,7 +362,7 @@ extension InspectorView {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DS.Color.surfaceInset)
+        .background(DS.Color.surfaceInset.opacity(0.96))
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
     }
 

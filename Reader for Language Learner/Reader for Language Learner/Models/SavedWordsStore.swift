@@ -213,22 +213,15 @@ final class SavedWordsStore {
 
     private func save() {
         do {
-            let data = try JSONEncoder().encode(words)
-            try data.write(to: fileURL, options: .atomic)
+            try RELLJSONStore.save(words, to: fileURL, storeName: "SavedWordsStore")
             saveError = nil
         } catch {
             saveError = error.localizedDescription
+            AppLogger.persistence.error("SavedWordsStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
         }
     }
 
     private static func load(from url: URL) -> [SavedWord] {
-        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        do {
-            let data = try Data(contentsOf: url)
-            return try JSONDecoder().decode([SavedWord].self, from: data)
-        } catch {
-            AppLogger.persistence.error("SavedWordsStore load failed: \(error.localizedDescription)")
-            return []
-        }
+        RELLJSONStore.load([SavedWord].self, from: url, storeName: "SavedWordsStore", defaultValue: [])
     }
 }

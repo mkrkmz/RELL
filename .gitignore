@@ -24,6 +24,11 @@ xcuserdata/
 # Build logs
 build.log
 
+# Local release artifacts
+*.dmg
+*.zip
+dmg_staging/
+
 # === macOS ===
 .DS_Store
 .AppleDouble

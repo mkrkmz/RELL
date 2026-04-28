@@ -13,7 +13,6 @@ extension InspectorView {
 
     var moduleGrid: some View {
         VStack(spacing: DS.Spacing.xs) {
-            // Primary row — keyboard shortcuts ⌘1…⌘5 + Run All button
             HStack(spacing: DS.Spacing.xxs) {
                 ForEach(Array(primaryModules.enumerated()), id: \.element) { index, module in
                     moduleButton(
@@ -22,16 +21,19 @@ extension InspectorView {
                     )
                 }
 
-                // Run All — compact circular button at trailing edge
                 Button {
                     runAllPrimaryModules()
                 } label: {
                     Image(systemName: "play.fill")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(DS.Color.accent)
-                        .frame(width: 30, height: 30)
-                        .background(DS.Color.accentSubtle)
-                        .clipShape(Circle())
+                        .foregroundStyle(hasSelection ? DS.Color.accent : DS.Color.textDisabled)
+                        .frame(width: 34, height: 34)
+                        .background(DS.Color.surfaceInset.opacity(0.94))
+                        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DS.Radius.sm)
+                                .strokeBorder(DS.Color.separator.opacity(0.20), lineWidth: 0.5)
+                        )
                 }
                 .buttonStyle(.plain)
                 .disabled(!hasSelection)
@@ -39,11 +41,15 @@ extension InspectorView {
                 .help("Run All (⇧⌘R)")
                 .accessibilityLabel("Run All Modules")
             }
-            .padding(DS.Spacing.xxs)
-            .background(DS.Color.surfaceElevated)
+            .padding(.horizontal, DS.Spacing.xxs)
+            .padding(.vertical, DS.Spacing.xs)
+            .background(DS.Color.surfaceElevated.opacity(0.96))
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.sm)
+                    .strokeBorder(DS.Color.separator.opacity(0.18), lineWidth: 0.6)
+            )
 
-            // Overflow row — compact, ⌘6…⌘0
             let overflowKeys: [Character] = ["6", "7", "8", "9", "0"]
             HStack(spacing: DS.Spacing.xxs) {
                 ForEach(Array(overflowModules.enumerated()), id: \.element) { index, module in
@@ -56,7 +62,14 @@ extension InspectorView {
                     )
                 }
             }
-            .padding(.horizontal, DS.Spacing.xxs)
+            .padding(.horizontal, DS.Spacing.xs)
+            .padding(.vertical, DS.Spacing.xs)
+            .background(DS.Color.surfaceInset.opacity(0.70))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.sm)
+                    .strokeBorder(DS.Color.separator.opacity(0.12), lineWidth: 0.5)
+            )
         }
         .animation(DS.Animation.snappy, value: explainMode)
     }
@@ -85,14 +98,14 @@ extension InspectorView {
                         .frame(width: compact ? 14 : 18, height: compact ? 14 : 18)
 
                     if hasOutput && !isLoading {
-                        Circle()
-                            .fill(module.accentColor)
-                            .frame(width: 4, height: 4)
+                        Capsule()
+                            .fill(module.accentColor.opacity(0.90))
+                            .frame(width: 8, height: 4)
                             .offset(x: 2, y: -2)
                     } else if hasError {
-                        Circle()
-                            .fill(DS.Color.danger)
-                            .frame(width: 4, height: 4)
+                        Capsule()
+                            .fill(DS.Color.danger.opacity(0.88))
+                            .frame(width: 8, height: 4)
                             .offset(x: 2, y: -2)
                     }
                 }
@@ -106,22 +119,26 @@ extension InspectorView {
             .frame(maxWidth: .infinity, minHeight: compact ? 28 : 40)
             .foregroundStyle(
                 !isEnabled ? DS.Color.textDisabled :
-                isActive   ? module.accentColor    :
-                             DS.Color.textSecondary
+                isActive   ? module.accentColor :
+                             compact ? DS.Color.textTertiary : DS.Color.textSecondary
             )
             .background {
                 if isActive {
                     RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .fill(module.accentColor.opacity(0.10))
+                        .fill(module.accentColor.opacity(compact ? 0.08 : 0.12))
                         .matchedGeometryEffect(id: "activeModule", in: moduleNamespace)
+                } else if compact {
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .fill(DS.Color.surface.opacity(0.72))
                 }
             }
             .overlay {
                 RoundedRectangle(cornerRadius: DS.Radius.sm)
                     .stroke(
-                        hasError && !isActive ? DS.Color.danger.opacity(0.25) :
-                        isActive ? module.accentColor.opacity(0.30) : .clear,
-                        lineWidth: 1
+                        hasError && !isActive ? DS.Color.danger.opacity(0.26) :
+                        isActive ? module.accentColor.opacity(0.36) :
+                        compact ? DS.Color.separator.opacity(0.06) : .clear,
+                        lineWidth: compact ? 0.8 : 1
                     )
             }
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.sm))

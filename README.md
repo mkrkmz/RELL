@@ -65,6 +65,14 @@ make open
 
 > Requires Xcode 16+ and macOS 15+
 
+### Verify Locally
+
+```bash
+make build    # Debug build
+make test     # Unit tests, same scope as CI
+make ui-test  # macOS launch/performance UI tests
+```
+
 ## Getting Started
 
 ### 1. Set Up an LLM Backend

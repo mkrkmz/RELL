@@ -91,8 +91,11 @@ main          # Kararli, her zaman derlenebilir
 # macOS icin derle
 make build
 
-# Testleri calistir
+# Unit testleri calistir (CI kapsami)
 make test
+
+# UI launch/performance testleri
+make ui-test
 
 # Lint kontrolu (SwiftLint gerektirir)
 make lint
@@ -101,7 +104,7 @@ make lint
 make clean
 ```
 
-Veya dogrudan Xcode ile: `Cmd + B` (derle), `Cmd + U` (test).
+Veya dogrudan Xcode ile: `Cmd + B` (derle), `Cmd + U` (secilen scheme testleri).
 
 ## Pull Request Sureci
 
@@ -119,8 +122,8 @@ Veya dogrudan Xcode ile: `Cmd + B` (derle), `Cmd + U` (test).
 
 Mevcut iyilestirme alanlari icin proje issue tracker'ina bakin. Ozellikle bu alanlarda katkiya acigiz:
 
-- Test coverage artirimi
+- Unit/UI test coverage artirimi
 - Erisilebirlik (a11y) iyilestirmeleri
 - UI yerellesstirme (i18n)
 - Performans optimizasyonlari
-- Yeni LLM provider desteği (Ollama, OpenAI API)
+- LLM provider hata akislari ve model uyumlulugu

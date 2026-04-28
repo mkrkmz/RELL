@@ -19,6 +19,42 @@ enum AppLogger {
     static let export      = Logger(subsystem: subsystem, category: "export")
 }
 
+enum RELLJSONStore {
+    static func load<Value: Decodable>(
+        _ type: Value.Type,
+        from url: URL,
+        storeName: String,
+        defaultValue: @autoclosure () -> Value
+    ) -> Value {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return defaultValue()
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            guard !data.isEmpty else {
+                AppLogger.persistence.warning("\(storeName) load skipped empty file at \(url.path, privacy: .private)")
+                return defaultValue()
+            }
+            return try JSONDecoder().decode(Value.self, from: data)
+        } catch {
+            AppLogger.persistence.error("\(storeName) load failed at \(url.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
+            return defaultValue()
+        }
+    }
+
+    static func save<Value: Encodable>(
+        _ value: Value,
+        to url: URL,
+        storeName: String
+    ) throws {
+        let directory = url.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let data = try JSONEncoder().encode(value)
+        try data.write(to: url, options: [.atomic])
+    }
+}
+
 // MARK: - App Support Directory
 
 extension FileManager {

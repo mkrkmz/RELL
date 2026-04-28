@@ -27,8 +27,8 @@ RELL, sadece macOS icin gelistirilmis 3 panelli bir masaustu uygulamasidir: sol 
 +--------------------------------------------------+
            |              |              |
 +------------------+  +----------+  +----------+
-|  State (Models)  |  | Services |  | UI System|
-| SelectionState   |  | LLMClient|  | DS       |
+|  State (Models)  |  | Services    |  | UI System|
+| SelectionState   |  | LLMProvider |  | DS       |
 | SavedWordsStore  |  | Speech   |  | Result   |
 | ReadingSession   |  | Anki     |  | Renderer |
 | InspectorVM      |  | Export   |  |          |
@@ -85,7 +85,7 @@ InspectorViewModel.fetchModule()
       |
       +-- Cache kontrol (LRU hit?) ---> Aninda goster
       |
-      +-- Cache miss --> LLMClient.stream()
+      +-- Cache miss --> LLMProvider.stream()
                               |
                               v
                     LM Studio SSE yaniti
@@ -104,7 +104,7 @@ InspectorViewModel.fetchModule()
 
 ### API Kontrati
 
-LM Studio'nun OpenAI-uyumlu API'si kullanilir:
+LM Studio, Ollama ve OpenAI-compatible provider'lar OpenAI uyumlu chat completions kontratini kullanir:
 
 **Endpoint:** `POST {serverURL}/v1/chat/completions`
 
@@ -154,7 +154,7 @@ protocol LLMProvider {
 }
 ```
 
-`LLMClient` bu protokolu uygular. Gelecekte Ollama, OpenAI API gibi alternatif provider'lar eklenebilir.
+`LLMClient` OpenAI-compatible provider'lari, `AnthropicClient` Claude Messages API'yi uygular. `ResilientLLMProvider` retry, circuit breaker ve kullaniciya okunabilir hata mesajlari icin bu provider'lari sarar.
 
 ## Persistence
 
@@ -166,8 +166,10 @@ Tum veri `~/Library/Application Support/RELL/` altinda:
 |-------|-------|-------|
 | `saved_words.json` | `[SavedWord]` | Limitsiz |
 | `reading_sessions.json` | `[ReadingSession]` | 500 oturum |
+| `pdf_notes.json` | `[PDFNote]` | Limitsiz |
+| `recent_documents.json` | `[RecentDocument]` | 12 belge |
 
-**Yedekleme/Atomik Yazma:** `JSONEncoder` ile serialize, `Data.write(to:)` ile diske yaz.
+**Yedekleme/Atomik Yazma:** Store'lar ortak `RELLJSONStore` yardimcisiyla JSON encode/decode eder, atomik yazar ve bos/bozuk persistence dosyalarinda uygulamayi bozmak yerine guvenli varsayilana doner. Hatalar `AppLogger.persistence` ile loglanir.
 
 ### UserDefaults
 
@@ -176,7 +178,7 @@ Kullanici tercihleri `@AppStorage` ile UserDefaults'ta saklanir:
 - Panel genislikleri (`sidebarWidth`, `inspectorWidth`)
 - Tema (`appTheme`, `pageTheme`)
 - Dil secimi (`nativeLanguage`, `targetLanguage`)
-- LLM ayarlari (`llmServerURL`, `llmModel`, `llmRequestTimeout`)
+- LLM ayarlari (`llmProviderType`, `llmServerURL`, `llmModel`, `llmRequestTimeout`, `llmAPIKey`)
 - Domain tercihi (`domainPreference`)
 - Yer imleri (`rell_pdf_bookmarks_v1`)
 

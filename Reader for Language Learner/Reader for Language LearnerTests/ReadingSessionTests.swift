@@ -7,6 +7,7 @@ import XCTest
 @testable import Reader_for_Language_Learner
 
 final class ReadingSessionTests: XCTestCase {
+    private static var retainedStores: [ReadingSessionStore] = []
 
     func testNewSessionIsActive() {
         let session = ReadingSession(pdfFilename: "test.pdf")
@@ -45,5 +46,21 @@ final class ReadingSessionTests: XCTestCase {
         XCTAssertEqual(decoded.pdfFilename, "book.pdf")
         XCTAssertEqual(decoded.durationSeconds, 60, accuracy: 0.01)
         XCTAssertFalse(decoded.isActive)
+    }
+
+    @MainActor
+    func testStoreIgnoresEmptyPersistenceFile() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("json")
+        try Data().write(to: fileURL)
+
+        let store = ReadingSessionStore(fileURL: fileURL)
+        Self.retainedStores.append(store)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+
+        XCTAssertTrue(store.sessions.isEmpty)
     }
 }
