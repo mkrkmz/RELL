@@ -9,6 +9,7 @@
 //  No repeated counts, no zero-value badges, no per-card button clusters.
 //
 
+import AppKit
 import SwiftUI
 
 struct EmptyStateView: View {
@@ -111,15 +112,10 @@ private struct DashboardHeader: View {
     let onOpenPDF: () -> Void
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                Text(greeting)
-                    .font(.system(size: 26, weight: .semibold, design: .default))
-                    .foregroundStyle(DS.Color.textPrimary)
-                Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
-                    .font(DS.Typography.subhead)
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
+        HStack(alignment: .center) {
+            Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
+                .font(DS.Typography.subhead)
+                .foregroundStyle(DS.Color.textTertiary)
 
             Spacer()
 
@@ -130,14 +126,6 @@ private struct DashboardHeader: View {
             .controlSize(.large)
             .keyboardShortcut("o", modifiers: [.command])
             .help("Open a PDF (⌘O)")
-        }
-    }
-
-    private var greeting: String {
-        switch Calendar.current.component(.hour, from: .now) {
-        case 5..<12:  return "Good morning"
-        case 12..<18: return "Good afternoon"
-        default:      return "Good evening"
         }
     }
 }
@@ -201,10 +189,21 @@ private struct ContinueReadingHero: View {
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
         }
         .buttonStyle(.plain)
-        .disabled(onOpen == nil)
+        .disabled(onOpen == nil || !fileExists)
+        .opacity(fileExists ? 1 : 0.55)
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
+        .contextMenu {
+            Button("Show in Finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([document.url])
+            }
+            .disabled(!fileExists)
+        }
         .accessibilityLabel("Continue reading \(displayTitle), \(document.pageLabel)")
+    }
+
+    private var fileExists: Bool {
+        FileManager.default.fileExists(atPath: document.path)
     }
 
     private var displayTitle: String {
@@ -214,6 +213,7 @@ private struct ContinueReadingHero: View {
     }
 
     private var metaText: String {
+        guard fileExists else { return "File not found — it may have been moved or deleted" }
         var parts = [document.pageLabel]
         if todayReadingTime > 0,
            let formatted = Self.durationFormatter.string(from: todayReadingTime) {
@@ -327,19 +327,19 @@ private struct RecentDocumentRow: View {
             onOpen?()
         } label: {
             HStack(spacing: DS.Spacing.md) {
-                Image(systemName: "doc.text")
+                Image(systemName: fileExists ? "doc.text" : "questionmark.folder")
                     .font(.system(size: 13, weight: .regular))
                     .foregroundStyle(DS.Color.textTertiary)
                     .frame(width: 16)
 
                 Text(displayTitle)
                     .font(DS.Typography.label)
-                    .foregroundStyle(DS.Color.textPrimary)
+                    .foregroundStyle(fileExists ? DS.Color.textPrimary : DS.Color.textTertiary)
                     .lineLimit(1)
 
                 Spacer(minLength: DS.Spacing.md)
 
-                Text(document.pageLabel)
+                Text(trailingText)
                     .font(DS.Typography.caption)
                     .foregroundStyle(DS.Color.textTertiary)
                     .lineLimit(1)
@@ -347,7 +347,7 @@ private struct RecentDocumentRow: View {
                 Image(systemName: "arrow.right")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(DS.Color.accent)
-                    .opacity(isHovered ? 1 : 0)
+                    .opacity(isHovered && fileExists ? 1 : 0)
             }
             .padding(.horizontal, DS.Spacing.lg)
             .padding(.vertical, DS.Spacing.md)
@@ -355,10 +355,25 @@ private struct RecentDocumentRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(onOpen == nil)
+        .disabled(onOpen == nil || !fileExists)
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
+        .contextMenu {
+            Button("Show in Finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([document.url])
+            }
+            .disabled(!fileExists)
+        }
         .accessibilityLabel("Open \(displayTitle), \(document.pageLabel)")
+    }
+
+    private var fileExists: Bool {
+        FileManager.default.fileExists(atPath: document.path)
+    }
+
+    private var trailingText: String {
+        guard fileExists else { return "File not found" }
+        return "\(document.pageLabel)  ·  \(Self.relativeFormatter.localizedString(for: document.lastOpenedAt, relativeTo: .now))"
     }
 
     private var displayTitle: String {
@@ -366,6 +381,12 @@ private struct RecentDocumentRow: View {
             .replacingOccurrences(of: ".pdf", with: "", options: [.caseInsensitive, .anchored, .backwards])
             .replacingOccurrences(of: "_", with: " ")
     }
+
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter
+    }()
 }
 
 // MARK: - Empty Library Hero

@@ -23,6 +23,7 @@ struct ReadingStatsView: View {
             VStack(alignment: .leading, spacing: DS.Spacing.lg) {
                 todayCard
                 weeklyChart
+                reviewActivityCard
                 learningGrid
                 totalsGrid
             }
@@ -145,6 +146,20 @@ struct ReadingStatsView: View {
         .background(DS.Color.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .dsShadow(DS.Shadow.subtle)
+    }
+
+    // MARK: - Review Activity Heatmap
+
+    @ViewBuilder
+    private var reviewActivityCard: some View {
+        let activity = savedWordsStore.reviewActivity(days: 365)
+        if activity.contains(where: { $0.count > 0 }) {
+            ReviewHeatmapView(activity: activity)
+                .padding(DS.Spacing.md)
+                .background(DS.Color.surfaceElevated)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+                .dsShadow(DS.Shadow.subtle)
+        }
     }
 
     // MARK: - Totals Grid

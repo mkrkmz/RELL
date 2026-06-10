@@ -26,7 +26,8 @@ Is kalemleri:
 ## Faz 3 — UI/UX Iyilestirme
 
 - [x] Karsilama sayfasi (dashboard) premium redesign: tek aksan rengi, tek review CTA, hero "Continue Reading" karti, sakin liste satirlari, sifir-degerli rozetlerin kaldirilmasi, 640pt ortali kolon
-- [ ] Heatmap'i sidebar Stats sekmesine tasi (dashboard'dan kaldirildi; ReviewHeatmapView bileseni duruyor)
+- [x] Heatmap sidebar Stats sekmesine tasindi (Reader/Stats/ReviewHeatmapView.swift); olu WorkspaceSummaryView.swift silindi
+- [x] Dashboard ince ayar: selamlama kaldirildi, recent satirlarina goreli zaman, eksik dosya durumu (soluk + "File not found"), sag tik "Show in Finder"
 - [ ] Monolitik view'lari parcala:
   - `UI/SavedWordsListView.swift` (615 satir) → SearchBar / FilterBar / WordRow ayri dosyalar
   - `App/EmptyStateView.swift` icindeki 4 gomulu struct ayri dosyalara
