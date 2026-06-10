@@ -9,6 +9,35 @@
 
 import Foundation
 
+// MARK: - Finish Reason
+
+/// Why a streamed response ended, as reported by the server.
+/// `nil` from `stream` means the server did not report one.
+enum LLMFinishReason: Equatable, Sendable {
+    /// Model finished naturally (`stop` / `end_turn`).
+    case stop
+    /// Response was cut off by the max_tokens limit (`length` / `max_tokens`).
+    case length
+    /// Any other server-reported reason.
+    case other(String)
+
+    init(openAIRawValue: String) {
+        switch openAIRawValue {
+        case "stop":   self = .stop
+        case "length": self = .length
+        default:       self = .other(openAIRawValue)
+        }
+    }
+
+    init(anthropicRawValue: String) {
+        switch anthropicRawValue {
+        case "end_turn", "stop_sequence": self = .stop
+        case "max_tokens":                self = .length
+        default:                          self = .other(anthropicRawValue)
+        }
+    }
+}
+
 // MARK: - Protocol
 
 /// Defines the minimum contract for an LLM backend used by RELL.
@@ -23,6 +52,8 @@ protocol LLMProvider {
     ) async throws -> String
 
     /// Streaming chat — `onToken` is called on @MainActor for each delta chunk.
+    /// Returns the server-reported finish reason, or `nil` when unavailable.
+    @discardableResult
     func stream(
         system: String,
         user: String,
@@ -30,7 +61,7 @@ protocol LLMProvider {
         maxTokens: Int,
         topP: Double,
         onToken: @MainActor @escaping (String) -> Void
-    ) async throws
+    ) async throws -> LLMFinishReason?
 }
 
 // MARK: - LLMClient conformance

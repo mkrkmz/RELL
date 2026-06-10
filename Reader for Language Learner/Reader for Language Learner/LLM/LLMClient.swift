@@ -9,8 +9,8 @@ import Foundation
 import os
 
 struct LLMClient {
-    nonisolated static let streamFlushInterval: Duration = .milliseconds(80)
-    nonisolated static let preferredFlushCharacterCount = 50
+    nonisolated static let streamFlushInterval: Duration = .milliseconds(120)
+    nonisolated static let preferredFlushCharacterCount = 80
     nonisolated static let streamGapWarningThreshold: TimeInterval = 1.5
     nonisolated static let logger = Logger(subsystem: "com.rell.app", category: "llm")
 
@@ -156,6 +156,7 @@ struct LLMClient {
     /// Streams tokens from LM Studio's Server-Sent Events endpoint.
     /// `onToken` is called on each delta content chunk as it arrives.
     /// The caller's `Task` can be cancelled to abort mid-stream.
+    @discardableResult
     func stream(
         system: String,
         user: String,
@@ -163,7 +164,7 @@ struct LLMClient {
         maxTokens: Int = 512,
         topP: Double = 0.9,
         onToken: @MainActor @escaping (String) -> Void
-    ) async throws {
+    ) async throws -> LLMFinishReason? {
         guard let url = URL(string: "\(baseURLString)/v1/chat/completions") else {
             throw ClientError.invalidURL
         }
@@ -209,6 +210,8 @@ struct LLMClient {
                 throw ClientError.badStatusCode(status: httpResponse.statusCode, body: "")
             }
 
+            var finishReason: LLMFinishReason?
+
             // Read SSE lines: each non-empty line starting with "data: "
             for try await line in asyncBytes.lines {
                 // Respect task cancellation
@@ -220,9 +223,14 @@ struct LLMClient {
 
                 guard let data = payload.data(using: .utf8),
                       let chunk = try? JSONDecoder().decode(StreamChunk.self, from: data),
-                      let delta = chunk.choices.first?.delta.content,
-                      !delta.isEmpty
+                      let choice = chunk.choices.first
                 else { continue }
+
+                if let rawReason = choice.finish_reason {
+                    finishReason = LLMFinishReason(openAIRawValue: rawReason)
+                }
+
+                guard let delta = choice.delta.content, !delta.isEmpty else { continue }
 
                 await diagnostics.recordChunk(delta)
                 await flushState.append(delta, deliver: onToken)
@@ -230,6 +238,11 @@ struct LLMClient {
 
             await flushState.flush(force: true, deliver: onToken)
             await diagnostics.finish()
+
+            if case .length = finishReason {
+                LLMClient.logger.warning("Stream stopped by max_tokens limit (\(maxTokens))")
+            }
+            return finishReason
         } catch let urlError as URLError {
             switch urlError.code {
             case .cannotFindHost, .cannotConnectToHost, .networkConnectionLost,
@@ -240,7 +253,7 @@ struct LLMClient {
             }
         } catch is CancellationError {
             // Swallow — caller handles via task state
-            return
+            return nil
         } catch is DecodingError {
             throw ClientError.invalidResponse("Could not parse LLM server stream.")
         }
@@ -364,6 +377,7 @@ private struct StreamChunk: Codable {
 
 private struct StreamChoice: Codable {
     let delta: StreamDelta
+    let finish_reason: String?
 }
 
 private struct StreamDelta: Codable {

@@ -215,7 +215,15 @@ extension InspectorView {
                     withAnimation { proxy.scrollTo("top", anchor: .top) }
                 }
                 .onChange(of: output) { _, _ in
-                    if isLoading {
+                    guard isLoading else { return }
+                    let now = Date()
+                    guard now.timeIntervalSince(lastStreamScrollAt) >= 0.15 else { return }
+                    lastStreamScrollAt = now
+                    proxy.scrollTo("stream-bottom", anchor: .bottom)
+                }
+                .onChange(of: isLoading) { _, nowLoading in
+                    // Final scroll once the stream ends so the tail is visible.
+                    if !nowLoading {
                         proxy.scrollTo("stream-bottom", anchor: .bottom)
                     }
                 }

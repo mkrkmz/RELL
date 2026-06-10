@@ -106,6 +106,7 @@ struct ResilientLLMProvider: LLMProvider {
         }
     }
 
+    @discardableResult
     func stream(
         system: String,
         user: String,
@@ -113,7 +114,7 @@ struct ResilientLLMProvider: LLMProvider {
         maxTokens: Int,
         topP: Double,
         onToken: @MainActor @escaping (String) -> Void
-    ) async throws {
+    ) async throws -> LLMFinishReason? {
         try await withRetry {
             try await inner.stream(
                 system: system,

@@ -35,6 +35,8 @@ struct InspectorView: View {
     @State var moduleElapsed: [ModuleType: Double] = [:]
     @State var displayedText: String = ""
     @State var selectionDebounceTask: Task<Void, Never>?
+    /// Last auto-scroll during streaming — throttles scroll-to-bottom to ~6/s.
+    @State var lastStreamScrollAt: Date = .distantPast
     @AppStorage("autoRunEnabled") var autoRunEnabled: Bool = true
 
     @State var circuitBreaker = CircuitBreaker()
@@ -374,9 +376,22 @@ struct InspectorView: View {
             return custom
         }()
 
+        // Local servers process requests on one GPU context — running many
+        // streams at once slows all of them, so gate their concurrency.
+        let isLocalProvider = llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
+            || llmProviderTypeRaw == LLMProviderType.ollama.rawValue
+
         let task = Task {
+            var finishReason: LLMFinishReason?
             do {
-                try await client.stream(
+                if isLocalProvider {
+                    await viewModel.localRequestGate.acquire()
+                }
+                defer {
+                    if isLocalProvider { viewModel.localRequestGate.release() }
+                }
+                try Task.checkCancellation()
+                finishReason = try await client.stream(
                     system: systemPrompt,
                     user: userPrompt,
                     temperature: resolvedTemperature,
@@ -395,11 +410,15 @@ struct InspectorView: View {
 
             if !Task.isCancelled {
                 await MainActor.run {
-                    // Heuristic: avg ~3.5 chars/token. If output is ≥90% of the token budget,
-                    // the model likely hit the limit and the response may be incomplete.
-                    let outputLength = viewModel.outputs[module]?.count ?? 0
-                    let tokenBudgetChars = Int(Double(resolvedMaxTokens) * 3.5)
-                    viewModel.wasTruncated[module] = outputLength >= Int(Double(tokenBudgetChars) * 0.90)
+                    if let finishReason {
+                        viewModel.wasTruncated[module] = finishReason == .length
+                    } else {
+                        // No server-reported finish reason — fall back to a heuristic:
+                        // avg ~3.5 chars/token; output at ≥90% of the budget likely hit the limit.
+                        let outputLength = viewModel.outputs[module]?.count ?? 0
+                        let tokenBudgetChars = Int(Double(resolvedMaxTokens) * 3.5)
+                        viewModel.wasTruncated[module] = outputLength >= Int(Double(tokenBudgetChars) * 0.90)
+                    }
                     viewModel.snapshotToCache(key: cacheKey)
                 }
             }

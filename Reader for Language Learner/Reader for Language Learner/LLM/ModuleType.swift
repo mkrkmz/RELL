@@ -164,7 +164,9 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    /// Recommended max_tokens cap per module/mode/detail to keep Gemma fast.
+    /// Recommended max_tokens cap per module/mode/detail.
+    /// Base values are sized for mid/large local models (7B+); known small
+    /// models (e.g. gemma-4) get tighter caps below to stay fast.
     func recommendedMaxTokens(
         mode: ExplainMode,
         detail: ExplainDetail,
@@ -173,49 +175,49 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable {
         let base: Int
         switch (self, mode, detail) {
         // Definition
-        case (.definitionEN, .word, .short):        base = 160
-        case (.definitionEN, .word, .detailed):     base = 280
-        case (.definitionEN, .sentence, .short):    base = 160
-        case (.definitionEN, .sentence, .detailed): base = 280
+        case (.definitionEN, .word, .short):        base = 256
+        case (.definitionEN, .word, .detailed):     base = 512
+        case (.definitionEN, .sentence, .short):    base = 256
+        case (.definitionEN, .sentence, .detailed): base = 512
         // TR Meaning — Turkish prose needs more room than English
-        case (.meaningTR, .word, .short):           base = 220
-        case (.meaningTR, .word, .detailed):        base = 380
-        case (.meaningTR, .sentence, .short):       base = 220
-        case (.meaningTR, .sentence, .detailed):    base = 380
+        case (.meaningTR, .word, .short):           base = 320
+        case (.meaningTR, .word, .detailed):        base = 640
+        case (.meaningTR, .sentence, .short):       base = 320
+        case (.meaningTR, .sentence, .detailed):    base = 640
         // Collocations — markdown numbered list format needs more room
-        case (.collocations, .word, .short):        base = 550
-        case (.collocations, .word, .detailed):     base = 900
-        case (.collocations, .sentence, .short):    base = 400
-        case (.collocations, .sentence, .detailed): base = 700
+        case (.collocations, .word, .short):        base = 800
+        case (.collocations, .word, .detailed):     base = 1400
+        case (.collocations, .sentence, .short):    base = 600
+        case (.collocations, .sentence, .detailed): base = 1100
         // Examples
-        case (.examplesEN, .word, .short):          base = 120
-        case (.examplesEN, .word, .detailed):       base = 180
-        case (.examplesEN, .sentence, .short):      base = 120
-        case (.examplesEN, .sentence, .detailed):   base = 150
+        case (.examplesEN, .word, .short):          base = 240
+        case (.examplesEN, .word, .detailed):       base = 400
+        case (.examplesEN, .sentence, .short):      base = 240
+        case (.examplesEN, .sentence, .detailed):   base = 320
         // Etymology (word only)
-        case (.etymologyEN, _, .short):             base = 100
-        case (.etymologyEN, _, .detailed):          base = 160
+        case (.etymologyEN, _, .short):             base = 200
+        case (.etymologyEN, _, .detailed):          base = 320
         // Pronunciation
-        case (.pronunciationEN, .word, .short):     base = 40
-        case (.pronunciationEN, .word, .detailed):  base = 40
-        case (.pronunciationEN, .sentence, .short): base = 80
-        case (.pronunciationEN, .sentence, .detailed): base = 120
+        case (.pronunciationEN, .word, .short):     base = 64
+        case (.pronunciationEN, .word, .detailed):  base = 64
+        case (.pronunciationEN, .sentence, .short): base = 120
+        case (.pronunciationEN, .sentence, .detailed): base = 180
         // Mnemonic (word only)
-        case (.mnemonicEN, _, .short):              base = 60
-        case (.mnemonicEN, _, .detailed):           base = 100
+        case (.mnemonicEN, _, .short):              base = 120
+        case (.mnemonicEN, _, .detailed):           base = 200
         // Synonyms & Antonyms
-        case (.synonymsEN, .word, .short):          base = 160
-        case (.synonymsEN, .word, .detailed):       base = 280
-        case (.synonymsEN, .sentence, .short):      base = 120
-        case (.synonymsEN, .sentence, .detailed):   base = 180
+        case (.synonymsEN, .word, .short):          base = 280
+        case (.synonymsEN, .word, .detailed):       base = 480
+        case (.synonymsEN, .sentence, .short):      base = 200
+        case (.synonymsEN, .sentence, .detailed):   base = 300
         // Word Family (word only; sentence disabled but keep exhaustive)
-        case (.wordFamilyEN, _, .short):            base = 160
-        case (.wordFamilyEN, _, .detailed):         base = 260
+        case (.wordFamilyEN, _, .short):            base = 280
+        case (.wordFamilyEN, _, .detailed):         base = 440
         // Usage Notes
-        case (.usageNotesEN, .word, .short):        base = 180
-        case (.usageNotesEN, .word, .detailed):     base = 320
-        case (.usageNotesEN, .sentence, .short):    base = 150
-        case (.usageNotesEN, .sentence, .detailed): base = 240
+        case (.usageNotesEN, .word, .short):        base = 320
+        case (.usageNotesEN, .word, .detailed):     base = 600
+        case (.usageNotesEN, .sentence, .short):    base = 260
+        case (.usageNotesEN, .sentence, .detailed): base = 420
         }
 
         guard let modelIdentifier else { return base }

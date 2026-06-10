@@ -106,6 +106,7 @@ struct AnthropicClient: LLMProvider {
 
     // MARK: - Streaming (SSE)
 
+    @discardableResult
     func stream(
         system: String,
         user: String,
@@ -113,7 +114,7 @@ struct AnthropicClient: LLMProvider {
         maxTokens: Int = 512,
         topP: Double = 0.9,
         onToken: @MainActor @escaping (String) -> Void
-    ) async throws {
+    ) async throws -> LLMFinishReason? {
         let request = try buildRequest(
             system: system, user: user,
             temperature: temperature, maxTokens: maxTokens, topP: topP,
@@ -137,7 +138,10 @@ struct AnthropicClient: LLMProvider {
             // event: content_block_delta
             // data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"..."}}
             //
+            // event: message_delta  (carries stop_reason)
             // event: message_stop
+            var finishReason: LLMFinishReason?
+
             for try await line in asyncBytes.lines {
                 try Task.checkCancellation()
 
@@ -153,12 +157,17 @@ struct AnthropicClient: LLMProvider {
                     if let text = event.delta?.text, !text.isEmpty {
                         await onToken(text)
                     }
+                case "message_delta":
+                    if let rawReason = event.delta?.stop_reason {
+                        finishReason = LLMFinishReason(anthropicRawValue: rawReason)
+                    }
                 case "message_stop":
-                    return
+                    return finishReason
                 default:
                     continue
                 }
             }
+            return finishReason
         } catch let urlError as URLError {
             switch urlError.code {
             case .cannotFindHost, .cannotConnectToHost, .networkConnectionLost, .notConnectedToInternet, .timedOut:
@@ -167,7 +176,7 @@ struct AnthropicClient: LLMProvider {
                 throw urlError
             }
         } catch is CancellationError {
-            return
+            return nil
         } catch is DecodingError {
             throw ClientError.invalidResponse("Could not parse Anthropic stream.")
         }
@@ -266,4 +275,5 @@ private struct StreamEvent: Codable {
 private struct StreamDelta: Codable {
     let type: String?
     let text: String?
+    let stop_reason: String?
 }

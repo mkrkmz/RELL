@@ -22,7 +22,7 @@ enum PromptTemplates {
     // MARK: - System Prompt
 
     /// System prompt parameterized by language constraint and output format.
-    /// Kept concise for fast prefill on small local models (Gemma 3 4B etc.).
+    /// Kept concise for fast prefill on local models.
     static func system(lang: OutputLanguage, format: OutputFormat = .plain, customPreamble: String = "") -> String {
         let formatRule: String
         switch format {
@@ -33,12 +33,10 @@ enum PromptTemplates {
         }
 
         var base = """
-        You are a fast dictionary assistant for language learners.
+        You are a dictionary assistant for language learners.
         \(lang.constraint)
         \(formatRule)
-        Start with the answer immediately.
-        Be compact and direct.
-        No preamble, no commentary, no code fences.
+        Answer directly and compactly — no preamble, no commentary, no code fences.
         If unsure, write "\(lang.unknownFallback)".
         """
 

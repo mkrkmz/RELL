@@ -19,6 +19,10 @@ final class InspectorViewModel {
     /// Cancellable task handles per module.
     var activeTasks: [ModuleType: Task<Void, Never>] = [:]
 
+    /// Caps concurrent requests to local LLM servers (LM Studio / Ollama),
+    /// which serialize on a single GPU context anyway.
+    let localRequestGate = AsyncLimiter(limit: 2)
+
     /// LRU output cache — survives word-to-word navigation.
     var cache = LRUCache<OutputCacheKey, [ModuleType: String]>(capacity: 20)
 
