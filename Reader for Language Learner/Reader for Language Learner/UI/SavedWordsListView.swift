@@ -272,7 +272,7 @@ struct SavedWordsListView: View {
                     Text("No saved words yet")
                         .font(DS.Typography.subhead)
                         .foregroundStyle(DS.Color.textSecondary)
-                    Text("Select text and press ⌘D\nwhile reading to save vocabulary.")
+                    Text("Save vocabulary from the reader, then review due words here.")
                         .font(DS.Typography.caption)
                         .foregroundStyle(DS.Color.textTertiary)
                         .multilineTextAlignment(.center)
@@ -282,13 +282,15 @@ struct SavedWordsListView: View {
                         .font(DS.Typography.subhead)
                         .foregroundStyle(DS.Color.textSecondary)
                     if selectedFilter == .thisPDF {
-                        Text("No saved words from this PDF.")
+                        Text("No vocabulary saved from this PDF yet. Select text and save it from the inspector.")
                             .font(DS.Typography.caption)
                             .foregroundStyle(DS.Color.textTertiary)
+                            .multilineTextAlignment(.center)
                     } else if selectedFilter == .needsReview {
-                        Text("Nothing is due right now.")
+                        Text("Nothing is due right now. Keep reading or include all saved words in Review.")
                             .font(DS.Typography.caption)
                             .foregroundStyle(DS.Color.textTertiary)
+                            .multilineTextAlignment(.center)
                     } else if !searchText.isEmpty {
                         Text("Try a different search term.")
                             .font(DS.Typography.caption)

@@ -188,7 +188,7 @@ struct PDFNotesView: View {
             title: isFiltered ? "No Matching Notes" : "No Notes Yet",
             message: isFiltered
                 ? "Try a different search or filter for \(filename)."
-                : "Select text in the PDF and add a note from the context menu."
+                : "Select a passage, add a note, then turn useful ideas into saved words or review items."
         )
     }
 
@@ -196,7 +196,7 @@ struct PDFNotesView: View {
         DSEmptyState(
             icon: "doc.text",
             title: "No Document",
-            message: "Open a PDF to start collecting notes."
+            message: "Open a PDF to collect notes alongside vocabulary and review."
         )
     }
 }
@@ -251,10 +251,10 @@ private struct PDFNoteRow: View {
 
             if isHovered {
                 VStack(spacing: DS.Spacing.xs) {
-                    rowAction(systemName: "arrow.up.right.square", action: onJump)
-                    rowAction(systemName: "star", action: onSaveWord)
-                    rowAction(systemName: "clock.badge.plus", action: onQueueReview)
-                    rowAction(systemName: "pencil", action: onEdit)
+                    rowAction(systemName: "arrow.up.right.square", help: "Jump to note page", action: onJump)
+                    rowAction(systemName: "star", help: "Save selected text as vocabulary", action: onSaveWord)
+                    rowAction(systemName: "clock.badge.plus", help: "Add selected text to Review", action: onQueueReview)
+                    rowAction(systemName: "pencil", help: "Edit note", action: onEdit)
                 }
                 .transition(.opacity.combined(with: .scale))
             }
@@ -274,7 +274,7 @@ private struct PDFNoteRow: View {
         }
     }
 
-    private func rowAction(systemName: String, action: @escaping () -> Void) -> some View {
+    private func rowAction(systemName: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 11, weight: .medium))
@@ -284,6 +284,8 @@ private struct PDFNoteRow: View {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
         }
         .buttonStyle(.plain)
+        .help(help)
+        .accessibilityLabel(help)
     }
 }
 
@@ -376,7 +378,7 @@ struct PDFNoteEditorSheet: View {
                             Button("Save Word") {
                                 saveWord(queueForReview: false)
                             }
-                            Button("Queue Review") {
+                            Button("Queue for Review") {
                                 saveWord(queueForReview: true)
                             }
                         }

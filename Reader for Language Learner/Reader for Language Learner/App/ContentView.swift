@@ -22,6 +22,7 @@ struct ContentView: View {
     @State private var showSidebar   = true
     @State private var showInspector = true
     @State private var isDropTargeted = false
+    @State private var showWorkspaceReview = false
 
     @AppStorage("sidebarWidth")   private var sidebarWidth:   Double = DS.Layout.sidebarDefault
     @AppStorage("inspectorWidth") private var inspectorWidth: Double = DS.Layout.inspectorDefault
@@ -43,10 +44,13 @@ struct ContentView: View {
                     EmptyStateView(
                         onOpenPDF: openPDF,
                         recentDocuments: recentDocumentStore.recentDocuments,
+                        todayReadingTime: sessionStore.todayReadingTime,
+                        reviewedTodayCount: savedWordsStore.reviewedTodayCount,
                         noteStore: noteStore,
                         savedWordsStore: savedWordsStore,
                         bookmarkStore: bookmarkStore,
-                        onOpenRecent: { openDocument($0.url) }
+                        onOpenRecent: { openDocument($0.url) },
+                        onReview: { showWorkspaceReview = true }
                     )
                         .onDrop(of: [.pdf], isTargeted: $isDropTargeted, perform: handleDrop)
                         .overlay { if isDropTargeted { dropOverlay } }
@@ -104,6 +108,13 @@ struct ContentView: View {
                 onCancel: { noteStore.cancelDraft() }
             )
         }
+        .sheet(isPresented: $showWorkspaceReview) {
+            QuizView(
+                store: savedWordsStore,
+                onContinueReading: { showWorkspaceReview = false }
+            )
+                .frame(width: 460, height: 560)
+        }
     }
 
     // MARK: - Reader Layout (3-panel)
@@ -125,7 +136,7 @@ struct ContentView: View {
                         bookmarkStore:       bookmarkStore,
                         noteStore:           noteStore,
                         sessionStore:        sessionStore,
-                        currentDocumentName: selectionState.documentURL?.deletingPathExtension().lastPathComponent
+                        currentDocumentName: currentDocumentName
                     )
                     .frame(width: sidebarWidth)
 
@@ -214,11 +225,15 @@ struct ContentView: View {
         return idx + 1
     }
 
+    private var currentDocumentName: String? {
+        selectionState.documentURL?.deletingPathExtension().lastPathComponent
+    }
+
     private var readerContextStrip: some View {
         HStack(spacing: DS.Spacing.sm) {
             readerContextChip(
                 icon: "doc.text",
-                text: selectionState.documentURL?.deletingPathExtension().lastPathComponent ?? "Open PDF"
+                text: currentDocumentName ?? "Open PDF"
             )
             readerContextDivider
             readerContextChip(
@@ -228,12 +243,25 @@ struct ContentView: View {
 
             Spacer(minLength: DS.Spacing.sm)
 
-            readerContextChip(
-                icon: selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    ? "cursorarrow.click"
-                    : "text.cursor",
-                text: selectionSummaryText
-            )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: DS.Spacing.xs) {
+                    readerContextMetricChip(icon: "note.text", value: "\(currentNoteCount)", label: "notes")
+                    readerContextMetricChip(icon: "star", value: "\(currentSavedWordCount)", label: "saved")
+                    readerContextMetricChip(
+                        icon: currentDueWordCount > 0 ? "clock.badge.exclamationmark" : "checkmark.seal",
+                        value: "\(currentDueWordCount)",
+                        label: "due",
+                        tint: currentDueWordCount > 0 ? DS.Color.warning : DS.Color.success
+                    )
+                    readerContextChip(
+                        icon: selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            ? "cursorarrow.click"
+                            : "text.cursor",
+                        text: selectionSummaryText
+                    )
+                }
+            }
+            .frame(maxWidth: 360)
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, 6)
@@ -267,6 +295,18 @@ struct ContentView: View {
         return "Sentence selection ready"
     }
 
+    private var currentNoteCount: Int {
+        noteStore.count(for: currentDocumentName)
+    }
+
+    private var currentSavedWordCount: Int {
+        savedWordsStore.savedCount(for: currentDocumentName)
+    }
+
+    private var currentDueWordCount: Int {
+        savedWordsStore.dueCount(for: currentDocumentName)
+    }
+
     private var readerContextDivider: some View {
         Divider()
             .frame(height: 12)
@@ -284,6 +324,27 @@ struct ContentView: View {
         }
         .font(DS.Typography.caption)
         .foregroundStyle(DS.Color.textSecondary)
+    }
+
+    private func readerContextMetricChip(
+        icon: String,
+        value: String,
+        label: String,
+        tint: Color = DS.Color.accent
+    ) -> some View {
+        HStack(spacing: DS.Spacing.xs) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(tint)
+            Text("\(value) \(label)")
+                .lineLimit(1)
+        }
+        .font(DS.Typography.caption)
+        .foregroundStyle(DS.Color.textSecondary)
+        .padding(.horizontal, DS.Spacing.xs)
+        .padding(.vertical, 3)
+        .background(tint.opacity(0.08))
+        .clipShape(Capsule())
     }
 
     // MARK: - Toolbar

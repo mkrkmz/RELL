@@ -14,7 +14,7 @@ enum SidebarTab: String, CaseIterable, Identifiable {
     case bookmarks  = "Marks"
     case notes      = "Notes"
     case saved      = "Saved"
-    case quiz       = "Quiz"
+    case quiz       = "Review"
     case stats      = "Stats"
     var id: String { rawValue }
 
@@ -72,6 +72,7 @@ struct SidebarView: View {
 
     private func tabBarButton(_ tab: SidebarTab) -> some View {
         let isSelected = selectedTab == tab
+        let badgeCount = badgeCount(for: tab)
         return Button {
             withAnimation(DS.Animation.springFast) { selectedTab = tab }
         } label: {
@@ -83,21 +84,6 @@ struct SidebarView: View {
                         .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
                         .foregroundStyle(isSelected ? DS.Color.accent : DS.Color.textSecondary)
 
-                    // Badge for Saved / Bookmarks count
-                    let badgeCount: Int = {
-                        switch tab {
-                        case .saved:      return savedWordsStore.words.count
-                        case .quiz:       return savedWordsStore.pendingReviewCount
-                        case .bookmarks:
-                            if let name = currentDocumentName {
-                                return bookmarkStore.bookmarks(for: name).count
-                            }
-                            return 0
-                        case .notes:
-                            return noteStore.count(for: currentDocumentName)
-                        default: return 0
-                        }
-                    }()
                     if badgeCount > 0 {
                         Text("\(min(badgeCount, 99))")
                             .font(.system(size: 8, weight: .bold))
@@ -126,8 +112,47 @@ struct SidebarView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(tab.rawValue)
-        .accessibilityValue(isSelected ? "Selected" : "")
+        .accessibilityValue(accessibilityValue(isSelected: isSelected, badgeCount: badgeCount, tab: tab))
         .accessibilityHint("Switch to \(tab.rawValue) tab")
+    }
+
+    private func badgeCount(for tab: SidebarTab) -> Int {
+        switch tab {
+        case .saved:
+            return savedWordsStore.words.count
+        case .quiz:
+            return savedWordsStore.pendingReviewCount
+        case .bookmarks:
+            if let name = currentDocumentName {
+                return bookmarkStore.bookmarks(for: name).count
+            }
+            return 0
+        case .notes:
+            return noteStore.count(for: currentDocumentName)
+        default:
+            return 0
+        }
+    }
+
+    private func accessibilityValue(isSelected: Bool, badgeCount: Int, tab: SidebarTab) -> String {
+        let selection = isSelected ? "Selected" : ""
+        guard badgeCount > 0 else { return selection }
+
+        let countText: String
+        switch tab {
+        case .quiz:
+            countText = "\(badgeCount) words due"
+        case .saved:
+            countText = "\(badgeCount) saved words"
+        case .notes:
+            countText = "\(badgeCount) notes for this document"
+        case .bookmarks:
+            countText = "\(badgeCount) marks for this document"
+        default:
+            countText = "\(badgeCount) items"
+        }
+
+        return selection.isEmpty ? countText : "\(selection), \(countText)"
     }
 
     // MARK: - Tab Content

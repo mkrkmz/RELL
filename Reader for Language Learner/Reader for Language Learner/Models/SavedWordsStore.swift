@@ -36,6 +36,12 @@ enum ReviewRating: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class SavedWordsStore {
+    struct ReviewActivityDay: Identifiable, Equatable {
+        let date: Date
+        let count: Int
+
+        var id: Date { date }
+    }
 
     private(set) var words: [SavedWord] = []
     var saveError: String? = nil
@@ -143,10 +149,7 @@ final class SavedWordsStore {
 
     var reviewedTodayCount: Int {
         let dayStart = Calendar.current.startOfDay(for: Date())
-        return words.filter { word in
-            guard let lastReviewedAt = word.lastReviewedAt else { return false }
-            return lastReviewedAt >= dayStart
-        }.count
+        return reviewEventDates().filter { $0 >= dayStart }.count
     }
 
     var masteredCount: Int {
@@ -161,12 +164,62 @@ final class SavedWordsStore {
         words.filter { !$0.hasBeenReviewed }.count
     }
 
+    func words(for filename: String?) -> [SavedWord] {
+        guard let filename else { return [] }
+        return words.filter { $0.pdfFilename == filename }
+    }
+
+    func savedCount(for filename: String?) -> Int {
+        words(for: filename).count
+    }
+
+    func dueCount(for filename: String?, at referenceDate: Date = Date()) -> Int {
+        words(for: filename).filter { isDue($0, at: referenceDate) }.count
+    }
+
+    func dueWords(at referenceDate: Date = Date()) -> [SavedWord] {
+        words.filter { isDue($0, at: referenceDate) }
+    }
+
+    func reviewFallbackWords() -> [SavedWord] {
+        words.filter { $0.masteryLevel != .mastered }
+    }
+
+    func reviewQueue(includeAll: Bool, at referenceDate: Date = Date()) -> [SavedWord] {
+        if includeAll {
+            return words
+        }
+
+        let due = dueWords(at: referenceDate)
+        return due.isEmpty ? reviewFallbackWords() : due
+    }
+
+    func reviewActivity(days: Int = 35, endingAt referenceDate: Date = Date()) -> [ReviewActivityDay] {
+        let calendar = Calendar.current
+        let endDay = calendar.startOfDay(for: referenceDate)
+        let safeDays = max(days, 1)
+        let countsByDay = Dictionary(grouping: reviewEventDates()) { date in
+            calendar.startOfDay(for: date)
+        }.mapValues(\.count)
+
+        return (0..<safeDays).compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: -(safeDays - 1 - offset), to: endDay) else {
+                return nil
+            }
+            return ReviewActivityDay(date: day, count: countsByDay[day] ?? 0)
+        }
+    }
+
     @discardableResult
     func applyReview(_ rating: ReviewRating, to word: SavedWord, reviewedAt: Date = Date()) -> SavedWord? {
         guard let index = words.firstIndex(where: { $0.id == word.id }) else { return nil }
 
         var updated = words[index]
         updated.reviewCount += 1
+        if updated.reviewHistory.isEmpty, let lastReviewedAt = updated.lastReviewedAt {
+            updated.reviewHistory = [lastReviewedAt]
+        }
+        updated.reviewHistory.append(reviewedAt)
         updated.lastReviewedAt = reviewedAt
 
         switch rating {
@@ -207,6 +260,18 @@ final class SavedWordsStore {
         words[index] = updated
         save()
         return updated
+    }
+
+    private func reviewEventDates() -> [Date] {
+        words.flatMap { word in
+            if !word.reviewHistory.isEmpty {
+                return word.reviewHistory
+            }
+            if let lastReviewedAt = word.lastReviewedAt {
+                return [lastReviewedAt]
+            }
+            return []
+        }
     }
 
     // MARK: - Persistence

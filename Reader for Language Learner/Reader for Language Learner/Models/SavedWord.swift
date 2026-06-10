@@ -94,6 +94,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     var reviewCount: Int
     var incorrectCount: Int
     var lastReviewedAt: Date?
+    var reviewHistory: [Date]
     var nextReviewAt: Date?
 
     init(
@@ -111,6 +112,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         reviewCount: Int = 0,
         incorrectCount: Int = 0,
         lastReviewedAt: Date? = nil,
+        reviewHistory: [Date] = [],
         nextReviewAt: Date? = nil
     ) {
         self.id = id
@@ -127,7 +129,47 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.reviewCount = reviewCount
         self.incorrectCount = incorrectCount
         self.lastReviewedAt = lastReviewedAt
+        self.reviewHistory = reviewHistory
         self.nextReviewAt = nextReviewAt
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case term
+        case sentence
+        case pdfFilename
+        case pageNumber
+        case mode
+        case domain
+        case notes
+        case llmOutputs
+        case savedAt
+        case masteryLevel
+        case reviewCount
+        case incorrectCount
+        case lastReviewedAt
+        case reviewHistory
+        case nextReviewAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        term = try container.decode(String.self, forKey: .term)
+        sentence = try container.decodeIfPresent(String.self, forKey: .sentence) ?? ""
+        pdfFilename = try container.decodeIfPresent(String.self, forKey: .pdfFilename)
+        pageNumber = try container.decodeIfPresent(Int.self, forKey: .pageNumber)
+        mode = try container.decodeIfPresent(String.self, forKey: .mode) ?? ExplainMode.word.rawValue
+        domain = try container.decodeIfPresent(String.self, forKey: .domain) ?? DomainPreference.general.rawValue
+        notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        llmOutputs = try container.decodeIfPresent([String: String].self, forKey: .llmOutputs) ?? [:]
+        savedAt = try container.decodeIfPresent(Date.self, forKey: .savedAt) ?? Date()
+        masteryLevel = try container.decodeIfPresent(MasteryLevel.self, forKey: .masteryLevel) ?? .new
+        reviewCount = try container.decodeIfPresent(Int.self, forKey: .reviewCount) ?? 0
+        incorrectCount = try container.decodeIfPresent(Int.self, forKey: .incorrectCount) ?? 0
+        lastReviewedAt = try container.decodeIfPresent(Date.self, forKey: .lastReviewedAt)
+        reviewHistory = try container.decodeIfPresent([Date].self, forKey: .reviewHistory) ?? []
+        nextReviewAt = try container.decodeIfPresent(Date.self, forKey: .nextReviewAt)
     }
 
     var hasBeenReviewed: Bool {

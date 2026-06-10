@@ -11,6 +11,8 @@ import SwiftUI
 
 struct QuizView: View {
     var store: SavedWordsStore
+    var onContinueReading: (() -> Void)? = nil
+    var onOpenSavedWords: (() -> Void)? = nil
 
     @State private var queue: [SavedWord] = []
     @State private var currentIndex = 0
@@ -23,14 +25,14 @@ struct QuizView: View {
     // Filter: due words only by default
     @State private var includeAll = false
 
-    private var dueWords: [SavedWord] {
-        store.words.filter { store.isDue($0) }
-    }
+    private var dueWords: [SavedWord] { store.dueWords() }
 
     private var wordsToQuiz: [SavedWord] {
-        includeAll
-            ? store.words
-            : (dueWords.isEmpty ? store.words.filter { $0.masteryLevel != .mastered } : dueWords)
+        store.reviewQueue(includeAll: includeAll)
+    }
+
+    private var isUsingFallbackQueue: Bool {
+        !includeAll && dueWords.isEmpty && !store.reviewFallbackWords().isEmpty
     }
 
     var body: some View {
@@ -54,41 +56,64 @@ struct QuizView: View {
     // MARK: - Start Screen
 
     private var startState: some View {
-        VStack(spacing: DS.Spacing.lg) {
-            Spacer()
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: DS.Spacing.lg) {
+                Image(systemName: "brain.filled.head.profile")
+                    .font(.system(size: 38, weight: .light))
+                    .foregroundStyle(DS.Color.accent)
 
-            Image(systemName: "brain.filled.head.profile")
-                .font(.system(size: 40, weight: .light))
-                .foregroundStyle(DS.Color.accent)
-
-            VStack(spacing: DS.Spacing.xs) {
-                Text("Vocabulary Quiz")
-                    .font(DS.Typography.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
-                Text("\(wordsToQuiz.count) words ready")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-                if !includeAll {
-                    Text(dueWords.isEmpty ? "No due words right now, showing weak words instead." : "Starting with words that are due for review.")
-                        .font(DS.Typography.caption2)
+                VStack(spacing: DS.Spacing.xs) {
+                    Text("Review Center")
+                        .font(DS.Typography.headline)
+                        .foregroundStyle(DS.Color.textPrimary)
+                    Text(startSummaryText)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(DS.Color.textTertiary)
                         .multilineTextAlignment(.center)
+                        .lineLimit(3)
                 }
-            }
 
-            Toggle("Include all saved words", isOn: $includeAll)
-                .toggleStyle(.switch)
-                .controlSize(.mini)
-                .font(DS.Typography.caption)
-                .tint(DS.Color.accent)
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sm) {
+                    reviewStat(icon: "clock.badge.exclamationmark", value: "\(dueWords.count)", label: "Due now", color: dueWords.isEmpty ? DS.Color.success : DS.Color.warning)
+                    reviewStat(icon: "sparkles", value: "\(store.newCount)", label: "New", color: DS.Color.accent)
+                    reviewStat(icon: "brain", value: "\(store.learningCount)", label: "Learning", color: DS.Color.warning)
+                    reviewStat(icon: "checkmark.seal", value: "\(store.masteredCount)", label: "Mastered", color: DS.Color.success)
+                    reviewStat(icon: "checkmark.circle", value: "\(store.reviewedTodayCount)", label: "Reviewed today", color: DS.Color.success)
+                }
 
-            Button("Start Quiz") { beginQuiz() }
+                Toggle("Include all saved words", isOn: $includeAll)
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .font(DS.Typography.caption)
+                    .tint(DS.Color.accent)
+                    .help("Review every saved word instead of the due-first queue.")
+
+                Button {
+                    beginQuiz()
+                } label: {
+                    Label("Start Review", systemImage: "play.fill")
+                        .font(DS.Typography.callout.weight(.semibold))
+                }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.regular)
-
-            Spacer()
+                .keyboardShortcut(.defaultAction)
+                .help("Start the current review queue")
+            }
+            .padding(DS.Spacing.lg)
         }
-        .padding(DS.Spacing.lg)
+    }
+
+    private var startSummaryText: String {
+        if includeAll {
+            return "\(wordsToQuiz.count) saved words are ready for an all-in review."
+        }
+        if !dueWords.isEmpty {
+            return "\(dueWords.count) words are due now. Start here to keep the review queue moving."
+        }
+        if isUsingFallbackQueue {
+            return "No words are due right now, so Review Center will practice new and learning words."
+        }
+        return "Your review queue is clear."
     }
 
     // MARK: - Quiz Card
@@ -97,14 +122,19 @@ struct QuizView: View {
         let word = queue[currentIndex]
 
         return VStack(spacing: DS.Spacing.lg) {
-            // Progress
-            ProgressView(value: Double(currentIndex), total: Double(queue.count))
-                .tint(DS.Color.accent)
-                .padding(.horizontal, DS.Spacing.md)
-
-            Text("\(currentIndex + 1) / \(queue.count)")
-                .font(DS.Typography.caption2)
+            VStack(spacing: DS.Spacing.xs) {
+                ProgressView(value: Double(currentIndex + 1), total: Double(queue.count))
+                    .tint(DS.Color.accent)
+                HStack {
+                    Text("Review \(currentIndex + 1) of \(queue.count)")
+                    Spacer()
+                    Label(word.reviewStatus.label, systemImage: word.reviewStatus.icon)
+                        .foregroundStyle(word.reviewStatus.color)
+                }
+                .font(DS.Typography.caption2.weight(.semibold))
                 .foregroundStyle(DS.Color.textTertiary)
+            }
+            .padding(.horizontal, DS.Spacing.md)
 
             Spacer()
 
@@ -137,19 +167,25 @@ struct QuizView: View {
                     actionButton(
                         label: "Again",
                         icon: "arrow.counterclockwise",
-                        color: DS.Color.danger
+                        color: DS.Color.danger,
+                        shortcut: "1",
+                        shortcutLabel: "1"
                     ) { handleAgain(word: word) }
 
                     actionButton(
                         label: "Good",
                         icon: "checkmark.circle.fill",
-                        color: DS.Color.accent
+                        color: DS.Color.accent,
+                        shortcut: "2",
+                        shortcutLabel: "2"
                     ) { handleGood(word: word) }
 
                     actionButton(
                         label: "Easy",
                         icon: "checkmark.seal.fill",
-                        color: DS.Color.success
+                        color: DS.Color.success,
+                        shortcut: "3",
+                        shortcutLabel: "3"
                     ) { handleKnown(word: word) }
                 }
                 .padding(.horizontal, DS.Spacing.xl)
@@ -185,11 +221,13 @@ struct QuizView: View {
                 .font(.system(size: 28, weight: .semibold, design: .default))
                 .foregroundStyle(DS.Color.textPrimary)
                 .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.72)
             masteryBadge(word.masteryLevel)
+            sourceBadge(for: word)
         }
         .frame(maxWidth: .infinity, alignment: .center)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Flashcard front: \(word.term), mastery level \(word.masteryLevel.label)")
+        .accessibilityLabel("Review card front: \(word.term), mastery level \(word.masteryLevel.label), status \(word.reviewStatus.label)")
         .accessibilityHint("Tap to flip and see the definition")
     }
 
@@ -203,6 +241,7 @@ struct QuizView: View {
                 .foregroundStyle(DS.Color.textPrimary)
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
+            sourceBadge(for: word)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -228,6 +267,8 @@ struct QuizView: View {
         label: String,
         icon: String,
         color: Color,
+        shortcut: KeyEquivalent,
+        shortcutLabel: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -244,42 +285,84 @@ struct QuizView: View {
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         }
         .buttonStyle(.plain)
+        .keyboardShortcut(shortcut, modifiers: [])
+        .help("\(label) - mark this card and continue (\(shortcutLabel))")
+        .accessibilityHint("Marks the current card as \(label) and advances review")
     }
 
     // MARK: - Result Screen
 
     private var resultState: some View {
-        VStack(spacing: DS.Spacing.lg) {
-            Spacer()
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: DS.Spacing.lg) {
+                Image(systemName: sessionAgain == 0 ? "star.fill" : "checkmark.circle.fill")
+                    .font(.system(size: 46, weight: .light))
+                    .foregroundStyle(sessionAgain == 0 ? .yellow : DS.Color.success)
 
-            Image(systemName: sessionAgain == 0 ? "star.fill" : "checkmark.circle.fill")
-                .font(.system(size: 48, weight: .light))
-                .foregroundStyle(sessionAgain == 0 ? .yellow : DS.Color.success)
+                VStack(spacing: DS.Spacing.xs) {
+                    Text("Review Complete")
+                        .font(DS.Typography.headline)
+                        .foregroundStyle(DS.Color.textPrimary)
+                    Text(resultSummaryText)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .multilineTextAlignment(.center)
+                }
 
-            VStack(spacing: DS.Spacing.xs) {
-                Text("Session Complete!")
-                    .font(DS.Typography.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
                 HStack(spacing: DS.Spacing.lg) {
                     resultStat(value: "\(sessionGood)", label: "Good", color: DS.Color.accent)
                     resultStat(value: "\(sessionEasy)", label: "Easy", color: DS.Color.success)
                     resultStat(value: "\(sessionAgain)", label: "Again", color: DS.Color.danger)
                 }
+
+                VStack(spacing: DS.Spacing.sm) {
+                    Button {
+                        isFinished = false
+                        beginQuiz()
+                    } label: {
+                        Label(store.pendingReviewCount > 0 ? "Review More" : "Practice Again", systemImage: "arrow.clockwise")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.regular)
+                    .disabled(wordsToQuiz.isEmpty)
+
+                    if let onContinueReading {
+                        Button(action: onContinueReading) {
+                            Label("Continue Reading", systemImage: "book.pages")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.regular)
+                    }
+
+                    if let onOpenSavedWords {
+                        Button(action: onOpenSavedWords) {
+                            Label("Open Saved Words", systemImage: "star")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.regular)
+                    }
+                }
+                .font(DS.Typography.caption.weight(.semibold))
+
                 Text("\(store.pendingReviewCount) words still due")
-                    .font(DS.Typography.caption)
+                    .font(DS.Typography.caption2)
                     .foregroundStyle(DS.Color.textTertiary)
             }
-
-            Button("Start Over") {
-                isFinished = false
-                beginQuiz()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.regular)
-
-            Spacer()
+            .padding(DS.Spacing.lg)
         }
-        .padding(DS.Spacing.lg)
+    }
+
+    private var resultSummaryText: String {
+        if store.pendingReviewCount > 0 {
+            return "Nice pass. There are still due words waiting in the queue."
+        }
+        if sessionAgain > 0 {
+            return "Good work. Words marked Again are scheduled back into review soon."
+        }
+        return "Clean session. Your due queue is clear for now."
     }
 
     private func resultStat(value: String, label: String, color: Color) -> some View {
@@ -299,7 +382,7 @@ struct QuizView: View {
         DSEmptyState(
             icon: "star",
             title: "No saved words",
-            message: "Save vocabulary while reading to start a quiz."
+            message: "Save vocabulary from the reader to build your review queue."
         )
     }
 
@@ -313,12 +396,12 @@ struct QuizView: View {
                 Text("All words mastered!")
                     .font(DS.Typography.headline)
                     .foregroundStyle(DS.Color.textPrimary)
-                Text("Enable \"Include mastered words\" to review them.")
+                Text("Your review queue is clear. Include mastered words for extra practice.")
                     .font(DS.Typography.caption)
                     .foregroundStyle(DS.Color.textTertiary)
                     .multilineTextAlignment(.center)
             }
-            Toggle("Include mastered words", isOn: $includeAll)
+            Toggle("Include all saved words", isOn: $includeAll)
                 .toggleStyle(.switch)
                 .controlSize(.mini)
                 .font(DS.Typography.caption)
@@ -338,6 +421,52 @@ struct QuizView: View {
             .padding(.vertical, DS.Spacing.xxs + 1)
             .background(level.color.opacity(0.12))
             .clipShape(Capsule())
+    }
+
+    private func sourceBadge(for word: SavedWord) -> some View {
+        HStack(spacing: DS.Spacing.xs) {
+            Image(systemName: "doc.text")
+            Text(sourceText(for: word))
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+        .font(DS.Typography.caption2)
+        .foregroundStyle(DS.Color.textTertiary)
+        .padding(.horizontal, DS.Spacing.sm)
+        .padding(.vertical, DS.Spacing.xxs + 1)
+        .background(DS.Color.surfaceInset)
+        .clipShape(Capsule())
+    }
+
+    private func sourceText(for word: SavedWord) -> String {
+        if let pdfFilename = word.pdfFilename, let pageNumber = word.pageNumber {
+            return "\(pdfFilename) · p.\(pageNumber)"
+        }
+        if let pdfFilename = word.pdfFilename {
+            return pdfFilename
+        }
+        return "Saved vocabulary"
+    }
+
+    private func reviewStat(icon: String, value: String, label: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(color)
+            Text(value)
+                .font(DS.Typography.headline)
+                .foregroundStyle(DS.Color.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Text(label)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(DS.Color.textTertiary)
+                .lineLimit(1)
+        }
+        .padding(DS.Spacing.sm)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(color.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
     }
 
     // MARK: - Logic

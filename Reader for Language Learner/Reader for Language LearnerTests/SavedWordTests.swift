@@ -35,7 +35,24 @@ final class SavedWordTests: XCTestCase {
         XCTAssertEqual(decoded.reviewCount, 0)
         XCTAssertEqual(decoded.incorrectCount, 0)
         XCTAssertNil(decoded.lastReviewedAt)
+        XCTAssertTrue(decoded.reviewHistory.isEmpty)
         XCTAssertNil(decoded.nextReviewAt)
+    }
+
+    func testDecodeLegacyWordDefaultsReviewHistory() throws {
+        let id = UUID()
+        let json = """
+        {
+          "id": "\(id.uuidString)",
+          "term": "legacy"
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(SavedWord.self, from: json)
+
+        XCTAssertEqual(decoded.id, id)
+        XCTAssertEqual(decoded.term, "legacy")
+        XCTAssertTrue(decoded.reviewHistory.isEmpty)
     }
 
     func testDefaultValues() {
@@ -49,6 +66,7 @@ final class SavedWordTests: XCTestCase {
         XCTAssertTrue(word.llmOutputs.isEmpty)
         XCTAssertEqual(word.reviewCount, 0)
         XCTAssertEqual(word.incorrectCount, 0)
+        XCTAssertTrue(word.reviewHistory.isEmpty)
         XCTAssertTrue(word.isDue())
         XCTAssertEqual(word.reviewStatus, .new)
     }

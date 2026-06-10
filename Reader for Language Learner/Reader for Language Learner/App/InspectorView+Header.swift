@@ -12,11 +12,15 @@ extension InspectorView {
     // MARK: - Saved State
 
     var isCurrentlySaved: Bool {
-        savedWordsStore.isSaved(
-            term: trimmedSelection,
-            pdfFilename: pdfFilename,
-            pageNumber: pageNumber
-        )
+        currentlySavedWord != nil
+    }
+
+    var currentlySavedWord: SavedWord? {
+        savedWordsStore.words.first {
+            $0.term.lowercased() == trimmedSelection.lowercased()
+                && $0.pdfFilename == pdfFilename
+                && $0.pageNumber == pageNumber
+        }
     }
 
     // MARK: - Compact Selection Header
@@ -32,16 +36,16 @@ extension InspectorView {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityLabel("Selected text: \(trimmedSelection)")
 
-                if isCurrentlySaved {
-                    Label("Saved", systemImage: "checkmark.seal.fill")
+                if let savedWord = currentlySavedWord {
+                    Label("Saved · \(savedWord.reviewStatus.label)", systemImage: savedWord.reviewStatus.icon)
                         .font(DS.Typography.caption2.weight(.semibold))
-                        .foregroundStyle(DS.Color.success)
+                        .foregroundStyle(savedWord.reviewStatus.color)
                         .padding(.horizontal, DS.Spacing.sm)
                         .padding(.vertical, 5)
-                        .background(DS.Color.success.opacity(0.10))
+                        .background(savedWord.reviewStatus.color.opacity(0.10))
                         .clipShape(Capsule())
                         .transition(.scale(scale: 0.8).combined(with: .opacity))
-                        .accessibilityLabel("Word is saved to vocabulary")
+                        .accessibilityLabel("Word is saved to vocabulary. Review status: \(savedWord.reviewStatus.label)")
                 }
             }
             .animation(DS.Animation.springFast, value: isCurrentlySaved)
@@ -165,7 +169,7 @@ extension InspectorView {
             actionGroup {
                 iconButton(
                     systemImage: speechManager.isSpeaking ? "speaker.wave.2.fill" : "play.fill",
-                    help: speechManager.isSpeaking ? "Speaking…" : "Speak (⇧⌘S)",
+                    help: speechManager.isSpeaking ? "Speaking selected text…" : "Speak selected text (⇧⌘S)",
                     action: speakSelection
                 )
                 .keyboardShortcut("s", modifiers: [.command, .shift])
@@ -173,7 +177,7 @@ extension InspectorView {
 
                 iconButton(
                     systemImage: "stop.fill",
-                    help: "Stop (⇧⌘X)",
+                    help: "Stop speaking (⇧⌘X)",
                     action: speechManager.stop
                 )
                 .keyboardShortcut("x", modifiers: [.command, .shift])
@@ -183,23 +187,23 @@ extension InspectorView {
             actionSpacer()
 
             actionGroup {
-                iconButton(systemImage: "doc.on.doc", help: "Copy") {
+                iconButton(systemImage: "doc.on.doc", help: "Copy selected text") {
                     copyToClipboard(trimmedSelection, showFeedback: true)
                 }
 
                 iconButton(
                     systemImage: isCurrentlySaved ? "star.fill" : "star",
-                    help: isCurrentlySaved ? "Unsave (⌘D)" : "Save (⌘D)",
+                    help: isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)",
                     action: toggleSaveWord
                 )
                 .keyboardShortcut("d", modifiers: [.command])
                 .foregroundStyle(isCurrentlySaved ? .yellow : .primary)
 
-                iconButton(systemImage: "square.and.arrow.up", help: "Quick Export") {
+                iconButton(systemImage: "square.and.arrow.up", help: "Quick export this selection to Anki TSV") {
                     Task { await quickExport() }
                 }
 
-                iconButton(systemImage: "ellipsis.circle", help: "Full Export… (⌘E)") {
+                iconButton(systemImage: "ellipsis.circle", help: "Choose Anki export fields… (⌘E)") {
                     showAnkiExport = true
                 }
                 .keyboardShortcut("e", modifiers: [.command])
@@ -210,13 +214,13 @@ extension InspectorView {
             actionSpacer()
 
             actionGroup {
-                iconButton(systemImage: "trash", help: "Clear outputs", role: .destructive) {
+                iconButton(systemImage: "trash", help: "Clear generated module outputs", role: .destructive) {
                     viewModel.resetAll(); activeModule = nil
                 }
                 .disabled(isAnyLoading)
                 .foregroundStyle(DS.Color.danger.opacity(0.78))
 
-                iconButton(systemImage: "gearshape", help: "Settings (⌘,)") {
+                iconButton(systemImage: "gearshape", help: "Open RELL settings (⌘,)") {
                     openSettings()
                 }
                 .keyboardShortcut(",", modifiers: [.command])
