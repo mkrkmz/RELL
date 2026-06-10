@@ -352,6 +352,17 @@ struct ContentView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigation) {
+            if selectionState.documentURL != nil {
+                Button(action: closeDocument) {
+                    Label("Home", systemImage: "house")
+                }
+                .keyboardShortcut("w", modifiers: [.command, .shift])
+                .help("Close document and return to Home (⇧⌘W)")
+                .accessibilityLabel("Return to Home")
+            }
+        }
+
+        ToolbarItem(placement: .navigation) {
             Button { toggleSidebar() } label: {
                 Label("Toggle Sidebar", systemImage: "sidebar.left")
             }
@@ -518,6 +529,16 @@ struct ContentView: View {
 
     private func openDocument(_ url: URL) {
         selectionState.documentURL = url
+        closeFindBar()
+    }
+
+    /// Closes the current document and returns to the Home dashboard.
+    /// Session end and last-page persistence are handled by the
+    /// `onChange(of: selectionState.documentURL)` / page-change observers.
+    private func closeDocument() {
+        selectionState.documentURL = nil
+        selectionState.selectedText = ""
+        selectionState.contextSentence = nil
         closeFindBar()
     }
 
