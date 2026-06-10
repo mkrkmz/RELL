@@ -11,18 +11,17 @@ Kok nedenler:
 - Streaming sirasinda her flush'ta tum sonuc hiyerarsisi yeniden render ediliyor (`App/InspectorView+ResultPanel.swift`, `UI/ResultRenderer.swift`)
 
 Is kalemleri:
-- [ ] Token limitlerini 12B+ modele gore genislet (~1.5-2x)
-- [ ] SSE'de `finish_reason` decode et; truncation rozetini buna bagla
-- [ ] Yerel saglayicilarda modul isteklerini sinirli eszamanlilikla calistir (maks 2)
-- [ ] Streaming render maliyetini dusur (sade Text, scroll debounce, flush araligi 120ms/80 karakter)
-- [ ] Sistem prompt ve modul prompt'larini kisalt (format talimat yuku ~140 token)
+- [x] Token limitlerini 12B+ modele gore genislet (~1.5-2x)
+- [x] SSE'de `finish_reason` decode et; truncation rozetini buna bagla
+- [x] Yerel saglayicilarda modul isteklerini sinirli eszamanlilikla calistir (maks 2 — `AsyncLimiter`)
+- [x] Streaming render maliyetini dusur (scroll throttle ~6/sn, flush araligi 120ms/80 karakter)
+- [x] Sistem prompt'unu kisalt (modul prompt format kaliplari ResultParser'a bagli — bilerek dokunulmadi)
 
-## Faz 2 — Streaming Goruntuleme Optimizasyonu
+## Faz 2 — Streaming Goruntuleme Optimizasyonu (tamamlandi)
 
-- [ ] Parse sonuclarini memoize et (her delta'da tum buffer'i yeniden regex'lemek yerine `onChange` + `@State`)
-- [ ] Collocation/Examples/UsageNotes parser'larini stream bitiminde tek sefer calistir
-- [ ] LLM ciktilari icin kalici disk cache (uygulama kapaninca LRU cache kayboluyor)
-- [ ] Ayar degisikliginde tum cache'i silmek yerine yalnizca etkilenen anahtarlari sil
+- [x] Parse sonuclarini memoize et (`ParsedResultCache` — collocations + usage notes; satir bolme parser'lari ucuz, memoize edilmedi)
+- [x] LLM ciktilari icin kalici disk cache (`llm_output_cache.json`, kapasite 50, LRU sirasi korunarak)
+- [x] Ayar degisikliginde secici invalidation: native dil cache anahtarina eklendi; provider/model/dil degisimi cache'i silmiyor (yalnizca sunucu URL degisimi siler)
 
 ## Faz 3 — UI/UX Iyilestirme
 
