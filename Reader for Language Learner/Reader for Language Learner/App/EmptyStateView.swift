@@ -2,7 +2,11 @@
 //  EmptyStateView.swift
 //  Reader for Language Learner
 //
-//  Extracted from ContentView.swift
+//  Welcome dashboard shown when no PDF is open.
+//
+//  Design intent: calm, focused, premium. One accent color, one review CTA,
+//  a single hero action (continue the last document), quiet metadata.
+//  No repeated counts, no zero-value badges, no per-card button clusters.
 //
 
 import SwiftUI
@@ -22,13 +26,16 @@ struct EmptyStateView: View {
         savedWordsStore?.pendingReviewCount ?? 0
     }
 
-    private var hasDashboardData: Bool {
-        !recentDocuments.isEmpty
-            || todayReadingTime > 0
-            || reviewedTodayCount > 0
-            || (savedWordsStore?.words.isEmpty == false)
-            || (noteStore?.notes.isEmpty == false)
-            || (bookmarkStore?.bookmarks.isEmpty == false)
+    private var hasSavedWords: Bool {
+        savedWordsStore?.words.isEmpty == false
+    }
+
+    private var heroDocument: RecentDocument? {
+        recentDocuments.first
+    }
+
+    private var otherDocuments: [RecentDocument] {
+        Array(recentDocuments.dropFirst().prefix(4))
     }
 
     var body: some View {
@@ -38,427 +45,409 @@ struct EmptyStateView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: DS.Spacing.xl) {
-                    DashboardActionBar(
-                        pendingReviewCount: pendingReviewCount,
-                        hasSavedWords: savedWordsStore?.words.isEmpty == false,
-                        onOpenPDF: onOpenPDF,
-                        onReview: onReview
-                    )
+                    DashboardHeader(onOpenPDF: onOpenPDF)
 
-                    DashboardWorklaneRow(
-                        recentDocumentCount: recentDocuments.count,
-                        pendingReviewCount: pendingReviewCount,
-                        reviewedTodayCount: reviewedTodayCount,
-                        noteCount: noteStore?.notes.count ?? 0,
-                        savedWordCount: savedWordsStore?.words.count ?? 0,
-                        onOpenPDF: onOpenPDF,
-                        onReview: onReview
-                    )
-
-                    WorkspaceSummaryView(
-                        todayReadingTime: todayReadingTime,
-                        pendingReviewCount: pendingReviewCount,
-                        reviewedTodayCount: reviewedTodayCount,
-                        noteCount: noteStore?.notes.count ?? 0,
-                        savedWordCount: savedWordsStore?.words.count ?? 0,
-                        bookmarkCount: bookmarkStore?.bookmarks.count ?? 0,
-                        reviewActivity: savedWordsStore?.reviewActivity(days: 365) ?? []
-                    )
-
-                    if !recentDocuments.isEmpty {
-                        recentDocumentsSection
-                    } else if !hasDashboardData {
-                        EmptyDashboardPlaceholder()
+                    if let heroDocument {
+                        ContinueReadingHero(
+                            document: heroDocument,
+                            todayReadingTime: todayReadingTime,
+                            onOpen: onOpenRecent.map { open in { open(heroDocument) } }
+                        )
+                    } else {
+                        EmptyLibraryHero(onOpenPDF: onOpenPDF)
                     }
+
+                    if pendingReviewCount > 0, let onReview {
+                        ReviewPromptRow(
+                            pendingReviewCount: pendingReviewCount,
+                            onReview: onReview
+                        )
+                    }
+
+                    if !otherDocuments.isEmpty {
+                        RecentDocumentList(
+                            documents: otherDocuments,
+                            onOpen: onOpenRecent
+                        )
+                    }
+
+                    Spacer(minLength: DS.Spacing.xl)
+
+                    DashboardFooter(
+                        savedWordCount: savedWordsStore?.words.count ?? 0,
+                        noteCount: noteStore?.notes.count ?? 0,
+                        bookmarkCount: bookmarkStore?.bookmarks.count ?? 0,
+                        reviewedTodayCount: reviewedTodayCount,
+                        reviewStreak: currentReviewStreak
+                    )
                 }
-                .frame(maxWidth: 980, alignment: .topLeading)
-                .frame(maxWidth: .infinity, minHeight: 620, alignment: .top)
-                .padding(.horizontal, DS.Spacing.xl)
-                .padding(.vertical, DS.Spacing.xl)
+                .frame(maxWidth: 640, alignment: .topLeading)
+                .frame(maxWidth: .infinity, minHeight: 560, alignment: .top)
+                .padding(.horizontal, DS.Spacing.xxl)
+                .padding(.top, DS.Spacing.xxxl)
+                .padding(.bottom, DS.Spacing.xl)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var recentDocumentsSection: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.md) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Continue Reading")
-                    .font(DS.Typography.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
-                Spacer()
-                Text("\(recentDocuments.count) recent")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
-
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 214, maximum: 260), spacing: DS.Spacing.md)],
-                alignment: .leading,
-                spacing: DS.Spacing.md
-            ) {
-                ForEach(recentDocuments.prefix(4)) { document in
-                    CompactRecentDocumentCard(
-                        document: document,
-                        noteCount: noteStore?.count(for: document.filename) ?? 0,
-                        savedWordCount: savedWordsStore?.savedCount(for: document.filename) ?? 0,
-                        dueWordCount: savedWordsStore?.dueCount(for: document.filename) ?? 0,
-                        bookmarkCount: bookmarkStore?.bookmarks(for: document.filename).count ?? 0,
-                        onOpen: { onOpenRecent?(document) },
-                        onReview: onReview
-                    )
-                }
+    private var currentReviewStreak: Int {
+        guard let activity = savedWordsStore?.reviewActivity(days: 60) else { return 0 }
+        var streak = 0
+        for day in activity.reversed() {
+            if day.count > 0 {
+                streak += 1
+            } else if streak > 0 {
+                break
             }
         }
+        return streak
     }
 }
 
-private struct DashboardActionBar: View {
-    let pendingReviewCount: Int
-    let hasSavedWords: Bool
+// MARK: - Header
+
+private struct DashboardHeader: View {
     let onOpenPDF: () -> Void
-    let onReview: (() -> Void)?
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            horizontalLayout
-            verticalLayout
-        }
-        .padding(DS.Spacing.md)
-        .background(statusColor.opacity(0.05))
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.28), lineWidth: 1)
-        )
-        .overlay(alignment: .leading) {
-            Rectangle()
-                .fill(statusColor)
-                .frame(width: 3)
-        }
-    }
-
-    private var horizontalLayout: some View {
-        HStack(spacing: DS.Spacing.md) {
-            statusBlock
-            Spacer(minLength: DS.Spacing.md)
-            actions
-        }
-    }
-
-    private var verticalLayout: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.md) {
-            statusBlock
-            actions
-        }
-    }
-
-    private var statusBlock: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-            HStack(spacing: DS.Spacing.sm) {
-                Image(systemName: statusIcon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(statusColor)
-                    .frame(width: 16)
-                Text(statusText)
-                    .font(DS.Typography.headline)
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                Text(greeting)
+                    .font(.system(size: 26, weight: .semibold, design: .default))
                     .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(1)
+                Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
+                    .font(DS.Typography.subhead)
+                    .foregroundStyle(DS.Color.textTertiary)
             }
-            Label("Drop a PDF anywhere in this window", systemImage: "arrow.down.to.line")
-                .font(DS.Typography.caption)
-                .foregroundStyle(DS.Color.textTertiary)
-                .lineLimit(1)
-        }
-    }
 
-    private var actions: some View {
-        HStack(spacing: DS.Spacing.sm) {
-            if let onReview {
-                Button(action: onReview) {
-                    Label(
-                        pendingReviewCount > 0 ? "Review \(pendingReviewCount)" : "Review",
-                        systemImage: "brain.head.profile"
-                    )
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.regular)
-                .disabled(!hasSavedWords)
-            }
+            Spacer()
 
             Button(action: onOpenPDF) {
-                Label("Open PDF", systemImage: "folder.badge.plus")
+                Label("Open PDF", systemImage: "plus")
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.regular)
+            .controlSize(.large)
             .keyboardShortcut("o", modifiers: [.command])
+            .help("Open a PDF (⌘O)")
         }
     }
 
-    private var statusText: String {
-        if pendingReviewCount > 0 {
-            return "\(pendingReviewCount) words are ready for review"
-        }
-        if hasSavedWords {
-            return "Keep reading and reviewing"
-        }
-        return "Start with a PDF"
-    }
-
-    private var statusIcon: String {
-        pendingReviewCount > 0 ? "clock.badge.exclamationmark" : "doc.text"
-    }
-
-    private var statusColor: Color {
-        pendingReviewCount > 0 ? DS.Color.warning : DS.Color.accent
-    }
-}
-
-private struct DashboardWorklaneRow: View {
-    let recentDocumentCount: Int
-    let pendingReviewCount: Int
-    let reviewedTodayCount: Int
-    let noteCount: Int
-    let savedWordCount: Int
-    let onOpenPDF: () -> Void
-    let onReview: (() -> Void)?
-
-    var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: DS.Spacing.md) {
-                cards
-            }
-            VStack(spacing: DS.Spacing.sm) {
-                cards
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var cards: some View {
-        DashboardLaneCard(
-            title: "Reading",
-            value: recentDocumentCount > 0 ? "\(recentDocumentCount) recent" : "Open a PDF",
-            detail: recentDocumentCount > 0 ? "Continue from your library" : "Start a reading session",
-            icon: "book.pages",
-            tint: DS.Color.accent,
-            actionTitle: "Open",
-            action: onOpenPDF
-        )
-
-        DashboardLaneCard(
-            title: "Review",
-            value: pendingReviewCount > 0 ? "\(pendingReviewCount) due" : "\(reviewedTodayCount) today",
-            detail: savedWordCount > 0 ? "\(savedWordCount) saved words" : "Save words while reading",
-            icon: pendingReviewCount > 0 ? "clock.badge.exclamationmark" : "checkmark.circle",
-            tint: pendingReviewCount > 0 ? DS.Color.warning : DS.Color.success,
-            actionTitle: "Review",
-            action: onReview,
-            isDisabled: savedWordCount == 0
-        )
-
-        DashboardLaneCard(
-            title: "Notes",
-            value: "\(noteCount) notes",
-            detail: noteCount > 0 ? "Search and revisit later" : "Create notes from PDFs",
-            icon: "note.text",
-            tint: .purple
-        )
-    }
-}
-
-private struct DashboardLaneCard: View {
-    let title: String
-    let value: String
-    let detail: String
-    let icon: String
-    let tint: Color
-    var actionTitle: String? = nil
-    var action: (() -> Void)? = nil
-    var isDisabled = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.sm) {
-                Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(tint)
-                    .frame(width: 16)
-                Text(title)
-                    .font(DS.Typography.caption.weight(.semibold))
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .lineLimit(1)
-                Spacer(minLength: DS.Spacing.sm)
-            }
-
-            Text(value)
-                .font(DS.Typography.headline)
-                .foregroundStyle(DS.Color.textPrimary)
-                .lineLimit(1)
-
-            HStack(spacing: DS.Spacing.sm) {
-                Text(detail)
-                    .font(DS.Typography.caption2)
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-
-                Spacer(minLength: DS.Spacing.xs)
-
-                if let action, let actionTitle {
-                    Button(actionTitle, action: action)
-                        .buttonStyle(.bordered)
-                        .controlSize(.mini)
-                        .disabled(isDisabled)
-                }
-            }
-        }
-        .padding(DS.Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(tint.opacity(0.055))
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(tint.opacity(0.28), lineWidth: 1)
-        )
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(tint)
-                .frame(height: 2)
+    private var greeting: String {
+        switch Calendar.current.component(.hour, from: .now) {
+        case 5..<12:  return "Good morning"
+        case 12..<18: return "Good afternoon"
+        default:      return "Good evening"
         }
     }
 }
 
-private struct EmptyDashboardPlaceholder: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            HStack(spacing: DS.Spacing.sm) {
-                Image(systemName: "doc.text")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(DS.Color.textSecondary)
-                Text("No documents yet")
-                    .font(DS.Typography.label)
-                    .foregroundStyle(DS.Color.textPrimary)
-            }
+// MARK: - Continue Reading Hero
 
-            Text("Open or drop a PDF to create reading history, saved words, notes, and review activity.")
-                .font(DS.Typography.caption)
-                .foregroundStyle(DS.Color.textTertiary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(DS.Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.24), lineWidth: 1)
-        )
-    }
-}
-
-private struct CompactRecentDocumentCard: View {
+private struct ContinueReadingHero: View {
     let document: RecentDocument
-    let noteCount: Int
-    let savedWordCount: Int
-    let dueWordCount: Int
-    let bookmarkCount: Int
-    let onOpen: () -> Void
-    let onReview: (() -> Void)?
+    let todayReadingTime: Double
+    var onOpen: (() -> Void)?
 
     @State private var isHovered = false
 
-    private var documentTint: Color {
-        if dueWordCount > 0 { return DS.Color.warning }
-        if savedWordCount > 0 { return DS.Color.success }
-        if noteCount > 0 { return .purple }
-        return DS.Color.accent
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            HStack(alignment: .top, spacing: DS.Spacing.sm) {
+        Button {
+            onOpen?()
+        } label: {
+            HStack(alignment: .center, spacing: DS.Spacing.lg) {
+                Image(systemName: "book.pages")
+                    .font(.system(size: 21, weight: .light))
+                    .foregroundStyle(DS.Color.accent)
+                    .frame(width: 52, height: 52)
+                    .background(DS.Color.accentSubtle)
+                    .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+
                 VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                    Text(document.filename)
-                        .font(DS.Typography.label)
+                    Text("Continue reading")
+                        .dsOverlineLabel()
+                        .textCase(.uppercase)
+
+                    Text(displayTitle)
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(DS.Color.textPrimary)
                         .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(document.lastOpenedAt, style: .relative)
-                        .font(DS.Typography.caption2)
+                        .multilineTextAlignment(.leading)
+
+                    Text(metaText)
+                        .font(DS.Typography.caption)
                         .foregroundStyle(DS.Color.textTertiary)
                         .lineLimit(1)
                 }
 
-                Spacer(minLength: DS.Spacing.sm)
+                Spacer(minLength: DS.Spacing.lg)
 
-                Text(document.pageLabel)
-                    .font(DS.Typography.caption2.weight(.semibold))
-                    .foregroundStyle(DS.Color.textSecondary)
-                    .lineLimit(1)
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(isHovered ? DS.Color.accent : DS.Color.textTertiary)
             }
-
-            HStack(spacing: DS.Spacing.sm) {
-                metric(icon: "note.text", value: noteCount)
-                metric(icon: "star", value: savedWordCount, tint: .yellow)
-                metric(icon: "clock", value: dueWordCount, tint: dueWordCount > 0 ? DS.Color.warning : DS.Color.textSecondary)
-                metric(icon: "bookmark", value: bookmarkCount, tint: .purple)
-            }
-
-            Text(document.url.lastPathComponent)
-                .font(DS.Typography.caption2)
-                .foregroundStyle(DS.Color.textTertiary)
-                .lineLimit(1)
-
-            HStack(spacing: DS.Spacing.sm) {
-                Button(action: onOpen) {
-                    Label("Continue", systemImage: "arrow.right")
-                        .font(DS.Typography.caption.weight(.semibold))
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-
-                if let onReview {
-                    Button(action: onReview) {
-                        Text(dueWordCount > 0 ? "Review \(dueWordCount)" : "Review")
-                            .font(DS.Typography.caption.weight(.semibold))
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .disabled(savedWordCount == 0)
-                }
-            }
+            .padding(DS.Spacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(DS.Color.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.lg)
+                    .strokeBorder(
+                        isHovered ? DS.Color.accentMuted : DS.Color.separator.opacity(0.3),
+                        lineWidth: 1
+                    )
+            )
+            .dsShadow(isHovered ? DS.Shadow.card : DS.Shadow.subtle)
+            .contentShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
         }
-        .padding(DS.Spacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(documentTint.opacity(isHovered ? 0.08 : 0.045))
+        .buttonStyle(.plain)
+        .disabled(onOpen == nil)
+        .animation(DS.Animation.fast, value: isHovered)
+        .onHover { isHovered = $0 }
+        .accessibilityLabel("Continue reading \(displayTitle), \(document.pageLabel)")
+    }
+
+    private var displayTitle: String {
+        document.filename
+            .replacingOccurrences(of: ".pdf", with: "", options: [.caseInsensitive, .anchored, .backwards])
+            .replacingOccurrences(of: "_", with: " ")
+    }
+
+    private var metaText: String {
+        var parts = [document.pageLabel]
+        if todayReadingTime > 0,
+           let formatted = Self.durationFormatter.string(from: todayReadingTime) {
+            parts.append("\(formatted) today")
+        }
+        parts.append(relativeOpenedText)
+        return parts.joined(separator: "  ·  ")
+    }
+
+    private var relativeOpenedText: String {
+        Self.relativeFormatter.localizedString(for: document.lastOpenedAt, relativeTo: .now)
+    }
+
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter
+    }()
+
+    private static let durationFormatter: DateComponentsFormatter = {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute]
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 2
+        formatter.zeroFormattingBehavior = .dropAll
+        return formatter
+    }()
+}
+
+// MARK: - Review Prompt
+
+private struct ReviewPromptRow: View {
+    let pendingReviewCount: Int
+    let onReview: () -> Void
+
+    var body: some View {
+        HStack(spacing: DS.Spacing.md) {
+            Circle()
+                .fill(DS.Color.warning)
+                .frame(width: 7, height: 7)
+
+            Text(pendingReviewCount == 1
+                 ? "1 word is ready for review"
+                 : "\(pendingReviewCount) words are ready for review")
+                .font(DS.Typography.label)
+                .foregroundStyle(DS.Color.textPrimary)
+
+            Spacer(minLength: DS.Spacing.md)
+
+            Button("Review", action: onReview)
+                .buttonStyle(.bordered)
+                .controlSize(.regular)
+                .help("Start a review session")
+        }
+        .padding(.horizontal, DS.Spacing.lg)
+        .padding(.vertical, DS.Spacing.md)
         .background(DS.Color.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(isHovered ? documentTint.opacity(0.42) : DS.Color.separator.opacity(0.26), lineWidth: 1)
+                .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 1)
         )
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(documentTint)
-                .frame(height: 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(pendingReviewCount) words ready for review")
+    }
+}
+
+// MARK: - Recent Documents
+
+private struct RecentDocumentList: View {
+    let documents: [RecentDocument]
+    var onOpen: ((RecentDocument) -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            Text("Recent")
+                .dsOverlineLabel()
+                .textCase(.uppercase)
+                .padding(.leading, DS.Spacing.xs)
+
+            VStack(spacing: 0) {
+                ForEach(Array(documents.enumerated()), id: \.element.id) { index, document in
+                    RecentDocumentRow(
+                        document: document,
+                        onOpen: onOpen.map { open in { open(document) } }
+                    )
+                    if index < documents.count - 1 {
+                        Divider()
+                            .padding(.leading, DS.Spacing.lg + 16)
+                    }
+                }
+            }
+            .background(DS.Color.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.md)
+                    .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 1)
+            )
         }
-        .contentShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+    }
+}
+
+private struct RecentDocumentRow: View {
+    let document: RecentDocument
+    var onOpen: (() -> Void)?
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button {
+            onOpen?()
+        } label: {
+            HStack(spacing: DS.Spacing.md) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .frame(width: 16)
+
+                Text(displayTitle)
+                    .font(DS.Typography.label)
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .lineLimit(1)
+
+                Spacer(minLength: DS.Spacing.md)
+
+                Text(document.pageLabel)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(1)
+
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(DS.Color.accent)
+                    .opacity(isHovered ? 1 : 0)
+            }
+            .padding(.horizontal, DS.Spacing.lg)
+            .padding(.vertical, DS.Spacing.md)
+            .background(isHovered ? DS.Color.hoverOverlay : .clear)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(onOpen == nil)
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
+        .accessibilityLabel("Open \(displayTitle), \(document.pageLabel)")
     }
 
-    private func metric(icon: String, value: Int, tint: Color = DS.Color.textSecondary) -> some View {
-        HStack(spacing: DS.Spacing.xs) {
-            Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(tint)
-            Text("\(value)")
-                .font(DS.Typography.caption2.weight(.medium))
+    private var displayTitle: String {
+        document.filename
+            .replacingOccurrences(of: ".pdf", with: "", options: [.caseInsensitive, .anchored, .backwards])
+            .replacingOccurrences(of: "_", with: " ")
+    }
+}
+
+// MARK: - Empty Library Hero
+
+private struct EmptyLibraryHero: View {
+    let onOpenPDF: () -> Void
+
+    var body: some View {
+        VStack(spacing: DS.Spacing.lg) {
+            ZStack {
+                Circle()
+                    .fill(DS.Color.accentSubtle)
+                    .frame(width: 76, height: 76)
+                Image(systemName: "book.pages")
+                    .font(.system(size: 30, weight: .light))
+                    .foregroundStyle(DS.Color.accent)
+            }
+
+            VStack(spacing: DS.Spacing.xs) {
+                Text("Start with a PDF")
+                    .font(DS.Typography.title)
+                    .foregroundStyle(DS.Color.textPrimary)
+                Text("Open a document, select words as you read,\nand build your vocabulary.")
+                    .font(DS.Typography.subhead)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
         }
-        .foregroundStyle(DS.Color.textSecondary)
-        .lineLimit(1)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, DS.Spacing.xxxl)
+    }
+}
+
+// MARK: - Footer
+
+private struct DashboardFooter: View {
+    let savedWordCount: Int
+    let noteCount: Int
+    let bookmarkCount: Int
+    let reviewedTodayCount: Int
+    let reviewStreak: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            Divider()
+
+            HStack(spacing: DS.Spacing.sm) {
+                if !statsText.isEmpty {
+                    Text(statsText)
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: DS.Spacing.md)
+
+                Label("Drop a PDF anywhere to open it", systemImage: "arrow.down.doc")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private var statsText: String {
+        var parts: [String] = []
+        if savedWordCount > 0 {
+            parts.append(savedWordCount == 1 ? "1 saved word" : "\(savedWordCount) saved words")
+        }
+        if noteCount > 0 {
+            parts.append(noteCount == 1 ? "1 note" : "\(noteCount) notes")
+        }
+        if bookmarkCount > 0 {
+            parts.append(bookmarkCount == 1 ? "1 bookmark" : "\(bookmarkCount) bookmarks")
+        }
+        if reviewedTodayCount > 0 {
+            parts.append("\(reviewedTodayCount) reviewed today")
+        }
+        if reviewStreak > 1 {
+            parts.append("\(reviewStreak)-day streak")
+        }
+        return parts.joined(separator: "  ·  ")
     }
 }
