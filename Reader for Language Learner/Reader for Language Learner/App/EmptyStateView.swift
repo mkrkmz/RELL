@@ -44,52 +44,65 @@ struct EmptyStateView: View {
             DS.Color.surface
                 .ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: DS.Spacing.xl) {
-                    DashboardHeader(onOpenPDF: onOpenPDF)
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: DS.Spacing.xl) {
+                        DashboardHeader(onOpenPDF: onOpenPDF)
 
-                    if let heroDocument {
-                        ContinueReadingHero(
-                            document: heroDocument,
-                            todayReadingTime: todayReadingTime,
-                            onOpen: onOpenRecent.map { open in { open(heroDocument) } }
-                        )
-                    } else {
-                        EmptyLibraryHero(onOpenPDF: onOpenPDF)
+                        if let heroDocument {
+                            ContinueReadingHero(
+                                document: heroDocument,
+                                todayReadingTime: todayReadingTime,
+                                onOpen: onOpenRecent.map { open in { open(heroDocument) } }
+                            )
+                        } else {
+                            EmptyLibraryHero(onOpenPDF: onOpenPDF)
+                        }
+
+                        if pendingReviewCount > 0, let onReview {
+                            ReviewPromptRow(
+                                pendingReviewCount: pendingReviewCount,
+                                previewTerms: dueTermPreview,
+                                onReview: onReview
+                            )
+                        }
+
+                        if !otherDocuments.isEmpty {
+                            RecentDocumentList(
+                                documents: otherDocuments,
+                                onOpen: onOpenRecent
+                            )
+                        }
                     }
-
-                    if pendingReviewCount > 0, let onReview {
-                        ReviewPromptRow(
-                            pendingReviewCount: pendingReviewCount,
-                            onReview: onReview
-                        )
-                    }
-
-                    if !otherDocuments.isEmpty {
-                        RecentDocumentList(
-                            documents: otherDocuments,
-                            onOpen: onOpenRecent
-                        )
-                    }
-
-                    Spacer(minLength: DS.Spacing.xl)
-
-                    DashboardFooter(
-                        savedWordCount: savedWordsStore?.words.count ?? 0,
-                        noteCount: noteStore?.notes.count ?? 0,
-                        bookmarkCount: bookmarkStore?.bookmarks.count ?? 0,
-                        reviewedTodayCount: reviewedTodayCount,
-                        reviewStreak: currentReviewStreak
-                    )
+                    .frame(maxWidth: 640, alignment: .topLeading)
+                    .frame(maxWidth: .infinity, alignment: .top)
+                    .padding(.horizontal, DS.Spacing.xxl)
+                    .padding(.top, DS.Spacing.xxxl)
+                    .padding(.bottom, DS.Spacing.xl)
                 }
-                .frame(maxWidth: 640, alignment: .topLeading)
-                .frame(maxWidth: .infinity, minHeight: 560, alignment: .top)
+
+                DashboardFooter(
+                    savedWordCount: savedWordsStore?.words.count ?? 0,
+                    noteCount: noteStore?.notes.count ?? 0,
+                    bookmarkCount: bookmarkStore?.bookmarks.count ?? 0,
+                    reviewedTodayCount: reviewedTodayCount,
+                    reviewStreak: currentReviewStreak
+                )
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, DS.Spacing.xxl)
-                .padding(.top, DS.Spacing.xxxl)
-                .padding(.bottom, DS.Spacing.xl)
+                .padding(.bottom, DS.Spacing.lg)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// First few due terms, shown as chips in the review prompt.
+    private var dueTermPreview: [String] {
+        guard let savedWordsStore else { return [] }
+        return savedWordsStore.reviewQueue(includeAll: false)
+            .prefix(3)
+            .map(\.term)
     }
 
     private var currentReviewStreak: Int {
@@ -177,6 +190,18 @@ private struct ContinueReadingHero: View {
             .padding(DS.Spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(DS.Color.surfaceElevated)
+            .overlay(alignment: .bottom) {
+                if let progress = document.readingProgress {
+                    GeometryReader { geo in
+                        Rectangle()
+                            .fill(DS.Color.accent.opacity(0.8))
+                            .frame(width: geo.size.width * progress)
+                    }
+                    .frame(height: 3)
+                    .background(DS.Color.accent.opacity(0.1))
+                    .accessibilityLabel("\(Int(progress * 100)) percent read")
+                }
+            }
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.lg)
@@ -247,19 +272,48 @@ private struct ContinueReadingHero: View {
 
 private struct ReviewPromptRow: View {
     let pendingReviewCount: Int
+    var previewTerms: [String] = []
     let onReview: () -> Void
 
     var body: some View {
-        HStack(spacing: DS.Spacing.md) {
+        HStack(alignment: .center, spacing: DS.Spacing.md) {
             Circle()
                 .fill(DS.Color.warning)
                 .frame(width: 7, height: 7)
 
-            Text(pendingReviewCount == 1
-                 ? "1 word is ready for review"
-                 : "\(pendingReviewCount) words are ready for review")
-                .font(DS.Typography.label)
-                .foregroundStyle(DS.Color.textPrimary)
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text(pendingReviewCount == 1
+                     ? "1 word is ready for review"
+                     : "\(pendingReviewCount) words are ready for review")
+                    .font(DS.Typography.label)
+                    .foregroundStyle(DS.Color.textPrimary)
+
+                if !previewTerms.isEmpty {
+                    HStack(spacing: DS.Spacing.xs) {
+                        ForEach(Array(previewTerms.enumerated()), id: \.offset) { _, term in
+                            Text(term)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(DS.Color.textSecondary)
+                                .lineLimit(1)
+                                .padding(.horizontal, DS.Spacing.sm)
+                                .padding(.vertical, 3)
+                                .background(DS.Color.surfaceInset)
+                                .clipShape(Capsule())
+                                .overlay(
+                                    Capsule()
+                                        .strokeBorder(DS.Color.separator.opacity(0.25), lineWidth: 0.7)
+                                )
+                        }
+
+                        if pendingReviewCount > previewTerms.count {
+                            Text("+\(pendingReviewCount - previewTerms.count) more")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(DS.Color.textTertiary)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+            }
 
             Spacer(minLength: DS.Spacing.md)
 

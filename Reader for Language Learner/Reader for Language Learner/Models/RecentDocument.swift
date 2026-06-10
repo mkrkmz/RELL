@@ -13,19 +13,22 @@ struct RecentDocument: Identifiable, Codable, Hashable {
     var filename: String
     var lastOpenedAt: Date
     var lastPageIndex: Int?
+    var pageCount: Int?
 
     init(
         id: UUID = UUID(),
         path: String,
         filename: String,
         lastOpenedAt: Date = Date(),
-        lastPageIndex: Int? = nil
+        lastPageIndex: Int? = nil,
+        pageCount: Int? = nil
     ) {
         self.id = id
         self.path = path
         self.filename = filename
         self.lastOpenedAt = lastOpenedAt
         self.lastPageIndex = lastPageIndex
+        self.pageCount = pageCount
     }
 
     var url: URL {
@@ -33,10 +36,17 @@ struct RecentDocument: Identifiable, Codable, Hashable {
     }
 
     var pageLabel: String {
-        if let lastPageIndex {
-            return "Page \(lastPageIndex + 1)"
+        guard let lastPageIndex else { return "Start reading" }
+        if let pageCount, pageCount > 0 {
+            return "Page \(lastPageIndex + 1) of \(pageCount)"
         }
-        return "Start reading"
+        return "Page \(lastPageIndex + 1)"
+    }
+
+    /// Fraction of the document read (0...1), when both page values are known.
+    var readingProgress: Double? {
+        guard let lastPageIndex, let pageCount, pageCount > 0 else { return nil }
+        return min(1, Double(lastPageIndex + 1) / Double(pageCount))
     }
 }
 
@@ -87,10 +97,13 @@ final class RecentDocumentStore {
         save()
     }
 
-    func updateLastPage(for url: URL, pageIndex: Int) {
+    func updateLastPage(for url: URL, pageIndex: Int, pageCount: Int? = nil) {
         let path = url.path
         guard let index = documents.firstIndex(where: { $0.path == path }) else { return }
         documents[index].lastPageIndex = pageIndex
+        if let pageCount, pageCount > 0 {
+            documents[index].pageCount = pageCount
+        }
         documents[index].lastOpenedAt = Date()
         save()
     }

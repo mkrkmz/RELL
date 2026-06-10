@@ -182,7 +182,11 @@ struct ContentView: View {
                         else { return }
                         persistPage(index, for: filename)
                         if let currentURL = selectionState.documentURL {
-                            recentDocumentStore.updateLastPage(for: currentURL, pageIndex: index)
+                            recentDocumentStore.updateLastPage(
+                                for: currentURL,
+                                pageIndex: index,
+                                pageCount: pdfView.document?.pageCount
+                            )
                         }
                     }
                     .onChange(of: selectionState.documentURL) { _, newURL in

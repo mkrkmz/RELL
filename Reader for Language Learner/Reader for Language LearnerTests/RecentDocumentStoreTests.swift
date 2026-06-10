@@ -33,6 +33,33 @@ final class RecentDocumentStoreTests: XCTestCase {
         XCTAssertEqual(store.recentDocuments.first?.pageLabel, "Page 8")
     }
 
+    func testUpdateLastPageWithPageCountBuildsProgress() throws {
+        let store = makeStore()
+        let url = try makeTempPDF(named: "astro-progress")
+
+        store.registerOpen(url: url)
+        store.updateLastPage(for: url, pageIndex: 4, pageCount: 10)
+
+        let document = try XCTUnwrap(store.recentDocuments.first)
+        XCTAssertEqual(document.pageLabel, "Page 5 of 10")
+        XCTAssertEqual(document.readingProgress, 0.5)
+    }
+
+    func testReadingProgressNilWithoutPageCount() {
+        let document = RecentDocument(path: "/tmp/a.pdf", filename: "a", lastPageIndex: 3)
+        XCTAssertNil(document.readingProgress)
+        XCTAssertEqual(document.pageLabel, "Page 4")
+    }
+
+    func testDecodeLegacyDocumentWithoutPageCount() throws {
+        let legacyJSON = """
+        {"id":"\(UUID().uuidString)","path":"/tmp/a.pdf","filename":"a","lastOpenedAt":700000000,"lastPageIndex":2}
+        """
+        let decoded = try JSONDecoder().decode(RecentDocument.self, from: Data(legacyJSON.utf8))
+        XCTAssertNil(decoded.pageCount)
+        XCTAssertEqual(decoded.lastPageIndex, 2)
+    }
+
     private func makeStore() -> RecentDocumentStore {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
