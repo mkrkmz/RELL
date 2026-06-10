@@ -147,29 +147,25 @@ struct InspectorView: View {
             refreshCache(term: trimmedSelection)
         }
         .onChange(of: nativeLanguageRaw) { _, _ in
-            // Native language change invalidates meaningTR and collocations outputs
-            viewModel.outputs[.meaningTR]    = nil
-            viewModel.outputs[.collocations] = nil
-            viewModel.errors[.meaningTR]     = nil
-            viewModel.errors[.collocations]  = nil
-            viewModel.cache.removeAll()
+            // Native language is part of the cache key — old entries stay
+            // valid under their own key; just reload for the new one.
             refreshCache(term: trimmedSelection)
         }
         .onChange(of: llmProviderTypeRaw) { _, _ in
-            // Provider change: cached outputs from the old provider are no longer valid
+            // Provider is part of the cache key — no wipe needed.
             circuitBreaker.reset()
-            viewModel.cache.removeAll()
             refreshCache(term: trimmedSelection)
         }
         .onChange(of: llmModel) { _, _ in
-            // Model change: same provider but different model may yield different outputs
+            // Model is part of the cache key — no wipe needed.
             circuitBreaker.reset()
-            viewModel.cache.removeAll()
             refreshCache(term: trimmedSelection)
         }
         .onChange(of: llmServerURL) { _, _ in
+            // Server URL is NOT in the cache key: a different server behind
+            // the same model name may answer differently, so wipe.
             circuitBreaker.reset()
-            viewModel.cache.removeAll()
+            viewModel.clearCache()
             refreshCache(term: trimmedSelection)
         }
         .onChange(of: llmAPIKey) { _, _ in
@@ -308,7 +304,8 @@ struct InspectorView: View {
         let key = OutputCacheKey(
             term: term, mode: explainMode.rawValue,
             detail: explainDetail.rawValue, domain: domainPreference.rawValue,
-            provider: llmProviderTypeRaw, model: llmModel
+            provider: llmProviderTypeRaw, model: llmModel,
+            native: nativeLanguageRaw
         )
         let loaded = viewModel.loadFromCache(key: key)
         if !loaded, let activeModule, !activeModule.isEnabled(mode: explainMode) {
@@ -358,7 +355,8 @@ struct InspectorView: View {
         let cacheKey = OutputCacheKey(
             term: trimmedSelection, mode: explainMode.rawValue,
             detail: explainDetail.rawValue, domain: domainPreference.rawValue,
-            provider: llmProviderTypeRaw, model: llmModel
+            provider: llmProviderTypeRaw, model: llmModel,
+            native: nativeLanguageRaw
         )
 
         let resolvedMaxTokens = module.recommendedMaxTokens(

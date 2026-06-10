@@ -72,4 +72,85 @@ final class LRUCacheTests: XCTestCase {
         cache.set("a", 1)
         XCTAssertEqual(cache.get("a"), 1, "Capacity should be clamped to 1")
     }
+
+    // MARK: - Codable
+
+    func testCodableRoundTripPreservesEntriesAndOrder() throws {
+        var cache = LRUCache<String, Int>(capacity: 5)
+        cache.set("a", 1)
+        cache.set("b", 2)
+        cache.set("c", 3)
+        _ = cache.get("a") // "b" is now the oldest
+
+        let data = try JSONEncoder().encode(cache)
+        var decoded = try JSONDecoder().decode(LRUCache<String, Int>.self, from: data)
+
+        XCTAssertEqual(
+            decoded.entriesOldestFirst.map(\.key), ["b", "c", "a"],
+            "Decoded cache should preserve LRU order (b was oldest after touching a)"
+        )
+        XCTAssertEqual(decoded.get("a"), 1)
+        XCTAssertEqual(decoded.get("b"), 2)
+        XCTAssertEqual(decoded.get("c"), 3)
+    }
+
+    func testEntriesOldestFirstReflectsUsage() {
+        var cache = LRUCache<String, Int>(capacity: 3)
+        cache.set("a", 1)
+        cache.set("b", 2)
+        _ = cache.get("a")
+
+        XCTAssertEqual(cache.entriesOldestFirst.map(\.key), ["b", "a"])
+    }
+
+    func testDecodedSnapshotMigratesIntoSmallerCapacity() throws {
+        var big = LRUCache<String, Int>(capacity: 10)
+        for (index, key) in ["a", "b", "c", "d"].enumerated() {
+            big.set(key, index)
+        }
+        let data = try JSONEncoder().encode(big)
+        let restored = try JSONDecoder().decode(LRUCache<String, Int>.self, from: data)
+
+        var small = LRUCache<String, Int>(capacity: 2)
+        for (key, value) in restored.entriesOldestFirst {
+            small.set(key, value)
+        }
+
+        XCTAssertNil(small.get("a"), "Oldest entries should fall off when migrating to a smaller capacity")
+        XCTAssertNil(small.get("b"))
+        XCTAssertEqual(small.get("c"), 2)
+        XCTAssertEqual(small.get("d"), 3)
+    }
+
+    // MARK: - OutputCacheKey
+
+    func testOutputCacheKeyDistinguishesNativeLanguage() {
+        let turkish = OutputCacheKey(
+            term: "orbit", mode: "Word", detail: "Short", domain: "General",
+            provider: "LM Studio", model: "m", native: "Turkish"
+        )
+        let german = OutputCacheKey(
+            term: "orbit", mode: "Word", detail: "Short", domain: "General",
+            provider: "LM Studio", model: "m", native: "German"
+        )
+        XCTAssertNotEqual(turkish, german)
+    }
+
+    func testOutputCacheKeyCodableRoundTrip() throws {
+        let key = OutputCacheKey(
+            term: "orbit", mode: "Word", detail: "Short", domain: "General",
+            provider: "LM Studio", model: "m", native: "Turkish"
+        )
+        let data = try JSONEncoder().encode(key)
+        let decoded = try JSONDecoder().decode(OutputCacheKey.self, from: data)
+        XCTAssertEqual(decoded, key)
+    }
+
+    func testOutputCacheKeyDecodesLegacyPayloadWithoutNative() throws {
+        let legacyJSON = """
+        {"term":"orbit","mode":"Word","detail":"Short","domain":"General","provider":"LM Studio","model":"m"}
+        """
+        let decoded = try JSONDecoder().decode(OutputCacheKey.self, from: Data(legacyJSON.utf8))
+        XCTAssertEqual(decoded.native, "")
+    }
 }

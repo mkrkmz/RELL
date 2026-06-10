@@ -4,12 +4,15 @@
 //
 
 import Foundation
+import os
 
 // MARK: - InspectorViewModel
 
 @MainActor
 @Observable
 final class InspectorViewModel {
+    static let cacheCapacity = 50
+
     var outputs: [ModuleType: String] = [:]
     var loading: [ModuleType: Bool] = [:]
     var errors: [ModuleType: String] = [:]
@@ -23,8 +26,18 @@ final class InspectorViewModel {
     /// which serialize on a single GPU context anyway.
     let localRequestGate = AsyncLimiter(limit: 2)
 
-    /// LRU output cache — survives word-to-word navigation.
-    var cache = LRUCache<OutputCacheKey, [ModuleType: String]>(capacity: 20)
+    /// LRU output cache — survives word-to-word navigation and, via the disk
+    /// snapshot in Application Support, app restarts.
+    var cache: LRUCache<OutputCacheKey, [ModuleType: String]>
+
+    private let cacheFileURL: URL?
+
+    init(cacheFileURL customCacheFileURL: URL? = nil) {
+        let url = customCacheFileURL
+            ?? FileManager.default.rellAppSupportDirectory()?.appendingPathComponent("llm_output_cache.json")
+        self.cacheFileURL = url
+        self.cache = Self.loadCache(from: url)
+    }
 
     /// Session-scoped history of the last 20 looked-up terms (most recent first).
     private(set) var recentTerms: [String] = []
@@ -54,6 +67,41 @@ final class InspectorViewModel {
         var merged = cache.get(key) ?? [:]
         for (module, value) in snapshot { merged[module] = value }
         cache.set(key, merged)
+        persistCache()
+    }
+
+    /// Clears the in-memory cache and its disk snapshot.
+    func clearCache() {
+        cache.removeAll()
+        persistCache()
+    }
+
+    // MARK: - Cache persistence
+
+    private static func loadCache(from url: URL?) -> LRUCache<OutputCacheKey, [ModuleType: String]> {
+        var fresh = LRUCache<OutputCacheKey, [ModuleType: String]>(capacity: cacheCapacity)
+        guard let url else { return fresh }
+        let restored = RELLJSONStore.load(
+            LRUCache<OutputCacheKey, [ModuleType: String]>.self,
+            from: url,
+            storeName: "InspectorOutputCache",
+            defaultValue: LRUCache(capacity: cacheCapacity)
+        )
+        // Re-insert into a cache with the current capacity; oldest entries
+        // beyond the limit fall off naturally.
+        for (key, value) in restored.entriesOldestFirst {
+            fresh.set(key, value)
+        }
+        return fresh
+    }
+
+    private func persistCache() {
+        guard let cacheFileURL else { return }
+        do {
+            try RELLJSONStore.save(cache, to: cacheFileURL, storeName: "InspectorOutputCache")
+        } catch {
+            AppLogger.persistence.error("LLM output cache save failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     @discardableResult

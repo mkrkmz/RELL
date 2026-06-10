@@ -45,7 +45,7 @@ enum DomainPreference: String, CaseIterable, Identifiable {
     }
 }
 
-enum ModuleType: String, CaseIterable, Identifiable, Hashable {
+enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
     case definitionEN
     case meaningTR
     case collocations

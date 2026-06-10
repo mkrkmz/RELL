@@ -261,18 +261,8 @@ struct PronunciationResultView: View {
 struct UsageNotesResultView: View {
     let content: String
 
-    private var rows: [(label: String, value: String)] {
-        content
-            .components(separatedBy: .newlines)
-            .compactMap { raw in
-                let line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !line.isEmpty else { return nil }
-                guard let colon = line.firstIndex(of: ":") else { return nil }
-                let label = String(line[..<colon]).trimmingCharacters(in: .whitespacesAndNewlines)
-                let value = String(line[line.index(after: colon)...]).trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !label.isEmpty, !value.isEmpty else { return nil }
-                return (label, value)
-            }
+    private var rows: [UsageNoteRow] {
+        ParsedResultCache.usageNoteRows(for: content)
     }
 
     var body: some View {
@@ -313,7 +303,7 @@ struct CollocationResultView: View {
     let content: String
 
     private var entries: [CollocationEntry] {
-        ResultParser.parseCollocationEntries(content)
+        ParsedResultCache.collocationEntries(for: content)
     }
 
     var body: some View {

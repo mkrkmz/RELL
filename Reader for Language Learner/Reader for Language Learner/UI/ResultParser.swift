@@ -25,6 +25,35 @@ struct ParsedSection: Identifiable, Hashable {
     let body: String
 }
 
+/// A single parsed `LABEL: value` row from usage-notes output.
+struct UsageNoteRow: Hashable {
+    let label: String
+    let value: String
+}
+
+/// Memoizes parsed LLM output so result views don't re-run the line-scanning
+/// parsers on every SwiftUI render. Keyed by the raw content string; entries
+/// are tiny and the cache holds only a handful of recent results.
+@MainActor
+enum ParsedResultCache {
+    private static var collocations = LRUCache<String, [CollocationEntry]>(capacity: 16)
+    private static var usageNotes = LRUCache<String, [UsageNoteRow]>(capacity: 16)
+
+    static func collocationEntries(for content: String) -> [CollocationEntry] {
+        if let cached = collocations.get(content) { return cached }
+        let parsed = ResultParser.parseCollocationEntries(content)
+        collocations.set(content, parsed)
+        return parsed
+    }
+
+    static func usageNoteRows(for content: String) -> [UsageNoteRow] {
+        if let cached = usageNotes.get(content) { return cached }
+        let parsed = ResultParser.parseUsageNoteRows(content)
+        usageNotes.set(content, parsed)
+        return parsed
+    }
+}
+
 enum ResultParser {
     static func parse(_ text: String, module: ModuleType) -> [ParsedSection] {
         let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -32,6 +61,23 @@ enum ResultParser {
 
         // All modules now produce plain text — return as a single section.
         return [ParsedSection(title: module.title, body: cleaned)]
+    }
+
+    // MARK: - Usage Notes Parser
+
+    /// Parses `LABEL: value` lines (FREQ, REG, CONFUSE, CAUTION…).
+    static func parseUsageNoteRows(_ text: String) -> [UsageNoteRow] {
+        text
+            .components(separatedBy: .newlines)
+            .compactMap { raw in
+                let line = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !line.isEmpty else { return nil }
+                guard let colon = line.firstIndex(of: ":") else { return nil }
+                let label = String(line[..<colon]).trimmingCharacters(in: .whitespacesAndNewlines)
+                let value = String(line[line.index(after: colon)...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !label.isEmpty, !value.isEmpty else { return nil }
+                return UsageNoteRow(label: label, value: value)
+            }
     }
 
     // MARK: - Collocation Parser (markdown format)
