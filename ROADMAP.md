@@ -11,12 +11,13 @@ parse memoizasyonu) tamamlandi ve buradan cikarildi.
 - [x] Hero karttaki ikon kutusu yerine kapak gorseli (placeholder ikonla fade-in)
 - [x] Recent satirlarinda mini kapak
 
-## Faz 2 — Gunluk Hedef + Haftalik Aktivite
+## Faz 2 — Gunluk Hedef + Haftalik Aktivite (tamamlandi)
 
-- [ ] Ayarlanabilir gunluk okuma hedefi (dakika, AppStorage); header'da progress ring + bugunku sure
-- [ ] 7 gunluk mini bar chart (Charts, `sessionStore.last7Days` reuse)
-- [ ] Seri gostergesi: flame + hedefle dolan halka (footer metni yerine gorsel oge)
-- [ ] Hedef tamamlama mikro-kutlamasi (kisa spring animasyon)
+- [x] Ayarlanabilir gunluk okuma hedefi (dakika, AppStorage `dailyReadingGoalMinutes`,
+      sag tik menusuyle 10-60 dk arasi secim); hero altindaki aktivite kartinda progress ring + bugunku sure
+- [x] 7 gunluk mini bar chart (Charts, `sessionStore.last7Days` reuse; hedef cizgisi RuleMark ile)
+- [x] Seri gostergesi: flame + okuma serisi (footer'daki review-streak metni kaldirildi)
+- [x] Hedef tamamlama mikro-kutlamasi (halka yesile doner, bounce'li checkmark, spring animasyon)
 
 ## Faz 3 — Dashboard Mini Kelime Karti
 

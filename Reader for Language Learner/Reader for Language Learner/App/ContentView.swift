@@ -52,7 +52,8 @@ struct ContentView: View {
                         bookmarkStore: bookmarkStore,
                         onOpenRecent: { openDocument($0.url) },
                         onReview: { showWorkspaceReview = true },
-                        coverStore: coverStore
+                        coverStore: coverStore,
+                        sessionStore: sessionStore
                     )
                         .onDrop(of: [.pdf], isTargeted: $isDropTargeted, perform: handleDrop)
                         .overlay { if isDropTargeted { dropOverlay } }

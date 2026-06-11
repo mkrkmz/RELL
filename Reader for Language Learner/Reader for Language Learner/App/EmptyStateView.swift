@@ -23,6 +23,7 @@ struct EmptyStateView: View {
     var onOpenRecent: ((RecentDocument) -> Void)? = nil
     var onReview: (() -> Void)? = nil
     var coverStore: DocumentCoverStore? = nil
+    var sessionStore: ReadingSessionStore? = nil
 
     private var pendingReviewCount: Int {
         savedWordsStore?.pendingReviewCount ?? 0
@@ -61,6 +62,14 @@ struct EmptyStateView: View {
                             EmptyLibraryHero(onOpenPDF: onOpenPDF)
                         }
 
+                        if let sessionStore, heroDocument != nil {
+                            DashboardActivityCard(
+                                todayReadingTime: todayReadingTime,
+                                last7Days: sessionStore.last7Days,
+                                readingStreak: sessionStore.currentStreak
+                            )
+                        }
+
                         if pendingReviewCount > 0, let onReview {
                             ReviewPromptRow(
                                 pendingReviewCount: pendingReviewCount,
@@ -88,8 +97,7 @@ struct EmptyStateView: View {
                     savedWordCount: savedWordsStore?.words.count ?? 0,
                     noteCount: noteStore?.notes.count ?? 0,
                     bookmarkCount: bookmarkStore?.bookmarks.count ?? 0,
-                    reviewedTodayCount: reviewedTodayCount,
-                    reviewStreak: currentReviewStreak
+                    reviewedTodayCount: reviewedTodayCount
                 )
                 .frame(maxWidth: 640)
                 .frame(maxWidth: .infinity)
@@ -120,18 +128,6 @@ struct EmptyStateView: View {
             .map(\.term)
     }
 
-    private var currentReviewStreak: Int {
-        guard let activity = savedWordsStore?.reviewActivity(days: 60) else { return 0 }
-        var streak = 0
-        for day in activity.reversed() {
-            if day.count > 0 {
-                streak += 1
-            } else if streak > 0 {
-                break
-            }
-        }
-        return streak
-    }
 }
 
 // MARK: - Header
@@ -541,7 +537,6 @@ private struct DashboardFooter: View {
     let noteCount: Int
     let bookmarkCount: Int
     let reviewedTodayCount: Int
-    let reviewStreak: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.md) {
@@ -578,9 +573,6 @@ private struct DashboardFooter: View {
         }
         if reviewedTodayCount > 0 {
             parts.append("\(reviewedTodayCount) reviewed today")
-        }
-        if reviewStreak > 1 {
-            parts.append("\(reviewStreak)-day streak")
         }
         return parts.joined(separator: "  ·  ")
     }
