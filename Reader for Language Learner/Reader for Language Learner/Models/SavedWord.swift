@@ -133,6 +133,22 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.nextReviewAt = nextReviewAt
     }
 
+    /// Best available text for the back of a review card.
+    /// Priority: English definition → native meaning → any output → context sentence.
+    var reviewDefinition: String {
+        let priority: [String] = [
+            ModuleType.definitionEN.rawValue,
+            ModuleType.meaningTR.rawValue,
+        ]
+        for key in priority {
+            if let text = llmOutputs[key], !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return text
+            }
+        }
+        return llmOutputs.values.first(where: { !$0.isEmpty })
+            ?? (sentence.isEmpty ? "No definition saved." : sentence)
+    }
+
     enum CodingKeys: String, CodingKey {
         case id
         case term

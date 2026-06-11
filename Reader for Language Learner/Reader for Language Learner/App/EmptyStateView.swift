@@ -25,10 +25,6 @@ struct EmptyStateView: View {
     var coverStore: DocumentCoverStore? = nil
     var sessionStore: ReadingSessionStore? = nil
 
-    private var pendingReviewCount: Int {
-        savedWordsStore?.pendingReviewCount ?? 0
-    }
-
     private var hasSavedWords: Bool {
         savedWordsStore?.words.isEmpty == false
     }
@@ -70,11 +66,10 @@ struct EmptyStateView: View {
                             )
                         }
 
-                        if pendingReviewCount > 0, let onReview {
-                            ReviewPromptRow(
-                                pendingReviewCount: pendingReviewCount,
-                                previewTerms: dueTermPreview,
-                                onReview: onReview
+                        if let savedWordsStore, hasSavedWords {
+                            DashboardWordCard(
+                                store: savedWordsStore,
+                                onReviewAll: onReview
                             )
                         }
 
@@ -118,14 +113,6 @@ struct EmptyStateView: View {
         guard let coverStore else { return nil }
         _ = coverStore.revision
         return coverStore.cover(for: document.path)
-    }
-
-    /// First few due terms, shown as chips in the review prompt.
-    private var dueTermPreview: [String] {
-        guard let savedWordsStore else { return [] }
-        return savedWordsStore.reviewQueue(includeAll: false)
-            .prefix(3)
-            .map(\.term)
     }
 
 }
@@ -297,73 +284,6 @@ private struct ContinueReadingHero: View {
         formatter.zeroFormattingBehavior = .dropAll
         return formatter
     }()
-}
-
-// MARK: - Review Prompt
-
-private struct ReviewPromptRow: View {
-    let pendingReviewCount: Int
-    var previewTerms: [String] = []
-    let onReview: () -> Void
-
-    var body: some View {
-        HStack(alignment: .center, spacing: DS.Spacing.md) {
-            Circle()
-                .fill(DS.Color.warning)
-                .frame(width: 7, height: 7)
-
-            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                Text(pendingReviewCount == 1
-                     ? "1 word is ready for review"
-                     : "\(pendingReviewCount) words are ready for review")
-                    .font(DS.Typography.label)
-                    .foregroundStyle(DS.Color.textPrimary)
-
-                if !previewTerms.isEmpty {
-                    HStack(spacing: DS.Spacing.xs) {
-                        ForEach(Array(previewTerms.enumerated()), id: \.offset) { _, term in
-                            Text(term)
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                                .lineLimit(1)
-                                .padding(.horizontal, DS.Spacing.sm)
-                                .padding(.vertical, 3)
-                                .background(DS.Color.surfaceInset)
-                                .clipShape(Capsule())
-                                .overlay(
-                                    Capsule()
-                                        .strokeBorder(DS.Color.separator.opacity(0.25), lineWidth: 0.7)
-                                )
-                        }
-
-                        if pendingReviewCount > previewTerms.count {
-                            Text("+\(pendingReviewCount - previewTerms.count) more")
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(DS.Color.textTertiary)
-                                .lineLimit(1)
-                        }
-                    }
-                }
-            }
-
-            Spacer(minLength: DS.Spacing.md)
-
-            Button("Review", action: onReview)
-                .buttonStyle(.bordered)
-                .controlSize(.regular)
-                .help("Start a review session")
-        }
-        .padding(.horizontal, DS.Spacing.lg)
-        .padding(.vertical, DS.Spacing.md)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 1)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(pendingReviewCount) words ready for review")
-    }
 }
 
 // MARK: - Recent Documents

@@ -247,18 +247,7 @@ struct QuizView: View {
     }
 
     private func backText(for word: SavedWord) -> String {
-        // Priority: definition → native meaning → first available output
-        let priority: [String] = [
-            ModuleType.definitionEN.rawValue,
-            ModuleType.meaningTR.rawValue,
-        ]
-        for key in priority {
-            if let text = word.llmOutputs[key], !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return text
-            }
-        }
-        return word.llmOutputs.values.first(where: { !$0.isEmpty })
-            ?? (word.sentence.isEmpty ? "No definition saved." : word.sentence)
+        word.reviewDefinition
     }
 
     // MARK: - Action Button

@@ -19,11 +19,12 @@ parse memoizasyonu) tamamlandi ve buradan cikarildi.
 - [x] Seri gostergesi: flame + okuma serisi (footer'daki review-streak metni kaldirildi)
 - [x] Hedef tamamlama mikro-kutlamasi (halka yesile doner, bounce'li checkmark, spring animasyon)
 
-## Faz 3 — Dashboard Mini Kelime Karti
+## Faz 3 — Dashboard Mini Kelime Karti (tamamlandi)
 
-- [ ] Review satirinin yerine tek due kelimelik flip kart: on yuz terim, arka yuz kayitli tanim
-- [ ] Again/Good/Easy → `savedWordsStore.applyReview` (QuizView ile ayni SRS), bitince siradaki kelime
-- [ ] Tum due'lar bitince "All caught up" durumu; tam oturum icin Review butonu kalir
+- [x] Review satirinin yerine tek due kelimelik flip kart: on yuz terim, arka yuz kayitli tanim
+      (tanim onceligi `SavedWord.reviewDefinition` olarak paylasildi, QuizView da kullaniyor)
+- [x] Again/Good/Easy → `savedWordsStore.applyReview` (QuizView ile ayni SRS), bitince siradaki kelime
+- [x] Tum due'lar bitince "All caught up" durumu + bir sonraki review zamani; "Review all" butonu kalir
 
 ## Faz 4 — Library Gorunumu
 
