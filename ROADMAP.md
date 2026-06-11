@@ -33,11 +33,16 @@ parse memoizasyonu) tamamlandi ve buradan cikarildi.
 - [x] Grid karti: kapak + baslik + ilerleme cubugu + son acilma; arama ve siralama (son acilan / ad / ilerleme)
 - [x] Sag tik: Show in Finder, Remove from Library (dashboard recent satirlarinda da)
 
-## Faz 5 — Onboarding
+## Faz 5 — Onboarding (tamamlandi)
 
-- [ ] Ilk acilista 3 adimli sheet (AppStorage `hasCompletedOnboarding`):
-      dil cifti secimi → LM Studio baglanti testi (mevcut connection-test reuse) → kisa ozellik turu
-- [ ] Atlanabilir; Settings'ten yeniden acilabilir
+- [x] Ilk acilista 3 adimli sheet (AppStorage `hasCompletedOnboarding`):
+      dil cifti secimi → LM Studio baglanti testi → kisa ozellik turu
+- [x] Atlanabilir (Skip / Esc); Settings → General'den "Show Welcome Tour Again" ile yeniden acilir
+- [x] Mevcut kullanicilar (okuma gecmisi olanlar) akisi hic gormez — ilk render oncesi otomatik tamamlanmis sayilir
+
+---
+
+Tum fazlar tamamlandi (2026-06-11). Yeni isler Backlog'dan secilir.
 
 ## Backlog (siralanmamis)
 

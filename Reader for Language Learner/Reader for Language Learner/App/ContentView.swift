@@ -30,6 +30,18 @@ struct ContentView: View {
     @AppStorage("appTheme")       private var appThemeRaw:    String = AppTheme.system.rawValue
     @AppStorage("pageTheme")      private var pageThemeRaw:   String = PageTheme.original.rawValue
     @AppStorage("readingPositions") private var readingPositionsData: Data = Data()
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+
+    init() {
+        // Users with existing reading history predate the first-run flow —
+        // mark it complete before the first render so the sheet never flashes.
+        let defaults = UserDefaults.standard
+        if !defaults.bool(forKey: "hasCompletedOnboarding"),
+           let dir = FileManager.default.rellAppSupportDirectory(),
+           FileManager.default.fileExists(atPath: dir.appendingPathComponent("recent_documents.json").path) {
+            defaults.set(true, forKey: "hasCompletedOnboarding")
+        }
+    }
 
     private var appTheme:  AppTheme  { AppTheme(rawValue: appThemeRaw) ?? .system }
     private var pageTheme: PageTheme { PageTheme(rawValue: pageThemeRaw) ?? .original }
@@ -118,6 +130,13 @@ struct ContentView: View {
                 onContinueReading: { showWorkspaceReview = false }
             )
                 .frame(width: 460, height: 560)
+        }
+        .sheet(isPresented: Binding(
+            get: { !hasCompletedOnboarding },
+            set: { hasCompletedOnboarding = !$0 }
+        )) {
+            OnboardingView { hasCompletedOnboarding = true }
+                .frame(width: 560, height: 540)
         }
     }
 

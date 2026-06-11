@@ -31,10 +31,19 @@ struct GeneralSettingsView: View {
             Section("Reading Context") {
                 domainRow
             }
+
+            Section {
+                Button("Show Welcome Tour Again") {
+                    hasCompletedOnboarding = false
+                }
+                .help("Reopens the first-run setup: language pair, AI connection, and quick tour")
+            }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 320)
+        .frame(width: 540, height: 380)
     }
+
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
 
     // MARK: - Language Pair
 
