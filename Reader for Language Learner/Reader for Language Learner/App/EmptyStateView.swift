@@ -22,6 +22,7 @@ struct EmptyStateView: View {
     var bookmarkStore: PDFBookmarkStore? = nil
     var onOpenRecent: ((RecentDocument) -> Void)? = nil
     var onReview: (() -> Void)? = nil
+    var coverStore: DocumentCoverStore? = nil
 
     private var pendingReviewCount: Int {
         savedWordsStore?.pendingReviewCount ?? 0
@@ -53,6 +54,7 @@ struct EmptyStateView: View {
                             ContinueReadingHero(
                                 document: heroDocument,
                                 todayReadingTime: todayReadingTime,
+                                cover: cover(for: heroDocument),
                                 onOpen: onOpenRecent.map { open in { open(heroDocument) } }
                             )
                         } else {
@@ -70,7 +72,8 @@ struct EmptyStateView: View {
                         if !otherDocuments.isEmpty {
                             RecentDocumentList(
                                 documents: otherDocuments,
-                                onOpen: onOpenRecent
+                                onOpen: onOpenRecent,
+                                coverProvider: { self.cover(for: $0) }
                             )
                         }
                     }
@@ -95,6 +98,18 @@ struct EmptyStateView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task(id: recentDocuments.prefix(5).map(\.path)) {
+            for document in recentDocuments.prefix(5) {
+                coverStore?.requestCover(for: document.path)
+            }
+        }
+    }
+
+    /// Reads `revision` so SwiftUI re-renders when a cover finishes loading.
+    private func cover(for document: RecentDocument) -> NSImage? {
+        guard let coverStore else { return nil }
+        _ = coverStore.revision
+        return coverStore.cover(for: document.path)
     }
 
     /// First few due terms, shown as chips in the review prompt.
@@ -148,6 +163,7 @@ private struct DashboardHeader: View {
 private struct ContinueReadingHero: View {
     let document: RecentDocument
     let todayReadingTime: Double
+    var cover: NSImage?
     var onOpen: (() -> Void)?
 
     @State private var isHovered = false
@@ -157,12 +173,8 @@ private struct ContinueReadingHero: View {
             onOpen?()
         } label: {
             HStack(alignment: .center, spacing: DS.Spacing.lg) {
-                Image(systemName: "book.pages")
-                    .font(.system(size: 21, weight: .light))
-                    .foregroundStyle(DS.Color.accent)
-                    .frame(width: 52, height: 52)
-                    .background(DS.Color.accentSubtle)
-                    .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+                coverView
+                    .animation(DS.Animation.standard, value: cover)
 
                 VStack(alignment: .leading, spacing: DS.Spacing.xs) {
                     Text("Continue reading")
@@ -225,6 +237,29 @@ private struct ContinueReadingHero: View {
             .disabled(!fileExists)
         }
         .accessibilityLabel("Continue reading \(displayTitle), \(document.pageLabel)")
+    }
+
+    @ViewBuilder
+    private var coverView: some View {
+        if let cover {
+            Image(nsImage: cover)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 52, height: 68)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .strokeBorder(DS.Color.separator.opacity(0.4), lineWidth: 0.5)
+                )
+                .transition(.opacity)
+        } else {
+            Image(systemName: "book.pages")
+                .font(.system(size: 21, weight: .light))
+                .foregroundStyle(DS.Color.accent)
+                .frame(width: 52, height: 68)
+                .background(DS.Color.accentSubtle)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+        }
     }
 
     private var fileExists: Bool {
@@ -340,6 +375,7 @@ private struct ReviewPromptRow: View {
 private struct RecentDocumentList: View {
     let documents: [RecentDocument]
     var onOpen: ((RecentDocument) -> Void)?
+    var coverProvider: (RecentDocument) -> NSImage? = { _ in nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
@@ -352,6 +388,7 @@ private struct RecentDocumentList: View {
                 ForEach(Array(documents.enumerated()), id: \.element.id) { index, document in
                     RecentDocumentRow(
                         document: document,
+                        cover: coverProvider(document),
                         onOpen: onOpen.map { open in { open(document) } }
                     )
                     if index < documents.count - 1 {
@@ -372,6 +409,7 @@ private struct RecentDocumentList: View {
 
 private struct RecentDocumentRow: View {
     let document: RecentDocument
+    var cover: NSImage?
     var onOpen: (() -> Void)?
 
     @State private var isHovered = false
@@ -381,10 +419,8 @@ private struct RecentDocumentRow: View {
             onOpen?()
         } label: {
             HStack(spacing: DS.Spacing.md) {
-                Image(systemName: fileExists ? "doc.text" : "questionmark.folder")
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .frame(width: 16)
+                miniCover
+                    .animation(DS.Animation.standard, value: cover)
 
                 Text(displayTitle)
                     .font(DS.Typography.label)
@@ -419,6 +455,29 @@ private struct RecentDocumentRow: View {
             .disabled(!fileExists)
         }
         .accessibilityLabel("Open \(displayTitle), \(document.pageLabel)")
+    }
+
+    @ViewBuilder
+    private var miniCover: some View {
+        if let cover, fileExists {
+            Image(nsImage: cover)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 22, height: 28)
+                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 3)
+                        .strokeBorder(DS.Color.separator.opacity(0.4), lineWidth: 0.5)
+                )
+                .transition(.opacity)
+        } else {
+            Image(systemName: fileExists ? "doc.text" : "questionmark.folder")
+                .font(.system(size: 12, weight: .regular))
+                .foregroundStyle(DS.Color.textTertiary)
+                .frame(width: 22, height: 28)
+                .background(DS.Color.surfaceInset.opacity(0.6))
+                .clipShape(RoundedRectangle(cornerRadius: 3))
+        }
     }
 
     private var fileExists: Bool {

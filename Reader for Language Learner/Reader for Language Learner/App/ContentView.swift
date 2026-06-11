@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var noteStore        = PDFNoteStore()
     @State private var sessionStore     = ReadingSessionStore()
     @State private var recentDocumentStore = RecentDocumentStore()
+    @State private var coverStore       = DocumentCoverStore()
     @State private var ankiPrefs        = AnkiModulePreferences()
 
     @State private var showSidebar   = true
@@ -50,7 +51,8 @@ struct ContentView: View {
                         savedWordsStore: savedWordsStore,
                         bookmarkStore: bookmarkStore,
                         onOpenRecent: { openDocument($0.url) },
-                        onReview: { showWorkspaceReview = true }
+                        onReview: { showWorkspaceReview = true },
+                        coverStore: coverStore
                     )
                         .onDrop(of: [.pdf], isTargeted: $isDropTargeted, perform: handleDrop)
                         .overlay { if isDropTargeted { dropOverlay } }

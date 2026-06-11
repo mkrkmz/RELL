@@ -1,46 +1,44 @@
-# RELL Roadmap
+# RELL Roadmap — UI ve Yeni Ozellikler
 
-Oncelikler: (1) arayuzu daha iyi ve kullanisli hale getirmek, (2) yerel LLM'de hiz ve kesilme problemlerini cozmek.
+Odak: dashboard'un sade temelini koruyarak gorsellik ve ozellik katmak.
+Onceki roadmap'in LLM performans isleri (finish_reason, istek kuyrugu, kalici cache,
+parse memoizasyonu) tamamlandi ve buradan cikarildi.
 
-## Faz 1 — LLM Hiz + Kesilme (aktif)
+## Faz 1 — Dashboard Gorsel Katman: PDF Kapaklari (tamamlandi)
 
-Kok nedenler:
-- Token limitleri kucuk modeller (Gemma 3 4B) icin ayarlanmis; 12B+ modelde gereksiz kesilmeye yol aciyor (`LLM/ModuleType.swift`)
-- Kesilme tespiti `finish_reason` yerine "3.5 karakter/token x %90" sezgisiyle yapiliyor (`App/InspectorView.swift`)
-- "Run All" 5 istegi ayni anda LM Studio'ya gonderiyor; yerel GPU kuyrukta boguluyor (`App/InspectorView+Grid.swift`)
-- Streaming sirasinda her flush'ta tum sonuc hiyerarsisi yeniden render ediliyor (`App/InspectorView+ResultPanel.swift`, `UI/ResultRenderer.swift`)
+- [x] `DocumentCoverStore`: ilk sayfadan async kapak render (PDFKit thumbnail),
+      bellek (NSCache) + disk (`Application Support/RELL/covers/`) cache, mtime ile tazelik
+- [x] Hero karttaki ikon kutusu yerine kapak gorseli (placeholder ikonla fade-in)
+- [x] Recent satirlarinda mini kapak
 
-Is kalemleri:
-- [x] Token limitlerini 12B+ modele gore genislet (~1.5-2x)
-- [x] SSE'de `finish_reason` decode et; truncation rozetini buna bagla
-- [x] Yerel saglayicilarda modul isteklerini sinirli eszamanlilikla calistir (maks 2 — `AsyncLimiter`)
-- [x] Streaming render maliyetini dusur (scroll throttle ~6/sn, flush araligi 120ms/80 karakter)
-- [x] Sistem prompt'unu kisalt (modul prompt format kaliplari ResultParser'a bagli — bilerek dokunulmadi)
+## Faz 2 — Gunluk Hedef + Haftalik Aktivite
 
-## Faz 2 — Streaming Goruntuleme Optimizasyonu (tamamlandi)
+- [ ] Ayarlanabilir gunluk okuma hedefi (dakika, AppStorage); header'da progress ring + bugunku sure
+- [ ] 7 gunluk mini bar chart (Charts, `sessionStore.last7Days` reuse)
+- [ ] Seri gostergesi: flame + hedefle dolan halka (footer metni yerine gorsel oge)
+- [ ] Hedef tamamlama mikro-kutlamasi (kisa spring animasyon)
 
-- [x] Parse sonuclarini memoize et (`ParsedResultCache` — collocations + usage notes; satir bolme parser'lari ucuz, memoize edilmedi)
-- [x] LLM ciktilari icin kalici disk cache (`llm_output_cache.json`, kapasite 50, LRU sirasi korunarak)
-- [x] Ayar degisikliginde secici invalidation: native dil cache anahtarina eklendi; provider/model/dil degisimi cache'i silmiyor (yalnizca sunucu URL degisimi siler)
+## Faz 3 — Dashboard Mini Kelime Karti
 
-## Faz 3 — UI/UX Iyilestirme
+- [ ] Review satirinin yerine tek due kelimelik flip kart: on yuz terim, arka yuz kayitli tanim
+- [ ] Again/Good/Easy → `savedWordsStore.applyReview` (QuizView ile ayni SRS), bitince siradaki kelime
+- [ ] Tum due'lar bitince "All caught up" durumu; tam oturum icin Review butonu kalir
 
-- [x] Karsilama sayfasi (dashboard) premium redesign: tek aksan rengi, tek review CTA, hero "Continue Reading" karti, sakin liste satirlari, sifir-degerli rozetlerin kaldirilmasi, 640pt ortali kolon
-- [x] Heatmap sidebar Stats sekmesine tasindi (Reader/Stats/ReviewHeatmapView.swift); olu WorkspaceSummaryView.swift silindi
-- [x] Dashboard ince ayar: selamlama kaldirildi, recent satirlarina goreli zaman, eksik dosya durumu (soluk + "File not found"), sag tik "Show in Finder"
-- [ ] Monolitik view'lari parcala:
-  - `UI/SavedWordsListView.swift` (615 satir) → SearchBar / FilterBar / WordRow ayri dosyalar
-  - `App/EmptyStateView.swift` icindeki 4 gomulu struct ayri dosyalara
-  - `UI/QuizView.swift` durum makinesini sadelestir
-- [ ] SavedWordsListView filtre/siralamayi her render'da hesaplamak yerine cache'le
-- [ ] Design System'e buton stilleri (`DSButtonStyle`) ve form alani bilesenleri ekle; Settings gorunumlerini bunlarla birlestir
-- [ ] Erisilebilirlik: tum etkilesimli ogelere `accessibilityLabel`/`accessibilityValue` (SidebarView a11y isinin devami), `.help()` tutarliligi
-- [ ] ForEach kimliklerini stabilize et (`ForEach(filteredWords, id: \.id)`)
-- [ ] PDFKitView highlight yenilemeyi debounce et (sayfa degisiminde tum kelimeler taraniyor)
+## Faz 4 — Library Gorunumu
 
-## Faz 4 — Kalite / Altyapi
+- [ ] `RecentDocumentStore.maxDocuments` 12 → 48
+- [ ] Recent bolumune "View all" → kapak grid'li Library sayfasi
+- [ ] Grid karti: kapak + baslik + ilerleme cubugu + son acilma; arama ve siralama
+- [ ] Sag tik: Show in Finder, Remove from Library
 
-- [ ] Yerellestime: `String(localized:)` + Localizable.xcstrings (su an hardcoded Ingilizce)
-- [ ] `print()` → `os.Logger` ile yapilandirilmis loglama
-- [ ] Force unwrap temizligi (`Models/SavedWordsStore.swift:24`, `Models/ReadingSessionStore.swift:24`)
-- [ ] Test kapsamini genislet (LLMClient SSE parser, prompt uretimi, truncation tespiti)
+## Faz 5 — Onboarding
+
+- [ ] Ilk acilista 3 adimli sheet (AppStorage `hasCompletedOnboarding`):
+      dil cifti secimi → LM Studio baglanti testi (mevcut connection-test reuse) → kisa ozellik turu
+- [ ] Atlanabilir; Settings'ten yeniden acilabilir
+
+## Backlog (siralanmamis)
+
+- Kelime etiketleri/desteleri; etikete gore review ve Anki export
+- Quiz kartlarinda TTS/telaffuz butonu
+- Cram modu, Quizlet export
