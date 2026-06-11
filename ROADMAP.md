@@ -1,51 +1,69 @@
-# RELL Roadmap — UI ve Yeni Ozellikler
+# RELL Roadmap v3 — Okuma Deneyimi, Kelime Organizasyonu ve AI
 
-Odak: dashboard'un sade temelini koruyarak gorsellik ve ozellik katmak.
-Onceki roadmap'in LLM performans isleri (finish_reason, istek kuyrugu, kalici cache,
-parse memoizasyonu) tamamlandi ve buradan cikarildi.
+Onceki roadmap (v2: dashboard gorsel katmani — kapaklar, gunluk hedef,
+mini kelime karti, Library, onboarding) 2026-06-11'de tamamlandi.
+Bu roadmap bir sonraki iterasyonu kapsar: okuma deneyimi, kelime
+organizasyonu, review modlari, AI takip sorusu ve istatistik derinligi.
 
-## Faz 1 — Dashboard Gorsel Katman: PDF Kapaklari (tamamlandi)
+## Faz 1 — Okuma Deneyimi: Odak Modu + Kalici Highlight
 
-- [x] `DocumentCoverStore`: ilk sayfadan async kapak render (PDFKit thumbnail),
-      bellek (NSCache) + disk (`Application Support/RELL/covers/`) cache, mtime ile tazelik
-- [x] Hero karttaki ikon kutusu yerine kapak gorseli (placeholder ikonla fade-in)
-- [x] Recent satirlarinda mini kapak
+- [ ] Odak modu: tek kisayolla (⇧⌘D) sidebar + inspector + context strip gizleme;
+      `ContentView`'daki mevcut `showSidebar`/`showInspector` state'leri reuse, toolbar'a buton
+- [ ] `PDFHighlight` modeli (filename, pageIndex, secim bounds'u, renk, tarih) +
+      `PDFHighlightStore` (RELLJSONStore + `rellAppSupportDirectory` kalibi, PDFNoteStore ornek)
+- [ ] PDFKitView Coordinator: secim sag tik menusune renk secmeli "Highlight" (PDFAnnotation);
+      sayfa degisiminde annotation'lari yeniden uygulama (saved-word highlight yolu reuse)
+- [ ] Sidebar'a "Highlights" sekmesi (tab enum + badge kalibi): liste, tikla → sayfaya git
+      (`pdfViewManager.goToPage`), sag tik → sil / renk degistir
 
-## Faz 2 — Gunluk Hedef + Haftalik Aktivite (tamamlandi)
+## Faz 2 — Okuma Deneyimi: Hover Sozluk + Ceviri Seridi
 
-- [x] Ayarlanabilir gunluk okuma hedefi (dakika, AppStorage `dailyReadingGoalMinutes`,
-      sag tik menusuyle 10-60 dk arasi secim); hero altindaki aktivite kartinda progress ring + bugunku sure
-- [x] 7 gunluk mini bar chart (Charts, `sessionStore.last7Days` reuse; hedef cizgisi RuleMark ile)
-- [x] Seri gostergesi: flame + okuma serisi (footer'daki review-streak metni kaldirildi)
-- [x] Hedef tamamlama mikro-kutlamasi (halka yesile doner, bounce'li checkmark, spring animasyon)
+- [ ] Hover popup: Coordinator'da mouse-hover kelime tespiti (`PDFPage.selectionForWord`),
+      ~500ms debounce; NSPopover icinde mini tanim — once `InspectorViewModel` LRU/disk
+      cache'ine bakilir, miss'te kisa non-streaming istek (definition short, ~64 token,
+      `AsyncLimiter` gate'ten gecer); ayarlardan kapatilabilir
+- [ ] Cumle ceviri seridi: cumle secilince PDF altinda ince serit (FindBarView yerlesim kalibi)
+      ana dile ceviriyi gosterir; ayri mini LLM istegi (~200 token), kapatilabilir + AppStorage toggle
 
-## Faz 3 — Dashboard Mini Kelime Karti (tamamlandi)
+## Faz 3 — Kelime Organizasyonu: Etiket & Desteler
 
-- [x] Review satirinin yerine tek due kelimelik flip kart: on yuz terim, arka yuz kayitli tanim
-      (tanim onceligi `SavedWord.reviewDefinition` olarak paylasildi, QuizView da kullaniyor)
-- [x] Again/Good/Easy → `savedWordsStore.applyReview` (QuizView ile ayni SRS), bitince siradaki kelime
-- [x] Tum due'lar bitince "All caught up" durumu + bir sonraki review zamani; "Review all" butonu kalir
+- [ ] `SavedWord.tags: [String]` (mevcut custom Codable'a `decodeIfPresent` ile geriye uyumlu)
+- [ ] `SavedWordsStore`: `allTags`, `words(tag:)`, tag CRUD helpers + birim testleri
+- [ ] SavedWordsListView: etiket filtresi, satir context menusunde "Add Tag",
+      detay sheet'inde etiket editoru
+- [ ] QuizView + DashboardWordCard: deste (etiket) secimiyle review kuyrugu
+      (`reviewQueue` + tag filtresi)
+- [ ] AnkiExporter: gercek etiketleri tags sutununa yaz (parametre zaten mevcut)
 
-## Faz 4 — Library Gorunumu (tamamlandi)
+## Faz 4 — Review Yuzeyi: Yeni Quiz Modlari + TTS
 
-- [x] `RecentDocumentStore.maxDocuments` 12 → 48; `remove(id:)` eklendi
-- [x] Recent bolumune "View all" (5+ belge varsa) → kapak grid'li Library sayfasi (Esc/Back ile donus)
-- [x] Grid karti: kapak + baslik + ilerleme cubugu + son acilma; arama ve siralama (son acilan / ad / ilerleme)
-- [x] Sag tik: Show in Finder, Remove from Library (dashboard recent satirlarinda da)
+- [ ] Mod secici: Flashcard (mevcut) / Coktan Secmeli / Yazarak Hatirlama + Cram anahtari
+- [ ] Coktan secmeli: dogru tanim + diger kelimelerin tanimlarindan 3 celdirici
+- [ ] Yazarak: terim gosterilir, kullanici anlami yazar, normalize karsilastirma +
+      kendi kendini derecelendirme
+- [ ] Cram modu: `applyReview` cagrilmaz (SRS bozulmaz), yalnizca oturum istatistigi
+- [ ] TTS: QuizView karti, SavedWordsListView satirlari ve DashboardWordCard'a telaffuz
+      butonu — `SpeechManager.shared.speak` reuse (`speechRate` AppStorage mevcut)
 
-## Faz 5 — Onboarding (tamamlandi)
+## Faz 5 — AI: Ask AI Takip Sorusu
 
-- [x] Ilk acilista 3 adimli sheet (AppStorage `hasCompletedOnboarding`):
-      dil cifti secimi → LM Studio baglanti testi → kisa ozellik turu
-- [x] Atlanabilir (Skip / Esc); Settings → General'den "Show Welcome Tour Again" ile yeniden acilir
-- [x] Mevcut kullanicilar (okuma gecmisi olanlar) akisi hic gormez — ilk render oncesi otomatik tamamlanmis sayilir
+- [ ] Inspector sonuc panelinin altina "Ask a follow-up…" alani; prompt = mevcut sistem
+      prompt + baglam (terim, cumle, aktif modul ciktisi) + soru
+- [ ] Mevcut streaming pipeline + `AsyncLimiter` + iptal mantigi reuse; cevap
+      `ResultRenderer` plain gorunumuyle
+- [ ] Oturum ici soru-cevap gecmisi (session-scoped, InspectorViewModel'de)
 
----
+## Faz 6 — Istatistik Derinligi
 
-Tum fazlar tamamlandi (2026-06-11). Yeni isler Backlog'dan secilir.
+- [ ] Stats sekmesine "Vocabulary" bolumu: `savedAt` uzerinden kumulatif kelime buyume
+      cizgisi + mastery dagilim grafigi (Charts zaten kullaniliyor)
+- [ ] Belge detayi: Library kartinda sag tik → "Document Stats" sheet'i: okuma suresi
+      (`sessionStore` per-document totals mevcut), kayitli kelime/not/bookmark sayilari,
+      okuma ilerlemesi
 
 ## Backlog (siralanmamis)
 
-- Kelime etiketleri/desteleri; etikete gore review ve Anki export
-- Quiz kartlarinda TTS/telaffuz butonu
-- Cram modu, Quizlet export
+- Gunluk hedef bildirimleri (UserNotifications)
+- CSV/Quizlet export
+- Kelime listesinden toplu etiket atama
+- Highlight'lara not ilistirme
