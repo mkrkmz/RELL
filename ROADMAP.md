@@ -26,12 +26,12 @@ parse memoizasyonu) tamamlandi ve buradan cikarildi.
 - [x] Again/Good/Easy → `savedWordsStore.applyReview` (QuizView ile ayni SRS), bitince siradaki kelime
 - [x] Tum due'lar bitince "All caught up" durumu + bir sonraki review zamani; "Review all" butonu kalir
 
-## Faz 4 — Library Gorunumu
+## Faz 4 — Library Gorunumu (tamamlandi)
 
-- [ ] `RecentDocumentStore.maxDocuments` 12 → 48
-- [ ] Recent bolumune "View all" → kapak grid'li Library sayfasi
-- [ ] Grid karti: kapak + baslik + ilerleme cubugu + son acilma; arama ve siralama
-- [ ] Sag tik: Show in Finder, Remove from Library
+- [x] `RecentDocumentStore.maxDocuments` 12 → 48; `remove(id:)` eklendi
+- [x] Recent bolumune "View all" (5+ belge varsa) → kapak grid'li Library sayfasi (Esc/Back ile donus)
+- [x] Grid karti: kapak + baslik + ilerleme cubugu + son acilma; arama ve siralama (son acilan / ad / ilerleme)
+- [x] Sag tik: Show in Finder, Remove from Library (dashboard recent satirlarinda da)
 
 ## Faz 5 — Onboarding
 

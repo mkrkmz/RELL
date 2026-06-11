@@ -51,6 +51,7 @@ struct ContentView: View {
                         savedWordsStore: savedWordsStore,
                         bookmarkStore: bookmarkStore,
                         onOpenRecent: { openDocument($0.url) },
+                        onRemoveRecent: { recentDocumentStore.remove(id: $0.id) },
                         onReview: { showWorkspaceReview = true },
                         coverStore: coverStore,
                         sessionStore: sessionStore

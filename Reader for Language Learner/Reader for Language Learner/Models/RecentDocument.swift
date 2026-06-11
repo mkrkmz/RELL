@@ -56,7 +56,7 @@ final class RecentDocumentStore {
     private(set) var documents: [RecentDocument] = []
 
     private let fileURL: URL
-    private let maxDocuments = 12
+    private let maxDocuments = 48
 
     init(fileURL customFileURL: URL? = nil) {
         if let customFileURL {
@@ -110,6 +110,12 @@ final class RecentDocumentStore {
 
     func removeMissingDocuments() {
         documents.removeAll { !FileManager.default.fileExists(atPath: $0.path) }
+        save()
+    }
+
+    /// Removes a single document from the library (the file itself is untouched).
+    func remove(id: UUID) {
+        documents.removeAll { $0.id == id }
         save()
     }
 

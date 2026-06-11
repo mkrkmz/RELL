@@ -60,6 +60,21 @@ final class RecentDocumentStoreTests: XCTestCase {
         XCTAssertEqual(decoded.lastPageIndex, 2)
     }
 
+    func testRemoveByIDDeletesOnlyThatDocument() throws {
+        let store = makeStore()
+        let keepURL = try makeTempPDF(named: "astro-keep")
+        let removeURL = try makeTempPDF(named: "astro-remove")
+
+        store.registerOpen(url: keepURL)
+        store.registerOpen(url: removeURL)
+        let target = try XCTUnwrap(store.recentDocuments.first { $0.filename == "astro-remove" })
+
+        store.remove(id: target.id)
+
+        XCTAssertEqual(store.recentDocuments.count, 1)
+        XCTAssertEqual(store.recentDocuments.first?.filename, "astro-keep")
+    }
+
     private func makeStore() -> RecentDocumentStore {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)

@@ -21,9 +21,12 @@ struct EmptyStateView: View {
     var savedWordsStore: SavedWordsStore? = nil
     var bookmarkStore: PDFBookmarkStore? = nil
     var onOpenRecent: ((RecentDocument) -> Void)? = nil
+    var onRemoveRecent: ((RecentDocument) -> Void)? = nil
     var onReview: (() -> Void)? = nil
     var coverStore: DocumentCoverStore? = nil
     var sessionStore: ReadingSessionStore? = nil
+
+    @State private var showLibrary = false
 
     private var hasSavedWords: Bool {
         savedWordsStore?.words.isEmpty == false
@@ -44,48 +47,26 @@ struct EmptyStateView: View {
 
             VStack(spacing: 0) {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: DS.Spacing.xl) {
-                        DashboardHeader(onOpenPDF: onOpenPDF)
-
-                        if let heroDocument {
-                            ContinueReadingHero(
-                                document: heroDocument,
-                                todayReadingTime: todayReadingTime,
-                                cover: cover(for: heroDocument),
-                                onOpen: onOpenRecent.map { open in { open(heroDocument) } }
-                            )
-                        } else {
-                            EmptyLibraryHero(onOpenPDF: onOpenPDF)
-                        }
-
-                        if let sessionStore, heroDocument != nil {
-                            DashboardActivityCard(
-                                todayReadingTime: todayReadingTime,
-                                last7Days: sessionStore.last7Days,
-                                readingStreak: sessionStore.currentStreak
-                            )
-                        }
-
-                        if let savedWordsStore, hasSavedWords {
-                            DashboardWordCard(
-                                store: savedWordsStore,
-                                onReviewAll: onReview
-                            )
-                        }
-
-                        if !otherDocuments.isEmpty {
-                            RecentDocumentList(
-                                documents: otherDocuments,
+                    Group {
+                        if showLibrary {
+                            LibraryView(
+                                documents: recentDocuments,
+                                coverStore: coverStore,
                                 onOpen: onOpenRecent,
-                                coverProvider: { self.cover(for: $0) }
+                                onRemove: onRemoveRecent,
+                                onBack: { showLibrary = false }
                             )
+                            .frame(maxWidth: 880, alignment: .topLeading)
+                        } else {
+                            dashboardColumn
+                                .frame(maxWidth: 640, alignment: .topLeading)
                         }
                     }
-                    .frame(maxWidth: 640, alignment: .topLeading)
                     .frame(maxWidth: .infinity, alignment: .top)
                     .padding(.horizontal, DS.Spacing.xxl)
-                    .padding(.top, DS.Spacing.xxxl)
+                    .padding(.top, showLibrary ? DS.Spacing.xl : DS.Spacing.xxxl)
                     .padding(.bottom, DS.Spacing.xl)
+                    .animation(DS.Animation.standard, value: showLibrary)
                 }
 
                 DashboardFooter(
@@ -104,6 +85,48 @@ struct EmptyStateView: View {
         .task(id: recentDocuments.prefix(5).map(\.path)) {
             for document in recentDocuments.prefix(5) {
                 coverStore?.requestCover(for: document.path)
+            }
+        }
+    }
+
+    private var dashboardColumn: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xl) {
+            DashboardHeader(onOpenPDF: onOpenPDF)
+
+            if let heroDocument {
+                ContinueReadingHero(
+                    document: heroDocument,
+                    todayReadingTime: todayReadingTime,
+                    cover: cover(for: heroDocument),
+                    onOpen: onOpenRecent.map { open in { open(heroDocument) } }
+                )
+            } else {
+                EmptyLibraryHero(onOpenPDF: onOpenPDF)
+            }
+
+            if let sessionStore, heroDocument != nil {
+                DashboardActivityCard(
+                    todayReadingTime: todayReadingTime,
+                    last7Days: sessionStore.last7Days,
+                    readingStreak: sessionStore.currentStreak
+                )
+            }
+
+            if let savedWordsStore, hasSavedWords {
+                DashboardWordCard(
+                    store: savedWordsStore,
+                    onReviewAll: onReview
+                )
+            }
+
+            if !otherDocuments.isEmpty {
+                RecentDocumentList(
+                    documents: otherDocuments,
+                    onOpen: onOpenRecent,
+                    onRemove: onRemoveRecent,
+                    coverProvider: { self.cover(for: $0) },
+                    onViewAll: recentDocuments.count > 5 ? { showLibrary = true } : nil
+                )
             }
         }
     }
@@ -291,21 +314,42 @@ private struct ContinueReadingHero: View {
 private struct RecentDocumentList: View {
     let documents: [RecentDocument]
     var onOpen: ((RecentDocument) -> Void)?
+    var onRemove: ((RecentDocument) -> Void)?
     var coverProvider: (RecentDocument) -> NSImage? = { _ in nil }
+    var onViewAll: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            Text("Recent")
-                .dsOverlineLabel()
-                .textCase(.uppercase)
-                .padding(.leading, DS.Spacing.xs)
+            HStack(alignment: .firstTextBaseline) {
+                Text("Recent")
+                    .dsOverlineLabel()
+                    .textCase(.uppercase)
+                    .padding(.leading, DS.Spacing.xs)
+
+                Spacer()
+
+                if let onViewAll {
+                    Button(action: onViewAll) {
+                        HStack(spacing: DS.Spacing.xxs) {
+                            Text("View all")
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 8, weight: .semibold))
+                        }
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.accent)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Show the full library")
+                }
+            }
 
             VStack(spacing: 0) {
                 ForEach(Array(documents.enumerated()), id: \.element.id) { index, document in
                     RecentDocumentRow(
                         document: document,
                         cover: coverProvider(document),
-                        onOpen: onOpen.map { open in { open(document) } }
+                        onOpen: onOpen.map { open in { open(document) } },
+                        onRemove: onRemove.map { remove in { remove(document) } }
                     )
                     if index < documents.count - 1 {
                         Divider()
@@ -327,6 +371,7 @@ private struct RecentDocumentRow: View {
     let document: RecentDocument
     var cover: NSImage?
     var onOpen: (() -> Void)?
+    var onRemove: (() -> Void)?
 
     @State private var isHovered = false
 
@@ -369,6 +414,11 @@ private struct RecentDocumentRow: View {
                 NSWorkspace.shared.activateFileViewerSelecting([document.url])
             }
             .disabled(!fileExists)
+
+            if let onRemove {
+                Divider()
+                Button("Remove from Library", role: .destructive, action: onRemove)
+            }
         }
         .accessibilityLabel("Open \(displayTitle), \(document.pageLabel)")
     }
