@@ -24,6 +24,8 @@ struct ReadingStatsView: View {
                 todayCard
                 weeklyChart
                 reviewActivityCard
+                vocabularyGrowthCard
+                masteryDistributionCard
                 learningGrid
                 totalsGrid
             }
@@ -162,6 +164,109 @@ struct ReadingStatsView: View {
         }
     }
 
+    // MARK: - Vocabulary Growth
+
+    @ViewBuilder
+    private var vocabularyGrowthCard: some View {
+        let points = vocabularyGrowth
+        if points.count >= 2 {
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text("VOCABULARY GROWTH")
+                    .dsOverlineLabel()
+
+                Chart(points) { point in
+                    AreaMark(
+                        x: .value("Day", point.date),
+                        y: .value("Words", point.total)
+                    )
+                    .foregroundStyle(DS.Color.accent.opacity(0.16))
+                    LineMark(
+                        x: .value("Day", point.date),
+                        y: .value("Words", point.total)
+                    )
+                    .foregroundStyle(DS.Color.accent)
+                    .interpolationMethod(.monotone)
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { _ in
+                        AxisGridLine().foregroundStyle(DS.Color.separator.opacity(0.4))
+                        AxisValueLabel()
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                    }
+                }
+                .frame(height: 110)
+            }
+            .padding(DS.Spacing.md)
+            .background(DS.Color.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+            .dsShadow(DS.Shadow.subtle)
+        }
+    }
+
+    /// Cumulative saved-word count over time, sampled per day a word was saved.
+    private var vocabularyGrowth: [VocabPoint] {
+        let sorted = savedWordsStore.words.map(\.savedAt).sorted()
+        guard !sorted.isEmpty else { return [] }
+        let calendar = Calendar.current
+        var byDay: [Date: Int] = [:]
+        for date in sorted {
+            let day = calendar.startOfDay(for: date)
+            byDay[day, default: 0] += 1
+        }
+        var running = 0
+        return byDay.keys.sorted().map { day in
+            running += byDay[day] ?? 0
+            return VocabPoint(date: day, total: running)
+        }
+    }
+
+    // MARK: - Mastery Distribution
+
+    @ViewBuilder
+    private var masteryDistributionCard: some View {
+        let slices = masterySlices
+        if slices.contains(where: { $0.count > 0 }) {
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text("MASTERY")
+                    .dsOverlineLabel()
+
+                Chart(slices) { slice in
+                    BarMark(
+                        x: .value("Count", slice.count),
+                        y: .value("Level", slice.label)
+                    )
+                    .foregroundStyle(slice.color)
+                    .cornerRadius(DS.Radius.xs)
+                    .annotation(position: .trailing) {
+                        if slice.count > 0 {
+                            Text("\(slice.count)")
+                                .font(DS.Typography.caption2)
+                                .foregroundStyle(DS.Color.textTertiary)
+                        }
+                    }
+                }
+                .chartXAxis(.hidden)
+                .frame(height: 92)
+            }
+            .padding(DS.Spacing.md)
+            .background(DS.Color.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+            .dsShadow(DS.Shadow.subtle)
+        }
+    }
+
+    private var masterySlices: [MasterySlice] {
+        [
+            MasterySlice(label: "New", count: savedWordsStore.newCount, color: DS.Color.accent),
+            MasterySlice(label: "Learning", count: savedWordsStore.learningCount, color: DS.Color.warning),
+            MasterySlice(label: "Mastered", count: savedWordsStore.masteredCount, color: DS.Color.success)
+        ]
+    }
+
     // MARK: - Totals Grid
 
     private var learningGrid: some View {
@@ -265,4 +370,19 @@ struct ReadingStatsView: View {
         if h > 0 { return "\(h)h \(m)m" }
         return "\(m)m"
     }
+}
+
+// MARK: - Chart Models
+
+private struct VocabPoint: Identifiable {
+    let date: Date
+    let total: Int
+    var id: Date { date }
+}
+
+private struct MasterySlice: Identifiable {
+    let label: String
+    let count: Int
+    let color: Color
+    var id: String { label }
 }

@@ -15,9 +15,11 @@ struct LibraryView: View {
     var coverStore: DocumentCoverStore?
     var onOpen: ((RecentDocument) -> Void)?
     var onRemove: ((RecentDocument) -> Void)?
+    var statsProvider: ((RecentDocument) -> DocumentStats)? = nil
     let onBack: () -> Void
 
     @State private var searchText = ""
+    @State private var statsDocument: RecentDocument?
     @AppStorage("librarySortOrder") private var sortOrderRaw: String = LibrarySortOrder.lastOpened.rawValue
 
     private var sortOrder: LibrarySortOrder {
@@ -61,7 +63,8 @@ struct LibraryView: View {
                             document: document,
                             cover: cover(for: document),
                             onOpen: onOpen.map { open in { open(document) } },
-                            onRemove: onRemove.map { remove in { remove(document) } }
+                            onRemove: onRemove.map { remove in { remove(document) } },
+                            onShowStats: statsProvider != nil ? { statsDocument = document } : nil
                         )
                     }
                 }
@@ -70,6 +73,11 @@ struct LibraryView: View {
         .task(id: filteredDocuments.map(\.path)) {
             for document in filteredDocuments {
                 coverStore?.requestCover(for: document.path)
+            }
+        }
+        .sheet(item: $statsDocument) { document in
+            if let stats = statsProvider?(document) {
+                DocumentStatsSheet(document: document, stats: stats)
             }
         }
     }
@@ -167,6 +175,7 @@ private struct LibraryCard: View {
     var cover: NSImage?
     var onOpen: (() -> Void)?
     var onRemove: (() -> Void)?
+    var onShowStats: (() -> Void)?
 
     @State private var isHovered = false
 
@@ -203,6 +212,9 @@ private struct LibraryCard: View {
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
         .contextMenu {
+            if let onShowStats {
+                Button("Document Stats…", action: onShowStats)
+            }
             Button("Show in Finder") {
                 NSWorkspace.shared.activateFileViewerSelecting([document.url])
             }
@@ -275,4 +287,105 @@ private struct LibraryCard: View {
         formatter.unitsStyle = .short
         return formatter
     }()
+}
+
+// MARK: - Document Stats
+
+struct DocumentStats {
+    var readingTime: Double
+    var savedWords: Int
+    var dueWords: Int
+    var notes: Int
+    var bookmarks: Int
+    var progress: Double?
+    var pageLabel: String
+}
+
+private struct DocumentStatsSheet: View {
+    let document: RecentDocument
+    let stats: DocumentStats
+
+    @Environment(\.dismiss) private var dismiss
+
+    private var displayTitle: String {
+        document.filename
+            .replacingOccurrences(of: ".pdf", with: "", options: [.caseInsensitive, .anchored, .backwards])
+            .replacingOccurrences(of: "_", with: " ")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: DS.Spacing.sm) {
+                Image(systemName: "chart.bar.doc.horizontal")
+                    .foregroundStyle(DS.Color.accent)
+                Text(displayTitle)
+                    .font(DS.Typography.headline)
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .lineLimit(1)
+                Spacer()
+                Button("", systemImage: "xmark.circle.fill") { dismiss() }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+            .padding(DS.Spacing.lg)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                if let progress = stats.progress {
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                        HStack {
+                            Text(stats.pageLabel)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(DS.Color.textSecondary)
+                            Spacer()
+                            Text("\(Int(progress * 100))%")
+                                .font(DS.Typography.caption.weight(.semibold))
+                                .foregroundStyle(DS.Color.accent)
+                        }
+                        ProgressView(value: progress).tint(DS.Color.accent)
+                    }
+                }
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sm) {
+                    statCell(icon: "clock", value: formattedTime, label: "Read", tint: DS.Color.accent)
+                    statCell(icon: "star", value: "\(stats.savedWords)", label: "Saved words", tint: .yellow)
+                    statCell(icon: "clock.badge.exclamationmark", value: "\(stats.dueWords)", label: "Due", tint: DS.Color.warning)
+                    statCell(icon: "note.text", value: "\(stats.notes)", label: "Notes", tint: .purple)
+                    statCell(icon: "bookmark", value: "\(stats.bookmarks)", label: "Bookmarks", tint: .purple)
+                }
+            }
+            .padding(DS.Spacing.lg)
+
+            Spacer(minLength: 0)
+        }
+        .frame(width: 360, height: 360)
+    }
+
+    private var formattedTime: String {
+        let total = Int(stats.readingTime)
+        let h = total / 3600
+        let m = (total % 3600) / 60
+        if h > 0 { return "\(h)h \(m)m" }
+        if m > 0 { return "\(m)m" }
+        return "—"
+    }
+
+    private func statCell(icon: String, value: String, label: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+            Image(systemName: icon)
+                .font(.system(size: 13))
+                .foregroundStyle(tint)
+            Text(value)
+                .font(DS.Typography.headline)
+                .foregroundStyle(DS.Color.textPrimary)
+            Text(label)
+                .font(DS.Typography.caption2)
+                .foregroundStyle(DS.Color.textTertiary)
+        }
+        .padding(DS.Spacing.sm)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(DS.Color.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+    }
 }

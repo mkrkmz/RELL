@@ -54,6 +54,7 @@ struct EmptyStateView: View {
                                 coverStore: coverStore,
                                 onOpen: onOpenRecent,
                                 onRemove: onRemoveRecent,
+                                statsProvider: documentStats(for:),
                                 onBack: { showLibrary = false }
                             )
                             .frame(maxWidth: 880, alignment: .topLeading)
@@ -136,6 +137,21 @@ struct EmptyStateView: View {
         guard let coverStore else { return nil }
         _ = coverStore.revision
         return coverStore.cover(for: document.path)
+    }
+
+    /// Builds per-document stats, bridging the two filename keyings: reading
+    /// sessions key on the file name with extension, while saved words / notes
+    /// / bookmarks key on the name without it.
+    private func documentStats(for document: RecentDocument) -> DocumentStats {
+        DocumentStats(
+            readingTime: sessionStore?.totalTime(for: document.url.lastPathComponent) ?? 0,
+            savedWords: savedWordsStore?.savedCount(for: document.filename) ?? 0,
+            dueWords: savedWordsStore?.dueCount(for: document.filename) ?? 0,
+            notes: noteStore?.count(for: document.filename) ?? 0,
+            bookmarks: bookmarkStore?.bookmarks(for: document.filename).count ?? 0,
+            progress: document.readingProgress,
+            pageLabel: document.pageLabel
+        )
     }
 
 }

@@ -64,13 +64,16 @@ sade kalsin diye; deste secimi Review Center'da. Istenirse eklenebilir.
 - [x] Oturum ici soru-cevap thread'i (`FollowUpExchange`, InspectorViewModel; secim
       degisince temizlenir), streaming cevap satir satir
 
-## Faz 6 — Istatistik Derinligi
+## Faz 6 — Istatistik Derinligi (tamamlandi)
 
-- [ ] Stats sekmesine "Vocabulary" bolumu: `savedAt` uzerinden kumulatif kelime buyume
-      cizgisi + mastery dagilim grafigi (Charts zaten kullaniliyor)
-- [ ] Belge detayi: Library kartinda sag tik → "Document Stats" sheet'i: okuma suresi
-      (`sessionStore` per-document totals mevcut), kayitli kelime/not/bookmark sayilari,
-      okuma ilerlemesi
+- [x] Stats sekmesine kumulatif kelime buyume cizgisi (AreaMark+LineMark, `savedAt` gunluk)
+      ve mastery dagilim bar grafigi (Charts)
+- [x] Library kartinda sag tik → "Document Stats…" sheet'i: okuma suresi, kayitli/due
+      kelime, not, bookmark, okuma ilerlemesi (iki filename anahtarlamasi EmptyStateView'da koprulendi)
+
+---
+
+**v3 roadmap tamamlandi (2026-06-11).** Yeni isler Backlog'dan secilir.
 
 ## Backlog (siralanmamis)
 
