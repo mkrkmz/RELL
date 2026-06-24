@@ -87,6 +87,9 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     var mode: String          // ExplainMode.rawValue
     var domain: String        // DomainPreference.rawValue
     var notes: String
+    /// User-assigned deck labels. Single-token, stored as entered, matched
+    /// case-insensitively.
+    var tags: [String]
     /// Snapshot of LLM outputs at save time. Key = ModuleType.rawValue.
     var llmOutputs: [String: String]
     var savedAt: Date
@@ -106,6 +109,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         mode: String = ExplainMode.word.rawValue,
         domain: String = DomainPreference.general.rawValue,
         notes: String = "",
+        tags: [String] = [],
         llmOutputs: [String: String] = [:],
         savedAt: Date = Date(),
         masteryLevel: MasteryLevel = .new,
@@ -123,6 +127,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.mode = mode
         self.domain = domain
         self.notes = notes
+        self.tags = tags
         self.llmOutputs = llmOutputs
         self.savedAt = savedAt
         self.masteryLevel = masteryLevel
@@ -158,6 +163,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         case mode
         case domain
         case notes
+        case tags
         case llmOutputs
         case savedAt
         case masteryLevel
@@ -178,6 +184,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         mode = try container.decodeIfPresent(String.self, forKey: .mode) ?? ExplainMode.word.rawValue
         domain = try container.decodeIfPresent(String.self, forKey: .domain) ?? DomainPreference.general.rawValue
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
         llmOutputs = try container.decodeIfPresent([String: String].self, forKey: .llmOutputs) ?? [:]
         savedAt = try container.decodeIfPresent(Date.self, forKey: .savedAt) ?? Date()
         masteryLevel = try container.decodeIfPresent(MasteryLevel.self, forKey: .masteryLevel) ?? .new
@@ -190,6 +197,12 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
 
     var hasBeenReviewed: Bool {
         reviewCount > 0 || lastReviewedAt != nil
+    }
+
+    func hasTag(_ tag: String) -> Bool {
+        let needle = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !needle.isEmpty else { return false }
+        return tags.contains { $0.lowercased() == needle }
     }
 
     func isDue(at referenceDate: Date = Date()) -> Bool {

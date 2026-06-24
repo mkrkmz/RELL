@@ -30,15 +30,18 @@ organizasyonu, review modlari, AI takip sorusu ve istatistik derinligi.
 Not: hover cache kaynagi olarak InspectorViewModel disk cache yerine kayitli kelimeler +
 servis-ici bellek cache kullanildi (daha az coupling, ayni "once cache" davranisi).
 
-## Faz 3 — Kelime Organizasyonu: Etiket & Desteler
+## Faz 3 — Kelime Organizasyonu: Etiket & Desteler (tamamlandi)
 
-- [ ] `SavedWord.tags: [String]` (mevcut custom Codable'a `decodeIfPresent` ile geriye uyumlu)
-- [ ] `SavedWordsStore`: `allTags`, `words(tag:)`, tag CRUD helpers + birim testleri
-- [ ] SavedWordsListView: etiket filtresi, satir context menusunde "Add Tag",
-      detay sheet'inde etiket editoru
-- [ ] QuizView + DashboardWordCard: deste (etiket) secimiyle review kuyrugu
-      (`reviewQueue` + tag filtresi)
-- [ ] AnkiExporter: gercek etiketleri tags sutununa yaz (parametre zaten mevcut)
+- [x] `SavedWord.tags: [String]` (geriye uyumlu Codable) + `hasTag`
+- [x] `SavedWordsStore`: `allTags`, `words(withTag:)`, `tagCount`, `addTag`/`removeTag`,
+      `reviewQueue(includeAll:tag:)` (deste icinde due/fallback); birim testleri
+- [x] SavedWordsListView: deste filtre menusu, satir context menusunde "Deck" alt menusu
+      + satir etiket chip'leri, detay sheet'inde `TagEditorView` (yeni FlowLayout/TagChip)
+- [x] QuizView: deste secici (review kuyrugu tag'e gore daralir)
+- [x] AnkiExporter: per-word etiketler `extraTags` ile tags sutununa (dedupe + underscore)
+
+Not: DashboardWordCard kasitli olarak deste secici almadi — minimal "bugun due" karti
+sade kalsin diye; deste secimi Review Center'da. Istenirse eklenebilir.
 
 ## Faz 4 — Review Yuzeyi: Yeni Quiz Modlari + TTS
 

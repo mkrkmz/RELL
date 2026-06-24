@@ -253,7 +253,8 @@ struct BulkAnkiExportView: View {
             pdfFilename: word.pdfFilename,
             pageNumber: word.pageNumber,
             contextSentence: word.sentence,
-            tags: prefs.tags
+            tags: prefs.tags,
+            extraTags: word.tags
         )
     }
 

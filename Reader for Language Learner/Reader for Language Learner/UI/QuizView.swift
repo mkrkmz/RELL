@@ -24,11 +24,12 @@ struct QuizView: View {
 
     // Filter: due words only by default
     @State private var includeAll = false
+    @State private var selectedTag: String?
 
     private var dueWords: [SavedWord] { store.dueWords() }
 
     private var wordsToQuiz: [SavedWord] {
-        store.reviewQueue(includeAll: includeAll)
+        store.reviewQueue(includeAll: includeAll, tag: selectedTag)
     }
 
     private var isUsingFallbackQueue: Bool {
@@ -87,6 +88,34 @@ struct QuizView: View {
                     .font(DS.Typography.caption)
                     .tint(DS.Color.accent)
                     .help("Review every saved word instead of the due-first queue.")
+
+                if !store.allTags.isEmpty {
+                    Menu {
+                        Button {
+                            selectedTag = nil
+                        } label: {
+                            Label("All decks", systemImage: selectedTag == nil ? "checkmark" : "")
+                        }
+                        Divider()
+                        ForEach(store.allTags, id: \.self) { tag in
+                            Button {
+                                selectedTag = tag
+                            } label: {
+                                Label(
+                                    "\(tag) (\(store.tagCount(tag)))",
+                                    systemImage: selectedTag?.lowercased() == tag.lowercased() ? "checkmark" : ""
+                                )
+                            }
+                        }
+                    } label: {
+                        Label(selectedTag.map { "Deck: \($0)" } ?? "All decks", systemImage: "tag")
+                            .font(DS.Typography.caption)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .controlSize(.small)
+                    .fixedSize()
+                    .help("Review only words in a deck (tag).")
+                }
 
                 Button {
                     beginQuiz()

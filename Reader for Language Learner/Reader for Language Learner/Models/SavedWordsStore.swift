@@ -138,6 +138,47 @@ final class SavedWordsStore {
         words.first(where: { $0.id == id })
     }
 
+    // MARK: - Tags / Decks
+
+    /// All distinct tags across saved words, sorted case-insensitively.
+    var allTags: [String] {
+        var seen = Set<String>()
+        var ordered: [String] = []
+        for word in words {
+            for tag in word.tags {
+                let key = tag.lowercased()
+                if seen.insert(key).inserted {
+                    ordered.append(tag)
+                }
+            }
+        }
+        return ordered.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+
+    func words(withTag tag: String) -> [SavedWord] {
+        words.filter { $0.hasTag(tag) }
+    }
+
+    func tagCount(_ tag: String) -> Int {
+        words.reduce(0) { $0 + ($1.hasTag(tag) ? 1 : 0) }
+    }
+
+    /// Adds a tag (single token, trimmed) to a word if not already present.
+    func addTag(_ rawTag: String, to wordID: UUID) {
+        let tag = rawTag.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !tag.isEmpty, let index = words.firstIndex(where: { $0.id == wordID }) else { return }
+        guard !words[index].hasTag(tag) else { return }
+        words[index].tags.append(tag)
+        save()
+    }
+
+    func removeTag(_ tag: String, from wordID: UUID) {
+        guard let index = words.firstIndex(where: { $0.id == wordID }) else { return }
+        let needle = tag.lowercased()
+        words[index].tags.removeAll { $0.lowercased() == needle }
+        save()
+    }
+
     func isDue(_ word: SavedWord, at referenceDate: Date = Date()) -> Bool {
         word.isDue(at: referenceDate)
     }
@@ -185,13 +226,22 @@ final class SavedWordsStore {
         words.filter { $0.masteryLevel != .mastered }
     }
 
-    func reviewQueue(includeAll: Bool, at referenceDate: Date = Date()) -> [SavedWord] {
-        if includeAll {
-            return words
+    /// Words to review, optionally scoped to a deck (tag). Due/fallback logic
+    /// is computed within the chosen pool so an empty deck still falls back to
+    /// its own new/learning words rather than the global set.
+    func reviewQueue(includeAll: Bool, tag: String? = nil, at referenceDate: Date = Date()) -> [SavedWord] {
+        let pool: [SavedWord]
+        if let tag, !tag.isEmpty {
+            pool = words.filter { $0.hasTag(tag) }
+        } else {
+            pool = words
         }
 
-        let due = dueWords(at: referenceDate)
-        return due.isEmpty ? reviewFallbackWords() : due
+        if includeAll { return pool }
+
+        let due = pool.filter { isDue($0, at: referenceDate) }
+        if !due.isEmpty { return due }
+        return pool.filter { $0.masteryLevel != .mastered }
     }
 
     func reviewActivity(days: Int = 35, endingAt referenceDate: Date = Date()) -> [ReviewActivityDay] {

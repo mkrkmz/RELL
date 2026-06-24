@@ -33,7 +33,8 @@ enum AnkiExporter {
         pdfFilename: String?,
         pageNumber: Int?,
         contextSentence: String? = nil,
-        tags: String
+        tags: String,
+        extraTags: [String] = []
     ) -> AnkiNoteDraft {
         // ── Front ──
         var front = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -78,10 +79,18 @@ enum AnkiExporter {
         }
 
         // ── Tags ──
-        let normalizedTags = tags
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        // Anki separates tags by spaces, so each tag must be a single token;
+        // collapse any internal whitespace in per-word tags to underscores.
+        let baseTokens = tags
             .components(separatedBy: .whitespaces)
             .filter { !$0.isEmpty }
+        let extraTokens = extraTags
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                     .replacingOccurrences(of: " ", with: "_") }
+            .filter { !$0.isEmpty }
+        var seenTags = Set<String>()
+        let normalizedTags = (baseTokens + extraTokens)
+            .filter { seenTags.insert($0.lowercased()).inserted }
             .joined(separator: " ")
 
         return AnkiNoteDraft(

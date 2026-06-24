@@ -34,6 +34,7 @@ struct SavedWordsListView: View {
     @AppStorage("savedWordsSortOrder") private var sortRaw = SavedWordsSortOrder.dateDesc.rawValue
     @State private var searchText    = ""
     @State private var selectedFilter: SavedWordsFilter = .all
+    @State private var selectedTag: String?
     @State private var selectedWord: SavedWord?
     @State private var showBulkExport = false
     @State private var showClearConfirm = false
@@ -60,6 +61,11 @@ struct SavedWordsListView: View {
             }
         }
 
+        // Tag / deck filter
+        if let tag = selectedTag {
+            result = result.filter { $0.hasTag(tag) }
+        }
+
         // Search
         if !searchText.isEmpty {
             let q = searchText.lowercased()
@@ -68,6 +74,7 @@ struct SavedWordsListView: View {
                     || ($0.pdfFilename?.lowercased().contains(q) ?? false)
                     || $0.notes.lowercased().contains(q)
                     || $0.sentence.lowercased().contains(q)
+                    || $0.tags.contains { $0.lowercased().contains(q) }
             }
         }
 
@@ -193,6 +200,37 @@ struct SavedWordsListView: View {
             .controlSize(.mini)
             .frame(width: 84)
 
+            if !store.allTags.isEmpty {
+                Menu {
+                    Button {
+                        selectedTag = nil
+                    } label: {
+                        Label("All decks", systemImage: selectedTag == nil ? "checkmark" : "")
+                    }
+                    Divider()
+                    ForEach(store.allTags, id: \.self) { tag in
+                        Button {
+                            selectedTag = tag
+                        } label: {
+                            Label(
+                                "\(tag) (\(store.tagCount(tag)))",
+                                systemImage: selectedTag?.lowercased() == tag.lowercased() ? "checkmark" : ""
+                            )
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 2) {
+                        Image(systemName: "tag")
+                        Text(selectedTag ?? "Deck")
+                            .lineLimit(1)
+                    }
+                }
+                .menuStyle(.borderlessButton)
+                .controlSize(.mini)
+                .fixedSize()
+                .help("Filter by deck (tag)")
+            }
+
             Spacer()
 
             // Count label
@@ -245,6 +283,21 @@ struct SavedWordsListView: View {
                                     }
                                     .disabled(word.masteryLevel == level)
                                 }
+                            }
+                            Menu("Deck") {
+                                ForEach(store.allTags, id: \.self) { tag in
+                                    Button {
+                                        if word.hasTag(tag) {
+                                            store.removeTag(tag, from: word.id)
+                                        } else {
+                                            store.addTag(tag, to: word.id)
+                                        }
+                                    } label: {
+                                        Label(tag, systemImage: word.hasTag(tag) ? "checkmark" : "")
+                                    }
+                                }
+                                if !store.allTags.isEmpty { Divider() }
+                                Button("Edit Tags…") { selectedWord = word }
                             }
                             Divider()
                             Button("Delete", role: .destructive) { store.delete(word) }
@@ -417,6 +470,16 @@ private struct SavedWordRow: View {
                     }
                 }
 
+                // Tag chips
+                if !word.tags.isEmpty {
+                    FlowLayout(spacing: 3) {
+                        ForEach(word.tags, id: \.self) { tag in
+                            TagChip(tag: tag)
+                        }
+                    }
+                    .padding(.top, 1)
+                }
+
                 // Notes snippet
                 if !word.notes.isEmpty {
                     Text(word.notes)
@@ -500,6 +563,14 @@ private struct SavedWordDetailSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: DS.Spacing.lg) {
                     metadataSection
+
+                    Divider()
+
+                    // Tags editor
+                    VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                        Text("TAGS / DECKS").dsOverlineLabel()
+                        TagEditorView(tags: $word.tags, suggestions: store.allTags)
+                    }
 
                     Divider()
 
