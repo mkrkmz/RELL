@@ -13,11 +13,12 @@ final class RELLPDFView: PDFView {
 
     // MARK: - Callbacks (set by Coordinator)
 
-    var onContextSaveWord: (() -> Void)?
-    var onContextAddNote:  (() -> Void)?
-    var onContextLookUp:   (() -> Void)?
-    var onContextCopy:     (() -> Void)?
-    var onContextSpeak:    (() -> Void)?
+    var onContextSaveWord:  (() -> Void)?
+    var onContextAddNote:   (() -> Void)?
+    var onContextHighlight: ((HighlightColor) -> Void)?
+    var onContextLookUp:    (() -> Void)?
+    var onContextCopy:      (() -> Void)?
+    var onContextSpeak:     (() -> Void)?
 
     // MARK: - Context Menu
 
@@ -50,6 +51,25 @@ final class RELLPDFView: PDFView {
         noteItem.target    = self
         noteItem.isEnabled = true
         menu.addItem(noteItem)
+
+        // ── Highlight (color submenu) ──────────────────────────────────
+        let highlightItem = NSMenuItem(title: "Highlight", action: nil, keyEquivalent: "")
+        let highlightSubmenu = NSMenu()
+        highlightSubmenu.autoenablesItems = false
+        for color in HighlightColor.allCases {
+            let item = NSMenuItem(
+                title:         color.label,
+                action:        #selector(fireHighlight(_:)),
+                keyEquivalent: ""
+            )
+            item.target           = self
+            item.isEnabled        = true
+            item.representedObject = color.rawValue
+            item.image            = Self.swatchImage(for: color.nsColor)
+            highlightSubmenu.addItem(item)
+        }
+        highlightItem.submenu = highlightSubmenu
+        menu.addItem(highlightItem)
 
         // ── Look Up ────────────────────────────────────────────────────
         let lookUpItem = NSMenuItem(
@@ -94,4 +114,21 @@ final class RELLPDFView: PDFView {
     @objc private func fireLookUp()   { onContextLookUp?()   }
     @objc private func fireCopy()     { onContextCopy?()     }
     @objc private func fireSpeak()    { onContextSpeak?()    }
+
+    @objc private func fireHighlight(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let color = HighlightColor(rawValue: raw) else { return }
+        onContextHighlight?(color)
+    }
+
+    /// Small filled-circle swatch for the color submenu items.
+    private static func swatchImage(for color: NSColor) -> NSImage {
+        let size = NSSize(width: 12, height: 12)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        color.setFill()
+        NSBezierPath(ovalIn: NSRect(origin: .zero, size: size)).fill()
+        image.unlockFocus()
+        return image
+    }
 }

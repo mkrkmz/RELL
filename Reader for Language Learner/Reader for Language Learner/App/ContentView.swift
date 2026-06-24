@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var savedWordsStore  = SavedWordsStore()
     @State private var bookmarkStore    = PDFBookmarkStore()
     @State private var noteStore        = PDFNoteStore()
+    @State private var highlightStore   = PDFHighlightStore()
     @State private var sessionStore     = ReadingSessionStore()
     @State private var recentDocumentStore = RecentDocumentStore()
     @State private var coverStore       = DocumentCoverStore()
@@ -24,6 +25,12 @@ struct ContentView: View {
     @State private var showInspector = true
     @State private var isDropTargeted = false
     @State private var showWorkspaceReview = false
+
+    // Focus mode hides the side panels for distraction-free reading and
+    // remembers their prior visibility so exiting restores the layout.
+    @State private var focusMode = false
+    @State private var preFocusSidebar = true
+    @State private var preFocusInspector = true
 
     @AppStorage("sidebarWidth")   private var sidebarWidth:   Double = DS.Layout.sidebarDefault
     @AppStorage("inspectorWidth") private var inspectorWidth: Double = DS.Layout.inspectorDefault
@@ -158,6 +165,7 @@ struct ContentView: View {
                         savedWordsStore:     savedWordsStore,
                         bookmarkStore:       bookmarkStore,
                         noteStore:           noteStore,
+                        highlightStore:      highlightStore,
                         sessionStore:        sessionStore,
                         currentDocumentName: currentDocumentName
                     )
@@ -179,7 +187,9 @@ struct ContentView: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
-                    readerContextStrip
+                    if !focusMode {
+                        readerContextStrip
+                    }
 
                     PDFKitView(
                         documentURL: selectionState.documentURL,
@@ -195,6 +205,7 @@ struct ContentView: View {
                         pdfViewManager: pdfViewManager,
                         savedWordsStore: savedWordsStore,
                         noteStore: noteStore,
+                        highlightStore: highlightStore,
                         pageTheme: pageTheme
                     )
                     .onReceive(NotificationCenter.default.publisher(for: .PDFViewPageChanged)) { notification in
@@ -473,6 +484,20 @@ struct ContentView: View {
         }
 
         ToolbarItem(placement: .automatic) {
+            Button { toggleFocusMode() } label: {
+                Label(
+                    "Focus Mode",
+                    systemImage: focusMode
+                        ? "arrow.down.right.and.arrow.up.left"
+                        : "arrow.up.left.and.arrow.down.right"
+                )
+            }
+            .keyboardShortcut("d", modifiers: [.command, .shift])
+            .help(focusMode ? "Exit Focus Mode (⇧⌘D)" : "Focus Mode — hide panels (⇧⌘D)")
+            .disabled(selectionState.documentURL == nil)
+        }
+
+        ToolbarItem(placement: .automatic) {
             Button { toggleInspector() } label: {
                 Label("Toggle Inspector", systemImage: "sidebar.right")
             }
@@ -579,6 +604,22 @@ struct ContentView: View {
 
     private func toggleSidebar()   { showSidebar.toggle() }
     private func toggleInspector() { showInspector.toggle() }
+
+    /// Enters focus mode by hiding both side panels, remembering their prior
+    /// state so exiting restores exactly what was visible.
+    private func toggleFocusMode() {
+        if focusMode {
+            focusMode = false
+            showSidebar = preFocusSidebar
+            showInspector = preFocusInspector
+        } else {
+            preFocusSidebar = showSidebar
+            preFocusInspector = showInspector
+            focusMode = true
+            showSidebar = false
+            showInspector = false
+        }
+    }
 
     private var isCurrentPageBookmarked: Bool {
         guard let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent,

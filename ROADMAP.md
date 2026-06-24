@@ -5,16 +5,16 @@ mini kelime karti, Library, onboarding) 2026-06-11'de tamamlandi.
 Bu roadmap bir sonraki iterasyonu kapsar: okuma deneyimi, kelime
 organizasyonu, review modlari, AI takip sorusu ve istatistik derinligi.
 
-## Faz 1 — Okuma Deneyimi: Odak Modu + Kalici Highlight
+## Faz 1 — Okuma Deneyimi: Odak Modu + Kalici Highlight (tamamlandi)
 
-- [ ] Odak modu: tek kisayolla (⇧⌘D) sidebar + inspector + context strip gizleme;
-      `ContentView`'daki mevcut `showSidebar`/`showInspector` state'leri reuse, toolbar'a buton
-- [ ] `PDFHighlight` modeli (filename, pageIndex, secim bounds'u, renk, tarih) +
-      `PDFHighlightStore` (RELLJSONStore + `rellAppSupportDirectory` kalibi, PDFNoteStore ornek)
-- [ ] PDFKitView Coordinator: secim sag tik menusune renk secmeli "Highlight" (PDFAnnotation);
-      sayfa degisiminde annotation'lari yeniden uygulama (saved-word highlight yolu reuse)
-- [ ] Sidebar'a "Highlights" sekmesi (tab enum + badge kalibi): liste, tikla → sayfaya git
-      (`pdfViewManager.goToPage`), sag tik → sil / renk degistir
+- [x] Odak modu: ⇧⌘D ile sidebar + inspector + context strip gizleme; onceki panel
+      durumunu hatirlayip cikista geri yukler; toolbar butonu (belge acikken)
+- [x] `PDFHighlight` + `PDFHighlightStore` (RELLJSONStore, `pdf_highlights.json`,
+      PDFNoteStore kalibi; PDFHighlightRect reuse); 5 renk (`HighlightColor`)
+- [x] RELLPDFView sag tik → renkli "Highlight" alt menusu (swatch'li); Coordinator
+      annotation render (`kUserHighlightKey`), `.pdfHighlightsChanged` ile re-render
+- [x] Sidebar "Marker" sekmesi: liste, tikla → sayfaya git, swipe → sil, swatch menu → renk degistir
+- [x] Birim testleri: PDFHighlightStore CRUD, siralama, kalicilik, renk fallback
 
 ## Faz 2 — Okuma Deneyimi: Hover Sozluk + Ceviri Seridi
 

@@ -12,6 +12,7 @@ enum SidebarTab: String, CaseIterable, Identifiable {
     case thumbnails = "Pages"
     case outline    = "Contents"
     case bookmarks  = "Marks"
+    case highlights = "Marker"
     case notes      = "Notes"
     case saved      = "Saved"
     case quiz       = "Review"
@@ -23,10 +24,20 @@ enum SidebarTab: String, CaseIterable, Identifiable {
         case .thumbnails: return "square.grid.2x2"
         case .outline:    return "list.bullet.indent"
         case .bookmarks:  return "bookmark"
+        case .highlights: return "highlighter"
         case .notes:      return "note.text"
         case .saved:      return "star"
         case .quiz:       return "brain.head.profile"
         case .stats:      return "chart.bar"
+        }
+    }
+
+    /// Icon shown when the tab is selected. Most symbols have a `.fill`
+    /// variant; `highlighter` does not, so it stays as-is.
+    var selectedIconName: String {
+        switch self {
+        case .highlights: return "highlighter"
+        default:          return iconName + ".fill"
         }
     }
 }
@@ -38,6 +49,7 @@ struct SidebarView: View {
     var savedWordsStore: SavedWordsStore
     var bookmarkStore:   PDFBookmarkStore
     var noteStore:       PDFNoteStore
+    var highlightStore:  PDFHighlightStore
     var sessionStore:    ReadingSessionStore
     var currentDocumentName: String?
 
@@ -78,9 +90,7 @@ struct SidebarView: View {
         } label: {
             VStack(spacing: 3) {
                 ZStack(alignment: .topTrailing) {
-                    Image(systemName: isSelected
-                          ? tab.iconName + ".fill"
-                          : tab.iconName)
+                    Image(systemName: isSelected ? tab.selectedIconName : tab.iconName)
                         .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
                         .foregroundStyle(isSelected ? DS.Color.accent : DS.Color.textSecondary)
 
@@ -99,6 +109,8 @@ struct SidebarView: View {
                 Text(tab.rawValue)
                     .font(.system(size: 9, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? DS.Color.accent : DS.Color.textTertiary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.Spacing.xs)
@@ -127,6 +139,8 @@ struct SidebarView: View {
                 return bookmarkStore.bookmarks(for: name).count
             }
             return 0
+        case .highlights:
+            return highlightStore.count(for: currentDocumentName)
         case .notes:
             return noteStore.count(for: currentDocumentName)
         default:
@@ -148,6 +162,8 @@ struct SidebarView: View {
             countText = "\(badgeCount) notes for this document"
         case .bookmarks:
             countText = "\(badgeCount) marks for this document"
+        case .highlights:
+            countText = "\(badgeCount) highlights for this document"
         default:
             countText = "\(badgeCount) items"
         }
@@ -188,6 +204,12 @@ struct SidebarView: View {
         case .bookmarks:
             PDFBookmarksView(
                 bookmarkStore:   bookmarkStore,
+                pdfViewManager:  pdfViewManager,
+                currentFilename: currentDocumentName
+            )
+        case .highlights:
+            HighlightsView(
+                highlightStore:  highlightStore,
                 pdfViewManager:  pdfViewManager,
                 currentFilename: currentDocumentName
             )

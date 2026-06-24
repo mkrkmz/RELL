@@ -19,6 +19,7 @@ struct PDFKitView: NSViewRepresentable {
     var pdfViewManager: PDFViewManager
     var savedWordsStore: SavedWordsStore
     var noteStore: PDFNoteStore
+    var highlightStore: PDFHighlightStore
     var pageTheme: PageTheme = .original
 
     func makeCoordinator() -> Coordinator {
@@ -26,7 +27,8 @@ struct PDFKitView: NSViewRepresentable {
                     contextSentence: $contextSentence,
                     searchManager: searchManager,
                     savedWordsStore: savedWordsStore,
-                    noteStore: noteStore)
+                    noteStore: noteStore,
+                    highlightStore: highlightStore)
     }
 
     func makeNSView(context: Context) -> PDFView {
@@ -50,6 +52,7 @@ struct PDFKitView: NSViewRepresentable {
         context.coordinator.searchManager = searchManager
         context.coordinator.savedWordsStore = savedWordsStore
         context.coordinator.noteStore = noteStore
+        context.coordinator.highlightStore = highlightStore
         context.coordinator.requestDocumentUpdate(using: documentURL)
         context.coordinator.applyTheme(pageTheme)
         context.coordinator.refreshHighlights()
@@ -87,10 +90,13 @@ struct PDFKitView: NSViewRepresentable {
         var searchManager: PDFSearchManager
         var savedWordsStore: SavedWordsStore
         var noteStore: PDFNoteStore
-        
+        var highlightStore: PDFHighlightStore
+
         /// Key for identifying auto-generated highlight annotations.
         private let kAutoHighlightKey = "RELL_AutoHighlight"
         private let kNoteHighlightKey = "RELL_NoteHighlight"
+        private let kUserHighlightKey = "RELL_UserHighlight"
+        private var highlightsObserver: NSObjectProtocol?
         
         /// Cache of pages that have already been processed for the current set of saved words.
         private var processedPages = Set<PDFPage>()
@@ -99,12 +105,13 @@ struct PDFKitView: NSViewRepresentable {
         private var lastSavedWordsCount: Int = 0
         private var lastNotesCount: Int = 0
         
-        init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore) {
+        init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore, highlightStore: PDFHighlightStore) {
             self.selectedText = selectedText
             self.contextSentence = contextSentence
             self.searchManager = searchManager
             self.savedWordsStore = savedWordsStore
             self.noteStore = noteStore
+            self.highlightStore = highlightStore
         }
 
         func attach(to pdfView: PDFView) {
@@ -114,13 +121,14 @@ struct PDFKitView: NSViewRepresentable {
 
             // Wire context-menu callbacks if using RELLPDFView
             if let rellView = pdfView as? RELLPDFView {
-                rellView.onContextSaveWord = { [weak self] in self?.contextSaveWord() }
-                rellView.onContextAddNote  = { [weak self] in self?.contextAddNote() }
-                rellView.onContextLookUp   = {
+                rellView.onContextSaveWord  = { [weak self] in self?.contextSaveWord() }
+                rellView.onContextAddNote   = { [weak self] in self?.contextAddNote() }
+                rellView.onContextHighlight = { [weak self] color in self?.contextHighlight(color) }
+                rellView.onContextLookUp    = {
                     NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
                 }
-                rellView.onContextCopy     = { [weak self] in self?.contextCopy() }
-                rellView.onContextSpeak    = { [weak self] in self?.contextSpeak() }
+                rellView.onContextCopy      = { [weak self] in self?.contextCopy() }
+                rellView.onContextSpeak     = { [weak self] in self?.contextSpeak() }
             }
             
             // Create Overlay
@@ -154,6 +162,18 @@ struct PDFKitView: NSViewRepresentable {
             ) { [weak self] _ in
                 Task { @MainActor in
                     self?.refreshHighlights()
+                }
+            }
+
+            // User highlights mutate outside SwiftUI's view-update path, so
+            // re-render annotations when the store broadcasts a change.
+            highlightsObserver = NotificationCenter.default.addObserver(
+                forName: .pdfHighlightsChanged,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.resetHighlightsCache()
                 }
             }
         }
@@ -288,16 +308,22 @@ struct PDFKitView: NSViewRepresentable {
                 lastNotesCount = noteStore.notes.count
                 processedPages.removeAll()
             }
-            
+
             let visiblePages = pdfView.visiblePages
             let savedTerms = savedWordsStore.words.map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
             let currentFilename = loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? ""
             let notesByPage = Dictionary(grouping: noteStore.notes(for: currentFilename), by: \.pageIndex)
-            
+            let highlightsByPage = Dictionary(grouping: highlightStore.highlights(for: currentFilename), by: \.pageIndex)
+
             for page in visiblePages {
                 let pageIndex = pdfView.document?.index(for: page) ?? -1
                 if effectiveForce || !processedPages.contains(page) {
-                    processPage(page, savedTerms: savedTerms, notes: notesByPage[pageIndex] ?? [])
+                    processPage(
+                        page,
+                        savedTerms: savedTerms,
+                        notes: notesByPage[pageIndex] ?? [],
+                        highlights: highlightsByPage[pageIndex] ?? []
+                    )
                     processedPages.insert(page)
                 }
             }
@@ -308,9 +334,21 @@ struct PDFKitView: NSViewRepresentable {
             refreshHighlights(force: true)
         }
         
-        private func processPage(_ page: PDFPage, savedTerms: [String], notes: [PDFNote]) {
+        private func processPage(_ page: PDFPage, savedTerms: [String], notes: [PDFNote], highlights: [PDFHighlight]) {
             removeGeneratedHighlights(from: page)
-            
+
+            // User highlights first so saved-word/note tints layer over them.
+            for highlight in highlights {
+                let nsColor = highlight.color.nsColor
+                for rect in highlight.highlightRects {
+                    addUserHighlight(
+                        to: page,
+                        rect: CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height),
+                        color: nsColor
+                    )
+                }
+            }
+
             guard let text = page.string else { return }
             let nsText = text as NSString
             let fullRange = NSRange(location: 0, length: nsText.length)
@@ -366,11 +404,22 @@ struct PDFKitView: NSViewRepresentable {
             annotation.shouldPrint = false
             page.addAnnotation(annotation)
         }
-        
+
+        private func addUserHighlight(to page: PDFPage, rect: CGRect, color: NSColor) {
+            guard rect.width > 0, rect.height > 0 else { return }
+            let annotation = PDFAnnotation(bounds: rect, forType: .highlight, withProperties: nil)
+            annotation.color = color.withAlphaComponent(0.34)
+            annotation.userName = kUserHighlightKey
+            annotation.shouldPrint = false
+            page.addAnnotation(annotation)
+        }
+
         private func removeGeneratedHighlights(from page: PDFPage) {
             let annotations = page.annotations
             for annotation in annotations {
-                if annotation.userName == kAutoHighlightKey || annotation.userName == kNoteHighlightKey {
+                if annotation.userName == kAutoHighlightKey
+                    || annotation.userName == kNoteHighlightKey
+                    || annotation.userName == kUserHighlightKey {
                     page.removeAnnotation(annotation)
                 }
             }
@@ -445,6 +494,44 @@ struct PDFKitView: NSViewRepresentable {
             }
         }
 
+        private func contextHighlight(_ color: HighlightColor) {
+            guard let pdfView = pdfView,
+                  let selection = pdfView.currentSelection,
+                  let raw = selection.string
+            else { return }
+            let selectedText = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !selectedText.isEmpty else { return }
+
+            guard let page = selection.pages.first ?? pdfView.currentPage,
+                  let document = pdfView.document
+            else { return }
+
+            let pageIndex = document.index(for: page)
+            let rects = selection.selectionsByLine().map { lineSelection -> PDFHighlightRect in
+                let rect = lineSelection.bounds(for: page)
+                return PDFHighlightRect(
+                    x: rect.origin.x,
+                    y: rect.origin.y,
+                    width: rect.size.width,
+                    height: rect.size.height
+                )
+            }
+            guard !rects.isEmpty else { return }
+
+            let highlight = PDFHighlight(
+                pdfFilename: loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? "Unknown PDF",
+                pageIndex: pageIndex,
+                pageLabel: page.label ?? "Page \(pageIndex + 1)",
+                selectedText: selectedText,
+                colorRaw: color.rawValue,
+                highlightRects: rects
+            )
+
+            Task { @MainActor in
+                self.highlightStore.add(highlight)
+            }
+        }
+
         private func contextCopy() {
             guard let text = pdfView?.currentSelection?.string, !text.isEmpty else { return }
             NSPasteboard.general.clearContents()
@@ -508,6 +595,10 @@ struct PDFKitView: NSViewRepresentable {
             if let visiblePagesObserver {
                 NotificationCenter.default.removeObserver(visiblePagesObserver)
                 self.visiblePagesObserver = nil
+            }
+            if let highlightsObserver {
+                NotificationCenter.default.removeObserver(highlightsObserver)
+                self.highlightsObserver = nil
             }
             selectionDebounceWorkItem?.cancel()
             selectionDebounceWorkItem = nil
