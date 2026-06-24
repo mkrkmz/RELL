@@ -88,24 +88,23 @@ struct DashboardWordCard: View {
     // MARK: - Flip Card
 
     private func flipCard(for word: SavedWord) -> some View {
-        Button {
-            isFlipped.toggle()
-        } label: {
-            ZStack {
-                cardFace(front: true, word: word)
-                    .opacity(isFlipped ? 0 : 1)
-                    .rotation3DEffect(.degrees(isFlipped ? 180 : 0), axis: (x: 0, y: 1, z: 0))
+        // A tap gesture (not a Button) so the embedded SpeakButton can handle
+        // its own taps without nested-button conflicts.
+        ZStack {
+            cardFace(front: true, word: word)
+                .opacity(isFlipped ? 0 : 1)
+                .rotation3DEffect(.degrees(isFlipped ? 180 : 0), axis: (x: 0, y: 1, z: 0))
 
-                cardFace(front: false, word: word)
-                    .opacity(isFlipped ? 1 : 0)
-                    .rotation3DEffect(.degrees(isFlipped ? 0 : -180), axis: (x: 0, y: 1, z: 0))
-            }
-            .frame(maxWidth: .infinity, minHeight: 96)
-            .contentShape(Rectangle())
+            cardFace(front: false, word: word)
+                .opacity(isFlipped ? 1 : 0)
+                .rotation3DEffect(.degrees(isFlipped ? 0 : -180), axis: (x: 0, y: 1, z: 0))
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, minHeight: 96)
+        .contentShape(Rectangle())
+        .onTapGesture { isFlipped.toggle() }
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.bottom, isFlipped ? DS.Spacing.sm : DS.Spacing.lg)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel(
             isFlipped
             ? "Definition: \(word.reviewDefinition)"
@@ -119,12 +118,15 @@ struct DashboardWordCard: View {
         Group {
             if front {
                 VStack(spacing: DS.Spacing.xs) {
-                    Text(word.term)
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(2)
+                    HStack(spacing: DS.Spacing.sm) {
+                        Text(word.term)
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(DS.Color.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.7)
+                            .lineLimit(2)
+                        SpeakButton(text: word.term, size: 13)
+                    }
                     Text("Click to reveal")
                         .font(DS.Typography.caption2)
                         .foregroundStyle(DS.Color.textTertiary)

@@ -43,15 +43,18 @@ servis-ici bellek cache kullanildi (daha az coupling, ayni "once cache" davranis
 Not: DashboardWordCard kasitli olarak deste secici almadi — minimal "bugun due" karti
 sade kalsin diye; deste secimi Review Center'da. Istenirse eklenebilir.
 
-## Faz 4 — Review Yuzeyi: Yeni Quiz Modlari + TTS
+## Faz 4 — Review Yuzeyi: Yeni Quiz Modlari + TTS (tamamlandi)
 
-- [ ] Mod secici: Flashcard (mevcut) / Coktan Secmeli / Yazarak Hatirlama + Cram anahtari
-- [ ] Coktan secmeli: dogru tanim + diger kelimelerin tanimlarindan 3 celdirici
-- [ ] Yazarak: terim gosterilir, kullanici anlami yazar, normalize karsilastirma +
-      kendi kendini derecelendirme
-- [ ] Cram modu: `applyReview` cagrilmaz (SRS bozulmaz), yalnizca oturum istatistigi
-- [ ] TTS: QuizView karti, SavedWordsListView satirlari ve DashboardWordCard'a telaffuz
-      butonu — `SpeechManager.shared.speak` reuse (`speechRate` AppStorage mevcut)
+- [x] Mod secici (segmented, `quizMode` AppStorage): Flashcard / Coktan Secmeli / Yazarak
+- [x] Coktan secmeli: dogru tanim + diger kelimelerin tanimlarindan 3 celdirici
+      (yetersiz kelimede plain-reveal fallback); secimde dogru/yanlis vurgulanir
+- [x] Yazarak: terim gosterilir, kullanici anlami yazar, "Check" → normalize karsilastirma
+      (tavsiye nitelikli ✓), 3 buton ile kendi kendini derecelendirme
+- [x] Cram anahtari: `applyReview` cagrilmaz (SRS bozulmaz), yalnizca oturum sayaci;
+      kart basliginda "Cram" rozeti
+- [x] TTS: yeni `SpeakButton` (hedef dile gore ses) → QuizView karti, SavedWordsListView
+      satiri (hover), DashboardWordCard (flip onTapGesture'a cevrildi)
+- [x] Saf logic `QuizMatching`'e cikarildi + birim testleri
 
 ## Faz 5 — AI: Ask AI Takip Sorusu
 

@@ -9,6 +9,22 @@
 
 import SwiftUI
 
+enum QuizMode: String, CaseIterable, Identifiable {
+    case flashcard = "Flashcard"
+    case multipleChoice = "Choice"
+    case typed = "Type"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .flashcard:      return "rectangle.on.rectangle"
+        case .multipleChoice: return "list.bullet"
+        case .typed:          return "keyboard"
+        }
+    }
+}
+
 struct QuizView: View {
     var store: SavedWordsStore
     var onContinueReading: (() -> Void)? = nil
@@ -25,6 +41,19 @@ struct QuizView: View {
     // Filter: due words only by default
     @State private var includeAll = false
     @State private var selectedTag: String?
+
+    // Modes
+    @AppStorage("quizMode") private var quizModeRaw = QuizMode.flashcard.rawValue
+    @State private var cram = false
+
+    // Per-card answer state (multiple choice / typed)
+    @State private var mcOptions: [String] = []
+    @State private var mcSelectedIndex: Int?
+    @State private var typedAnswer = ""
+
+    private var quizMode: QuizMode {
+        QuizMode(rawValue: quizModeRaw) ?? .flashcard
+    }
 
     private var dueWords: [SavedWord] { store.dueWords() }
 
@@ -82,12 +111,31 @@ struct QuizView: View {
                     reviewStat(icon: "checkmark.circle", value: "\(store.reviewedTodayCount)", label: "Reviewed today", color: DS.Color.success)
                 }
 
+                Picker("Mode", selection: Binding(
+                    get: { quizMode },
+                    set: { quizModeRaw = $0.rawValue }
+                )) {
+                    ForEach(QuizMode.allCases) { mode in
+                        Label(mode.rawValue, systemImage: mode.icon).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .help("Flashcard reveal, multiple choice, or typed recall.")
+
                 Toggle("Include all saved words", isOn: $includeAll)
                     .toggleStyle(.switch)
                     .controlSize(.mini)
                     .font(DS.Typography.caption)
                     .tint(DS.Color.accent)
                     .help("Review every saved word instead of the due-first queue.")
+
+                Toggle("Cram — practice without changing the schedule", isOn: $cram)
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .font(DS.Typography.caption)
+                    .tint(DS.Color.warning)
+                    .help("Drill cards without affecting spaced-repetition timing.")
 
                 if !store.allTags.isEmpty {
                     Menu {
@@ -157,6 +205,10 @@ struct QuizView: View {
                 HStack {
                     Text("Review \(currentIndex + 1) of \(queue.count)")
                     Spacer()
+                    if cram {
+                        Label("Cram", systemImage: "bolt.fill")
+                            .foregroundStyle(DS.Color.warning)
+                    }
                     Label(word.reviewStatus.label, systemImage: word.reviewStatus.icon)
                         .foregroundStyle(word.reviewStatus.color)
                 }
@@ -167,62 +219,176 @@ struct QuizView: View {
 
             Spacer()
 
-            // Card
-            ZStack {
-                // Back face
-                cardFace(content: backContent(for: word), isFront: false)
-                    .rotation3DEffect(.degrees(isFlipped ? 0 : -90), axis: (x: 0, y: 1, z: 0))
-                    .opacity(isFlipped ? 1 : 0)
-
-                // Front face
-                cardFace(content: frontContent(for: word), isFront: true)
-                    .rotation3DEffect(.degrees(isFlipped ? 90 : 0), axis: (x: 0, y: 1, z: 0))
-                    .opacity(isFlipped ? 0 : 1)
-            }
-            .onTapGesture { flipCard() }
-
-            // Hint
-            if !isFlipped {
-                Text("Tap to reveal")
-                    .font(DS.Typography.caption2)
-                    .foregroundStyle(DS.Color.textTertiary)
+            switch quizMode {
+            case .flashcard:      flashcardBody(word)
+            case .multipleChoice: multipleChoiceBody(word)
+            case .typed:          typedBody(word)
             }
 
             Spacer()
 
-            // Action buttons (only shown after flip)
             if isFlipped {
-                HStack(spacing: DS.Spacing.lg) {
-                    actionButton(
-                        label: "Again",
-                        icon: "arrow.counterclockwise",
-                        color: DS.Color.danger,
-                        shortcut: "1",
-                        shortcutLabel: "1"
-                    ) { handleAgain(word: word) }
-
-                    actionButton(
-                        label: "Good",
-                        icon: "checkmark.circle.fill",
-                        color: DS.Color.accent,
-                        shortcut: "2",
-                        shortcutLabel: "2"
-                    ) { handleGood(word: word) }
-
-                    actionButton(
-                        label: "Easy",
-                        icon: "checkmark.seal.fill",
-                        color: DS.Color.success,
-                        shortcut: "3",
-                        shortcutLabel: "3"
-                    ) { handleKnown(word: word) }
-                }
-                .padding(.horizontal, DS.Spacing.xl)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                ratingRow(for: word)
             }
         }
         .padding(.vertical, DS.Spacing.md)
         .animation(DS.Animation.springFast, value: isFlipped)
+    }
+
+    // MARK: - Flashcard Body
+
+    @ViewBuilder
+    private func flashcardBody(_ word: SavedWord) -> some View {
+        ZStack {
+            cardFace(content: backContent(for: word), isFront: false)
+                .rotation3DEffect(.degrees(isFlipped ? 0 : -90), axis: (x: 0, y: 1, z: 0))
+                .opacity(isFlipped ? 1 : 0)
+
+            cardFace(content: frontContent(for: word), isFront: true)
+                .rotation3DEffect(.degrees(isFlipped ? 90 : 0), axis: (x: 0, y: 1, z: 0))
+                .opacity(isFlipped ? 0 : 1)
+        }
+        .onTapGesture { flipCard() }
+
+        if !isFlipped {
+            Text("Tap to reveal")
+                .font(DS.Typography.caption2)
+                .foregroundStyle(DS.Color.textTertiary)
+        }
+    }
+
+    // MARK: - Multiple Choice Body
+
+    @ViewBuilder
+    private func multipleChoiceBody(_ word: SavedWord) -> some View {
+        VStack(spacing: DS.Spacing.md) {
+            cardFace(content: frontContent(for: word), isFront: true)
+
+            if mcOptions.count < 2 {
+                // Not enough distractors — fall back to a plain reveal.
+                if isFlipped {
+                    Text(word.reviewDefinition)
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .padding(.horizontal, DS.Spacing.lg)
+                } else {
+                    Button("Reveal answer") { revealAnswer() }
+                        .buttonStyle(.bordered)
+                }
+            } else {
+                VStack(spacing: DS.Spacing.sm) {
+                    ForEach(Array(mcOptions.enumerated()), id: \.offset) { index, option in
+                        choiceRow(index: index, option: option, correct: word.reviewDefinition)
+                    }
+                }
+                .padding(.horizontal, DS.Spacing.md)
+            }
+        }
+    }
+
+    private func choiceRow(index: Int, option: String, correct: String) -> some View {
+        let isCorrect = option == correct
+        let isSelected = mcSelectedIndex == index
+        let tint: Color = {
+            guard isFlipped else { return DS.Color.separator.opacity(0.4) }
+            if isCorrect { return DS.Color.success }
+            if isSelected { return DS.Color.danger }
+            return DS.Color.separator.opacity(0.3)
+        }()
+
+        return Button {
+            guard !isFlipped else { return }
+            mcSelectedIndex = index
+            revealAnswer()
+        } label: {
+            HStack(alignment: .top, spacing: DS.Spacing.sm) {
+                Image(systemName: isFlipped && (isCorrect || isSelected)
+                      ? (isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                      : "circle")
+                    .foregroundStyle(isFlipped && (isCorrect || isSelected) ? tint : DS.Color.textTertiary)
+                Text(option)
+                    .font(DS.Typography.callout)
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(3)
+                Spacer(minLength: 0)
+            }
+            .padding(DS.Spacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background((isFlipped && (isCorrect || isSelected) ? tint.opacity(0.10) : DS.Color.surfaceElevated))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.md)
+                    .strokeBorder(tint, lineWidth: isFlipped && (isCorrect || isSelected) ? 1.2 : 0.6)
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(isFlipped)
+    }
+
+    // MARK: - Typed Recall Body
+
+    @ViewBuilder
+    private func typedBody(_ word: SavedWord) -> some View {
+        VStack(spacing: DS.Spacing.md) {
+            cardFace(content: frontContent(for: word), isFront: true)
+
+            if !isFlipped {
+                VStack(spacing: DS.Spacing.sm) {
+                    TextField("Type the meaning…", text: $typedAnswer, axis: .vertical)
+                        .textFieldStyle(.roundedBorder)
+                        .lineLimit(1...3)
+                        .onSubmit { if !typedAnswer.trimmingCharacters(in: .whitespaces).isEmpty { revealAnswer() } }
+                    Button("Check") { revealAnswer() }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.regular)
+                        .disabled(typedAnswer.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .keyboardShortcut(.return, modifiers: [.command])
+                }
+                .padding(.horizontal, DS.Spacing.lg)
+            } else {
+                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                    HStack(spacing: DS.Spacing.xs) {
+                        Image(systemName: typedLooksCorrect(word) ? "checkmark.circle.fill" : "questionmark.circle.fill")
+                            .foregroundStyle(typedLooksCorrect(word) ? DS.Color.success : DS.Color.warning)
+                        Text(typedLooksCorrect(word) ? "Looks right — confirm below" : "Self-check against the answer")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                    if !typedAnswer.trimmingCharacters(in: .whitespaces).isEmpty {
+                        Text("You wrote: \(typedAnswer)")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textSecondary)
+                            .italic()
+                    }
+                    Divider()
+                    Text(word.reviewDefinition)
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(DS.Spacing.lg)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(DS.Color.surfaceElevated)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+                .padding(.horizontal, DS.Spacing.md)
+            }
+        }
+    }
+
+    // MARK: - Rating Row
+
+    private func ratingRow(for word: SavedWord) -> some View {
+        HStack(spacing: DS.Spacing.lg) {
+            actionButton(label: "Again", icon: "arrow.counterclockwise", color: DS.Color.danger,
+                         shortcut: "1", shortcutLabel: "1") { recordRating(.again, word: word) }
+            actionButton(label: "Good", icon: "checkmark.circle.fill", color: DS.Color.accent,
+                         shortcut: "2", shortcutLabel: "2") { recordRating(.good, word: word) }
+            actionButton(label: "Easy", icon: "checkmark.seal.fill", color: DS.Color.success,
+                         shortcut: "3", shortcutLabel: "3") { recordRating(.easy, word: word) }
+        }
+        .padding(.horizontal, DS.Spacing.xl)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
     // MARK: - Card Faces
@@ -246,11 +412,14 @@ struct QuizView: View {
             Text("TERM")
                 .font(DS.Typography.caption2.weight(.bold))
                 .foregroundStyle(DS.Color.textTertiary)
-            Text(word.term)
-                .font(.system(size: 28, weight: .semibold, design: .default))
-                .foregroundStyle(DS.Color.textPrimary)
-                .multilineTextAlignment(.center)
-                .minimumScaleFactor(0.72)
+            HStack(spacing: DS.Spacing.sm) {
+                Text(word.term)
+                    .font(.system(size: 28, weight: .semibold, design: .default))
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.72)
+                SpeakButton(text: word.term, size: 15)
+            }
             masteryBadge(word.masteryLevel)
             sourceBadge(for: word)
         }
@@ -492,44 +661,82 @@ struct QuizView: View {
     private func beginQuiz() {
         queue = wordsToQuiz.shuffled()
         currentIndex = 0
-        isFlipped = false
         sessionAgain = 0
         sessionGood = 0
         sessionEasy = 0
         isFinished = false
+        prepareCard()
+    }
+
+    /// Resets per-card answer state and, for multiple choice, builds options.
+    private func prepareCard() {
+        isFlipped = false
+        typedAnswer = ""
+        mcSelectedIndex = nil
+        mcOptions = []
+        guard currentIndex < queue.count else { return }
+        if quizMode == .multipleChoice {
+            mcOptions = buildOptions(for: queue[currentIndex])
+        }
     }
 
     private func flipCard() {
         withAnimation(.easeInOut(duration: 0.25)) { isFlipped = true }
     }
 
-    private func handleKnown(word: SavedWord) {
-        sessionEasy += 1
-        _ = store.applyReview(.easy, to: word)
-        advance()
+    private func revealAnswer() {
+        withAnimation(.easeInOut(duration: 0.2)) { isFlipped = true }
     }
 
-    private func handleAgain(word: SavedWord) {
-        sessionAgain += 1
-        if let updated = store.applyReview(.again, to: word) {
-            queue.append(updated)
+    /// Records a grade. In cram mode scheduling is left untouched (no
+    /// `applyReview`); only the session tally and requeue-on-Again apply.
+    private func recordRating(_ rating: ReviewRating, word: SavedWord) {
+        switch rating {
+        case .again: sessionAgain += 1
+        case .good:  sessionGood += 1
+        case .easy:  sessionEasy += 1
         }
-        advance()
-    }
 
-    private func handleGood(word: SavedWord) {
-        sessionGood += 1
-        _ = store.applyReview(.good, to: word)
+        if cram {
+            if rating == .again { queue.append(word) }
+        } else {
+            let updated = store.applyReview(rating, to: word)
+            if rating == .again, let updated { queue.append(updated) }
+        }
         advance()
     }
 
     private func advance() {
-        isFlipped = false
         let next = currentIndex + 1
         if next >= queue.count {
+            isFlipped = false
             isFinished = true
         } else {
-            withAnimation(DS.Animation.springFast) { currentIndex = next }
+            currentIndex = next
+            withAnimation(DS.Animation.springFast) { prepareCard() }
         }
+    }
+
+    // MARK: - Multiple Choice Options
+
+    /// Correct definition plus up to three distinct distractors drawn from
+    /// other saved words. Returns fewer than two when the vocabulary is too
+    /// small, signaling a plain-reveal fallback.
+    private func buildOptions(for word: SavedWord) -> [String] {
+        let correct = word.reviewDefinition
+        guard !correct.isEmpty, correct != "No definition saved." else { return [] }
+
+        let candidates = store.words
+            .filter { $0.id != word.id }
+            .shuffled()
+            .map(\.reviewDefinition)
+        let distractors = QuizMatching.distractors(correct: correct, candidates: candidates)
+
+        guard !distractors.isEmpty else { return [] }
+        return ([correct] + distractors).shuffled()
+    }
+
+    private func typedLooksCorrect(_ word: SavedWord) -> Bool {
+        QuizMatching.looksCorrect(typed: typedAnswer, definition: word.reviewDefinition)
     }
 }

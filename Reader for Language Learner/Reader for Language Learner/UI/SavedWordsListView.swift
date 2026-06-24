@@ -412,10 +412,16 @@ private struct SavedWordRow: View {
 
             VStack(alignment: .leading, spacing: DS.Spacing.xxs + 1) {
                 // Term
-                Text(word.term)
-                    .font(DS.Typography.callout.weight(.medium))
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(1)
+                HStack(spacing: DS.Spacing.xs) {
+                    Text(word.term)
+                        .font(DS.Typography.callout.weight(.medium))
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .lineLimit(1)
+                    if isHovered {
+                        SpeakButton(text: word.term, size: 11)
+                            .transition(.opacity)
+                    }
+                }
 
                 // Source + domain badge + date row
                 HStack(spacing: DS.Spacing.xs) {
