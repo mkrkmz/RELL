@@ -34,6 +34,7 @@ struct InspectorView: View {
     @State var moduleStartTimes: [ModuleType: Date] = [:]
     @State var moduleElapsed: [ModuleType: Double] = [:]
     @State var displayedText: String = ""
+    @State var followUpQuestion: String = ""
     @State var selectionDebounceTask: Task<Void, Never>?
     /// Last auto-scroll during streaming — throttles scroll-to-bottom to ~6/s.
     @State var lastStreamScrollAt: Date = .distantPast
@@ -229,6 +230,7 @@ struct InspectorView: View {
                 .padding(.horizontal, DS.Spacing.xs)
                 .padding(.vertical, DS.Spacing.xxs)
             resultPanel
+            askAISection
         }
         .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

@@ -8,6 +8,15 @@ import os
 
 // MARK: - InspectorViewModel
 
+/// One question/answer pair in the inspector's Ask AI thread.
+struct FollowUpExchange: Identifiable {
+    let id: UUID
+    let question: String
+    var answer: String
+    var isLoading: Bool
+    var error: String?
+}
+
 @MainActor
 @Observable
 final class InspectorViewModel {
@@ -21,6 +30,14 @@ final class InspectorViewModel {
 
     /// Cancellable task handles per module.
     var activeTasks: [ModuleType: Task<Void, Never>] = [:]
+
+    /// Session-scoped "Ask AI" follow-up exchanges for the current selection.
+    var followUps: [FollowUpExchange] = []
+    var followUpTask: Task<Void, Never>?
+
+    var isAskingFollowUp: Bool {
+        followUps.last?.isLoading == true
+    }
 
     /// Caps concurrent requests to local LLM servers (LM Studio / Ollama),
     /// which serialize on a single GPU context anyway.
@@ -57,6 +74,9 @@ final class InspectorViewModel {
         loading.removeAll()
         errors.removeAll()
         wasTruncated.removeAll()
+        followUpTask?.cancel()
+        followUpTask = nil
+        followUps.removeAll()
     }
 
     // MARK: - Cache helpers

@@ -56,13 +56,13 @@ sade kalsin diye; deste secimi Review Center'da. Istenirse eklenebilir.
       satiri (hover), DashboardWordCard (flip onTapGesture'a cevrildi)
 - [x] Saf logic `QuizMatching`'e cikarildi + birim testleri
 
-## Faz 5 — AI: Ask AI Takip Sorusu
+## Faz 5 — AI: Ask AI Takip Sorusu (tamamlandi)
 
-- [ ] Inspector sonuc panelinin altina "Ask a follow-up…" alani; prompt = mevcut sistem
-      prompt + baglam (terim, cumle, aktif modul ciktisi) + soru
-- [ ] Mevcut streaming pipeline + `AsyncLimiter` + iptal mantigi reuse; cevap
-      `ResultRenderer` plain gorunumuyle
-- [ ] Oturum ici soru-cevap gecmisi (session-scoped, InspectorViewModel'de)
+- [x] Inspector sonuc panelinin altinda "Ask a follow-up…" alani; baglam = terim +
+      cumle + aktif modul ciktisi (800 char cap) + soru
+- [x] Mevcut streaming pipeline + `localRequestGate` + iptal (stop butonu) reuse
+- [x] Oturum ici soru-cevap thread'i (`FollowUpExchange`, InspectorViewModel; secim
+      degisince temizlenir), streaming cevap satir satir
 
 ## Faz 6 — Istatistik Derinligi
 
