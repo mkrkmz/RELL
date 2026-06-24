@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var sessionStore     = ReadingSessionStore()
     @State private var recentDocumentStore = RecentDocumentStore()
     @State private var coverStore       = DocumentCoverStore()
+    @State private var quickLookup      = QuickLookupService()
     @State private var ankiPrefs        = AnkiModulePreferences()
 
     @State private var showSidebar   = true
@@ -38,6 +39,11 @@ struct ContentView: View {
     @AppStorage("pageTheme")      private var pageThemeRaw:   String = PageTheme.original.rawValue
     @AppStorage("readingPositions") private var readingPositionsData: Data = Data()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
+    @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+
+    /// Sentence the user dismissed; suppresses the strip until the selection changes.
+    @State private var dismissedTranslationSentence: String = ""
 
     init() {
         // Users with existing reading history predate the first-run flow —
@@ -206,6 +212,8 @@ struct ContentView: View {
                         savedWordsStore: savedWordsStore,
                         noteStore: noteStore,
                         highlightStore: highlightStore,
+                        quickLookup: quickLookup,
+                        hoverEnabled: hoverDictionaryEnabled,
                         pageTheme: pageTheme
                     )
                     .onReceive(NotificationCenter.default.publisher(for: .PDFViewPageChanged)) { notification in
@@ -227,7 +235,17 @@ struct ContentView: View {
                         guard let newURL else { return }
                         restorePage(for: newURL.deletingPathExtension().lastPathComponent)
                     }
+
+                    if sentenceTranslationEnabled, !focusMode, let sentence = translatableSentence {
+                        SentenceTranslationStrip(
+                            sentence: sentence,
+                            service: quickLookup,
+                            onClose: { dismissedTranslationSentence = sentence }
+                        )
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
                 }
+                .animation(DS.Animation.standard, value: translatableSentence)
                 .padding(.top, DS.Spacing.sm)
                 .padding(.horizontal, DS.Spacing.sm)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -265,6 +283,15 @@ struct ContentView: View {
 
     private var currentDocumentName: String? {
         selectionState.documentURL?.deletingPathExtension().lastPathComponent
+    }
+
+    /// The selected text when it reads as a sentence (≥3 words) and hasn't
+    /// been dismissed — the source for the translation strip.
+    private var translatableSentence: String? {
+        let selection = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard selection.split(whereSeparator: \.isWhitespace).count >= 3 else { return nil }
+        guard selection != dismissedTranslationSentence else { return nil }
+        return selection
     }
 
     private var readerContextStrip: some View {

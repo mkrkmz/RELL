@@ -33,6 +33,30 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                Toggle(isOn: $hoverDictionaryEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Hover Dictionary")
+                        Text("Show a quick definition when you hover over a word.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                Toggle(isOn: $sentenceTranslationEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sentence Translation")
+                        Text("Translate the selected sentence below the page.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+            } header: {
+                Text("Reading Aids")
+            } footer: {
+                Text("Both use your AI provider. Turn them off to avoid extra requests.")
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+
+            Section {
                 Button("Show Welcome Tour Again") {
                     hasCompletedOnboarding = false
                 }
@@ -40,10 +64,12 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 380)
+        .frame(width: 540, height: 480)
     }
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+    @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
+    @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
 
     // MARK: - Language Pair
 

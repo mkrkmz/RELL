@@ -20,6 +20,8 @@ struct PDFKitView: NSViewRepresentable {
     var savedWordsStore: SavedWordsStore
     var noteStore: PDFNoteStore
     var highlightStore: PDFHighlightStore
+    var quickLookup: QuickLookupService
+    var hoverEnabled: Bool = true
     var pageTheme: PageTheme = .original
 
     func makeCoordinator() -> Coordinator {
@@ -28,7 +30,9 @@ struct PDFKitView: NSViewRepresentable {
                     searchManager: searchManager,
                     savedWordsStore: savedWordsStore,
                     noteStore: noteStore,
-                    highlightStore: highlightStore)
+                    highlightStore: highlightStore,
+                    quickLookup: quickLookup,
+                    hoverEnabled: hoverEnabled)
     }
 
     func makeNSView(context: Context) -> PDFView {
@@ -53,6 +57,8 @@ struct PDFKitView: NSViewRepresentable {
         context.coordinator.savedWordsStore = savedWordsStore
         context.coordinator.noteStore = noteStore
         context.coordinator.highlightStore = highlightStore
+        context.coordinator.quickLookup = quickLookup
+        context.coordinator.setHoverEnabled(hoverEnabled)
         context.coordinator.requestDocumentUpdate(using: documentURL)
         context.coordinator.applyTheme(pageTheme)
         context.coordinator.refreshHighlights()
@@ -91,12 +97,21 @@ struct PDFKitView: NSViewRepresentable {
         var savedWordsStore: SavedWordsStore
         var noteStore: PDFNoteStore
         var highlightStore: PDFHighlightStore
+        var quickLookup: QuickLookupService
+        var hoverEnabled: Bool
 
         /// Key for identifying auto-generated highlight annotations.
         private let kAutoHighlightKey = "RELL_AutoHighlight"
         private let kNoteHighlightKey = "RELL_NoteHighlight"
         private let kUserHighlightKey = "RELL_UserHighlight"
         private var highlightsObserver: NSObjectProtocol?
+
+        // Hover dictionary
+        private var hoverPopover: NSPopover?
+        private let hoverModel = HoverLookupModel()
+        private var hoverWorkItem: DispatchWorkItem?
+        private var hoverTask: Task<Void, Never>?
+        private var currentHoverTerm: String = ""
         
         /// Cache of pages that have already been processed for the current set of saved words.
         private var processedPages = Set<PDFPage>()
@@ -105,13 +120,20 @@ struct PDFKitView: NSViewRepresentable {
         private var lastSavedWordsCount: Int = 0
         private var lastNotesCount: Int = 0
         
-        init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore, highlightStore: PDFHighlightStore) {
+        init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore, highlightStore: PDFHighlightStore, quickLookup: QuickLookupService, hoverEnabled: Bool) {
             self.selectedText = selectedText
             self.contextSentence = contextSentence
             self.searchManager = searchManager
             self.savedWordsStore = savedWordsStore
             self.noteStore = noteStore
             self.highlightStore = highlightStore
+            self.quickLookup = quickLookup
+            self.hoverEnabled = hoverEnabled
+        }
+
+        @MainActor func setHoverEnabled(_ enabled: Bool) {
+            hoverEnabled = enabled
+            if !enabled { closeHoverPopover() }
         }
 
         func attach(to pdfView: PDFView) {
@@ -129,6 +151,8 @@ struct PDFKitView: NSViewRepresentable {
                 }
                 rellView.onContextCopy      = { [weak self] in self?.contextCopy() }
                 rellView.onContextSpeak     = { [weak self] in self?.contextSpeak() }
+                rellView.onHoverMove        = { [weak self] point in self?.handleHover(at: point) }
+                rellView.onHoverExit        = { [weak self] in self?.cancelHover() }
             }
             
             // Create Overlay
@@ -153,6 +177,8 @@ struct PDFKitView: NSViewRepresentable {
                 let value = pdfView.currentSelection?.string?
                     .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 self.scheduleSelectionUpdate(value)
+                // A deliberate selection supersedes a passive hover.
+                self.closeHoverPopover()
             }
             
             visiblePagesObserver = NotificationCenter.default.addObserver(
@@ -162,6 +188,7 @@ struct PDFKitView: NSViewRepresentable {
             ) { [weak self] _ in
                 Task { @MainActor in
                     self?.refreshHighlights()
+                    self?.closeHoverPopover()
                 }
             }
 
@@ -426,6 +453,103 @@ struct PDFKitView: NSViewRepresentable {
         }
         
 
+        // MARK: - Hover Dictionary
+
+        private func handleHover(at point: NSPoint) {
+            guard hoverEnabled, let pdfView = pdfView, pdfView.document != nil else { return }
+            hoverWorkItem?.cancel()
+            let work = DispatchWorkItem { [weak self] in
+                MainActor.assumeIsolated { self?.resolveHover(at: point) }
+            }
+            hoverWorkItem = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+        }
+
+        @MainActor private func resolveHover(at point: NSPoint) {
+            guard hoverEnabled, let pdfView = pdfView else { return }
+            // Don't compete with an active text selection.
+            if let active = pdfView.currentSelection?.string?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !active.isEmpty {
+                return
+            }
+            guard let page = pdfView.page(for: point, nearest: false) else {
+                closeHoverPopover(); return
+            }
+            let pagePoint = pdfView.convert(point, to: page)
+            guard let selection = page.selectionForWord(at: pagePoint),
+                  let raw = selection.string?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  isLikelyWord(raw)
+            else {
+                closeHoverPopover(); return
+            }
+
+            if raw.lowercased() == currentHoverTerm.lowercased(), hoverPopover?.isShown == true {
+                return
+            }
+            currentHoverTerm = raw
+
+            let viewRect = pdfView.convert(selection.bounds(for: page), from: page)
+
+            hoverModel.term = raw
+            if let cached = quickLookup.cachedDefinition(for: raw, savedWordsStore: savedWordsStore) {
+                hoverModel.phase = .loaded(cached)
+            } else {
+                hoverModel.phase = .loading
+                startHoverLookup(term: raw)
+            }
+            showHoverPopover(relativeTo: viewRect, in: pdfView)
+        }
+
+        private func isLikelyWord(_ string: String) -> Bool {
+            guard (1...40).contains(string.count) else { return false }
+            if string.contains(where: { $0.isWhitespace }) { return false }
+            return string.contains(where: { $0.isLetter })
+        }
+
+        @MainActor private func startHoverLookup(term: String) {
+            hoverTask?.cancel()
+            hoverTask = Task { @MainActor [weak self] in
+                guard let self else { return }
+                do {
+                    let definition = try await self.quickLookup.definition(for: term)
+                    guard !Task.isCancelled,
+                          self.currentHoverTerm.lowercased() == term.lowercased() else { return }
+                    self.hoverModel.phase = .loaded(definition)
+                } catch {
+                    guard !Task.isCancelled,
+                          self.currentHoverTerm.lowercased() == term.lowercased() else { return }
+                    self.hoverModel.phase = .failed
+                }
+            }
+        }
+
+        @MainActor private func showHoverPopover(relativeTo rect: NSRect, in view: NSView) {
+            let popover: NSPopover
+            if let existing = hoverPopover {
+                popover = existing
+                if popover.isShown { popover.close() }   // reposition to the new word
+            } else {
+                popover = NSPopover()
+                popover.behavior = .semitransient
+                popover.animates = false
+                popover.contentViewController = NSHostingController(rootView: HoverDefinitionPopover(model: hoverModel))
+                hoverPopover = popover
+            }
+            popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
+        }
+
+        private func cancelHover() {
+            hoverWorkItem?.cancel()
+            closeHoverPopover()
+        }
+
+        private func closeHoverPopover() {
+            hoverWorkItem?.cancel()
+            hoverTask?.cancel()
+            currentHoverTerm = ""
+            hoverPopover?.performClose(nil)
+        }
+
         // MARK: - Context Menu Actions
 
         private func contextSaveWord() {
@@ -600,6 +724,12 @@ struct PDFKitView: NSViewRepresentable {
                 NotificationCenter.default.removeObserver(highlightsObserver)
                 self.highlightsObserver = nil
             }
+            hoverWorkItem?.cancel()
+            hoverWorkItem = nil
+            hoverTask?.cancel()
+            hoverTask = nil
+            hoverPopover?.performClose(nil)
+            hoverPopover = nil
             selectionDebounceWorkItem?.cancel()
             selectionDebounceWorkItem = nil
             documentUpdateWorkItem?.cancel()

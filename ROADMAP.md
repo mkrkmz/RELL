@@ -16,14 +16,19 @@ organizasyonu, review modlari, AI takip sorusu ve istatistik derinligi.
 - [x] Sidebar "Marker" sekmesi: liste, tikla → sayfaya git, swipe → sil, swatch menu → renk degistir
 - [x] Birim testleri: PDFHighlightStore CRUD, siralama, kalicilik, renk fallback
 
-## Faz 2 — Okuma Deneyimi: Hover Sozluk + Ceviri Seridi
+## Faz 2 — Okuma Deneyimi: Hover Sozluk + Ceviri Seridi (tamamlandi)
 
-- [ ] Hover popup: Coordinator'da mouse-hover kelime tespiti (`PDFPage.selectionForWord`),
-      ~500ms debounce; NSPopover icinde mini tanim — once `InspectorViewModel` LRU/disk
-      cache'ine bakilir, miss'te kisa non-streaming istek (definition short, ~64 token,
-      `AsyncLimiter` gate'ten gecer); ayarlardan kapatilabilir
-- [ ] Cumle ceviri seridi: cumle secilince PDF altinda ince serit (FindBarView yerlesim kalibi)
-      ana dile ceviriyi gosterir; ayri mini LLM istegi (~200 token), kapatilabilir + AppStorage toggle
+- [x] Hover popup: RELLPDFView tracking-area + `selectionForWord`, 500ms debounce;
+      NSPopover icinde mini tanim. Cache-first: once kayitli kelime / bellek cache,
+      miss'te kisa non-streaming definition istegi (`AsyncLimiter` gate, local provider).
+      `hoverDictionaryEnabled` ile kapatilabilir
+- [x] Cumle ceviri seridi: ≥3 kelimelik secimde PDF altinda ince serit, ana dile
+      ceviri (ayri mini istek, ~240 token); kapat butonu + `sentenceTranslationEnabled` toggle
+- [x] Ortak `QuickLookupService` (provider config + ModuleType prompt reuse + cache);
+      Settings → General "Reading Aids" bolumu; birim testleri (cache yollari)
+
+Not: hover cache kaynagi olarak InspectorViewModel disk cache yerine kayitli kelimeler +
+servis-ici bellek cache kullanildi (daha az coupling, ayni "once cache" davranisi).
 
 ## Faz 3 — Kelime Organizasyonu: Etiket & Desteler
 

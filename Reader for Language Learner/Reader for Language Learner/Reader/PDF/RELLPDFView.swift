@@ -20,6 +20,40 @@ final class RELLPDFView: PDFView {
     var onContextCopy:      (() -> Void)?
     var onContextSpeak:     (() -> Void)?
 
+    /// Reports the cursor location (in view coordinates) while hovering with
+    /// no mouse button down, plus exit events, for the hover dictionary.
+    var onHoverMove: ((NSPoint) -> Void)?
+    var onHoverExit: (() -> Void)?
+
+    private var hoverTrackingArea: NSTrackingArea?
+
+    // MARK: - Hover Tracking
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverTrackingArea {
+            removeTrackingArea(hoverTrackingArea)
+        }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseMoved, .mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+        hoverTrackingArea = area
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        onHoverMove?(convert(event.locationInWindow, from: nil))
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        onHoverExit?()
+    }
+
     // MARK: - Context Menu
 
     override func menu(for event: NSEvent) -> NSMenu? {
