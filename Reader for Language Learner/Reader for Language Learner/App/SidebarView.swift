@@ -18,12 +18,13 @@ enum SidebarTab: String, CaseIterable, Identifiable {
     var iconName: String {
         switch self {
         case .thumbnails:  return "square.grid.2x2"
-        case .outline:     return "list.bullet.indent"
+        case .outline:     return "list.bullet.rectangle"
         case .annotations: return "bookmark"
         case .words:       return "character.book.closed"
         }
     }
 
+    /// All four base symbols have a matching `.fill` variant.
     var selectedIconName: String { iconName + ".fill" }
 }
 
@@ -77,6 +78,9 @@ struct SidebarView: View {
                     Image(systemName: isSelected ? tab.selectedIconName : tab.iconName)
                         .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
                         .foregroundStyle(isSelected ? DS.Color.accent : DS.Color.textSecondary)
+                        // Fixed box so every symbol centers identically
+                        // regardless of its intrinsic width/baseline.
+                        .frame(width: 22, height: 17)
 
                     if badgeCount > 0 {
                         Text("\(min(badgeCount, 99))")
