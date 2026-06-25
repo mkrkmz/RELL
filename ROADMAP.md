@@ -26,13 +26,14 @@ Hedef sekmeler: **Pages · Contents · Annotations · Words**
 - [x] ContentView toolbar'inda "Stats" butonu (chart.bar) → `ReadingStatsView` sheet
 - [x] `ReadingStatsView` icerigi aynen korundu
 
-## Faz 3 — Inspector aksiyon bari sadeleştirme
+## Faz 3 — Inspector aksiyon bari sadeleştirme (tamamlandi)
 
-- [ ] `actionBar`: yalnizca Kaydet (⭐, ⌘D) + Seslendir/Durdur (⇧⌘S/⇧⌘X) gorunur kalir
-- [ ] Kopyala, Quick Export, Export fields (⌘E), Clear outputs → tek "⋯" Menu altina
-      (kisayollar menu item'larinda korunur)
-- [ ] Ayarlar (⚙) toolbar'dan kaldirilir — ⌘, ve uygulama menusu zaten var
-- [ ] Header tek temiz satira iner
+- [x] `actionBar`: yalnizca Kaydet (⭐, ⌘D) + Seslendir/Durdur (⇧⌘S/⇧⌘X) gorunur
+- [x] Kopyala, Quick Export, Export Fields (⌘E), Clear Outputs → tek "⋯" Menu;
+      ⌘E gizli shortcut butonuyla menu kapaliyken de calisir
+- [x] Ayarlar (⚙) kaldirildi (⌘, ve uygulama menusu yeterli); kullanilmayan
+      `openSettings` env temizlendi
+- [x] Header tek temiz satira indi (8 ikon → 3 gorunur + ⋯)
 
 ## Faz 4 — Modul grid: overflow'u "More" altina
 

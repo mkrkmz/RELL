@@ -52,7 +52,6 @@ struct InspectorView: View {
     @Environment(AnkiModulePreferences.self) var ankiPrefs
 
     var speechManager: SpeechManager { SpeechManager.shared }
-    @Environment(\.openSettings) var openSettings
 
     let primaryModules:  [ModuleType] = [.definitionEN, .meaningTR, .collocations, .examplesEN, .pronunciationEN]
     let overflowModules: [ModuleType] = [.etymologyEN, .mnemonicEN, .synonymsEN, .wordFamilyEN, .usageNotesEN]

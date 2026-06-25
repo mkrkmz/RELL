@@ -186,47 +186,84 @@ extension InspectorView {
 
             actionSpacer()
 
-            actionGroup {
-                iconButton(systemImage: "doc.on.doc", help: "Copy selected text") {
-                    copyToClipboard(trimmedSelection, showFeedback: true)
-                }
-
-                iconButton(
-                    systemImage: isCurrentlySaved ? "star.fill" : "star",
-                    help: isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)",
-                    action: toggleSaveWord
-                )
-                .keyboardShortcut("d", modifiers: [.command])
-                .foregroundStyle(isCurrentlySaved ? .yellow : .primary)
-
-                iconButton(systemImage: "square.and.arrow.up", help: "Quick export this selection to Anki TSV") {
-                    Task { await quickExport() }
-                }
-
-                iconButton(systemImage: "ellipsis.circle", help: "Choose Anki export fields… (⌘E)") {
-                    showAnkiExport = true
-                }
-                .keyboardShortcut("e", modifiers: [.command])
-            }
+            iconButton(
+                systemImage: isCurrentlySaved ? "star.fill" : "star",
+                help: isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)",
+                action: toggleSaveWord
+            )
+            .keyboardShortcut("d", modifiers: [.command])
+            .foregroundStyle(isCurrentlySaved ? .yellow : .primary)
 
             Spacer(minLength: DS.Spacing.xs)
 
-            actionSpacer()
-
-            actionGroup {
-                iconButton(systemImage: "trash", help: "Clear generated module outputs", role: .destructive) {
-                    viewModel.resetAll(); activeModule = nil
-                }
-                .disabled(isAnyLoading)
-                .foregroundStyle(DS.Color.danger.opacity(0.78))
-
-                iconButton(systemImage: "gearshape", help: "Open RELL settings (⌘,)") {
-                    openSettings()
-                }
-                .keyboardShortcut(",", modifiers: [.command])
-            }
+            overflowMenu
         }
         .controlSize(.mini)
+        // Keeps ⌘E working even while the overflow menu is closed.
+        .background(exportShortcutButton)
+    }
+
+    // MARK: - Overflow Menu
+
+    private var overflowMenu: some View {
+        Menu {
+            Button {
+                copyToClipboard(trimmedSelection, showFeedback: true)
+            } label: {
+                Label("Copy Text", systemImage: "doc.on.doc")
+            }
+            .disabled(!hasSelection)
+
+            Section("Anki") {
+                Button {
+                    Task { await quickExport() }
+                } label: {
+                    Label("Quick Export to Anki", systemImage: "square.and.arrow.up")
+                }
+                .disabled(!hasSelection)
+
+                Button {
+                    showAnkiExport = true
+                } label: {
+                    Label("Export Fields… (⌘E)", systemImage: "slider.horizontal.3")
+                }
+                .disabled(!hasSelection)
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                viewModel.resetAll(); activeModule = nil
+            } label: {
+                Label("Clear Outputs", systemImage: "trash")
+            }
+            .disabled(isAnyLoading)
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.system(size: 12, weight: .medium))
+                .frame(width: 28, height: 28)
+                .background(DS.Color.surfaceInset)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .strokeBorder(DS.Color.separator.opacity(0.22), lineWidth: 0.5)
+                )
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("More actions")
+    }
+
+    /// Invisible button that keeps the ⌘E export shortcut active regardless of
+    /// the overflow menu's open/closed state.
+    private var exportShortcutButton: some View {
+        Button { showAnkiExport = true } label: { Color.clear }
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .keyboardShortcut("e", modifiers: [.command])
+            .disabled(!hasSelection)
+            .accessibilityHidden(true)
     }
 
     @ViewBuilder
