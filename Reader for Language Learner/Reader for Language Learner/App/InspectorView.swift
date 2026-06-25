@@ -39,6 +39,7 @@ struct InspectorView: View {
     /// Last auto-scroll during streaming — throttles scroll-to-bottom to ~6/s.
     @State var lastStreamScrollAt: Date = .distantPast
     @AppStorage("autoRunEnabled") var autoRunEnabled: Bool = true
+    @AppStorage("inspectorShowMoreModules") var showMoreModules: Bool = false
 
     @State var circuitBreaker = CircuitBreaker()
     @Namespace var moduleNamespace

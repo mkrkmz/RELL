@@ -35,12 +35,14 @@ Hedef sekmeler: **Pages · Contents · Annotations · Words**
       `openSettings` env temizlendi
 - [x] Header tek temiz satira indi (8 ikon → 3 gorunur + ⋯)
 
-## Faz 4 — Modul grid: overflow'u "More" altina
+## Faz 4 — Modul grid: overflow'u "More" altina (tamamlandi)
 
-- [ ] `moduleGrid`: 5 birincil modul + "More" disclosure; acilinca diger 5 modul
-      ayni stille gosterilir (soluk "overflow" gorunumu kaldirilir)
-- [ ] Acik/kapali durum `@AppStorage` ile hatirlanir; Run All (⇧⌘R) korunur
-- [ ] Modul kisayollari (⌘1-0) korunur
+- [x] `moduleGrid`: 5 birincil modul + "More modules" disclosure; acilinca diger 5 modul
+      birincil ile ayni stille (soluk/compact overflow gorunumu kaldirildi); kapaliyken
+      overflow'ta cikti varsa kucuk aksan noktasi
+- [x] Acik/kapali `@AppStorage("inspectorShowMoreModules")`; Run All (⇧⌘R) korundu
+- [x] Modul kisayollari (⌘1-5 gorunur butonlarda, ⌘6-0 her zaman aktif gizli butonlarda);
+      overflow sutunlari Run All slotuyla hizalandi
 
 ## Faz 5 — Inspector yuzey katmanlarini duzlestir
 
