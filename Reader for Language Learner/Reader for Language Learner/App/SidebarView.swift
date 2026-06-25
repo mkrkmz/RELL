@@ -9,37 +9,22 @@ import SwiftUI
 // MARK: - Sidebar Tab
 
 enum SidebarTab: String, CaseIterable, Identifiable {
-    case thumbnails = "Pages"
-    case outline    = "Contents"
-    case bookmarks  = "Marks"
-    case highlights = "Marker"
-    case notes      = "Notes"
-    case saved      = "Saved"
-    case quiz       = "Review"
-    case stats      = "Stats"
+    case thumbnails  = "Pages"
+    case outline     = "Contents"
+    case annotations = "Annotations"
+    case words       = "Words"
     var id: String { rawValue }
 
     var iconName: String {
         switch self {
-        case .thumbnails: return "square.grid.2x2"
-        case .outline:    return "list.bullet.indent"
-        case .bookmarks:  return "bookmark"
-        case .highlights: return "highlighter"
-        case .notes:      return "note.text"
-        case .saved:      return "star"
-        case .quiz:       return "brain.head.profile"
-        case .stats:      return "chart.bar"
+        case .thumbnails:  return "square.grid.2x2"
+        case .outline:     return "list.bullet.indent"
+        case .annotations: return "bookmark"
+        case .words:       return "character.book.closed"
         }
     }
 
-    /// Icon shown when the tab is selected. Most symbols have a `.fill`
-    /// variant; `highlighter` does not, so it stays as-is.
-    var selectedIconName: String {
-        switch self {
-        case .highlights: return "highlighter"
-        default:          return iconName + ".fill"
-        }
-    }
+    var selectedIconName: String { iconName + ".fill" }
 }
 
 // MARK: - SidebarView
@@ -50,7 +35,6 @@ struct SidebarView: View {
     var bookmarkStore:   PDFBookmarkStore
     var noteStore:       PDFNoteStore
     var highlightStore:  PDFHighlightStore
-    var sessionStore:    ReadingSessionStore
     var currentDocumentName: String?
 
     @State private var selectedTab: SidebarTab = .thumbnails
@@ -130,19 +114,14 @@ struct SidebarView: View {
 
     private func badgeCount(for tab: SidebarTab) -> Int {
         switch tab {
-        case .saved:
-            return savedWordsStore.words.count
-        case .quiz:
+        case .annotations:
+            let marks = currentDocumentName.map { bookmarkStore.bookmarks(for: $0).count } ?? 0
+            return marks
+                + highlightStore.count(for: currentDocumentName)
+                + noteStore.count(for: currentDocumentName)
+        case .words:
+            // Show the actionable due count rather than the full library size.
             return savedWordsStore.pendingReviewCount
-        case .bookmarks:
-            if let name = currentDocumentName {
-                return bookmarkStore.bookmarks(for: name).count
-            }
-            return 0
-        case .highlights:
-            return highlightStore.count(for: currentDocumentName)
-        case .notes:
-            return noteStore.count(for: currentDocumentName)
         default:
             return 0
         }
@@ -154,16 +133,10 @@ struct SidebarView: View {
 
         let countText: String
         switch tab {
-        case .quiz:
+        case .words:
             countText = "\(badgeCount) words due"
-        case .saved:
-            countText = "\(badgeCount) saved words"
-        case .notes:
-            countText = "\(badgeCount) notes for this document"
-        case .bookmarks:
-            countText = "\(badgeCount) marks for this document"
-        case .highlights:
-            countText = "\(badgeCount) highlights for this document"
+        case .annotations:
+            countText = "\(badgeCount) annotations for this document"
         default:
             countText = "\(badgeCount) items"
         }
@@ -201,36 +174,19 @@ struct SidebarView: View {
             }
         case .outline:
             PDFOutlineView(pdfViewManager: pdfViewManager)
-        case .bookmarks:
-            PDFBookmarksView(
+        case .annotations:
+            AnnotationsView(
                 bookmarkStore:   bookmarkStore,
-                pdfViewManager:  pdfViewManager,
-                currentFilename: currentDocumentName
-            )
-        case .highlights:
-            HighlightsView(
                 highlightStore:  highlightStore,
+                noteStore:       noteStore,
+                savedWordsStore: savedWordsStore,
                 pdfViewManager:  pdfViewManager,
                 currentFilename: currentDocumentName
             )
-        case .notes:
-            PDFNotesView(
-                noteStore: noteStore,
-                savedWordsStore: savedWordsStore,
-                pdfViewManager: pdfViewManager,
-                currentFilename: currentDocumentName
-            )
-        case .saved:
-            SavedWordsListView(
+        case .words:
+            WordsView(
                 store: savedWordsStore,
                 currentDocumentName: currentDocumentName
-            )
-        case .quiz:
-            QuizView(store: savedWordsStore)
-        case .stats:
-            ReadingStatsView(
-                sessionStore: sessionStore,
-                savedWordsStore: savedWordsStore
             )
         }
     }

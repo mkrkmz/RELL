@@ -9,27 +9,22 @@ Tasarim kararlari (kullaniciyla netlestirildi):
 - Modul grid: overflow 5 modul "More" disclosure altina; soluk/parlak ayrimi kalkar
 - Hicbir ozellik kaybolmaz; tum kisayollar korunur
 
-## Faz 1 — Sidebar: 8 sekme → 4
+## Faz 1 — Sidebar: 8 sekme → 4 (tamamlandi)
 
 Hedef sekmeler: **Pages · Contents · Annotations · Words**
 
-- [ ] `AnnotationsView` container: segmented [Bookmarks · Highlights · Notes],
-      mevcut `PDFBookmarksView` / `HighlightsView` / `PDFNotesView`'i barindirir;
-      son alt-sekme `@AppStorage` ile hatirlanir; segment basliklarinda sayi rozetleri
-- [ ] `WordsView` container: segmented [Words · Review], `SavedWordsListView` /
-      `QuizView`; Review segmentinde due sayisi
-- [ ] `SidebarTab` enum'u 4 case'e indir; `bookmarks`/`highlights`/`notes`/`saved`/`quiz`
-      case'leri kaldirilir; badge mantigi guncellenir (Annotations = bookmark+highlight+note
-      toplami, Words = saved/due)
-- [ ] 4 sekmeyle etiketler tam boyutta okunur; "Marks/Marker" karisikligi biter
+- [x] `AnnotationsView` container: segmented [Marks · Highlights · Notes],
+      mevcut `PDFBookmarksView` / `HighlightsView` / `PDFNotesView`; son alt-sekme `@AppStorage`
+- [x] `WordsView` container: segmented [Words · Review], `SavedWordsListView` / `QuizView`;
+      Review segmentinde due sayisi
+- [x] `SidebarTab` 4 case'e indi; badge: Annotations = bookmark+highlight+note, Words = due
+- [x] "Marks/Marker" karisikligi bitti; etiketler tam boyut
 
-## Faz 2 — Stats'i sidebar'dan cikar
+## Faz 2 — Stats'i sidebar'dan cikar (tamamlandi, Faz 1 ile birlikte)
 
-- [ ] Sidebar'dan Stats sekmesi kaldirilir
-- [ ] ContentView toolbar'ina "Stats" butonu (chart.bar) → `ReadingStatsView` sheet/popover
-      olarak acilir (sessionStore + savedWordsStore gecirilir)
-- [ ] `ReadingStatsView` icerigi aynen korunur (today, 7-gun, review heatmap, vocab growth,
-      mastery, totals)
+- [x] Sidebar'dan Stats sekmesi kaldirildi (SidebarView artik sessionStore almiyor)
+- [x] ContentView toolbar'inda "Stats" butonu (chart.bar) → `ReadingStatsView` sheet
+- [x] `ReadingStatsView` icerigi aynen korundu
 
 ## Faz 3 — Inspector aksiyon bari sadeleştirme
 

@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var showInspector = true
     @State private var isDropTargeted = false
     @State private var showWorkspaceReview = false
+    @State private var showStats = false
 
     // Focus mode hides the side panels for distraction-free reading and
     // remembers their prior visibility so exiting restores the layout.
@@ -144,6 +145,21 @@ struct ContentView: View {
             )
                 .frame(width: 460, height: 560)
         }
+        .sheet(isPresented: $showStats) {
+            NavigationStack {
+                ReadingStatsView(
+                    sessionStore: sessionStore,
+                    savedWordsStore: savedWordsStore
+                )
+                .navigationTitle("Stats")
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { showStats = false }
+                    }
+                }
+            }
+            .frame(width: 420, height: 620)
+        }
         .sheet(isPresented: Binding(
             get: { !hasCompletedOnboarding },
             set: { hasCompletedOnboarding = !$0 }
@@ -172,7 +188,6 @@ struct ContentView: View {
                         bookmarkStore:       bookmarkStore,
                         noteStore:           noteStore,
                         highlightStore:      highlightStore,
-                        sessionStore:        sessionStore,
                         currentDocumentName: currentDocumentName
                     )
                     .frame(width: sidebarWidth)
@@ -522,6 +537,13 @@ struct ContentView: View {
             .keyboardShortcut("d", modifiers: [.command, .shift])
             .help(focusMode ? "Exit Focus Mode (⇧⌘D)" : "Focus Mode — hide panels (⇧⌘D)")
             .disabled(selectionState.documentURL == nil)
+        }
+
+        ToolbarItem(placement: .automatic) {
+            Button { showStats = true } label: {
+                Label("Stats", systemImage: "chart.bar")
+            }
+            .help("Reading & vocabulary stats")
         }
 
         ToolbarItem(placement: .automatic) {
