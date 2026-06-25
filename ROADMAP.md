@@ -1,83 +1,65 @@
-# RELL Roadmap v3 — Okuma Deneyimi, Kelime Organizasyonu ve AI
+# RELL Roadmap v4 — Panel Sadeleştirme (UI/UX)
 
-Onceki roadmap (v2: dashboard gorsel katmani — kapaklar, gunluk hedef,
-mini kelime karti, Library, onboarding) 2026-06-11'de tamamlandi.
-Bu roadmap bir sonraki iterasyonu kapsar: okuma deneyimi, kelime
-organizasyonu, review modlari, AI takip sorusu ve istatistik derinligi.
+Odak: yan panelleri (sol sidebar + sag inspector) islevsellik kaybetmeden
+gorsel olarak sadelestirmek. v1-v3 roadmap'leri tamamlandi.
 
-## Faz 1 — Okuma Deneyimi: Odak Modu + Kalici Highlight (tamamlandi)
+Tasarim kararlari (kullaniciyla netlestirildi):
+- Sol sidebar: 8 sekme → 4 (Stats sidebar'dan cikar)
+- Sag inspector aksiyon bari: ikincil aksiyonlar "⋯" menusune; ⚙ kaldirilir (⌘,)
+- Modul grid: overflow 5 modul "More" disclosure altina; soluk/parlak ayrimi kalkar
+- Hicbir ozellik kaybolmaz; tum kisayollar korunur
 
-- [x] Odak modu: ⇧⌘D ile sidebar + inspector + context strip gizleme; onceki panel
-      durumunu hatirlayip cikista geri yukler; toolbar butonu (belge acikken)
-- [x] `PDFHighlight` + `PDFHighlightStore` (RELLJSONStore, `pdf_highlights.json`,
-      PDFNoteStore kalibi; PDFHighlightRect reuse); 5 renk (`HighlightColor`)
-- [x] RELLPDFView sag tik → renkli "Highlight" alt menusu (swatch'li); Coordinator
-      annotation render (`kUserHighlightKey`), `.pdfHighlightsChanged` ile re-render
-- [x] Sidebar "Marker" sekmesi: liste, tikla → sayfaya git, swipe → sil, swatch menu → renk degistir
-- [x] Birim testleri: PDFHighlightStore CRUD, siralama, kalicilik, renk fallback
+## Faz 1 — Sidebar: 8 sekme → 4
 
-## Faz 2 — Okuma Deneyimi: Hover Sozluk + Ceviri Seridi (tamamlandi)
+Hedef sekmeler: **Pages · Contents · Annotations · Words**
 
-- [x] Hover popup: RELLPDFView tracking-area + `selectionForWord`, 500ms debounce;
-      NSPopover icinde mini tanim. Cache-first: once kayitli kelime / bellek cache,
-      miss'te kisa non-streaming definition istegi (`AsyncLimiter` gate, local provider).
-      `hoverDictionaryEnabled` ile kapatilabilir
-- [x] Cumle ceviri seridi: ≥3 kelimelik secimde PDF altinda ince serit, ana dile
-      ceviri (ayri mini istek, ~240 token); kapat butonu + `sentenceTranslationEnabled` toggle
-- [x] Ortak `QuickLookupService` (provider config + ModuleType prompt reuse + cache);
-      Settings → General "Reading Aids" bolumu; birim testleri (cache yollari)
+- [ ] `AnnotationsView` container: segmented [Bookmarks · Highlights · Notes],
+      mevcut `PDFBookmarksView` / `HighlightsView` / `PDFNotesView`'i barindirir;
+      son alt-sekme `@AppStorage` ile hatirlanir; segment basliklarinda sayi rozetleri
+- [ ] `WordsView` container: segmented [Words · Review], `SavedWordsListView` /
+      `QuizView`; Review segmentinde due sayisi
+- [ ] `SidebarTab` enum'u 4 case'e indir; `bookmarks`/`highlights`/`notes`/`saved`/`quiz`
+      case'leri kaldirilir; badge mantigi guncellenir (Annotations = bookmark+highlight+note
+      toplami, Words = saved/due)
+- [ ] 4 sekmeyle etiketler tam boyutta okunur; "Marks/Marker" karisikligi biter
 
-Not: hover cache kaynagi olarak InspectorViewModel disk cache yerine kayitli kelimeler +
-servis-ici bellek cache kullanildi (daha az coupling, ayni "once cache" davranisi).
+## Faz 2 — Stats'i sidebar'dan cikar
 
-## Faz 3 — Kelime Organizasyonu: Etiket & Desteler (tamamlandi)
+- [ ] Sidebar'dan Stats sekmesi kaldirilir
+- [ ] ContentView toolbar'ina "Stats" butonu (chart.bar) → `ReadingStatsView` sheet/popover
+      olarak acilir (sessionStore + savedWordsStore gecirilir)
+- [ ] `ReadingStatsView` icerigi aynen korunur (today, 7-gun, review heatmap, vocab growth,
+      mastery, totals)
 
-- [x] `SavedWord.tags: [String]` (geriye uyumlu Codable) + `hasTag`
-- [x] `SavedWordsStore`: `allTags`, `words(withTag:)`, `tagCount`, `addTag`/`removeTag`,
-      `reviewQueue(includeAll:tag:)` (deste icinde due/fallback); birim testleri
-- [x] SavedWordsListView: deste filtre menusu, satir context menusunde "Deck" alt menusu
-      + satir etiket chip'leri, detay sheet'inde `TagEditorView` (yeni FlowLayout/TagChip)
-- [x] QuizView: deste secici (review kuyrugu tag'e gore daralir)
-- [x] AnkiExporter: per-word etiketler `extraTags` ile tags sutununa (dedupe + underscore)
+## Faz 3 — Inspector aksiyon bari sadeleştirme
 
-Not: DashboardWordCard kasitli olarak deste secici almadi — minimal "bugun due" karti
-sade kalsin diye; deste secimi Review Center'da. Istenirse eklenebilir.
+- [ ] `actionBar`: yalnizca Kaydet (⭐, ⌘D) + Seslendir/Durdur (⇧⌘S/⇧⌘X) gorunur kalir
+- [ ] Kopyala, Quick Export, Export fields (⌘E), Clear outputs → tek "⋯" Menu altina
+      (kisayollar menu item'larinda korunur)
+- [ ] Ayarlar (⚙) toolbar'dan kaldirilir — ⌘, ve uygulama menusu zaten var
+- [ ] Header tek temiz satira iner
 
-## Faz 4 — Review Yuzeyi: Yeni Quiz Modlari + TTS (tamamlandi)
+## Faz 4 — Modul grid: overflow'u "More" altina
 
-- [x] Mod secici (segmented, `quizMode` AppStorage): Flashcard / Coktan Secmeli / Yazarak
-- [x] Coktan secmeli: dogru tanim + diger kelimelerin tanimlarindan 3 celdirici
-      (yetersiz kelimede plain-reveal fallback); secimde dogru/yanlis vurgulanir
-- [x] Yazarak: terim gosterilir, kullanici anlami yazar, "Check" → normalize karsilastirma
-      (tavsiye nitelikli ✓), 3 buton ile kendi kendini derecelendirme
-- [x] Cram anahtari: `applyReview` cagrilmaz (SRS bozulmaz), yalnizca oturum sayaci;
-      kart basliginda "Cram" rozeti
-- [x] TTS: yeni `SpeakButton` (hedef dile gore ses) → QuizView karti, SavedWordsListView
-      satiri (hover), DashboardWordCard (flip onTapGesture'a cevrildi)
-- [x] Saf logic `QuizMatching`'e cikarildi + birim testleri
+- [ ] `moduleGrid`: 5 birincil modul + "More" disclosure; acilinca diger 5 modul
+      ayni stille gosterilir (soluk "overflow" gorunumu kaldirilir)
+- [ ] Acik/kapali durum `@AppStorage` ile hatirlanir; Run All (⇧⌘R) korunur
+- [ ] Modul kisayollari (⌘1-0) korunur
 
-## Faz 5 — AI: Ask AI Takip Sorusu (tamamlandi)
+## Faz 5 — Inspector yuzey katmanlarini duzlestir
 
-- [x] Inspector sonuc panelinin altinda "Ask a follow-up…" alani; baglam = terim +
-      cumle + aktif modul ciktisi (800 char cap) + soru
-- [x] Mevcut streaming pipeline + `localRequestGate` + iptal (stop butonu) reuse
-- [x] Oturum ici soru-cevap thread'i (`FollowUpExchange`, InspectorViewModel; secim
-      degisince temizlenir), streaming cevap satir satir
+- [ ] Ic-ice bordered kart sayisini azalt (header/control/grid/overflow/result → daha az
+      cerceve, tek elevation seviyesi, bosluga dayali ayrim)
+- [ ] `controlStrip`: mode + detail tek temiz satir; recent terms daha sessiz yerlesim
+- [ ] DS token tutarliligi; gereksiz `.overlay(stroke)` katmanlari temizlenir
 
-## Faz 6 — Istatistik Derinligi (tamamlandi)
+## Dogrulama
 
-- [x] Stats sekmesine kumulatif kelime buyume cizgisi (AreaMark+LineMark, `savedAt` gunluk)
-      ve mastery dagilim bar grafigi (Charts)
-- [x] Library kartinda sag tik → "Document Stats…" sheet'i: okuma suresi, kayitli/due
-      kelime, not, bookmark, okuma ilerlemesi (iki filename anahtarlamasi EmptyStateView'da koprulendi)
-
----
-
-**v3 roadmap tamamlandi (2026-06-11).** Yeni isler Backlog'dan secilir.
+- Build + birim testleri (UI test haric)
+- Manuel: sidebar 4 sekme akiyor mu; Annotations/Words alt-segmentleri dogru iceriği
+  gosteriyor mu; Stats sheet aciliyor mu; inspector ⋯ menusu tum eski aksiyonlari
+  iceriyor mu; modul "More" acilip kapaniyor mu; tum kisayollar calisiyor mu
 
 ## Backlog (siralanmamis)
 
-- Gunluk hedef bildirimleri (UserNotifications)
-- CSV/Quizlet export
-- Kelime listesinden toplu etiket atama
-- Highlight'lara not ilistirme
+- Gunluk hedef bildirimleri, CSV/Quizlet export, toplu etiketleme, highlight'lara not
