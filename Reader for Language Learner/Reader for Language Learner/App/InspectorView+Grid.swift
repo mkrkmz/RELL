@@ -23,13 +23,6 @@ extension InspectorView {
                 runAllButton
             }
             .padding(.horizontal, DS.Spacing.xxs)
-            .padding(.vertical, DS.Spacing.xs)
-            .background(DS.Color.surfaceElevated.opacity(0.96))
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.sm)
-                    .strokeBorder(DS.Color.separator.opacity(0.18), lineWidth: 0.6)
-            )
 
             moreModulesToggle
 
@@ -44,13 +37,6 @@ extension InspectorView {
                     Color.clear.frame(width: 34, height: 1)
                 }
                 .padding(.horizontal, DS.Spacing.xxs)
-                .padding(.vertical, DS.Spacing.xs)
-                .background(DS.Color.surfaceElevated.opacity(0.96))
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.separator.opacity(0.18), lineWidth: 0.6)
-                )
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }

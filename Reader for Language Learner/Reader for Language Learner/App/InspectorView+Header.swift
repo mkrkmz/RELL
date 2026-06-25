@@ -54,14 +54,8 @@ extension InspectorView {
 
             actionBar
         }
-        .padding(.horizontal, DS.Spacing.md)
-        .padding(.vertical, DS.Spacing.sm)
-        .background(DS.Color.surfaceElevated.opacity(0.96))
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.24), lineWidth: 0.6)
-        )
+        .padding(.horizontal, DS.Spacing.xs)
+        .padding(.top, DS.Spacing.xxs)
     }
 
     // MARK: - Control Strip (Mode + Detail + Recent Terms)
@@ -111,14 +105,7 @@ extension InspectorView {
 
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, DS.Spacing.sm)
-        .padding(.vertical, DS.Spacing.xs)
-        .background(DS.Color.surface.opacity(0.76))
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.separator.opacity(0.14), lineWidth: 0.5)
-        )
+        .padding(.horizontal, DS.Spacing.xs)
         .animation(DS.Animation.springFast, value: explainMode)
     }
 

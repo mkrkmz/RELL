@@ -44,12 +44,16 @@ Hedef sekmeler: **Pages · Contents · Annotations · Words**
 - [x] Modul kisayollari (⌘1-5 gorunur butonlarda, ⌘6-0 her zaman aktif gizli butonlarda);
       overflow sutunlari Run All slotuyla hizalandi
 
-## Faz 5 — Inspector yuzey katmanlarini duzlestir
+## Faz 5 — Inspector yuzey katmanlarini duzlestir (tamamlandi)
 
-- [ ] Ic-ice bordered kart sayisini azalt (header/control/grid/overflow/result → daha az
-      cerceve, tek elevation seviyesi, bosluga dayali ayrim)
-- [ ] `controlStrip`: mode + detail tek temiz satir; recent terms daha sessiz yerlesim
-- [ ] DS token tutarliligi; gereksiz `.overlay(stroke)` katmanlari temizlenir
+- [x] Header, controlStrip ve modul grid satirlarinin kart kabugu (bg + clip + stroke)
+      kaldirildi; bu ogeler taban yuzeyde bosluk/divider ile gruplaniyor
+- [x] Tek "icerik karti" sonuc paneli kaldi; ask-AI girisi tek hafif kart
+- [x] Ic-ice cerceve sayisi ~5'ten 2'ye indi (sonuc + ask girisi)
+
+---
+
+**v4 roadmap tamamlandi (2026-06-25).** Yeni isler Backlog'dan secilir.
 
 ## Dogrulama
 
