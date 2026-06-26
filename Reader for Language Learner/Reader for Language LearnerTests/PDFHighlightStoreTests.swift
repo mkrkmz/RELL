@@ -82,9 +82,11 @@ final class PDFHighlightStoreTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
         let first = PDFHighlightStore(fileURL: fileURL)
+        Self.retainedStores.append(first)
         first.add(makeHighlight(text: "remembered", color: .pink))
 
         let second = PDFHighlightStore(fileURL: fileURL)
+        Self.retainedStores.append(second)
         let restored = second.highlights(for: "doc")
         XCTAssertEqual(restored.count, 1)
         XCTAssertEqual(restored.first?.selectedText, "remembered")
