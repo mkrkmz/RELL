@@ -12,6 +12,16 @@ import XCTest
 final class QuickLookupServiceTests: XCTestCase {
     private static var retained: [Any] = []
 
+    /// Retained for the class lifetime so the service (and its AsyncLimiter
+    /// actor) isn't deallocated inside XCTest's post-scope memory checker —
+    /// that actor-deinit path crashes the Swift concurrency runtime on the CI
+    /// toolchain. The app keeps a single QuickLookupService alive anyway.
+    private func makeService() -> QuickLookupService {
+        let service = QuickLookupService()
+        Self.retained.append(service)
+        return service
+    }
+
     private func makeSavedStore() -> SavedWordsStore {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("quicklookup_words_\(UUID().uuidString).json")
@@ -22,7 +32,7 @@ final class QuickLookupServiceTests: XCTestCase {
     }
 
     func testCachedDefinitionUsesSavedWord() {
-        let service = QuickLookupService()
+        let service = makeService()
         let store = makeSavedStore()
         store.add(SavedWord(
             term: "presuppose",
@@ -35,13 +45,13 @@ final class QuickLookupServiceTests: XCTestCase {
     }
 
     func testCachedDefinitionMissReturnsNil() {
-        let service = QuickLookupService()
+        let service = makeService()
         let store = makeSavedStore()
         XCTAssertNil(service.cachedDefinition(for: "unsaved", savedWordsStore: store))
     }
 
     func testCachedDefinitionIgnoresPlaceholderDefinition() {
-        let service = QuickLookupService()
+        let service = makeService()
         let store = makeSavedStore()
         // A saved word with no usable outputs resolves to the placeholder,
         // which must not be served as a definition.
@@ -50,7 +60,7 @@ final class QuickLookupServiceTests: XCTestCase {
     }
 
     func testCachedTranslationEmptyForUnknownSentence() {
-        let service = QuickLookupService()
+        let service = makeService()
         XCTAssertNil(service.cachedTranslation(for: "an unseen sentence"))
     }
 }
