@@ -58,6 +58,19 @@ enum DS {
         static var separator: SwiftUI.Color {
             SwiftUI.Color(nsColor: .separatorColor)
         }
+
+        /// Single hairline stroke used for every panel / card border in the
+        /// inspector. Replaces the ad-hoc `separator.opacity(0.06…0.45)` values
+        /// so the whole surface reads as one system.
+        static var hairline: SwiftUI.Color { separator.opacity(0.18) }
+
+        // ── Surface scale ───────────────────────────────────────────────────
+        // Three fixed levels so panels/cards stop each inventing their own
+        // opacity. `panel` = outer container, `cardInset` = sunken content
+        // (result body), `cardSoft` = gently raised item cards.
+        static var panel:     SwiftUI.Color { surface.opacity(0.72) }
+        static var cardInset: SwiftUI.Color { surfaceInset.opacity(0.96) }
+        static var cardSoft:  SwiftUI.Color { surfaceElevated.opacity(0.60) }
     }
 
     // MARK: - Typography
@@ -185,6 +198,44 @@ extension View {
             .padding(padding)
             .background(DS.Color.surfaceElevated)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+    }
+
+    /// Standard inspector container: a `panel` surface with a rounded corner and
+    /// a single hairline border. Callers manage their own padding.
+    func dsPanel(
+        surface: SwiftUI.Color = DS.Color.panel,
+        cornerRadius: CGFloat = DS.Radius.lg
+    ) -> some View {
+        self
+            .background(surface)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
+            )
+    }
+}
+
+// MARK: - Section Header
+
+/// Overline section label with an optional trailing accessory (e.g. a "Run All"
+/// action). Anchors visual hierarchy between the inspector's zones.
+struct DSSectionHeader<Trailing: View>: View {
+    let title: String
+    @ViewBuilder var trailing: () -> Trailing
+
+    init(_ title: String, @ViewBuilder trailing: @escaping () -> Trailing = { EmptyView() }) {
+        self.title = title
+        self.trailing = trailing
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: DS.Spacing.sm) {
+            Text(title.uppercased())
+                .dsOverlineLabel()
+            Spacer(minLength: DS.Spacing.sm)
+            trailing()
+        }
     }
 }
 

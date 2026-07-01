@@ -222,14 +222,20 @@ struct InspectorView: View {
     // MARK: - Selection Content
 
     var selectionContent: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            selectionHeader
-            controlStrip
+        VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+            // ── Zone 1: word + actions + how-to-explain (one cohesive block) ──
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                selectionHeader
+                controlStrip
+            }
+
+            // ── Zone 2: modules ───────────────────────────────────────────────
             moduleGrid
-            Divider()
-                .padding(.horizontal, DS.Spacing.xs)
-                .padding(.vertical, DS.Spacing.xxs)
+
+            // ── Zone 3: result ────────────────────────────────────────────────
             resultPanel
+
+            // ── Zone 4: ask a follow-up ───────────────────────────────────────
             askAISection
         }
         .padding(DS.Spacing.md)
@@ -282,12 +288,6 @@ struct InspectorView: View {
         .buttonStyle(.plain)
         .help(help)
         .opacity(role == .destructive ? 0.94 : 1)
-    }
-
-    func actionSpacer() -> some View {
-        Divider()
-            .frame(height: 14)
-            .padding(.horizontal, 6)
     }
 
     var isAnyLoading: Bool {

@@ -18,7 +18,11 @@ struct ResultRenderer: View {
     var showsContextBreakout: Bool = false
 
     var body: some View {
-        if prefersStreamingRenderer {
+        if showsContextBreakout {
+            // Render straight into the context cards — even while streaming —
+            // so the layout doesn't reshuffle the moment the stream ends.
+            ContextAwareResultView(content: content, isStreaming: prefersStreamingRenderer)
+        } else if prefersStreamingRenderer {
             StreamingResultView(content: content)
         } else {
             renderedContent
@@ -27,29 +31,30 @@ struct ResultRenderer: View {
 
     @ViewBuilder
     private var renderedContent: some View {
-        if showsContextBreakout {
-            ContextAwareResultView(content: content)
-        } else {
-            switch module {
-            case .collocations:
-                CollocationResultView(content: content)
-            case .examplesEN:
-                ExamplesResultView(content: content)
-            case .pronunciationEN:
-                PronunciationResultView(content: content)
-            case .usageNotesEN:
-                UsageNotesResultView(content: content)
-            case .synonymsEN, .wordFamilyEN:
-                LineListResultView(content: content, emphasizeDivider: true)
-            default:
-                AttributedResultView(content: content)
-            }
+        switch module {
+        case .collocations:
+            CollocationResultView(content: content)
+        case .examplesEN:
+            ExamplesResultView(content: content)
+        case .pronunciationEN:
+            PronunciationResultView(content: content)
+        case .usageNotesEN:
+            UsageNotesResultView(content: content)
+        case .synonymsEN, .wordFamilyEN:
+            LineListResultView(content: content, emphasizeDivider: true)
+        default:
+            AttributedResultView(content: content)
         }
     }
 }
 
 struct ContextAwareResultView: View {
     let content: String
+    /// While the stream is live we show the first card immediately (with just
+    /// one paragraph) instead of falling back to inline text, so the "In This
+    /// Context" box is visible from the first tokens and the "General Meaning"
+    /// box slides in once the model emits the paragraph break.
+    var isStreaming: Bool = false
 
     private var paragraphs: [String] {
         content
@@ -59,23 +64,33 @@ struct ContextAwareResultView: View {
     }
 
     var body: some View {
-        if paragraphs.count < 2 {
-            AttributedResultView(content: content)
-        } else {
-            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+        Group {
+            if paragraphs.count >= 2 {
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                    contextBreakoutCard(
+                        title: "In This Context",
+                        body: paragraphs.first ?? "",
+                        tint: DS.Color.accentStrong
+                    )
+
+                    contextBreakoutCard(
+                        title: "General Meaning",
+                        body: paragraphs.dropFirst().joined(separator: "\n\n"),
+                        tint: DS.Color.textSecondary
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            } else if isStreaming, let first = paragraphs.first {
                 contextBreakoutCard(
                     title: "In This Context",
-                    body: paragraphs.first ?? "",
+                    body: first,
                     tint: DS.Color.accentStrong
                 )
-
-                contextBreakoutCard(
-                    title: "General Meaning",
-                    body: paragraphs.dropFirst().joined(separator: "\n\n"),
-                    tint: DS.Color.textSecondary
-                )
+            } else {
+                AttributedResultView(content: content)
             }
         }
+        .animation(DS.Animation.standard, value: paragraphs.count)
     }
 
     func contextBreakoutCard(title: String, body: String, tint: Color) -> some View {
@@ -92,12 +107,55 @@ struct ContextAwareResultView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(DS.Spacing.lg)
-        .background(DS.Color.surface.opacity(0.72))
+        .background(DS.Color.panel)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
                 .strokeBorder(tint.opacity(0.18), lineWidth: 0.8)
         )
+    }
+}
+
+/// Animated "still generating" indicator shown at the tail of a streaming
+/// result. The waving dots keep moving even when the model pauses mid-stream
+/// (e.g. while it silently reasons), so the output never looks finished when
+/// it isn't.
+struct StreamingActivityIndicator: View {
+    var label: String = "Generating…"
+    @State private var animating = false
+
+    var body: some View {
+        HStack(spacing: DS.Spacing.sm) {
+            HStack(spacing: 5) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(DS.Color.accent)
+                        .frame(width: 6, height: 6)
+                        .scaleEffect(animating ? 1.0 : 0.5)
+                        .opacity(animating ? 1.0 : 0.3)
+                        .animation(
+                            .easeInOut(duration: 0.55)
+                                .repeatForever(autoreverses: true)
+                                .delay(Double(index) * 0.18),
+                            value: animating
+                        )
+                }
+            }
+
+            Text(label)
+                .font(DS.Typography.caption2.weight(.medium))
+                .foregroundStyle(DS.Color.textTertiary)
+        }
+        .padding(.horizontal, DS.Spacing.sm)
+        .padding(.vertical, DS.Spacing.xs)
+        .background(DS.Color.cardSoft)
+        .clipShape(Capsule())
+        .overlay(
+            Capsule()
+                .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
+        )
+        .accessibilityLabel("Generating response")
+        .onAppear { animating = true }
     }
 }
 
@@ -113,7 +171,7 @@ struct StreamingResultView: View {
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
         .padding(DS.Spacing.lg)
-        .background(DS.Color.surface.opacity(0.72))
+        .background(DS.Color.panel)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -140,7 +198,7 @@ struct AttributedResultView: View {
             .lineSpacing(5)
             .fixedSize(horizontal: false, vertical: true)
             .padding(DS.Spacing.lg)
-            .background(DS.Color.surface.opacity(0.72))
+            .background(DS.Color.panel)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -182,7 +240,7 @@ struct LineListResultView: View {
                 }
             }
             .padding(DS.Spacing.lg)
-            .background(DS.Color.surface.opacity(0.72))
+            .background(DS.Color.panel)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         }
     }
@@ -216,7 +274,7 @@ struct ExamplesResultView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(DS.Spacing.md)
-                    .background(DS.Color.surface.opacity(0.72))
+                    .background(DS.Color.panel)
                     .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
                 }
             }
@@ -250,7 +308,7 @@ struct PronunciationResultView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(DS.Spacing.md)
-                    .background(DS.Color.surface.opacity(0.72))
+                    .background(DS.Color.panel)
                     .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
                 }
             }
@@ -287,7 +345,7 @@ struct UsageNotesResultView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(DS.Spacing.md)
-                    .background(DS.Color.surface.opacity(0.72))
+                    .background(DS.Color.panel)
                     .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
                 }
             }
@@ -316,7 +374,7 @@ struct CollocationResultView: View {
                 }
             }
             .padding(DS.Spacing.sm)
-            .background(DS.Color.surface.opacity(0.5))
+            .background(DS.Color.panel)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         }
     }
@@ -384,7 +442,7 @@ struct CollocationItemView: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.separator.opacity(0.45), lineWidth: 0.5)
+                .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
         )
     }
 }

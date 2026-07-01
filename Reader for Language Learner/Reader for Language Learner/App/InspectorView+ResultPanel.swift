@@ -46,11 +46,11 @@ extension InspectorView {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DS.Color.surfaceInset.opacity(0.94))
+        .background(DS.Color.cardInset)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.lg)
-                .strokeBorder(DS.Color.separator.opacity(0.24), lineWidth: 0.6)
+                .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
         )
     }
 
@@ -90,14 +90,21 @@ extension InspectorView {
 
                 Spacer(minLength: 0)
 
-                if let elapsed, !isLoading {
-                    Text(String(format: "%.1fs", elapsed))
-                        .font(DS.Typography.caption2.weight(.medium))
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
+                if (elapsed != nil || isTruncated) && !isLoading {
+                    HStack(spacing: DS.Spacing.xs) {
+                        if let elapsed {
+                            Text(String(format: "%.1fs", elapsed))
+                                .font(DS.Typography.caption2.weight(.medium))
+                                .foregroundStyle(DS.Color.textTertiary)
+                        }
+                        if isTruncated {
+                            truncationWarningBadge
+                        }
+                    }
 
-                if isTruncated && !isLoading {
-                    truncationWarningBadge
+                    Divider()
+                        .frame(height: 14)
+                        .padding(.horizontal, DS.Spacing.xxs)
                 }
 
                 HStack(spacing: DS.Spacing.xxs) {
@@ -149,12 +156,7 @@ extension InspectorView {
                 showSourceContext: hasSourceContext
             )
         }
-        .background(DS.Color.surface.opacity(0.72))
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.lg)
-                .strokeBorder(DS.Color.separator.opacity(0.24), lineWidth: 0.6)
-        )
+        .dsPanel()
     }
 
     private func resultToolbarButton(
@@ -169,7 +171,7 @@ extension InspectorView {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.separator.opacity(0.18), lineWidth: 0.5)
+                        .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
                 )
         }
         .buttonStyle(.plain)
@@ -206,10 +208,19 @@ extension InspectorView {
                             showsContextBreakout: shouldShowContextBreakout(for: module)
                         )
                             .padding(.horizontal, DS.Spacing.md)
-                            .padding(.bottom, DS.Spacing.md)
+                            .padding(.bottom, isLoading ? DS.Spacing.xs : DS.Spacing.md)
                             .frame(maxWidth: .infinity, alignment: .leading)
+
+                        if isLoading {
+                            StreamingActivityIndicator()
+                                .padding(.horizontal, DS.Spacing.md)
+                                .padding(.bottom, DS.Spacing.md)
+                                .transition(.opacity)
+                        }
+
                         Color.clear.frame(height: 1).id("stream-bottom")
                     }
+                    .animation(DS.Animation.standard, value: isLoading)
                 }
                 .onChange(of: activeModule) { _, _ in
                     withAnimation { proxy.scrollTo("top", anchor: .top) }
@@ -230,7 +241,7 @@ extension InspectorView {
             }
             .textSelection(.enabled)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(DS.Color.surfaceInset.opacity(0.96))
+            .background(DS.Color.cardInset)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
             .lineSpacing(4)
         } else if isLoading {
@@ -277,11 +288,11 @@ extension InspectorView {
             }
         }
         .padding(DS.Spacing.md)
-        .background(DS.Color.surface.opacity(0.86))
+        .background(DS.Color.panel)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.22), lineWidth: 0.8)
+                .strokeBorder(DS.Color.hairline, lineWidth: 0.8)
         )
     }
 
@@ -314,11 +325,7 @@ extension InspectorView {
     }
 
     var liveStatusBadge: some View {
-        Circle()
-            .fill(DS.Color.accent)
-            .frame(width: 6, height: 6)
-            .scaleEffect(1.0)
-            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: true)
+        PulsingDot()
             .accessibilityLabel("Streaming output in progress")
     }
 
@@ -351,7 +358,7 @@ extension InspectorView {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DS.Color.surfaceInset.opacity(0.96))
+        .background(DS.Color.cardInset)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
     }
 
@@ -370,7 +377,7 @@ extension InspectorView {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DS.Color.surfaceInset.opacity(0.96))
+        .background(DS.Color.cardInset)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
     }
 

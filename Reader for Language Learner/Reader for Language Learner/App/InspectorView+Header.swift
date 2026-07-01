@@ -61,86 +61,92 @@ extension InspectorView {
     // MARK: - Control Strip (Mode + Detail + Recent Terms)
 
     var controlStrip: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            HStack(spacing: DS.Spacing.xxs) {
-                ForEach(ExplainMode.allCases) { mode in
-                    Button { explainMode = mode } label: {
-                        Text(mode.rawValue)
-                            .font(DS.Typography.caption2.weight(explainMode == mode ? .bold : .regular))
-                            .foregroundStyle(explainMode == mode ? DS.Color.accent : DS.Color.textTertiary)
-                            .padding(.horizontal, DS.Spacing.sm)
-                            .padding(.vertical, DS.Spacing.xxs + 1)
-                            .background {
-                                if explainMode == mode {
-                                    Capsule()
-                                        .fill(DS.Color.accentSubtle)
-                                        .matchedGeometryEffect(id: "modeBackground", in: moduleNamespace)
+        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+            // Primary row: explain mode + detail level
+            HStack(spacing: DS.Spacing.xs) {
+                HStack(spacing: DS.Spacing.xxs) {
+                    ForEach(ExplainMode.allCases) { mode in
+                        Button { explainMode = mode } label: {
+                            Text(mode.rawValue)
+                                .font(DS.Typography.caption2.weight(explainMode == mode ? .bold : .regular))
+                                .foregroundStyle(explainMode == mode ? DS.Color.accent : DS.Color.textTertiary)
+                                .padding(.horizontal, DS.Spacing.sm)
+                                .padding(.vertical, DS.Spacing.xxs + 1)
+                                .background {
+                                    if explainMode == mode {
+                                        Capsule()
+                                            .fill(DS.Color.accentSubtle)
+                                            .matchedGeometryEffect(id: "modeBackground", in: moduleNamespace)
+                                    }
                                 }
-                            }
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
-            }
-            .padding(.trailing, 2)
 
-            Button {
-                explainDetail = explainDetail == .short ? .detailed : .short
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: explainDetail == .short ? "text.alignleft" : "text.alignjustify")
-                        .font(.system(size: 10, weight: .medium))
-                    Text(explainDetail == .short ? "Short" : "Detailed")
-                        .font(DS.Typography.caption2)
+                Button {
+                    explainDetail = explainDetail == .short ? .detailed : .short
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: explainDetail == .short ? "text.alignleft" : "text.alignjustify")
+                            .font(.system(size: 10, weight: .medium))
+                        Text(explainDetail == .short ? "Short" : "Detailed")
+                            .font(DS.Typography.caption2)
+                    }
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .padding(.horizontal, DS.Spacing.sm)
+                    .padding(.vertical, DS.Spacing.xxs + 1)
+                    .background(DS.Color.cardSoft)
+                    .clipShape(Capsule())
+                    .overlay(Capsule().strokeBorder(DS.Color.hairline, lineWidth: 0.5))
                 }
-                .foregroundStyle(DS.Color.textTertiary)
-                .padding(.horizontal, DS.Spacing.sm)
-                .padding(.vertical, DS.Spacing.xxs + 1)
-                .background(DS.Color.surfaceElevated.opacity(0.9))
-                .clipShape(Capsule())
+                .buttonStyle(.plain)
+                .help(explainDetail == .short ? "Switch to Detailed" : "Switch to Short")
+
+                Spacer(minLength: 0)
             }
-            .buttonStyle(.plain)
-            .help(explainDetail == .short ? "Switch to Detailed" : "Switch to Short")
 
-            recentTermsInline
-
-            Spacer(minLength: 0)
+            // Secondary row: recent terms (de-emphasized subline)
+            recentTermsRow
         }
         .padding(.horizontal, DS.Spacing.xs)
         .animation(DS.Animation.springFast, value: explainMode)
     }
 
-    // MARK: - Recent Terms (inline)
+    // MARK: - Recent Terms (secondary subline)
 
     @ViewBuilder
-    private var recentTermsInline: some View {
+    private var recentTermsRow: some View {
         let recents = viewModel.recentTerms.filter {
             $0.lowercased() != trimmedSelection.lowercased()
         }.prefix(4)
 
         if !recents.isEmpty {
-            Divider()
-                .frame(height: 12)
-                .padding(.horizontal, DS.Spacing.xxs)
+            HStack(spacing: DS.Spacing.xs) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(DS.Color.textTertiary)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DS.Spacing.xxs) {
-                    ForEach(Array(recents), id: \.self) { term in
-                        Button {
-                            NotificationCenter.default.post(
-                                name: .inspectorRecentTermSelected,
-                                object: term
-                            )
-                        } label: {
-                            Text(term)
-                                .font(DS.Typography.caption2)
-                                .foregroundStyle(DS.Color.textTertiary)
-                                .padding(.horizontal, DS.Spacing.xs)
-                                .padding(.vertical, DS.Spacing.xxs)
-                                .background(DS.Color.surfaceInset.opacity(0.72))
-                                .clipShape(Capsule())
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: DS.Spacing.xxs) {
+                        ForEach(Array(recents), id: \.self) { term in
+                            Button {
+                                NotificationCenter.default.post(
+                                    name: .inspectorRecentTermSelected,
+                                    object: term
+                                )
+                            } label: {
+                                Text(term)
+                                    .font(DS.Typography.caption2)
+                                    .foregroundStyle(DS.Color.textTertiary)
+                                    .padding(.horizontal, DS.Spacing.xs)
+                                    .padding(.vertical, DS.Spacing.xxs)
+                                    .background(DS.Color.cardSoft)
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Recent: \(term)")
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Recent: \(term)")
                     }
                 }
             }
@@ -153,6 +159,7 @@ extension InspectorView {
 
     var actionBar: some View {
         HStack(spacing: DS.Spacing.xs) {
+            // Left cluster: playback
             actionGroup {
                 iconButton(
                     systemImage: speechManager.isSpeaking ? "speaker.wave.2.fill" : "play.fill",
@@ -171,19 +178,20 @@ extension InspectorView {
                 .disabled(!speechManager.isSpeaking)
             }
 
-            actionSpacer()
+            Spacer(minLength: DS.Spacing.sm)
 
-            iconButton(
-                systemImage: isCurrentlySaved ? "star.fill" : "star",
-                help: isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)",
-                action: toggleSaveWord
-            )
-            .keyboardShortcut("d", modifiers: [.command])
-            .foregroundStyle(isCurrentlySaved ? .yellow : .primary)
+            // Right cluster: save + more
+            actionGroup {
+                iconButton(
+                    systemImage: isCurrentlySaved ? "star.fill" : "star",
+                    help: isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)",
+                    action: toggleSaveWord
+                )
+                .keyboardShortcut("d", modifiers: [.command])
+                .foregroundStyle(isCurrentlySaved ? .yellow : .primary)
 
-            Spacer(minLength: DS.Spacing.xs)
-
-            overflowMenu
+                overflowMenu
+            }
         }
         .controlSize(.mini)
         // Keeps ⌘E working even while the overflow menu is closed.

@@ -62,14 +62,20 @@ struct LLMClient {
     }
 
     private var shouldDisableReasoning: Bool {
-        isLMStudioLocalServer
+        isLocalServer
     }
 
-    private var isLMStudioLocalServer: Bool {
+    /// True when the server is a local runtime (LM Studio, Ollama, …) on
+    /// localhost, regardless of port. Local runtimes honor
+    /// `reasoning_effort: "none"` to suppress hidden thinking tokens, which
+    /// otherwise stall the visible stream (a few sentences arrive, then the
+    /// model "thinks" silently for several seconds before the rest appears).
+    /// Remote APIs (OpenAI, OpenRouter) are deliberately left untouched so we
+    /// never send them an unsupported parameter.
+    private var isLocalServer: Bool {
         guard let url = URL(string: baseURLString),
               let host = url.host?.lowercased() else { return false }
-        let isLocalHost = host == "127.0.0.1" || host == "localhost"
-        return isLocalHost && url.port == 1234
+        return host == "127.0.0.1" || host == "localhost" || host == "::1"
     }
 
     /// URLSession configured with the given request timeout.

@@ -12,32 +12,36 @@ extension InspectorView {
     // MARK: - Module Grid
 
     var moduleGrid: some View {
-        VStack(spacing: DS.Spacing.xs) {
-            HStack(spacing: DS.Spacing.xxs) {
-                ForEach(Array(primaryModules.enumerated()), id: \.element) { index, module in
-                    moduleButton(
-                        for: module,
-                        shortcut: KeyEquivalent(Character(String(index + 1)))
-                    )
-                }
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            DSSectionHeader("Modules") {
                 runAllButton
             }
             .padding(.horizontal, DS.Spacing.xxs)
 
-            moreModulesToggle
-
-            if showMoreModules {
+            VStack(spacing: DS.Spacing.xs) {
                 HStack(spacing: DS.Spacing.xxs) {
-                    ForEach(overflowModules, id: \.self) { module in
-                        // Shortcuts (⌘6-0) live on the hidden buttons below so
-                        // they keep working while this row is collapsed.
-                        moduleButton(for: module, shortcut: nil)
+                    ForEach(Array(primaryModules.enumerated()), id: \.element) { index, module in
+                        moduleButton(
+                            for: module,
+                            shortcut: KeyEquivalent(Character(String(index + 1)))
+                        )
                     }
-                    // Mirror the Run All slot so columns align with the primary row.
-                    Color.clear.frame(width: 34, height: 1)
                 }
                 .padding(.horizontal, DS.Spacing.xxs)
-                .transition(.opacity.combined(with: .move(edge: .top)))
+
+                if showMoreModules {
+                    HStack(spacing: DS.Spacing.xxs) {
+                        ForEach(overflowModules, id: \.self) { module in
+                            // Shortcuts (⌘6-0) live on the hidden buttons below so
+                            // they keep working while this row is collapsed.
+                            moduleButton(for: module, shortcut: nil)
+                        }
+                    }
+                    .padding(.horizontal, DS.Spacing.xxs)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                moreModulesToggle
             }
         }
         .background(overflowShortcutButtons)
@@ -45,22 +49,29 @@ extension InspectorView {
         .animation(DS.Animation.snappy, value: showMoreModules)
     }
 
-    // MARK: - Run All
+    // MARK: - Run All (section-header action)
 
     private var runAllButton: some View {
         Button {
             runAllPrimaryModules()
         } label: {
-            Image(systemName: "play.fill")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(hasSelection ? DS.Color.accent : DS.Color.textDisabled)
-                .frame(width: 34, height: 34)
-                .background(DS.Color.surfaceInset.opacity(0.94))
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.separator.opacity(0.20), lineWidth: 0.5)
+            HStack(spacing: 4) {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 8, weight: .bold))
+                Text("Run All")
+                    .font(DS.Typography.caption2.weight(.semibold))
+            }
+            .foregroundStyle(hasSelection ? DS.Color.accent : DS.Color.textDisabled)
+            .padding(.horizontal, DS.Spacing.sm)
+            .padding(.vertical, DS.Spacing.xxs + 1)
+            .background(hasSelection ? DS.Color.accentSubtle : DS.Color.cardSoft)
+            .clipShape(Capsule())
+            .overlay(
+                Capsule().strokeBorder(
+                    hasSelection ? DS.Color.accentMuted.opacity(0.45) : DS.Color.hairline,
+                    lineWidth: 0.6
                 )
+            )
         }
         .buttonStyle(.plain)
         .disabled(!hasSelection)
@@ -84,11 +95,12 @@ extension InspectorView {
                         .fill(DS.Color.accent.opacity(0.8))
                         .frame(width: 5, height: 5)
                 }
+                Spacer(minLength: 0)
             }
             .font(DS.Typography.caption2)
             .foregroundStyle(DS.Color.textTertiary)
-            .frame(maxWidth: .infinity)
             .padding(.vertical, 3)
+            .padding(.horizontal, DS.Spacing.xxs)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -143,15 +155,9 @@ extension InspectorView {
                         .frame(width: compact ? 14 : 18, height: compact ? 14 : 18)
 
                     if hasOutput && !isLoading {
-                        Capsule()
-                            .fill(module.accentColor.opacity(0.90))
-                            .frame(width: 8, height: 4)
-                            .offset(x: 2, y: -2)
+                        statusDot(module.accentColor)
                     } else if hasError {
-                        Capsule()
-                            .fill(DS.Color.danger.opacity(0.88))
-                            .frame(width: 8, height: 4)
-                            .offset(x: 2, y: -2)
+                        statusDot(DS.Color.danger)
                     }
                 }
 
@@ -174,7 +180,7 @@ extension InspectorView {
                         .matchedGeometryEffect(id: "activeModule", in: moduleNamespace)
                 } else if compact {
                     RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .fill(DS.Color.surface.opacity(0.72))
+                        .fill(DS.Color.panel)
                 }
             }
             .overlay {
@@ -182,7 +188,7 @@ extension InspectorView {
                     .stroke(
                         hasError && !isActive ? DS.Color.danger.opacity(0.26) :
                         isActive ? module.accentColor.opacity(0.36) :
-                        compact ? DS.Color.separator.opacity(0.06) : .clear,
+                        compact ? DS.Color.hairline : .clear,
                         lineWidth: compact ? 0.8 : 1
                     )
             }
@@ -202,5 +208,16 @@ extension InspectorView {
             hasError  ? "Error" :
             hasOutput ? "Has output" : "No output"
         )
+    }
+
+    /// Small corner status dot for a module button (has-output / error).
+    private func statusDot(_ color: Color) -> some View {
+        Circle()
+            .fill(color)
+            .frame(width: 5, height: 5)
+            .overlay(
+                Circle().strokeBorder(DS.Color.surface, lineWidth: 1)
+            )
+            .offset(x: 3, y: -1)
     }
 }
