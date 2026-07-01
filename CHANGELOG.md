@@ -4,6 +4,38 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.7.0] - 2026-07-02
+
+A Review Center release: study modes are now genuinely testing recall, and
+review cards finally show everything you saved for a word.
+
+### Changed
+
+**Study modes**
+- **Choice** now works from definition to word: the card shows the saved
+  definition with the word masked out (•••), and you pick the right word among
+  four saved terms. The old direction gave itself away — definitions quote the
+  word, and the word sat right above the options.
+- **Type** is now a fill-in-the-blank exercise: the saved context sentence
+  appears with the word blanked, plus a masked definition as a hint, and your
+  answer is checked objectively (✓ Correct / ✗ Not quite) instead of the old
+  advisory self-check.
+- Words without a usable definition or sentence gracefully fall back to a
+  plain flashcard reveal, as before.
+
+**Review cards**
+- The card back now shows **every** saved module: Definition and native
+  meaning appear first, and a "Show more (N)" button reveals the rest
+  (etymology, collocations, examples, synonyms, …), each labeled with its
+  module color and name.
+- Long card content scrolls inside the card instead of clipping in the
+  narrow sidebar.
+
+### Fixed
+
+- Spaced-repetition scheduling, cram mode, deck filters, and keyboard
+  shortcuts are untouched; the stored mode preference carries over.
+
 ## [1.6.0] - 2026-07-01
 
 A focused release on the word inspector: local LLM streaming feels faster and
