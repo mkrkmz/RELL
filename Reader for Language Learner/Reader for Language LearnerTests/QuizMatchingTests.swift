@@ -14,22 +14,86 @@ final class QuizMatchingTests: XCTestCase {
         XCTAssertEqual(QuizMatching.normalized("  Yörüngé,  bir!! "), "yorunge bir")
     }
 
-    // MARK: - Typed matching
+    // MARK: - Typed term matching (objective)
 
-    func testLooksCorrectSubstring() {
-        XCTAssertTrue(QuizMatching.looksCorrect(typed: "circular path", definition: "A circular path around a body."))
+    func testMatchesTermExact() {
+        XCTAssertTrue(QuizMatching.matchesTerm(typed: "circumstance", term: "circumstance"))
     }
 
-    func testLooksCorrectTokenOverlap() {
-        XCTAssertTrue(QuizMatching.looksCorrect(typed: "orbiting around", definition: "Movement around a planet."))
+    func testMatchesTermIgnoresCaseWhitespacePunctuation() {
+        XCTAssertTrue(QuizMatching.matchesTerm(typed: "  Give Up! ", term: "give up"))
     }
 
-    func testLooksWrongWhenNoOverlap() {
-        XCTAssertFalse(QuizMatching.looksCorrect(typed: "banana", definition: "A circular path around a body."))
+    func testMatchesTermIgnoresDiacritics() {
+        XCTAssertTrue(QuizMatching.matchesTerm(typed: "yorunge", term: "Yörüngé"))
     }
 
-    func testLooksWrongForTrivialInput() {
-        XCTAssertFalse(QuizMatching.looksCorrect(typed: "a", definition: "Anything at all."))
+    func testMatchesTermRejectsDifferentWord() {
+        XCTAssertFalse(QuizMatching.matchesTerm(typed: "circumstances are", term: "circumstance"))
+        XCTAssertFalse(QuizMatching.matchesTerm(typed: "banana", term: "circumstance"))
+    }
+
+    func testMatchesTermRejectsEmptyInput() {
+        XCTAssertFalse(QuizMatching.matchesTerm(typed: "   ", term: "coma"))
+    }
+
+    // MARK: - Term masking
+
+    func testMaskTermMasksStartMiddleEndOccurrences() {
+        let masked = QuizMatching.maskTerm(
+            "coma",
+            in: "Coma is rare; a deep coma may end in coma"
+        )
+        XCTAssertEqual(masked, "••• is rare; a deep ••• may end in •••")
+    }
+
+    func testMaskTermMasksQuotedForm() {
+        let masked = QuizMatching.maskTerm(
+            "coma",
+            in: "In this context, \"coma\" refers to unconsciousness."
+        )
+        XCTAssertEqual(masked, "In this context, \"•••\" refers to unconsciousness.")
+    }
+
+    func testMaskTermIsCaseAndDiacriticInsensitive() {
+        XCTAssertEqual(
+            QuizMatching.maskTerm("yörünge", in: "Yorunge kavramı önemlidir."),
+            "••• kavramı önemlidir."
+        )
+    }
+
+    func testMaskTermDoesNotMaskInsideLongerWords() {
+        // "cat" must not mask "category" (5 extra letters — beyond inflection).
+        XCTAssertEqual(
+            QuizMatching.maskTerm("cat", in: "The category of a cat."),
+            "The category of a •••."
+        )
+    }
+
+    func testMaskTermMasksSimpleSuffixInflections() {
+        XCTAssertEqual(
+            QuizMatching.maskTerm("circumstance", in: "Those circumstances changed."),
+            "Those ••• changed."
+        )
+    }
+
+    func testMaskTermMasksYToIeInflection() {
+        XCTAssertEqual(
+            QuizMatching.maskTerm("fatality", in: "Traffic fatalities increased."),
+            "Traffic ••• increased."
+        )
+    }
+
+    func testMaskTermMasksMultiWordTerm() {
+        XCTAssertEqual(
+            QuizMatching.maskTerm("give up", in: "Don't give up on sleep."),
+            "Don't ••• on sleep."
+        )
+    }
+
+    func testMaskTermLeavesTextWithoutOccurrences() {
+        let text = "Nothing to hide here."
+        XCTAssertEqual(QuizMatching.maskTerm("coma", in: text), text)
     }
 
     // MARK: - Distractors

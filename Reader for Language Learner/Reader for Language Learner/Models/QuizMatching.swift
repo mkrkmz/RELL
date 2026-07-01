@@ -22,18 +22,104 @@ enum QuizMatching {
             .joined(separator: " ")
     }
 
-    /// Advisory check: does the typed answer overlap the definition?
-    /// Substring match for short answers, or a shared significant token.
-    static func looksCorrect(typed: String, definition: String) -> Bool {
+    /// Objective check for typed recall: the typed answer must equal the term
+    /// after normalization (case, diacritics, punctuation, and spacing folded).
+    static func matchesTerm(typed: String, term: String) -> Bool {
         let answer = normalized(typed)
-        guard answer.count >= 2 else { return false }
-        let def = normalized(definition)
-        if def.contains(answer) { return true }
+        guard !answer.isEmpty else { return false }
+        return answer == normalized(term)
+    }
 
-        let answerTokens = Set(answer.split(separator: " ").map(String.init).filter { $0.count >= 3 })
-        guard !answerTokens.isEmpty else { return false }
-        let defTokens = Set(def.split(separator: " ").map(String.init))
-        return !answerTokens.isDisjoint(with: defTokens)
+    // MARK: - Term masking
+
+    /// Placeholder shown where the term has been masked out of a question.
+    static let maskPlaceholder = "•••"
+
+    /// Replaces occurrences of `term` in `text` with `maskPlaceholder`, so
+    /// definitions and context sentences can be shown as questions without
+    /// giving the answer away. Matching is case- and diacritic-insensitive,
+    /// respects word boundaries ("cat" never masks "category"), spans
+    /// multi-word terms, and also catches simple inflections: a trailing
+    /// suffix of up to three letters ("coma" → "comas", "circumstance" →
+    /// "circumstances") and the y→ie family ("fatality" → "fatalities").
+    static func maskTerm(_ term: String, in text: String) -> String {
+        let termTokens = normalized(term)
+            .split(separator: " ")
+            .map(String.init)
+        guard !termTokens.isEmpty, !text.isEmpty else { return text }
+
+        // Tokenize the original text into word ranges so replacements can be
+        // made in place without disturbing punctuation or quoting.
+        var words: [(range: Range<String.Index>, normalized: String)] = []
+        var index = text.startIndex
+        while index < text.endIndex {
+            let character = text[index]
+            if character.isLetter || character.isNumber {
+                var end = text.index(after: index)
+                while end < text.endIndex,
+                      text[end].isLetter || text[end].isNumber {
+                    end = text.index(after: end)
+                }
+                words.append((index..<end, normalized(String(text[index..<end]))))
+                index = end
+            } else {
+                index = text.index(after: index)
+            }
+        }
+
+        // Collect matching word sequences (non-overlapping, left to right).
+        var maskRanges: [Range<String.Index>] = []
+        var wordIndex = 0
+        while wordIndex + termTokens.count <= words.count {
+            if sequenceMatches(at: wordIndex, words: words, termTokens: termTokens) {
+                let start = words[wordIndex].range.lowerBound
+                let end = words[wordIndex + termTokens.count - 1].range.upperBound
+                maskRanges.append(start..<end)
+                wordIndex += termTokens.count
+            } else {
+                wordIndex += 1
+            }
+        }
+
+        guard !maskRanges.isEmpty else { return text }
+        var result = text
+        for range in maskRanges.reversed() {
+            result.replaceSubrange(range, with: maskPlaceholder)
+        }
+        return result
+    }
+
+    private static func sequenceMatches(
+        at start: Int,
+        words: [(range: Range<String.Index>, normalized: String)],
+        termTokens: [String]
+    ) -> Bool {
+        for (offset, token) in termTokens.enumerated() {
+            let word = words[start + offset].normalized
+            let isLastToken = offset == termTokens.count - 1
+            // Only the final token tolerates inflection; earlier tokens of a
+            // multi-word term must match exactly ("give up" ≠ "given up").
+            if isLastToken {
+                if !wordMatchesToken(word, token) { return false }
+            } else if word != token {
+                return false
+            }
+        }
+        return true
+    }
+
+    /// Exact match, a short trailing suffix (≤3 letters), or y→ie inflection.
+    private static func wordMatchesToken(_ word: String, _ token: String) -> Bool {
+        if word == token { return true }
+        if word.hasPrefix(token), word.count - token.count <= 3 { return true }
+        if token.hasSuffix("y") {
+            let stem = String(token.dropLast())
+            if word.hasPrefix(stem) {
+                let suffix = String(word.dropFirst(stem.count))
+                if ["ies", "ied", "ier", "iest"].contains(suffix) { return true }
+            }
+        }
+        return false
     }
 
     /// Distinct distractor definitions for a multiple-choice question, in the

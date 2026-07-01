@@ -50,6 +50,11 @@ struct QuizView: View {
     @State private var mcOptions: [String] = []
     @State private var mcSelectedIndex: Int?
     @State private var typedAnswer = ""
+    /// Whether the card back is showing every saved module or just the summary.
+    @State private var showAllBackSections = false
+
+    /// Modules shown on the card back by default; the rest sit behind "Show more".
+    private static let summaryModules: [ModuleType] = [.definitionEN, .meaningTR]
 
     private var quizMode: QuizMode {
         QuizMode(rawValue: quizModeRaw) ?? .flashcard
@@ -121,7 +126,7 @@ struct QuizView: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .help("Flashcard reveal, multiple choice, or typed recall.")
+                .help("Flashcard reveal, pick the word for a definition, or type the missing word.")
 
                 Toggle("Include all saved words", isOn: $includeAll)
                     .toggleStyle(.switch)
@@ -257,33 +262,62 @@ struct QuizView: View {
         }
     }
 
-    // MARK: - Multiple Choice Body
+    // MARK: - Multiple Choice Body (definition → term)
 
     @ViewBuilder
     private func multipleChoiceBody(_ word: SavedWord) -> some View {
         VStack(spacing: DS.Spacing.md) {
-            cardFace(content: frontContent(for: word), isFront: true)
-
             if mcOptions.count < 2 {
-                // Not enough distractors — fall back to a plain reveal.
+                // No usable definition or not enough distractor terms —
+                // fall back to a plain flashcard-style reveal.
                 if isFlipped {
-                    Text(word.reviewDefinition)
-                        .font(DS.Typography.callout)
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .padding(.horizontal, DS.Spacing.lg)
+                    cardFace(content: revealContent(for: word), isFront: false)
                 } else {
+                    cardFace(content: frontContent(for: word), isFront: true)
                     Button("Reveal answer") { revealAnswer() }
                         .buttonStyle(.bordered)
                 }
             } else {
+                if isFlipped {
+                    cardFace(content: revealContent(for: word), isFront: false)
+                } else {
+                    cardFace(content: choiceQuestionContent(for: word), isFront: true)
+                }
+
                 VStack(spacing: DS.Spacing.sm) {
                     ForEach(Array(mcOptions.enumerated()), id: \.offset) { index, option in
-                        choiceRow(index: index, option: option, correct: word.reviewDefinition)
+                        choiceRow(index: index, option: option, correct: word.term)
                     }
                 }
                 .padding(.horizontal, DS.Spacing.md)
             }
         }
+    }
+
+    /// Question card: the definition with the term masked out. The term,
+    /// mastery badge, and source badge are all withheld until reveal — each
+    /// one leaks the answer.
+    private func choiceQuestionContent(for word: SavedWord) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            Text("WHICH WORD FITS?")
+                .font(DS.Typography.caption2.weight(.bold))
+                .foregroundStyle(DS.Color.textTertiary)
+            cardScroll(maxHeight: 220) {
+                Text(maskedDefinition(for: word))
+                    .font(DS.Typography.body)
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func maskedDefinition(for word: SavedWord) -> String {
+        QuizMatching.maskTerm(
+            word.term,
+            in: MarkdownUtils.sanitizeLLMOutput(word.reviewDefinition)
+        )
     }
 
     private func choiceRow(index: Int, option: String, correct: String) -> some View {
@@ -307,10 +341,10 @@ struct QuizView: View {
                       : "circle")
                     .foregroundStyle(isFlipped && (isCorrect || isSelected) ? tint : DS.Color.textTertiary)
                 Text(option)
-                    .font(DS.Typography.callout)
+                    .font(DS.Typography.callout.weight(.medium))
                     .foregroundStyle(DS.Color.textPrimary)
                     .multilineTextAlignment(.leading)
-                    .lineLimit(3)
+                    .lineLimit(2)
                 Spacer(minLength: 0)
             }
             .padding(DS.Spacing.sm)
@@ -326,54 +360,128 @@ struct QuizView: View {
         .disabled(isFlipped)
     }
 
-    // MARK: - Typed Recall Body
+    // MARK: - Typed Recall Body (cloze → type the word)
 
     @ViewBuilder
     private func typedBody(_ word: SavedWord) -> some View {
+        let hasQuestion = clozeSentence(for: word) != nil || usableDefinition(for: word) != nil
+
         VStack(spacing: DS.Spacing.md) {
-            cardFace(content: frontContent(for: word), isFront: true)
+            if isFlipped {
+                cardFace(content: revealContent(for: word), isFront: false)
+            } else if hasQuestion {
+                cardFace(content: typedQuestionContent(for: word), isFront: true)
+            } else {
+                cardFace(content: frontContent(for: word), isFront: true)
+            }
 
             if !isFlipped {
-                VStack(spacing: DS.Spacing.sm) {
-                    TextField("Type the meaning…", text: $typedAnswer, axis: .vertical)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(1...3)
-                        .onSubmit { if !typedAnswer.trimmingCharacters(in: .whitespaces).isEmpty { revealAnswer() } }
-                    Button("Check") { revealAnswer() }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.regular)
-                        .disabled(typedAnswer.trimmingCharacters(in: .whitespaces).isEmpty)
-                        .keyboardShortcut(.return, modifiers: [.command])
-                }
-                .padding(.horizontal, DS.Spacing.lg)
-            } else {
-                VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                    HStack(spacing: DS.Spacing.xs) {
-                        Image(systemName: typedLooksCorrect(word) ? "checkmark.circle.fill" : "questionmark.circle.fill")
-                            .foregroundStyle(typedLooksCorrect(word) ? DS.Color.success : DS.Color.warning)
-                        Text(typedLooksCorrect(word) ? "Looks right — confirm below" : "Self-check against the answer")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
+                if hasQuestion {
+                    VStack(spacing: DS.Spacing.sm) {
+                        TextField("Type the word…", text: $typedAnswer)
+                            .textFieldStyle(.roundedBorder)
+                            .onSubmit { if !typedAnswer.trimmingCharacters(in: .whitespaces).isEmpty { revealAnswer() } }
+                        Button("Check") { revealAnswer() }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.regular)
+                            .disabled(typedAnswer.trimmingCharacters(in: .whitespaces).isEmpty)
+                            .keyboardShortcut(.return, modifiers: [.command])
                     }
-                    if !typedAnswer.trimmingCharacters(in: .whitespaces).isEmpty {
-                        Text("You wrote: \(typedAnswer)")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                            .italic()
-                    }
-                    Divider()
-                    Text(word.reviewDefinition)
-                        .font(DS.Typography.callout)
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, DS.Spacing.lg)
+                } else {
+                    // Nothing to build a question from — plain reveal.
+                    Button("Reveal answer") { revealAnswer() }
+                        .buttonStyle(.bordered)
                 }
-                .padding(DS.Spacing.lg)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(DS.Color.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
-                .padding(.horizontal, DS.Spacing.md)
+            } else if hasQuestion {
+                typedResultView(word)
             }
         }
+    }
+
+    /// Question card: the saved sentence as a cloze (term blanked out) plus
+    /// the masked definition as a secondary hint.
+    private func typedQuestionContent(for word: SavedWord) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            Text(clozeSentence(for: word) != nil ? "TYPE THE MISSING WORD" : "TYPE THE WORD")
+                .font(DS.Typography.caption2.weight(.bold))
+                .foregroundStyle(DS.Color.textTertiary)
+
+            cardScroll(maxHeight: 220) {
+                VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                    if let cloze = clozeSentence(for: word) {
+                        Text("“\(cloze)”")
+                            .font(DS.Typography.body)
+                            .italic()
+                            .foregroundStyle(DS.Color.textPrimary)
+                            .lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    if let definition = usableDefinition(for: word) {
+                        VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                            Text("HINT")
+                                .font(DS.Typography.caption2.weight(.bold))
+                                .foregroundStyle(DS.Color.textTertiary)
+                            Text(QuizMatching.maskTerm(word.term, in: definition))
+                                .font(DS.Typography.callout)
+                                .foregroundStyle(DS.Color.textSecondary)
+                                .lineSpacing(3)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Objective ✓/✗ result shown under the reveal card.
+    private func typedResultView(_ word: SavedWord) -> some View {
+        let isCorrect = QuizMatching.matchesTerm(typed: typedAnswer, term: word.term)
+        let tint = isCorrect ? DS.Color.success : DS.Color.danger
+        let trimmedAnswer = typedAnswer.trimmingCharacters(in: .whitespaces)
+
+        return HStack(spacing: DS.Spacing.sm) {
+            Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundStyle(tint)
+            Text(isCorrect ? "Correct!" : "Not quite")
+                .font(DS.Typography.caption.weight(.semibold))
+                .foregroundStyle(tint)
+            if !isCorrect, !trimmedAnswer.isEmpty {
+                Text("— you wrote “\(trimmedAnswer)”")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .italic()
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(DS.Spacing.md)
+        .background(tint.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+        .padding(.horizontal, DS.Spacing.md)
+    }
+
+    /// The saved sentence with the term masked, or nil when the sentence is
+    /// missing or doesn't contain the term (no blank → not a cloze).
+    private func clozeSentence(for word: SavedWord) -> String? {
+        let sentence = word.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sentence.isEmpty else { return nil }
+        let masked = QuizMatching.maskTerm(word.term, in: sentence)
+        return masked == sentence ? nil : masked
+    }
+
+    /// A real saved definition (not the placeholder fallback), sanitized.
+    private func usableDefinition(for word: SavedWord) -> String? {
+        let priority = [ModuleType.definitionEN.rawValue, ModuleType.meaningTR.rawValue]
+        for key in priority {
+            if let text = word.llmOutputs[key]?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !text.isEmpty {
+                return MarkdownUtils.sanitizeLLMOutput(text)
+            }
+        }
+        return nil
     }
 
     // MARK: - Rating Row
@@ -429,23 +537,119 @@ struct QuizView: View {
         .accessibilityHint("Tap to flip and see the definition")
     }
 
+    /// Flashcard back: every saved module, summary-first with "Show more".
     private func backContent(for word: SavedWord) -> some View {
+        backSections(for: word, maxHeight: 300)
+    }
+
+    /// Reveal card for choice/typed modes — the question hid the term, so the
+    /// reveal leads with it before the saved content.
+    private func revealContent(for word: SavedWord) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            Text("DEFINITION")
-                .font(DS.Typography.caption2.weight(.bold))
-                .foregroundStyle(DS.Color.textTertiary)
-            Text(backText(for: word))
-                .font(DS.Typography.body)
-                .foregroundStyle(DS.Color.textPrimary)
-                .lineSpacing(4)
-                .fixedSize(horizontal: false, vertical: true)
-            sourceBadge(for: word)
+            HStack(spacing: DS.Spacing.sm) {
+                Text(word.term)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .minimumScaleFactor(0.72)
+                SpeakButton(text: word.term, size: 13)
+                Spacer(minLength: 0)
+                masteryBadge(word.masteryLevel)
+            }
+            Divider()
+            backSections(for: word, maxHeight: 220)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func backText(for word: SavedWord) -> String {
-        word.reviewDefinition
+    /// Scrollable, labeled sections for all saved module outputs.
+    /// Definition + native meaning show by default; the rest expand on demand.
+    private func backSections(for word: SavedWord, maxHeight: CGFloat) -> some View {
+        let saved = savedModules(for: word)
+        let summary = saved.filter { Self.summaryModules.contains($0) }
+        // If neither summary module was saved, promote the first output so the
+        // back is never just a "Show more" button.
+        let visible = summary.isEmpty ? Array(saved.prefix(1)) : summary
+        let hidden = saved.filter { !visible.contains($0) }
+
+        return cardScroll(maxHeight: maxHeight) {
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                if saved.isEmpty {
+                    // No LLM outputs at all — fall back to sentence/placeholder.
+                    Text(word.reviewDefinition)
+                        .font(DS.Typography.body)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    ForEach(visible) { module in
+                        moduleSection(module, word: word)
+                    }
+
+                    if !hidden.isEmpty {
+                        if showAllBackSections {
+                            ForEach(hidden) { module in
+                                moduleSection(module, word: word)
+                            }
+                        } else {
+                            Button {
+                                withAnimation(DS.Animation.standard) { showAllBackSections = true }
+                            } label: {
+                                Label("Show more (\(hidden.count))", systemImage: "chevron.down")
+                                    .font(DS.Typography.caption2.weight(.semibold))
+                                    .foregroundStyle(DS.Color.accent)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Show the other saved modules for this word")
+                        }
+                    }
+                }
+
+                sourceBadge(for: word)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// One labeled section on the card back (module dot + title + output).
+    private func moduleSection(_ module: ModuleType, word: SavedWord) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+            HStack(spacing: DS.Spacing.xs) {
+                Circle()
+                    .fill(module.accentColor)
+                    .frame(width: 5, height: 5)
+                Text(module.title.uppercased())
+                    .font(DS.Typography.caption2.weight(.bold))
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+            Text(MarkdownUtils.sanitizeLLMOutput(word.llmOutputs[module.rawValue] ?? ""))
+                .font(DS.Typography.callout)
+                .foregroundStyle(DS.Color.textPrimary)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Modules with a non-empty saved output, in canonical module order.
+    private func savedModules(for word: SavedWord) -> [ModuleType] {
+        ModuleType.allCases.filter {
+            !(word.llmOutputs[$0.rawValue] ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    /// Bounded scroll container used by card bodies so long content scrolls
+    /// inside the card instead of overflowing the sidebar.
+    private func cardScroll<Content: View>(
+        maxHeight: CGFloat,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxHeight: maxHeight)
     }
 
     // MARK: - Action Button
@@ -674,6 +878,7 @@ struct QuizView: View {
         typedAnswer = ""
         mcSelectedIndex = nil
         mcOptions = []
+        showAllBackSections = false
         guard currentIndex < queue.count else { return }
         if quizMode == .multipleChoice {
             mcOptions = buildOptions(for: queue[currentIndex])
@@ -719,24 +924,21 @@ struct QuizView: View {
 
     // MARK: - Multiple Choice Options
 
-    /// Correct definition plus up to three distinct distractors drawn from
-    /// other saved words. Returns fewer than two when the vocabulary is too
-    /// small, signaling a plain-reveal fallback.
+    /// The correct term plus up to three distinct distractor terms drawn from
+    /// other saved words. Returns empty when the word has no real definition
+    /// to ask about, or when the vocabulary is too small for distractors —
+    /// both signal a plain-reveal fallback.
     private func buildOptions(for word: SavedWord) -> [String] {
-        let correct = word.reviewDefinition
-        guard !correct.isEmpty, correct != "No definition saved." else { return [] }
+        // The question shows the definition, so it must actually exist.
+        guard usableDefinition(for: word) != nil else { return [] }
 
         let candidates = store.words
             .filter { $0.id != word.id }
             .shuffled()
-            .map(\.reviewDefinition)
-        let distractors = QuizMatching.distractors(correct: correct, candidates: candidates)
+            .map(\.term)
+        let distractors = QuizMatching.distractors(correct: word.term, candidates: candidates)
 
         guard !distractors.isEmpty else { return [] }
-        return ([correct] + distractors).shuffled()
-    }
-
-    private func typedLooksCorrect(_ word: SavedWord) -> Bool {
-        QuizMatching.looksCorrect(typed: typedAnswer, definition: word.reviewDefinition)
+        return ([word.term] + distractors).shuffled()
     }
 }
