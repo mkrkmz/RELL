@@ -4,6 +4,38 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.6.0] - 2026-07-01
+
+A focused release on the word inspector: local LLM streaming feels faster and
+never looks stalled, and the inspector panel gets a visual-hierarchy pass.
+
+### Changed
+
+**Inspector**
+- Redesigned the inspector layout for clearer hierarchy: the word + actions,
+  explain controls, modules, and result now read as distinct zones.
+- Header actions are grouped into a clean toolbar (speak on the left, save and
+  more on the right); recent terms moved to a quieter secondary row.
+- The module grid gains a **MODULES** section label, and **Run All** is now a
+  distinct labeled action instead of a look-alike module button.
+- Card surfaces and borders across the inspector are unified onto a single
+  surface/hairline system for a more cohesive look.
+
+**Streaming**
+- Definition and meaning now stream directly into their "In This Context" /
+  "General Meaning" cards, so the layout no longer reshuffles when the
+  response finishes.
+
+### Fixed
+
+- Local models no longer stall mid-answer: hidden reasoning tokens are now
+  suppressed for **all** local servers (LM Studio and Ollama, any port), not
+  just LM Studio on its default port — removing the multi-second gaps where a
+  few sentences appeared and the rest arrived late.
+- A live **"Generating…"** indicator now animates at the end of the streaming
+  text (and the header status dot pulses again), so a paused response no longer
+  looks finished.
+
 ## [1.5.0] - 2026-06-25
 
 A large feature release. RELL gains a study-focused home dashboard, new in-page
