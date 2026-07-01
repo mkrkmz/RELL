@@ -4,6 +4,64 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.7.1] - 2026-07-02
+
+RELL grows into the Mac: full menu bar coverage, a system-wide Quick Lookup
+panel, module access from the right-click menu, and an LLM status light in
+the toolbar.
+
+### Added
+
+**Quick Lookup HUD**
+- **⌃⌥Space anywhere on the system** opens a floating lookup panel (uses
+  Carbon hotkeys — no Accessibility permission needed). Type a word, press
+  Return, get the definition; ⌘S saves it to your vocabulary, Esc closes.
+- The panel is cache-first: saved words and recently hovered terms answer
+  instantly without an LLM request; it never activates the app or steals
+  your current window's focus.
+- Speak button reads the term aloud; already-saved terms show a "Saved" badge.
+- New menu bar icon opens the same lookup panel even when no RELL window is
+  open. Settings › General › Quick Lookup has toggles for the icon and the
+  shortcut.
+
+**Menu bar**
+- **File** gains Open Recent (last 12 documents) and Close Document (⇧⌘W).
+- **View** gains Show/Hide Sidebar (⌘⌥S), Show/Hide Inspector (⌘⌥I), and
+  Enter/Exit Focus Mode (⇧⌘D) — titles flip with the current state.
+- New **Go** menu: Previous/Next Page (⌥⌘← / ⌥⌘→), enabled only when there
+  is somewhere to go.
+- New **Modules** menu: all ten analysis modules with ⌘1–⌘9 shortcuts, plus
+  Run Last Module (⌘L). Items disable when nothing is selected.
+- Menu commands reach the key window through SwiftUI FocusedValues
+  (`ReaderCommands`), not notifications.
+
+**Context menus**
+- PDF right-click menu gains **Analyze With ▸** — pick any of the ten modules
+  directly from the selection; the Inspector opens automatically if hidden.
+- Thumbnail sidebar right-click: Bookmark Page and Copy Text from Page.
+
+**LLM status**
+- Toolbar status light (green/orange/red dot + model name) with a popover
+  showing provider, server, model, latency, and last check time.
+- Reachability probe runs at launch and whenever the provider, server URL,
+  or model changes — problems surface before the first failed request.
+- The Inspector's "server unreachable" banner now has a **Settings…** button
+  that deep-links to the LLM pane; the status popover does the same.
+
+### Changed
+
+- The hover dictionary, sentence translation strip, and Quick Lookup now
+  share one definition cache and one request gate, so a word looked up in
+  any surface is instant in the others.
+
+### Fixed
+
+- Opening the Inspector while text was already selected no longer shows the
+  empty "Select text to analyze" state — the live selection is adopted on
+  mount.
+- Keyboard shortcuts moved from hidden toolbar buttons to real menu items,
+  so they are discoverable and survive toolbar customization.
+
 ## [1.7.0] - 2026-07-02
 
 A Review Center release: study modes are now genuinely testing recall, and
