@@ -12,15 +12,17 @@ struct ContentView: View {
     @State private var selectionState   = SelectionState()
     @State private var searchManager    = PDFSearchManager()
     @State private var pdfViewManager   = PDFViewManager()
-    @State private var savedWordsStore  = SavedWordsStore()
+    @State private var savedWordsStore  = SavedWordsStore.shared
     @State private var bookmarkStore    = PDFBookmarkStore()
     @State private var noteStore        = PDFNoteStore()
     @State private var highlightStore   = PDFHighlightStore()
     @State private var sessionStore     = ReadingSessionStore()
     @State private var recentDocumentStore = RecentDocumentStore()
     @State private var coverStore       = DocumentCoverStore()
-    @State private var quickLookup      = QuickLookupService()
+    @State private var quickLookup      = QuickLookupService.shared
     @State private var ankiPrefs        = AnkiModulePreferences()
+    @State private var circuitBreaker   = CircuitBreaker()
+    @State private var llmHealth        = LLMHealthMonitor()
 
     @State private var showSidebar   = true
     @State private var showInspector = true
@@ -42,6 +44,9 @@ struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+    @AppStorage(LLMConfiguration.providerTypeKey) private var llmProviderTypeRaw: String = LLMConfiguration.defaultProviderType.rawValue
+    @AppStorage(LLMConfiguration.serverURLKey)    private var llmServerURL: String = LLMConfiguration.defaultServerURL
+    @AppStorage(LLMConfiguration.modelKey)        private var llmModel: String = LLMConfiguration.defaultModel
 
     /// Sentence the user dismissed; suppresses the strip until the selection changes.
     @State private var dismissedTranslationSentence: String = ""
@@ -93,6 +98,7 @@ struct ContentView: View {
             .onExitCommand { closeFindBar() }
         }
         .environment(ankiPrefs)
+        .focusedSceneValue(\.readerCommands, readerCommands)
         .frame(minWidth: DS.Layout.windowMin.width, minHeight: DS.Layout.windowMin.height)
         .preferredColorScheme(appTheme.colorScheme)
         .onDrop(
@@ -102,7 +108,10 @@ struct ContentView: View {
         )
         .onReceive(NotificationCenter.default.publisher(for: .openPDFCommand)) { _ in openPDF() }
         .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in
-            if !showInspector { showInspector = true }
+            revealInspectorThenRepost(.inspectorRunLastModule, object: nil)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .inspectorRunModule)) { note in
+            revealInspectorThenRepost(.inspectorRunModule, object: note.object)
         }
         .onChange(of: selectionState.documentURL) { _, newURL in
             if let newURL {
@@ -119,7 +128,11 @@ struct ContentView: View {
         }
         .task {
             recentDocumentStore.removeMissingDocuments()
+            await llmHealth.check()
         }
+        .onChange(of: llmProviderTypeRaw) { _, _ in llmHealth.scheduleCheck() }
+        .onChange(of: llmServerURL)       { _, _ in llmHealth.scheduleCheck() }
+        .onChange(of: llmModel)           { _, _ in llmHealth.scheduleCheck() }
         .sheet(item: Binding(
             get: { noteStore.draftNote },
             set: { noteStore.draftNote = $0 }
@@ -280,7 +293,8 @@ struct ContentView: View {
                         contextSentence: selectionState.contextSentence,
                         pdfFilename: selectionState.documentURL?.deletingPathExtension().lastPathComponent,
                         pageNumber: currentPageNumber,
-                        savedWordsStore: savedWordsStore
+                        savedWordsStore: savedWordsStore,
+                        circuitBreaker: circuitBreaker
                     )
                     .frame(width: inspectorWidth)
                 }
@@ -436,7 +450,6 @@ struct ContentView: View {
                 Button(action: closeDocument) {
                     Label("Home", systemImage: "house")
                 }
-                .keyboardShortcut("w", modifiers: [.command, .shift])
                 .help("Close document and return to Home (⇧⌘W)")
                 .accessibilityLabel("Return to Home")
             }
@@ -446,7 +459,6 @@ struct ContentView: View {
             Button { toggleSidebar() } label: {
                 Label("Toggle Sidebar", systemImage: "sidebar.left")
             }
-            .keyboardShortcut("s", modifiers: [.command, .option])
             .help("Toggle Sidebar (⌘⌥S)")
         }
 
@@ -465,7 +477,6 @@ struct ContentView: View {
             Button(action: openPDF) {
                 Label("Open PDF", systemImage: "folder.badge.plus")
             }
-            .keyboardShortcut("o", modifiers: [.command])
             .help("Open PDF (⌘O)")
 
             Button(action: openFindBar) {
@@ -534,7 +545,6 @@ struct ContentView: View {
                         : "arrow.up.left.and.arrow.down.right"
                 )
             }
-            .keyboardShortcut("d", modifiers: [.command, .shift])
             .help(focusMode ? "Exit Focus Mode (⇧⌘D)" : "Focus Mode — hide panels (⇧⌘D)")
             .disabled(selectionState.documentURL == nil)
         }
@@ -546,20 +556,15 @@ struct ContentView: View {
             .help("Reading & vocabulary stats")
         }
 
+        ToolbarItem(placement: .status) {
+            LLMStatusItem(health: llmHealth, circuitBreaker: circuitBreaker)
+        }
+
         ToolbarItem(placement: .automatic) {
             Button { toggleInspector() } label: {
                 Label("Toggle Inspector", systemImage: "sidebar.right")
             }
-            .keyboardShortcut("i", modifiers: [.command, .option])
             .help("Toggle Inspector (⌘⌥I)")
-        }
-
-        ToolbarItem(placement: .automatic) {
-            Button { focusInspectorAndRun() } label: { EmptyView() }
-                .keyboardShortcut("l", modifiers: [.command])
-                .help("Focus Inspector & Run Last Module (⌘L)")
-                .frame(width: 0, height: 0)
-                .disabled(selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
     }
 
@@ -686,8 +691,53 @@ struct ContentView: View {
     }
 
     private func focusInspectorAndRun() {
-        if !showInspector { showInspector = true }
-        NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
+        revealInspectorThenRepost(.inspectorRunLastModule, object: nil, forcePost: true)
+    }
+
+    private func runModule(_ module: ModuleType) {
+        revealInspectorThenRepost(.inspectorRunModule, object: module.rawValue, forcePost: true)
+    }
+
+    /// Guarantees the Inspector receives a run notification even when it is
+    /// hidden: unhide it first, then re-post on the next runloop turn so the
+    /// freshly mounted view's `onReceive` is already subscribed. Re-entry is
+    /// safe — once the panel is visible this only posts when `forcePost` is set.
+    private func revealInspectorThenRepost(_ name: Notification.Name, object: Any?, forcePost: Bool = false) {
+        if !showInspector {
+            showInspector = true
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: name, object: object)
+            }
+        } else if forcePost {
+            NotificationCenter.default.post(name: name, object: object)
+        }
+    }
+
+    // MARK: - Menu Bar Bridge
+
+    /// Snapshot of window state + actions published to the main menu
+    /// (`ReaderMenuCommands`) through FocusedValues.
+    private var readerCommands: ReaderCommands {
+        ReaderCommands(
+            hasDocument: selectionState.documentURL != nil,
+            hasSelection: !selectionState.selectedText
+                .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+            isSidebarVisible: showSidebar,
+            isInspectorVisible: showInspector,
+            focusMode: focusMode,
+            canGoToPreviousPage: pdfViewManager.canGoToPreviousPage,
+            canGoToNextPage: pdfViewManager.canGoToNextPage,
+            recentDocuments: recentDocumentStore.recentDocuments,
+            openDocument: { openDocument($0) },
+            closeDocument: { closeDocument() },
+            toggleSidebar: { toggleSidebar() },
+            toggleInspector: { toggleInspector() },
+            toggleFocusMode: { toggleFocusMode() },
+            goToPreviousPage: { pdfViewManager.goToPreviousPage() },
+            goToNextPage: { pdfViewManager.goToNextPage() },
+            runModule: { runModule($0) },
+            runLastModule: { focusInspectorAndRun() }
+        )
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {

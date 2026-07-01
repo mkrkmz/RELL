@@ -59,6 +59,15 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
 
     var id: String { rawValue }
 
+    /// The five always-visible modules, in grid and menu order.
+    static let primary: [ModuleType] = [.definitionEN, .meaningTR, .collocations, .examplesEN, .pronunciationEN]
+
+    /// The overflow set shown behind "more modules".
+    static let overflow: [ModuleType] = [.etymologyEN, .mnemonicEN, .synonymsEN, .wordFamilyEN, .usageNotesEN]
+
+    /// Canonical ordering for menus: primary first, then overflow.
+    static var menuOrder: [ModuleType] { primary + overflow }
+
     /// Static title — used in result panel header.
     var title: String {
         title(nativeLanguage: Language.storedNative)

@@ -57,6 +57,34 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                Toggle(isOn: $menuBarExtraEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Menu Bar Icon")
+                        Text("Look up words from the menu bar, even when no window is open.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                Toggle(isOn: $hotkeyEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Global Shortcut  ⌃⌥Space")
+                        Text("Open the Quick Lookup panel from any app.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                .onChange(of: hotkeyEnabled) { _, enabled in
+                    if enabled {
+                        GlobalHotKeyManager.shared.register()
+                    } else {
+                        GlobalHotKeyManager.shared.unregister()
+                    }
+                }
+            } header: {
+                Text("Quick Lookup")
+            }
+
+            Section {
                 Button("Show Welcome Tour Again") {
                     hasCompletedOnboarding = false
                 }
@@ -70,6 +98,8 @@ struct GeneralSettingsView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+    @AppStorage("menuBarExtraEnabled") private var menuBarExtraEnabled = true
+    @AppStorage(GlobalHotKeyManager.enabledKey) private var hotkeyEnabled = true
 
     // MARK: - Language Pair
 

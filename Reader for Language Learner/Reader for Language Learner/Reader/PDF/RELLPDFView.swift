@@ -17,6 +17,7 @@ final class RELLPDFView: PDFView {
     var onContextAddNote:   (() -> Void)?
     var onContextHighlight: ((HighlightColor) -> Void)?
     var onContextLookUp:    (() -> Void)?
+    var onContextAnalyze:   ((ModuleType) -> Void)?
     var onContextCopy:      (() -> Void)?
     var onContextSpeak:     (() -> Void)?
 
@@ -115,6 +116,28 @@ final class RELLPDFView: PDFView {
         lookUpItem.isEnabled = true
         menu.addItem(lookUpItem)
 
+        // ── Analyze With (module submenu) ──────────────────────────────
+        let analyzeItem = NSMenuItem(title: "Analyze With", action: nil, keyEquivalent: "")
+        let analyzeSubmenu = NSMenu()
+        analyzeSubmenu.autoenablesItems = false
+        for module in ModuleType.menuOrder {
+            let item = NSMenuItem(
+                title:         module.title,
+                action:        #selector(fireAnalyze(_:)),
+                keyEquivalent: ""
+            )
+            item.target            = self
+            item.isEnabled         = true
+            item.representedObject = module.rawValue
+            item.image             = NSImage(
+                systemSymbolName: module.iconName,
+                accessibilityDescription: module.title
+            )
+            analyzeSubmenu.addItem(item)
+        }
+        analyzeItem.submenu = analyzeSubmenu
+        menu.addItem(analyzeItem)
+
         menu.addItem(.separator())
 
         // ── Copy ───────────────────────────────────────────────────────
@@ -153,6 +176,12 @@ final class RELLPDFView: PDFView {
         guard let raw = sender.representedObject as? String,
               let color = HighlightColor(rawValue: raw) else { return }
         onContextHighlight?(color)
+    }
+
+    @objc private func fireAnalyze(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let module = ModuleType(rawValue: raw) else { return }
+        onContextAnalyze?(module)
     }
 
     /// Small filled-circle swatch for the color submenu items.

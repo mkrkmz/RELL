@@ -20,11 +20,9 @@ extension InspectorView {
 
             VStack(spacing: DS.Spacing.xs) {
                 HStack(spacing: DS.Spacing.xxs) {
-                    ForEach(Array(primaryModules.enumerated()), id: \.element) { index, module in
-                        moduleButton(
-                            for: module,
-                            shortcut: KeyEquivalent(Character(String(index + 1)))
-                        )
+                    // ⌘1-⌘9 shortcuts live in the Modules main menu now.
+                    ForEach(primaryModules, id: \.self) { module in
+                        moduleButton(for: module, shortcut: nil)
                     }
                 }
                 .padding(.horizontal, DS.Spacing.xxs)
@@ -32,8 +30,6 @@ extension InspectorView {
                 if showMoreModules {
                     HStack(spacing: DS.Spacing.xxs) {
                         ForEach(overflowModules, id: \.self) { module in
-                            // Shortcuts (⌘6-0) live on the hidden buttons below so
-                            // they keep working while this row is collapsed.
                             moduleButton(for: module, shortcut: nil)
                         }
                     }
@@ -44,7 +40,6 @@ extension InspectorView {
                 moreModulesToggle
             }
         }
-        .background(overflowShortcutButtons)
         .animation(DS.Animation.snappy, value: explainMode)
         .animation(DS.Animation.snappy, value: showMoreModules)
     }
@@ -110,24 +105,6 @@ extension InspectorView {
     private var overflowHasOutput: Bool {
         overflowModules.contains { module in
             !(viewModel.outputs[module] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-    }
-
-    /// Always-present invisible buttons that keep ⌘6-0 bound to the overflow
-    /// modules even when the disclosure row is collapsed.
-    private var overflowShortcutButtons: some View {
-        let keys: [Character] = ["6", "7", "8", "9", "0"]
-        return ZStack {
-            ForEach(Array(overflowModules.enumerated()), id: \.element) { index, module in
-                if index < keys.count {
-                    Button { toggleModule(module) } label: { Color.clear }
-                        .frame(width: 0, height: 0)
-                        .opacity(0)
-                        .keyboardShortcut(KeyEquivalent(keys[index]), modifiers: [.command])
-                        .disabled(!isModuleEnabled(module))
-                        .accessibilityHidden(true)
-                }
-            }
         }
     }
 

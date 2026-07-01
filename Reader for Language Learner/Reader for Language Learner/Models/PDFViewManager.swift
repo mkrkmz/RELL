@@ -59,6 +59,26 @@ final class PDFViewManager {
         pdfView?.go(to: page)
     }
 
+    var canGoToPreviousPage: Bool {
+        guard let currentPageIndex else { return false }
+        return currentPageIndex > 0
+    }
+
+    var canGoToNextPage: Bool {
+        guard let currentPageIndex else { return false }
+        return currentPageIndex < pageCount - 1
+    }
+
+    func goToPreviousPage() {
+        guard pdfView?.canGoToPreviousPage == true else { return }
+        pdfView?.goToPreviousPage(nil)
+    }
+
+    func goToNextPage() {
+        guard pdfView?.canGoToNextPage == true else { return }
+        pdfView?.goToNextPage(nil)
+    }
+
     func zoomIn() {
         pdfView?.zoomIn(nil)
         updateZoomLabel()

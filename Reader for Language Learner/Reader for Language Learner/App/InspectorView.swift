@@ -14,6 +14,8 @@ struct InspectorView: View {
     let pdfFilename: String?
     let pageNumber: Int?
     var savedWordsStore: SavedWordsStore
+    /// Owned by ContentView so the toolbar status item shares the same instance.
+    var circuitBreaker: CircuitBreaker
 
     // MARK: State
 
@@ -41,7 +43,6 @@ struct InspectorView: View {
     @AppStorage("autoRunEnabled") var autoRunEnabled: Bool = true
     @AppStorage("inspectorShowMoreModules") var showMoreModules: Bool = false
 
-    @State var circuitBreaker = CircuitBreaker()
     @Namespace var moduleNamespace
 
     @AppStorage(LLMConfiguration.providerTypeKey) var llmProviderTypeRaw: String = LLMConfiguration.defaultProviderType.rawValue
@@ -51,11 +52,13 @@ struct InspectorView: View {
     @AppStorage(LLMConfiguration.apiKeyKey)       var llmAPIKey: String    = ""
     @AppStorage(Language.nativeLanguageKey)    var nativeLanguageRaw: String = Language.defaultNative.rawValue
     @Environment(AnkiModulePreferences.self) var ankiPrefs
+    @Environment(\.openSettings) private var openSettings
+    @AppStorage("settingsSelectedTab") private var settingsSelectedTab = SettingsTab.general.rawValue
 
     var speechManager: SpeechManager { SpeechManager.shared }
 
-    let primaryModules:  [ModuleType] = [.definitionEN, .meaningTR, .collocations, .examplesEN, .pronunciationEN]
-    let overflowModules: [ModuleType] = [.etymologyEN, .mnemonicEN, .synonymsEN, .wordFamilyEN, .usageNotesEN]
+    let primaryModules:  [ModuleType] = ModuleType.primary
+    let overflowModules: [ModuleType] = ModuleType.overflow
 
     var nativeLanguage: Language {
         Language(rawValue: nativeLanguageRaw) ?? .turkish
@@ -96,6 +99,14 @@ struct InspectorView: View {
             }
         }
         .animation(DS.Animation.standard, value: hasSelection)
+        .onAppear {
+            // A fresh mount (inspector toggled back on) starts with empty
+            // @State — adopt the live selection so the panel isn't blank
+            // and menu-driven module runs can proceed.
+            displayedText = selectedText
+            let trimmed = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { refreshCache(term: trimmed) }
+        }
         .onExitCommand { activeModule = nil }
         .onChange(of: selectedText) { _, newText in
             speechManager.stop()
@@ -125,6 +136,18 @@ struct InspectorView: View {
         .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in
             guard hasSelection else { return }
             focusAndRunLast()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .inspectorRunModule)) { note in
+            guard let raw = note.object as? String,
+                  let module = ModuleType(rawValue: raw),
+                  hasSelection,
+                  module.isEnabled(mode: explainMode)
+            else { return }
+            activeModule = module
+            lastUsedModule = module
+            if (viewModel.outputs[module] ?? "").isEmpty {
+                Task { await runModule(module, forceRefresh: false) }
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .inspectorRecentTermSelected)) { note in
             guard let term = note.object as? String else { return }
@@ -256,6 +279,12 @@ struct InspectorView: View {
             Spacer()
             Button("Retry") {
                 circuitBreaker.reset()
+            }
+            .font(DS.Typography.caption)
+            .buttonStyle(.borderless)
+            Button("Settings…") {
+                settingsSelectedTab = SettingsTab.llm.rawValue
+                openSettings()
             }
             .font(DS.Typography.caption)
             .buttonStyle(.borderless)
@@ -535,4 +564,6 @@ struct PulsingDot: View {
 extension Notification.Name {
     static let inspectorRunLastModule    = Notification.Name("inspectorRunLastModule")
     static let inspectorRecentTermSelected = Notification.Name("inspectorRecentTermSelected")
+    /// Runs a specific module; `object` is the `ModuleType` raw value.
+    static let inspectorRunModule        = Notification.Name("inspectorRunModule")
 }

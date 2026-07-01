@@ -174,7 +174,12 @@ struct SidebarView: View {
                 }
                 .padding(.vertical, DS.Spacing.xs)
                 Divider()
-                PDFThumbnailSidebarView(pdfViewManager: pdfViewManager, thumbnailSize: thumbnailSize)
+                PDFThumbnailSidebarView(
+                    pdfViewManager: pdfViewManager,
+                    thumbnailSize: thumbnailSize,
+                    bookmarkStore: bookmarkStore,
+                    currentDocumentName: currentDocumentName
+                )
             }
         case .outline:
             PDFOutlineView(pdfViewManager: pdfViewManager)

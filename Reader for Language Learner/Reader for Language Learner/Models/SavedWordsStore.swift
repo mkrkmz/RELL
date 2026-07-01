@@ -36,6 +36,11 @@ enum ReviewRating: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class SavedWordsStore {
+    /// Process-wide instance shared by the main window and the Quick Lookup
+    /// surfaces. Temporary bridge — Sprint 3 moves ownership to the App scene
+    /// and injects via .environment.
+    static let shared = SavedWordsStore()
+
     struct ReviewActivityDay: Identifiable, Equatable {
         let date: Date
         let count: Int

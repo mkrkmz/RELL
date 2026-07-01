@@ -149,6 +149,11 @@ struct PDFKitView: NSViewRepresentable {
                 rellView.onContextLookUp    = {
                     NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
                 }
+                rellView.onContextAnalyze   = { module in
+                    // ContentView listens too and unhides the Inspector first
+                    // when it is collapsed.
+                    NotificationCenter.default.post(name: .inspectorRunModule, object: module.rawValue)
+                }
                 rellView.onContextCopy      = { [weak self] in self?.contextCopy() }
                 rellView.onContextSpeak     = { [weak self] in self?.contextSpeak() }
                 rellView.onHoverMove        = { [weak self] point in self?.handleHover(at: point) }
