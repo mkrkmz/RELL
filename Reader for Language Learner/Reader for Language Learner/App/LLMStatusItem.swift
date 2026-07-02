@@ -61,12 +61,12 @@ struct LLMStatusItem: View {
     }
 
     private var statusLabel: String {
-        if circuitBreaker.state == .open { return "Unreachable" }
+        if circuitBreaker.state == .open { return String(localized: "Unreachable") }
         switch health.status {
-        case .healthy:     return "Connected"
-        case .checking:    return "Checking…"
-        case .unreachable: return "Unreachable"
-        case .unknown:     return "Unknown"
+        case .healthy:     return String(localized: "Connected")
+        case .checking:    return String(localized: "Checking…")
+        case .unreachable: return String(localized: "Unreachable")
+        case .unknown:     return String(localized: "Unknown")
         }
     }
 

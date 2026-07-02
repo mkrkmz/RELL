@@ -95,6 +95,7 @@ final class RecentDocumentStore {
         }
         trim()
         save()
+        SpotlightIndexer.indexDocument(at: url)
     }
 
     func updateLastPage(for url: URL, pageIndex: Int, pageCount: Int? = nil) {
@@ -109,14 +110,18 @@ final class RecentDocumentStore {
     }
 
     func removeMissingDocuments() {
+        let missing = documents.filter { !FileManager.default.fileExists(atPath: $0.path) }
         documents.removeAll { !FileManager.default.fileExists(atPath: $0.path) }
         save()
+        missing.forEach { SpotlightIndexer.removeDocument(path: $0.path) }
     }
 
     /// Removes a single document from the library (the file itself is untouched).
     func remove(id: UUID) {
+        let removed = documents.filter { $0.id == id }
         documents.removeAll { $0.id == id }
         save()
+        removed.forEach { SpotlightIndexer.removeDocument(path: $0.path) }
     }
 
     private func trim() {

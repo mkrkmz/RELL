@@ -14,10 +14,6 @@ import os
 @MainActor
 @Observable
 final class QuickLookupService {
-    /// Shared instance so the hover dictionary, translation strip, and the
-    /// Quick Lookup surfaces reuse one LRU cache and one request gate.
-    static let shared = QuickLookupService()
-
 
     @ObservationIgnored private var definitionCache = LRUCache<String, String>(capacity: 60)
     @ObservationIgnored private var translationCache = LRUCache<String, String>(capacity: 40)

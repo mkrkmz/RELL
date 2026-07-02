@@ -36,11 +36,6 @@ enum ReviewRating: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class SavedWordsStore {
-    /// Process-wide instance shared by the main window and the Quick Lookup
-    /// surfaces. Temporary bridge — Sprint 3 moves ownership to the App scene
-    /// and injects via .environment.
-    static let shared = SavedWordsStore()
-
     struct ReviewActivityDay: Identifiable, Equatable {
         let date: Date
         let count: Int
@@ -85,27 +80,34 @@ final class SavedWordsStore {
         }
         words.insert(word, at: 0)
         save()
+        SpotlightIndexer.index(word)
     }
 
     func update(_ word: SavedWord) {
         guard let index = words.firstIndex(where: { $0.id == word.id }) else { return }
         words[index] = word
         save()
+        SpotlightIndexer.index(word)
     }
 
     func delete(_ word: SavedWord) {
         words.removeAll { $0.id == word.id }
         save()
+        SpotlightIndexer.removeWord(id: word.id)
     }
 
     func delete(at offsets: IndexSet) {
+        let removed = offsets.map { words[$0] }
         words.remove(atOffsets: offsets)
         save()
+        removed.forEach { SpotlightIndexer.removeWord(id: $0.id) }
     }
 
     func deleteAll() {
+        let removed = words
         words.removeAll()
         save()
+        removed.forEach { SpotlightIndexer.removeWord(id: $0.id) }
     }
 
     func isSaved(term: String, pdfFilename: String?, pageNumber: Int?) -> Bool {
@@ -117,12 +119,18 @@ final class SavedWordsStore {
     }
 
     func remove(term: String, pdfFilename: String?, pageNumber: Int?) {
+        let removed = words.filter {
+            $0.term.lowercased() == term.lowercased()
+                && $0.pdfFilename == pdfFilename
+                && $0.pageNumber == pageNumber
+        }
         words.removeAll {
             $0.term.lowercased() == term.lowercased()
                 && $0.pdfFilename == pdfFilename
                 && $0.pageNumber == pageNumber
         }
         save()
+        removed.forEach { SpotlightIndexer.removeWord(id: $0.id) }
     }
 
     func setMastery(_ level: MasteryLevel, for word: SavedWord) {

@@ -70,7 +70,7 @@ final class RELLPDFView: PDFView {
 
         // ── Save Word ──────────────────────────────────────────────────
         let saveItem = NSMenuItem(
-            title:         "Save \(preview)",
+            title:         String(localized: "Save \(preview)"),
             action:        #selector(fireSaveWord),
             keyEquivalent: ""
         )
@@ -79,7 +79,7 @@ final class RELLPDFView: PDFView {
         menu.addItem(saveItem)
 
         let noteItem = NSMenuItem(
-            title:         "Add Note",
+            title:         String(localized: "Add Note"),
             action:        #selector(fireAddNote),
             keyEquivalent: ""
         )
@@ -88,7 +88,7 @@ final class RELLPDFView: PDFView {
         menu.addItem(noteItem)
 
         // ── Highlight (color submenu) ──────────────────────────────────
-        let highlightItem = NSMenuItem(title: "Highlight", action: nil, keyEquivalent: "")
+        let highlightItem = NSMenuItem(title: String(localized: "Highlight"), action: nil, keyEquivalent: "")
         let highlightSubmenu = NSMenu()
         highlightSubmenu.autoenablesItems = false
         for color in HighlightColor.allCases {
@@ -108,7 +108,7 @@ final class RELLPDFView: PDFView {
 
         // ── Look Up ────────────────────────────────────────────────────
         let lookUpItem = NSMenuItem(
-            title:         "Look Up in Inspector",
+            title:         String(localized: "Look Up in Inspector"),
             action:        #selector(fireLookUp),
             keyEquivalent: ""
         )
@@ -117,7 +117,7 @@ final class RELLPDFView: PDFView {
         menu.addItem(lookUpItem)
 
         // ── Analyze With (module submenu) ──────────────────────────────
-        let analyzeItem = NSMenuItem(title: "Analyze With", action: nil, keyEquivalent: "")
+        let analyzeItem = NSMenuItem(title: String(localized: "Analyze With"), action: nil, keyEquivalent: "")
         let analyzeSubmenu = NSMenu()
         analyzeSubmenu.autoenablesItems = false
         for module in ModuleType.menuOrder {
@@ -142,7 +142,7 @@ final class RELLPDFView: PDFView {
 
         // ── Copy ───────────────────────────────────────────────────────
         let copyItem = NSMenuItem(
-            title:         "Copy",
+            title:         String(localized: "Copy"),
             action:        #selector(fireCopy),
             keyEquivalent: "c"
         )
@@ -153,7 +153,7 @@ final class RELLPDFView: PDFView {
 
         // ── Speak ──────────────────────────────────────────────────────
         let speakItem = NSMenuItem(
-            title:         "Speak",
+            title:         String(localized: "Speak"),
             action:        #selector(fireSpeak),
             keyEquivalent: ""
         )

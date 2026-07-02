@@ -21,14 +21,17 @@ final class RELLThumbnailView: PDFThumbnailView {
         else { return super.menu(for: event) }
 
         let index = document.index(for: page)
-        let label = page.label.map { "Page \($0)" } ?? "Page \(index + 1)"
+        let label = page.label.map { String(localized: "Page \($0)") }
+            ?? String(localized: "Page \(index + 1)")
 
         let menu = NSMenu()
         menu.autoenablesItems = false
 
         let bookmarked = isPageBookmarked?(index) == true
         let bookmarkItem = NSMenuItem(
-            title:         bookmarked ? "Remove Bookmark from \(label)" : "Bookmark \(label)",
+            title: bookmarked
+                ? String(localized: "Remove Bookmark from \(label)")
+                : String(localized: "Bookmark \(label)"),
             action:        #selector(fireToggleBookmark(_:)),
             keyEquivalent: ""
         )
@@ -38,7 +41,7 @@ final class RELLThumbnailView: PDFThumbnailView {
         menu.addItem(bookmarkItem)
 
         let copyItem = NSMenuItem(
-            title:         "Copy Text from \(label)",
+            title:         String(localized: "Copy Text from \(label)"),
             action:        #selector(fireCopyPageText(_:)),
             keyEquivalent: ""
         )
@@ -53,7 +56,8 @@ final class RELLThumbnailView: PDFThumbnailView {
     @objc private func fireToggleBookmark(_ sender: NSMenuItem) {
         guard let index = sender.representedObject as? Int,
               let page = pdfView?.document?.page(at: index) else { return }
-        let label = page.label.map { "Page \($0)" } ?? "Page \(index + 1)"
+        let label = page.label.map { String(localized: "Page \($0)") }
+            ?? String(localized: "Page \(index + 1)")
         onToggleBookmark?(index, label)
     }
 

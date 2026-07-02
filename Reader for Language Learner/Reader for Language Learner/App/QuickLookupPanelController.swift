@@ -25,9 +25,21 @@ final class QuickLookupPanelController: NSObject, NSWindowDelegate {
     static let shared = QuickLookupPanelController()
 
     private var panel: KeyableHUDPanel?
+    /// Owned here (not @State in the view) so Services can prefill a term.
+    private let panelModel = QuickLookupPanelModel()
+
+    // Injected from the App at launch: the panel sits outside the SwiftUI
+    // scene tree, so App-owned stores arrive here instead of via environment.
+    private var savedWordsStore: SavedWordsStore?
+    private var quickLookup: QuickLookupService?
 
     private override init() {
         super.init()
+    }
+
+    func configure(savedWordsStore: SavedWordsStore, quickLookup: QuickLookupService) {
+        self.savedWordsStore = savedWordsStore
+        self.quickLookup = quickLookup
     }
 
     func toggle() {
@@ -42,6 +54,15 @@ final class QuickLookupPanelController: NSObject, NSWindowDelegate {
         let panel = ensurePanel()
         position(panel)
         panel.makeKeyAndOrderFront(nil)
+    }
+
+    /// Services entry point: open the panel already looking up `term`.
+    func show(lookingUp term: String) {
+        show()
+        panelModel.query = term
+        if let quickLookup, let savedWordsStore {
+            panelModel.lookup(service: quickLookup, savedWords: savedWordsStore)
+        }
     }
 
     func hide() {
@@ -69,9 +90,14 @@ final class QuickLookupPanelController: NSObject, NSWindowDelegate {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.delegate = self
 
+        // Defensive fallback: configure() runs in App.init, before any show().
+        let savedWordsStore = self.savedWordsStore ?? SavedWordsStore()
+        let quickLookup = self.quickLookup ?? QuickLookupService()
+
         let host = NSHostingView(
             rootView: QuickLookupPanelView(
                 style: .hud,
+                model: panelModel,
                 onDismiss: { [weak self] in
                     Task { @MainActor in self?.hide() }
                 },
@@ -79,6 +105,8 @@ final class QuickLookupPanelController: NSObject, NSWindowDelegate {
                     Task { @MainActor in self?.resizeToFit(size) }
                 }
             )
+            .environment(savedWordsStore)
+            .environment(quickLookup)
         )
         panel.contentView = host
         panel.setContentSize(host.fittingSize)
@@ -120,5 +148,28 @@ final class QuickLookupPanelController: NSObject, NSWindowDelegate {
         Task { @MainActor in
             self.hide()
         }
+    }
+}
+
+// MARK: - Services Provider
+
+/// Handles the system Services menu: select text in any app →
+/// Services → "Look Up in RELL" → the Quick Lookup HUD opens with it.
+final class ServicesProvider: NSObject {
+    static let shared = ServicesProvider()
+
+    @objc func lookUpInRELL(
+        _ pasteboard: NSPasteboard,
+        userData: String?,
+        error: AutoreleasingUnsafeMutablePointer<NSString>
+    ) {
+        guard let raw = pasteboard.string(forType: .string)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              !raw.isEmpty
+        else { return }
+
+        // A service can deliver arbitrarily long selections — cap sanely.
+        let term = String(raw.prefix(200))
+        QuickLookupPanelController.shared.show(lookingUp: term)
     }
 }

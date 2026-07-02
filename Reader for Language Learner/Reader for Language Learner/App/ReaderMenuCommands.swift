@@ -11,6 +11,7 @@ import SwiftUI
 
 struct ReaderMenuCommands: Commands {
     @FocusedValue(\.readerCommands) private var reader
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
         // ── File ──────────────────────────────────────────────────────
@@ -61,6 +62,11 @@ struct ReaderMenuCommands: Commands {
             Button("Next Page") { reader?.goToNextPage() }
                 .keyboardShortcut(.rightArrow, modifiers: [.command, .option])
                 .disabled(reader?.canGoToNextPage != true)
+
+            Divider()
+
+            Button("Vocabulary Review") { openWindow(id: "review") }
+                .keyboardShortcut("v", modifiers: [.command, .option])
         }
 
         // ── Modules ───────────────────────────────────────────────────
@@ -96,7 +102,9 @@ struct ReaderMenuCommands: Commands {
                     .disabled(true)
             } else {
                 ForEach(recents.prefix(12)) { document in
-                    Button(document.filename) { reader?.openDocument(document.url) }
+                    // openWindow(value:) focuses the document if it is
+                    // already open, otherwise opens a new window/tab.
+                    Button(document.filename) { openWindow(value: document.url) }
                 }
             }
         }

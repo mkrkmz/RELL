@@ -26,6 +26,21 @@ enum SidebarTab: String, CaseIterable, Identifiable {
 
     /// All four base symbols have a matching `.fill` variant.
     var selectedIconName: String { iconName + ".fill" }
+
+    /// User-facing tab title (raw values stay English — they key persistence).
+    var localizedTitle: String {
+        switch self {
+        case .thumbnails:  return String(localized: "Pages")
+        case .outline:     return String(localized: "Contents")
+        case .annotations: return String(localized: "Annotations")
+        case .words:       return String(localized: "Words")
+        }
+    }
+}
+
+extension Notification.Name {
+    /// Posted from a Spotlight deep link; object is the SavedWord UUID.
+    static let revealSavedWordCommand = Notification.Name("revealSavedWordCommand")
 }
 
 // MARK: - SidebarView
@@ -51,7 +66,13 @@ struct SidebarView: View {
             Divider()
             tabContent
         }
-        .background(VisualEffectView(material: .sidebar, blendingMode: .behindWindow))
+        // No explicit material: the NavigationSplitView sidebar column
+        // already provides the standard sidebar background.
+        .onReceive(NotificationCenter.default.publisher(for: .revealSavedWordCommand)) { _ in
+            // Spotlight deep link: the word list handles selection; this
+            // just makes sure the Words tab is frontmost.
+            withAnimation(DS.Animation.springFast) { selectedTab = .words }
+        }
     }
 
     // MARK: - Icon Tab Bar
@@ -94,7 +115,7 @@ struct SidebarView: View {
                     }
                 }
 
-                Text(tab.rawValue)
+                Text(tab.localizedTitle)
                     .font(.system(size: 9, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? DS.Color.accent : DS.Color.textTertiary)
                     .lineLimit(1)
@@ -111,9 +132,10 @@ struct SidebarView: View {
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(tab.rawValue)
+        .help(tab.localizedTitle)
+        .accessibilityLabel(tab.localizedTitle)
         .accessibilityValue(accessibilityValue(isSelected: isSelected, badgeCount: badgeCount, tab: tab))
-        .accessibilityHint("Switch to \(tab.rawValue) tab")
+        .accessibilityHint(String(localized: "Switch to \(tab.localizedTitle) tab"))
     }
 
     private func badgeCount(for tab: SidebarTab) -> Int {

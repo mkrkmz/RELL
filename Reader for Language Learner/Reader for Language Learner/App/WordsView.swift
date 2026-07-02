@@ -53,6 +53,8 @@ struct WordsView: View {
 
     private var reviewLabel: String {
         let due = store.pendingReviewCount
-        return due > 0 ? "Review (\(due))" : "Review"
+        return due > 0
+            ? String(localized: "Review (\(due))")
+            : String(localized: "Review")
     }
 }

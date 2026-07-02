@@ -4,27 +4,34 @@
 //
 
 import AppKit
+import CoreSpotlight
 import PDFKit
 import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
+    /// The window's presented value (WindowGroup for: URL.self).
+    /// nil = dashboard window; a URL = that document's window.
+    @Binding var documentURL: URL?
+
+    // Per-window state — every window gets its own document and viewer.
     @State private var selectionState   = SelectionState()
     @State private var searchManager    = PDFSearchManager()
     @State private var pdfViewManager   = PDFViewManager()
-    @State private var savedWordsStore  = SavedWordsStore.shared
-    @State private var bookmarkStore    = PDFBookmarkStore()
-    @State private var noteStore        = PDFNoteStore()
-    @State private var highlightStore   = PDFHighlightStore()
-    @State private var sessionStore     = ReadingSessionStore()
-    @State private var recentDocumentStore = RecentDocumentStore()
-    @State private var coverStore       = DocumentCoverStore()
-    @State private var quickLookup      = QuickLookupService.shared
-    @State private var ankiPrefs        = AnkiModulePreferences()
     @State private var circuitBreaker   = CircuitBreaker()
     @State private var llmHealth        = LLMHealthMonitor()
 
-    @State private var showSidebar   = true
+    // Shared stores — owned by the App scene, injected via environment.
+    @Environment(SavedWordsStore.self)     private var savedWordsStore
+    @Environment(QuickLookupService.self)  private var quickLookup
+    @Environment(PDFBookmarkStore.self)    private var bookmarkStore
+    @Environment(PDFNoteStore.self)        private var noteStore
+    @Environment(PDFHighlightStore.self)   private var highlightStore
+    @Environment(ReadingSessionStore.self) private var sessionStore
+    @Environment(RecentDocumentStore.self) private var recentDocumentStore
+    @Environment(DocumentCoverStore.self)  private var coverStore
+
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showInspector = true
     @State private var isDropTargeted = false
     @State private var showWorkspaceReview = false
@@ -36,8 +43,10 @@ struct ContentView: View {
     @State private var preFocusSidebar = true
     @State private var preFocusInspector = true
 
-    @AppStorage("sidebarWidth")   private var sidebarWidth:   Double = DS.Layout.sidebarDefault
-    @AppStorage("inspectorWidth") private var inspectorWidth: Double = DS.Layout.inspectorDefault
+    /// Column widths are managed (and persisted) by NavigationSplitView /
+    /// .inspector themselves; only visibility is app state.
+    private var showSidebar: Bool { columnVisibility != .detailOnly }
+
     @AppStorage("appTheme")       private var appThemeRaw:    String = AppTheme.system.rawValue
     @AppStorage("pageTheme")      private var pageThemeRaw:   String = PageTheme.original.rawValue
     @AppStorage("readingPositions") private var readingPositionsData: Data = Data()
@@ -51,7 +60,14 @@ struct ContentView: View {
     /// Sentence the user dismissed; suppresses the strip until the selection changes.
     @State private var dismissedTranslationSentence: String = ""
 
-    init() {
+    /// This view's NSWindow — used for tab preference and key-window
+    /// session tracking in the multi-window world.
+    @State private var hostWindow: NSWindow?
+
+    @Environment(\.openWindow) private var openWindow
+
+    init(documentURL: Binding<URL?>) {
+        self._documentURL = documentURL
         // Users with existing reading history predate the first-run flow —
         // mark it complete before the first render so the sheet never flashes.
         let defaults = UserDefaults.standard
@@ -68,11 +84,11 @@ struct ContentView: View {
     // MARK: - Body
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if selectionState.documentURL != nil {
-                    readerLayout
-                } else {
+        Group {
+            if selectionState.documentURL != nil {
+                readerSplitView
+            } else {
+                NavigationStack {
                     EmptyStateView(
                         onOpenPDF: openPDF,
                         recentDocuments: recentDocumentStore.recentDocuments,
@@ -87,17 +103,13 @@ struct ContentView: View {
                         coverStore: coverStore,
                         sessionStore: sessionStore
                     )
-                        .onDrop(of: [.pdf], isTargeted: $isDropTargeted, perform: handleDrop)
-                        .overlay { if isDropTargeted { dropOverlay } }
+                    .onDrop(of: [.pdf], isTargeted: $isDropTargeted, perform: handleDrop)
+                    .overlay { if isDropTargeted { dropOverlay } }
+                    .toolbar { toolbarContent }
+                    .navigationTitle(windowTitle)
                 }
             }
-            .animation(DS.Animation.standard, value: showSidebar)
-            .animation(DS.Animation.standard, value: showInspector)
-            .toolbar { toolbarContent }
-            .navigationTitle(windowTitle)
-            .onExitCommand { closeFindBar() }
         }
-        .environment(ankiPrefs)
         .focusedSceneValue(\.readerCommands, readerCommands)
         .frame(minWidth: DS.Layout.windowMin.width, minHeight: DS.Layout.windowMin.height)
         .preferredColorScheme(appTheme.colorScheme)
@@ -107,24 +119,75 @@ struct ContentView: View {
             perform: handleDrop
         )
         .onReceive(NotificationCenter.default.publisher(for: .openPDFCommand)) { _ in openPDF() }
+        .onReceive(NotificationCenter.default.publisher(for: .openReviewWindowCommand)) { _ in
+            openWindow(id: "review")
+        }
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                  let target = SpotlightIndexer.target(from: identifier)
+            else { return }
+            switch target {
+            case .document(let url):
+                openDocument(url)
+            case .word(let id):
+                // Reveal the card: Words tab in the sidebar + detail sheet.
+                columnVisibility = .all
+                NotificationCenter.default.post(name: .revealSavedWordCommand, object: id)
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in
             revealInspectorThenRepost(.inspectorRunLastModule, object: nil)
         }
         .onReceive(NotificationCenter.default.publisher(for: .inspectorRunModule)) { note in
             revealInspectorThenRepost(.inspectorRunModule, object: note.object)
         }
-        .onChange(of: selectionState.documentURL) { _, newURL in
+        .onChange(of: selectionState.documentURL) { oldURL, newURL in
             if let newURL {
                 recentDocumentStore.registerOpen(url: newURL)
             }
+            // Multi-window session rule: the store tracks one active session;
+            // only touch it when it belongs to (or should belong to) this window.
             if let filename = newURL?.lastPathComponent {
-                sessionStore.startSession(for: filename)
-            } else {
+                if sessionStore.activeSession?.pdfFilename != filename {
+                    sessionStore.startSession(for: filename)
+                }
+            } else if let old = oldURL?.lastPathComponent,
+                      sessionStore.activeSession?.pdfFilename == old {
                 sessionStore.endActiveSession()
             }
         }
+        .onChange(of: documentURL) { _, newValue in
+            // Window value changed from outside (restoration, openWindow) —
+            // adopt it as this window's document.
+            if selectionState.documentURL != newValue {
+                selectionState.documentURL = newValue
+                closeFindBar()
+            }
+        }
+        .onAppear {
+            if let documentURL, selectionState.documentURL != documentURL {
+                selectionState.documentURL = documentURL
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
+            // Active window wins: focusing this window resumes its session.
+            guard let window = note.object as? NSWindow, window === hostWindow,
+                  let filename = selectionState.documentURL?.lastPathComponent,
+                  sessionStore.activeSession?.pdfFilename != filename
+            else { return }
+            sessionStore.startSession(for: filename)
+        }
+        .background(WindowAccessor { window in
+            hostWindow = window
+            // Additional documents open as native tabs by default; users
+            // can still drag a tab out into its own window.
+            window.tabbingMode = .preferred
+        })
         .onDisappear {
-            sessionStore.endActiveSession()
+            if let filename = selectionState.documentURL?.lastPathComponent,
+               sessionStore.activeSession?.pdfFilename == filename {
+                sessionStore.endActiveSession()
+            }
         }
         .task {
             recentDocumentStore.removeMissingDocuments()
@@ -182,40 +245,50 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Reader Layout (3-panel)
+    // MARK: - Reader Layout (3-panel, native)
 
-    private var readerLayout: some View {
-        GeometryReader { proxy in
-            let totalWidth       = proxy.size.width
-            let sidebarOccupied  = showSidebar   ? sidebarWidth   + 7 : 0
-            let inspectorOccupied = showInspector ? inspectorWidth + 7 : 0
-            let sidebarMax  = max(DS.Layout.sidebarMin,   totalWidth - inspectorOccupied - DS.Layout.pdfMin)
-            let inspectorMax = max(DS.Layout.inspectorMin, totalWidth - sidebarOccupied   - DS.Layout.pdfMin)
-
-            HStack(spacing: 0) {
-                // ── Sidebar ──────────────────────────────────────────────────
-                if showSidebar {
-                    SidebarView(
-                        pdfViewManager:      pdfViewManager,
-                        savedWordsStore:     savedWordsStore,
-                        bookmarkStore:       bookmarkStore,
-                        noteStore:           noteStore,
-                        highlightStore:      highlightStore,
-                        currentDocumentName: currentDocumentName
+    private var readerSplitView: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            SidebarView(
+                pdfViewManager:      pdfViewManager,
+                savedWordsStore:     savedWordsStore,
+                bookmarkStore:       bookmarkStore,
+                noteStore:           noteStore,
+                highlightStore:      highlightStore,
+                currentDocumentName: currentDocumentName
+            )
+            .navigationSplitViewColumnWidth(
+                min: DS.Layout.sidebarMin,
+                ideal: DS.Layout.sidebarDefault,
+                max: 420
+            )
+        } detail: {
+            pdfColumn
+                .inspector(isPresented: $showInspector) {
+                    InspectorView(
+                        selectedText: selectionState.selectedText,
+                        contextSentence: selectionState.contextSentence,
+                        pdfFilename: selectionState.documentURL?.deletingPathExtension().lastPathComponent,
+                        pageNumber: currentPageNumber,
+                        savedWordsStore: savedWordsStore,
+                        circuitBreaker: circuitBreaker
                     )
-                    .frame(width: sidebarWidth)
-
-                    PanelDivider(
-                        panelWidth: $sidebarWidth,
-                        minWidth: DS.Layout.sidebarMin,
-                        maxWidth: sidebarMax,
-                        panelOnLeadingSide: true,
-                        defaultWidth: DS.Layout.sidebarDefault
+                    .inspectorColumnWidth(
+                        min: DS.Layout.inspectorMin,
+                        ideal: DS.Layout.inspectorDefault,
+                        max: 640
                     )
                 }
+                .toolbar { toolbarContent }
+                .navigationTitle(windowTitle)
+                .onExitCommand { closeFindBar() }
+        }
+        .navigationSplitViewStyle(.balanced)
+    }
 
-                // ── PDF Viewer ────────────────────────────────────────────────
-                VStack(spacing: DS.Spacing.sm) {
+    // ── PDF Viewer column ─────────────────────────────────────────────
+    private var pdfColumn: some View {
+        VStack(spacing: DS.Spacing.sm) {
                     if searchManager.isFindBarVisible {
                         FindBarView(searchManager: searchManager, onClose: closeFindBar)
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -273,33 +346,11 @@ struct ContentView: View {
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
                 }
-                .animation(DS.Animation.standard, value: translatableSentence)
-                .padding(.top, DS.Spacing.sm)
-                .padding(.horizontal, DS.Spacing.sm)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(nsColor: pageTheme.backgroundColor))
-
-                // ── Inspector ─────────────────────────────────────────────────
-                if showInspector {
-                    PanelDivider(
-                        panelWidth: $inspectorWidth,
-                        minWidth: DS.Layout.inspectorMin,
-                        maxWidth: inspectorMax,
-                        panelOnLeadingSide: false,
-                        defaultWidth: DS.Layout.inspectorDefault
-                    )
-                    InspectorView(
-                        selectedText: selectionState.selectedText,
-                        contextSentence: selectionState.contextSentence,
-                        pdfFilename: selectionState.documentURL?.deletingPathExtension().lastPathComponent,
-                        pageNumber: currentPageNumber,
-                        savedWordsStore: savedWordsStore,
-                        circuitBreaker: circuitBreaker
-                    )
-                    .frame(width: inspectorWidth)
-                }
-            }
-        }
+        .animation(DS.Animation.standard, value: translatableSentence)
+        .padding(.top, DS.Spacing.sm)
+        .padding(.horizontal, DS.Spacing.sm)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(nsColor: pageTheme.backgroundColor))
     }
 
     private var currentPageNumber: Int? {
@@ -368,25 +419,25 @@ struct ContentView: View {
     }
 
     private var pageStatusText: String {
-        guard pdfViewManager.pageCount > 0 else { return "PDF ready" }
+        guard pdfViewManager.pageCount > 0 else { return String(localized: "PDF ready") }
         if let currentPageNumber {
-            return "Page \(currentPageNumber) / \(pdfViewManager.pageCount)"
+            return String(localized: "Page \(currentPageNumber) / \(pdfViewManager.pageCount)")
         }
-        return "\(pdfViewManager.pageCount) pages"
+        return String(localized: "\(pdfViewManager.pageCount) pages")
     }
 
     private var selectionSummaryText: String {
         let trimmedSelection = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedSelection.isEmpty else { return "Select text to analyze" }
+        guard !trimmedSelection.isEmpty else { return String(localized: "Select text to analyze") }
 
         let wordCount = trimmedSelection.split(whereSeparator: \.isWhitespace).count
         if wordCount <= 1 {
-            return "1 word selected"
+            return String(localized: "1 word selected")
         }
         if wordCount <= 8 {
-            return "\(wordCount) words selected"
+            return String(localized: "\(wordCount) words selected")
         }
-        return "Sentence selection ready"
+        return String(localized: "Sentence selection ready")
     }
 
     private var currentNoteCount: Int {
@@ -455,12 +506,7 @@ struct ContentView: View {
             }
         }
 
-        ToolbarItem(placement: .navigation) {
-            Button { toggleSidebar() } label: {
-                Label("Toggle Sidebar", systemImage: "sidebar.left")
-            }
-            .help("Toggle Sidebar (⌘⌥S)")
-        }
+        // NavigationSplitView supplies the system sidebar toggle.
 
         ToolbarItem(placement: .navigation) {
             if selectionState.documentURL != nil {
@@ -576,6 +622,7 @@ struct ContentView: View {
                     .contentShape(Rectangle())
             }
             .help("Zoom Out (⌘-)")
+            .accessibilityLabel(Text("Zoom Out"))
             .keyboardShortcut("-", modifiers: [.command])
 
             Divider().frame(height: 16)
@@ -594,6 +641,7 @@ struct ContentView: View {
                     .contentShape(Rectangle())
             }
             .help("Zoom In (⌘+)")
+            .accessibilityLabel(Text("Zoom In"))
             .keyboardShortcut("+", modifiers: [.command])
         }
         .buttonStyle(.borderless)
@@ -634,14 +682,23 @@ struct ContentView: View {
     }
 
     private func openDocument(_ url: URL) {
-        selectionState.documentURL = url
-        closeFindBar()
+        if selectionState.documentURL == nil || selectionState.documentURL == url {
+            // Dashboard (or same document): this window adopts the document.
+            documentURL = url
+            selectionState.documentURL = url
+            closeFindBar()
+        } else {
+            // Another document is already on screen — open side by side
+            // (a native tab by default). openWindow dedupes by URL.
+            openWindow(value: url)
+        }
     }
 
     /// Closes the current document and returns to the Home dashboard.
     /// Session end and last-page persistence are handled by the
     /// `onChange(of: selectionState.documentURL)` / page-change observers.
     private func closeDocument() {
+        documentURL = nil
         selectionState.documentURL = nil
         selectionState.selectedText = ""
         selectionState.contextSentence = nil
@@ -656,7 +713,10 @@ struct ContentView: View {
         searchManager.closeFindBar()
     }
 
-    private func toggleSidebar()   { showSidebar.toggle() }
+    private func toggleSidebar() {
+        columnVisibility = showSidebar ? .detailOnly : .all
+    }
+
     private func toggleInspector() { showInspector.toggle() }
 
     /// Enters focus mode by hiding both side panels, remembering their prior
@@ -664,13 +724,13 @@ struct ContentView: View {
     private func toggleFocusMode() {
         if focusMode {
             focusMode = false
-            showSidebar = preFocusSidebar
+            columnVisibility = preFocusSidebar ? .all : .detailOnly
             showInspector = preFocusInspector
         } else {
             preFocusSidebar = showSidebar
             preFocusInspector = showInspector
             focusMode = true
-            showSidebar = false
+            columnVisibility = .detailOnly
             showInspector = false
         }
     }
@@ -778,5 +838,27 @@ struct ContentView: View {
 
     private func decodedPositions() -> [String: Int] {
         (try? JSONDecoder().decode([String: Int].self, from: readingPositionsData)) ?? [:]
+    }
+}
+
+// MARK: - Window Accessor
+
+/// Surfaces the hosting NSWindow to SwiftUI — needed for tabbing preference
+/// and key-window tracking, which have no SwiftUI equivalents.
+private struct WindowAccessor: NSViewRepresentable {
+    var onWindow: (NSWindow) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            if let window = view.window { onWindow(window) }
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async {
+            if let window = nsView.window { onWindow(window) }
+        }
     }
 }

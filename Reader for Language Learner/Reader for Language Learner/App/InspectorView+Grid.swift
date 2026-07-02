@@ -177,6 +177,7 @@ extension InspectorView {
         .if(shortcut != nil) { view in
             view.keyboardShortcut(shortcut!, modifiers: [.command])
         }
+        .help(module.title)
         .disabled(!isEnabled)
         .accessibilityLabel(module.shortTitle)
         .accessibilityHint(isActive ? "Active module, tap to deselect" : "Tap to run \(module.shortTitle) analysis")

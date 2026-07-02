@@ -124,6 +124,16 @@ struct SavedWordsListView: View {
             }
         }
         .animation(DS.Animation.standard, value: store.saveError)
+        .onReceive(NotificationCenter.default.publisher(for: .revealSavedWordCommand)) { note in
+            guard let id = note.object as? UUID,
+                  let word = store.words.first(where: { $0.id == id })
+            else { return }
+            // Clear narrowing filters so the revealed card is in the list.
+            searchText = ""
+            selectedFilter = .all
+            selectedTag = nil
+            selectedWord = word
+        }
         .sheet(item: $selectedWord) { word in
             SavedWordDetailSheet(word: word, store: store)
         }
@@ -173,74 +183,94 @@ struct SavedWordsListView: View {
 
     // MARK: - Filter Bar
 
+    /// Controls must compress with the sidebar: fixed picker widths used to
+    /// force this row wider than the panel, clipping the whole list. Pickers
+    /// now have flexible frames and the count wraps to its own line when the
+    /// single-row layout doesn't fit.
     private var filterBar: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            // Sort picker
-            Picker("", selection: Binding(
-                get: { selectedFilter },
-                set: { selectedFilter = $0 }
-            )) {
-                ForEach(availableFilters) { filter in
-                    Text(filter.rawValue).tag(filter)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.mini)
-            .frame(width: 110)
-
-            Picker("", selection: Binding(
-                get: { sortOrder },
-                set: { sortRaw = $0.rawValue }
-            )) {
-                ForEach(SavedWordsSortOrder.allCases) { o in
-                    Text(o.rawValue).tag(o)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.mini)
-            .frame(width: 84)
-
-            if !store.allTags.isEmpty {
-                Menu {
-                    Button {
-                        selectedTag = nil
-                    } label: {
-                        Label("All decks", systemImage: selectedTag == nil ? "checkmark" : "")
-                    }
-                    Divider()
-                    ForEach(store.allTags, id: \.self) { tag in
-                        Button {
-                            selectedTag = tag
-                        } label: {
-                            Label(
-                                "\(tag) (\(store.tagCount(tag)))",
-                                systemImage: selectedTag?.lowercased() == tag.lowercased() ? "checkmark" : ""
-                            )
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 2) {
-                        Image(systemName: "tag")
-                        Text(selectedTag ?? "Deck")
-                            .lineLimit(1)
-                    }
-                }
-                .menuStyle(.borderlessButton)
-                .controlSize(.mini)
-                .fixedSize()
-                .help("Filter by deck (tag)")
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: DS.Spacing.xs) {
+                filterControls
+                Spacer(minLength: DS.Spacing.xs)
+                countText
             }
 
-            Spacer()
-
-            // Count label
-            Text(countLabel)
-                .font(DS.Typography.caption2)
-                .foregroundStyle(DS.Color.textTertiary)
-                .animation(DS.Animation.standard, value: filteredWords.count)
+            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                HStack(spacing: DS.Spacing.xs) {
+                    filterControls
+                    Spacer(minLength: 0)
+                }
+                countText
+            }
         }
         .padding(.horizontal, DS.Spacing.sm)
         .padding(.vertical, DS.Spacing.xs)
+    }
+
+    @ViewBuilder
+    private var filterControls: some View {
+        Picker("", selection: Binding(
+            get: { selectedFilter },
+            set: { selectedFilter = $0 }
+        )) {
+            ForEach(availableFilters) { filter in
+                Text(filter.rawValue).tag(filter)
+            }
+        }
+        .labelsHidden()
+        .controlSize(.mini)
+        .frame(minWidth: 76, maxWidth: 120)
+
+        Picker("", selection: Binding(
+            get: { sortOrder },
+            set: { sortRaw = $0.rawValue }
+        )) {
+            ForEach(SavedWordsSortOrder.allCases) { o in
+                Text(o.rawValue).tag(o)
+            }
+        }
+        .labelsHidden()
+        .controlSize(.mini)
+        .frame(minWidth: 60, maxWidth: 90)
+
+        if !store.allTags.isEmpty {
+            Menu {
+                Button {
+                    selectedTag = nil
+                } label: {
+                    Label("All decks", systemImage: selectedTag == nil ? "checkmark" : "")
+                }
+                Divider()
+                ForEach(store.allTags, id: \.self) { tag in
+                    Button {
+                        selectedTag = tag
+                    } label: {
+                        Label(
+                            "\(tag) (\(store.tagCount(tag)))",
+                            systemImage: selectedTag?.lowercased() == tag.lowercased() ? "checkmark" : ""
+                        )
+                    }
+                }
+            } label: {
+                HStack(spacing: 2) {
+                    Image(systemName: "tag")
+                    Text(selectedTag ?? "Deck")
+                        .lineLimit(1)
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .controlSize(.mini)
+            .frame(maxWidth: 96)
+            .help("Filter by deck (tag)")
+        }
+    }
+
+    private var countText: some View {
+        Text(countLabel)
+            .font(DS.Typography.caption2)
+            .foregroundStyle(DS.Color.textTertiary)
+            .lineLimit(1)
+            .animation(DS.Animation.standard, value: filteredWords.count)
     }
 
     private var countLabel: String {

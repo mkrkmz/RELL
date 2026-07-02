@@ -32,7 +32,7 @@ final class QuickLookupPanelModel {
         query.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    func lookup() {
+    func lookup(service: QuickLookupService, savedWords: SavedWordsStore) {
         let term = trimmedQuery
         guard !term.isEmpty else { return }
 
@@ -40,10 +40,7 @@ final class QuickLookupPanelModel {
         lookedUpTerm = term
 
         // Cache-first: saved words and the LRU answer instantly.
-        if let cached = QuickLookupService.shared.cachedDefinition(
-            for: term,
-            savedWordsStore: SavedWordsStore.shared
-        ) {
+        if let cached = service.cachedDefinition(for: term, savedWordsStore: savedWords) {
             phase = .loaded(cached)
             return
         }
@@ -51,10 +48,10 @@ final class QuickLookupPanelModel {
         phase = .loading
         lookupTask = Task { [weak self] in
             do {
-                let definition = try await QuickLookupService.shared.definition(for: term)
+                let definition = try await service.definition(for: term)
                 guard !Task.isCancelled, let self, self.lookedUpTerm == term else { return }
                 if definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    self.phase = .failed("The model returned an empty answer. Try again or check the model in Settings.")
+                    self.phase = .failed(String(localized: "The model returned an empty answer. Try again or check the model in Settings."))
                 } else {
                     self.phase = .loaded(definition)
                 }
@@ -65,9 +62,9 @@ final class QuickLookupPanelModel {
         }
     }
 
-    func saveWord() {
+    func saveWord(to store: SavedWordsStore) {
         guard case .loaded(let definition) = phase, !lookedUpTerm.isEmpty else { return }
-        SavedWordsStore.shared.add(SavedWord(
+        store.add(SavedWord(
             term: lookedUpTerm,
             sentence: "",
             pdfFilename: nil,
@@ -78,10 +75,10 @@ final class QuickLookupPanelModel {
         ))
     }
 
-    var isCurrentTermSaved: Bool {
+    func isCurrentTermSaved(in store: SavedWordsStore) -> Bool {
         guard !lookedUpTerm.isEmpty else { return false }
         let key = lookedUpTerm.lowercased()
-        return SavedWordsStore.shared.words.contains { $0.term.lowercased() == key }
+        return store.words.contains { $0.term.lowercased() == key }
     }
 
     func reset() {
@@ -103,14 +100,31 @@ enum QuickLookupPanelStyle {
 }
 
 struct QuickLookupPanelView: View {
-    var style: QuickLookupPanelStyle = .hud
+    let style: QuickLookupPanelStyle
     /// Closes the hosting surface (HUD panel or menu bar window).
-    var onDismiss: (() -> Void)? = nil
+    let onDismiss: (() -> Void)?
     /// Reports content-size changes so the HUD panel can grow with results.
-    var onSizeChange: ((CGSize) -> Void)? = nil
+    let onSizeChange: ((CGSize) -> Void)?
 
-    @State private var model = QuickLookupPanelModel()
+    @State private var model: QuickLookupPanelModel
     @FocusState private var searchFocused: Bool
+
+    @Environment(QuickLookupService.self) private var quickLookup
+    @Environment(SavedWordsStore.self) private var savedWordsStore
+
+    /// `model` may be supplied by the HUD controller so external entry
+    /// points (Services menu) can prefill and trigger a lookup.
+    init(
+        style: QuickLookupPanelStyle = .hud,
+        model: QuickLookupPanelModel? = nil,
+        onDismiss: (() -> Void)? = nil,
+        onSizeChange: ((CGSize) -> Void)? = nil
+    ) {
+        self.style = style
+        self.onDismiss = onDismiss
+        self.onSizeChange = onSizeChange
+        self._model = State(initialValue: model ?? QuickLookupPanelModel())
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -150,7 +164,7 @@ struct QuickLookupPanelView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 17))
                 .focused($searchFocused)
-                .onSubmit { model.lookup() }
+                .onSubmit { model.lookup(service: quickLookup, savedWords: savedWordsStore) }
 
             if !model.query.isEmpty {
                 Button {
@@ -210,12 +224,12 @@ struct QuickLookupPanelView: View {
 
                 Spacer()
 
-                if model.isCurrentTermSaved {
+                if model.isCurrentTermSaved(in: savedWordsStore) {
                     Label("Saved", systemImage: "checkmark.circle.fill")
                         .font(DS.Typography.caption)
                         .foregroundStyle(DS.Color.success)
                 } else {
-                    Button("Save Word") { model.saveWord() }
+                    Button("Save Word") { model.saveWord(to: savedWordsStore) }
                         .controlSize(.small)
                         .keyboardShortcut("s", modifiers: [.command])
                         .help("Save to vocabulary (⌘S)")
@@ -235,7 +249,7 @@ struct QuickLookupPanelView: View {
                 .foregroundStyle(DS.Color.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
-            Button("Retry") { model.lookup() }
+            Button("Retry") { model.lookup(service: quickLookup, savedWords: savedWordsStore) }
                 .controlSize(.small)
         }
         .padding(.horizontal, DS.Spacing.md)
