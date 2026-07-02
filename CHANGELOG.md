@@ -4,6 +4,58 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.8.0] - 2026-07-03
+
+The structural release: RELL becomes a true multi-window Mac app with native
+panels, speaks Turkish, and plugs into Spotlight, Shortcuts, and the
+Services menu.
+
+### Added
+
+**Multiple windows & native tabs**
+- Each PDF opens in its own window; opening a second document while one is
+  on screen opens it **side by side — as a native tab by default** (drag the
+  tab out for a separate window; Window › Merge All Windows works).
+- Opening an already-open PDF focuses its window instead of duplicating it.
+- ⌘N opens a new dashboard window; File › Open Recent opens documents in
+  their own window/tab; windows restore after relaunch.
+- New standalone **Vocabulary Review window** (Go › Vocabulary Review, ⌥⌘V) —
+  study without a document open.
+- Reading-time tracking is now focus-aware: the active window's document
+  owns the session.
+
+**Turkish localization & accessibility**
+- The interface is localized into Turkish (menus, toolbar, sidebar,
+  settings, Quick Lookup, status surfaces, context menus) via a String
+  Catalog — follows the system language.
+- Tooltips on sidebar tabs and module buttons; VoiceOver labels for zoom
+  and iconic controls.
+
+**System integration**
+- **Services menu:** select text in any app → Services → "Look Up in RELL"
+  opens the Quick Lookup panel with the selection.
+- **Shortcuts (App Intents):** three actions — *Add Word to RELL*,
+  *Start Vocabulary Review*, *Look Up in RELL* — usable from Shortcuts
+  and Spotlight.
+- **Core Spotlight:** saved words and library documents are searchable
+  system-wide. Clicking a word result opens its card in the Words tab;
+  clicking a document reopens the PDF.
+
+### Changed
+
+- The three-panel layout now uses the native `NavigationSplitView` and
+  inspector APIs: standard resize behavior, system sidebar toggle, and
+  column widths remembered by macOS. The custom divider is gone.
+- Shared stores (words, bookmarks, notes, highlights, recents, covers)
+  moved to app scope — all windows and the Quick Lookup surfaces see the
+  same data instantly.
+
+### Fixed
+
+- Saved-words list no longer overflows the sidebar when the panel is
+  narrow: the filter bar compresses and wraps instead of clipping the
+  whole list.
+
 ## [1.7.1] - 2026-07-02
 
 RELL grows into the Mac: full menu bar coverage, a system-wide Quick Lookup
