@@ -6,7 +6,7 @@
 <p align="center"><strong>Reader for Language Learner</strong></p>
 
 <p align="center">
-  A native macOS PDF reader with built-in AI-powered vocabulary analysis.<br/>
+  A native macOS reader for PDFs and EPUBs with built-in AI-powered vocabulary analysis.<br/>
   Look up any word or sentence while reading — definitions, collocations, etymology, mnemonics, and more — powered by local or cloud LLMs.
 </p>
 
@@ -35,14 +35,14 @@
 
 ## Features
 
-- **PDF Reader** — Full-featured viewer built on PDFKit: page navigation, search, bookmarks, zoom, reading position memory
+- **PDF & EPUB Reader** — Full-featured PDF viewer built on PDFKit (page navigation, search, bookmarks, zoom) plus a dependency-free EPUB 2/3 engine (chapters, table of contents, in-book search) — both share reading position memory
 - **10 Analysis Modules** — Definition, native-language meaning, collocations, examples, pronunciation (IPA), etymology, mnemonics, synonyms, word family, usage notes
 - **Multi-LLM Support** — LM Studio, Ollama, OpenAI-compatible APIs, and Anthropic Claude
 - **12 Languages** — English, Turkish, German, French, Spanish, Japanese, Korean, Chinese, Arabic, Portuguese, Russian, Italian
 - **Anki Export** — Save words and export as TSV flashcards (single or bulk) with context sentences
 - **Reading Stats** — Daily/weekly reading time tracking, unique documents count
 - **Text-to-Speech** — Listen to selected text with system voices
-- **Themes** — Light/dark/system app theme, PDF page themes (original, sepia, dark)
+- **Themes** — Light/dark/system app theme, page themes for both PDFs and EPUBs (original, sepia, dark)
 - **Privacy-First** — Works fully offline with local LLMs, no telemetry, no cloud dependency required
 
 ## Installation
@@ -96,12 +96,12 @@ RELL supports four LLM backends. Pick one:
 Open **Settings** (`Cmd + ,`) to:
 - **General** — Set your native and target language
 - **LLM** — Choose backend, server URL, model, API key
-- **Appearance** — App theme and PDF page theme
+- **Appearance** — App theme and page theme
 
 ### 3. Start Reading
 
-1. **Open a PDF** — `Cmd + O` or drag-and-drop
-2. **Select text** — Highlight a word or sentence in the PDF
+1. **Open a document** — `Cmd + O` or drag-and-drop a PDF or EPUB
+2. **Select text** — Highlight a word or sentence as you read
 3. **Analyze** — Click any module in the inspector panel:
 
 | Module | Description |
@@ -123,9 +123,9 @@ Open **Settings** (`Cmd + ,`) to:
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd + O` | Open PDF |
-| `Cmd + F` | Find in PDF |
-| `Cmd + B` | Toggle bookmark |
+| `Cmd + O` | Open a PDF or EPUB |
+| `Cmd + F` | Find in document |
+| `Cmd + B` | Toggle bookmark (PDF) |
 | `Cmd + L` | Focus inspector & run last module |
 | `Cmd + ,` | Settings |
 | `Cmd + +/-` | Zoom in/out |
@@ -140,7 +140,7 @@ Reader for Language Learner/
   App/            Main views (ContentView, InspectorView, SidebarView)
   Models/         Data models & state management (@Observable)
   LLM/            LLM clients, configuration, prompt templates
-  Reader/         PDF components (PDFKit wrapper)
+  Reader/         Reader components — PDF/ (PDFKit wrapper), EPUB/ (in-house ZIP + OPF engine, WKWebView)
   UI/             Design system (DS namespace), result rendering
   Settings/       Settings views
   Export/         Anki TSV export
@@ -156,6 +156,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation.
 | Language | Swift 6.2 |
 | UI | SwiftUI |
 | PDF | PDFKit |
+| EPUB | In-house ZIP decoder + EPUB 2/3 parser, rendered via WKWebView |
 | LLM | OpenAI-compatible API + Anthropic Messages API |
 | Speech | AVFoundation |
 | State | `@Observable` + `@AppStorage` |
@@ -175,22 +176,22 @@ This project is licensed under the [MIT License](LICENSE).
 <details>
 <summary><strong>Turkce / Turkish</strong></summary>
 
-## RELL - Dil Ogrencileri icin PDF Okuyucu
+## RELL - Dil Ogrencileri icin PDF ve EPUB Okuyucu
 
-Yerlesik yapay zeka destekli kelime analizi sunan macOS PDF okuyucu uygulamasi.
+Yerlesik yapay zeka destekli kelime analizi sunan macOS PDF ve EPUB okuyucu uygulamasi.
 
 Okurken sectiginiz kelime veya cumleleri aninda analiz eder: tanim, anlam, kolokasyon, ornek cumle, etimoloji, telaffuz, mnemonik, es anlamli, kelime ailesi ve kullanim notlari. LM Studio, Ollama, OpenAI uyumlu API'ler ve Anthropic Claude destekler.
 
 ### Ozellikler
 
-- **PDF Okuyucu** — Sayfa navigasyonu, arama, yer imi, zoom, okuma pozisyonu hafizasi
+- **PDF ve EPUB Okuyucu** — PDFKit tabanli PDF goruntuleyici (sayfa navigasyonu, arama, yer imi, zoom) ve bagimsiz bir EPUB 2/3 motoru (bolumler, icindekiler, kitap ici arama) — ikisi de okuma pozisyonu hafizasi paylasir
 - **10 Analiz Modulu** — Tanim, ana dilde anlam, kolokasyonlar, ornekler, telaffuz (IPA), etimoloji, mnemonik, es anlamlilar, kelime ailesi, kullanim notlari
 - **Multi-LLM Destegi** — LM Studio, Ollama, OpenAI uyumlu API'ler ve Anthropic Claude
 - **12 Dil** — Ingilizce, Turkce, Almanca, Fransizca, Ispanyolca, Japonca, Korece, Cince, Arapca, Portekizce, Rusca, Italyanca
 - **Anki Entegrasyonu** — Kelimeleri Anki kartlarina aktar (tekli ve toplu), baglam cumleleri ile
 - **Okuma Istatistikleri** — Gunluk/haftalik okuma suresi, belge sayisi takibi
 - **Sesli Okuma** — Secilen metni text-to-speech ile dinleme
-- **Temalar** — Acik/koyu/sistem temasi, PDF sayfa temasi (orijinal, sepya, koyu)
+- **Temalar** — Acik/koyu/sistem temasi, hem PDF hem EPUB icin sayfa temasi (orijinal, sepya, koyu)
 - **Gizlilik Oncelikli** — Yerel LLM'ler ile tamamen cevrimdisi calisir
 
 ### Kurulum
@@ -212,7 +213,7 @@ make build
 ### Hizli Baslangic
 
 1. [LM Studio](https://lmstudio.ai/) indirin, bir model yukleyin ve sunucuyu baslatin
-2. RELL'i acin, bir PDF yukleyin
+2. RELL'i acin, bir PDF veya EPUB yukleyin
 3. Bir kelime secin ve sag paneldeki modullerden birini tiklayin
 4. Kelimeyi kaydedin, Anki'ye aktarin
 

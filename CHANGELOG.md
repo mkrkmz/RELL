@@ -4,6 +4,28 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.9.1] - 2026-07-06
+
+A wording pass following EPUB support: the interface (and README) no longer
+assumes every open document is a PDF.
+
+### Fixed
+
+- The dashboard's continue-reading card showed **"Page 11 of 28"** for an
+  open EPUB — it now says **"Chapter 11 of 28"**. `RecentDocument` derives
+  the wording from the file extension.
+- "Open PDF", "Start with a PDF", "This PDF" (vocabulary filter), and
+  similar labels across the empty state, toolbar, onboarding, and export
+  sheet are now format-neutral ("Open", "This Document", …) since they
+  apply to both PDFs and EPUBs. Turkish translations updated to match.
+- README (English and Turkish) now describes RELL as a PDF **and EPUB**
+  reader throughout — feature list, keyboard shortcuts, project structure,
+  and tech stack table.
+
+Empty-state messages for **notes, bookmarks, and highlights** still say
+"Open a PDF" — those three features remain PDF-only for now, so the
+wording is accurate as-is.
+
 ## [1.9.0] - 2026-07-03
 
 RELL learns to read EPUBs. Books get the full vocabulary workflow — select,
