@@ -90,7 +90,15 @@ struct ContentView: View {
 
     // MARK: - Body
 
+    // Split into stages so the type checker isn't asked to solve one
+    // 25-modifier expression — that alone timed out CI's clean build
+    // (`the compiler is unable to type-check this expression in reasonable
+    // time`) even though a warm local cache let it slide.
     var body: some View {
+        withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))
+    }
+
+    private var baseContent: some View {
         Group {
             if selectionState.documentURL != nil {
                 readerSplitView
@@ -125,156 +133,168 @@ struct ContentView: View {
             isTargeted: selectionState.documentURL != nil ? $isDropTargeted : nil,
             perform: handleDrop
         )
-        .onReceive(NotificationCenter.default.publisher(for: .openPDFCommand)) { _ in openPDF() }
-        .onReceive(NotificationCenter.default.publisher(for: .openReviewWindowCommand)) { _ in
-            openWindow(id: "review")
-        }
-        .onContinueUserActivity(CSSearchableItemActionType) { activity in
-            guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
-                  let target = SpotlightIndexer.target(from: identifier)
-            else { return }
-            switch target {
-            case .document(let url):
-                openDocument(url)
-            case .word(let id):
-                // Reveal the card: Words tab in the sidebar + detail sheet.
-                columnVisibility = .all
-                NotificationCenter.default.post(name: .revealSavedWordCommand, object: id)
+    }
+
+    private func withNotifications(_ content: some View) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .openPDFCommand)) { _ in openPDF() }
+            .onReceive(NotificationCenter.default.publisher(for: .openReviewWindowCommand)) { _ in
+                openWindow(id: "review")
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in
-            revealInspectorThenRepost(.inspectorRunLastModule, object: nil)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .inspectorRunModule)) { note in
-            revealInspectorThenRepost(.inspectorRunModule, object: note.object)
-        }
-        .onChange(of: selectionState.documentURL) { oldURL, newURL in
-            if let newURL {
-                recentDocumentStore.registerOpen(url: newURL)
-            }
-            // Multi-window session rule: the store tracks one active session;
-            // only touch it when it belongs to (or should belong to) this window.
-            if let filename = newURL?.lastPathComponent {
-                if sessionStore.activeSession?.pdfFilename != filename {
-                    sessionStore.startSession(for: filename)
+            .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                      let target = SpotlightIndexer.target(from: identifier)
+                else { return }
+                switch target {
+                case .document(let url):
+                    openDocument(url)
+                case .word(let id):
+                    // Reveal the card: Words tab in the sidebar + detail sheet.
+                    columnVisibility = .all
+                    NotificationCenter.default.post(name: .revealSavedWordCommand, object: id)
                 }
-            } else if let old = oldURL?.lastPathComponent,
-                      sessionStore.activeSession?.pdfFilename == old {
-                sessionStore.endActiveSession()
             }
-            // Leaving an EPUB (close or switch to a PDF) releases the book
-            // and persists its reading position.
-            if newURL?.pathExtension.lowercased() != "epub", epubManager.document != nil {
-                epubManager.close()
+            .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in
+                revealInspectorThenRepost(.inspectorRunLastModule, object: nil)
             }
-        }
-        .onChange(of: documentURL) { _, newValue in
-            // Window value changed from outside (restoration, openWindow) —
-            // adopt it as this window's document.
-            if selectionState.documentURL != newValue {
-                selectionState.documentURL = newValue
-                closeFindBar()
+            .onReceive(NotificationCenter.default.publisher(for: .inspectorRunModule)) { note in
+                revealInspectorThenRepost(.inspectorRunModule, object: note.object)
             }
-        }
-        .onAppear {
-            if let documentURL, selectionState.documentURL != documentURL {
-                selectionState.documentURL = documentURL
+    }
+
+    private func withDocumentAndEPUBSync(_ content: some View) -> some View {
+        content
+            .onChange(of: selectionState.documentURL) { oldURL, newURL in
+                if let newURL {
+                    recentDocumentStore.registerOpen(url: newURL)
+                }
+                // Multi-window session rule: the store tracks one active session;
+                // only touch it when it belongs to (or should belong to) this window.
+                if let filename = newURL?.lastPathComponent {
+                    if sessionStore.activeSession?.pdfFilename != filename {
+                        sessionStore.startSession(for: filename)
+                    }
+                } else if let old = oldURL?.lastPathComponent,
+                          sessionStore.activeSession?.pdfFilename == old {
+                    sessionStore.endActiveSession()
+                }
+                // Leaving an EPUB (close or switch to a PDF) releases the book
+                // and persists its reading position.
+                if newURL?.pathExtension.lowercased() != "epub", epubManager.document != nil {
+                    epubManager.close()
+                }
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
-            // Active window wins: focusing this window resumes its session.
-            guard let window = note.object as? NSWindow, window === hostWindow,
-                  let filename = selectionState.documentURL?.lastPathComponent,
-                  sessionStore.activeSession?.pdfFilename != filename
-            else { return }
-            sessionStore.startSession(for: filename)
-        }
-        .background(WindowAccessor { window in
-            hostWindow = window
-            // Additional documents open as native tabs by default; users
-            // can still drag a tab out into its own window.
-            window.tabbingMode = .preferred
-        })
-        .onDisappear {
-            if let filename = selectionState.documentURL?.lastPathComponent,
-               sessionStore.activeSession?.pdfFilename == filename {
-                sessionStore.endActiveSession()
+            .onChange(of: documentURL) { _, newValue in
+                // Window value changed from outside (restoration, openWindow) —
+                // adopt it as this window's document.
+                if selectionState.documentURL != newValue {
+                    selectionState.documentURL = newValue
+                    closeFindBar()
+                }
             }
-        }
-        .task {
-            recentDocumentStore.removeMissingDocuments()
-            await llmHealth.check()
-        }
-        .onChange(of: epubManager.loadedURL) { _, url in
-            // Dashboard cover: pull the book's declared cover image once.
-            guard let url,
-                  let document = epubManager.document,
-                  let coverPath = document.coverImagePath,
-                  coverStore.cover(for: url.path) == nil,
-                  let resource = try? document.resource(at: coverPath)
-            else { return }
-            coverStore.storeCover(imageData: resource.data, for: url.path)
-        }
-        .onChange(of: epubManager.chapterIndex) { _, chapter in
-            // Continue-reading cards track chapters the way PDFs track pages.
-            guard isEPUBDocument, let url = selectionState.documentURL,
-                  epubManager.chapterCount > 0 else { return }
-            recentDocumentStore.updateLastPage(
-                for: url,
-                pageIndex: chapter,
-                pageCount: epubManager.chapterCount
-            )
-        }
-        .onChange(of: llmProviderTypeRaw) { _, _ in llmHealth.scheduleCheck() }
-        .onChange(of: llmServerURL)       { _, _ in llmHealth.scheduleCheck() }
-        .onChange(of: llmModel)           { _, _ in llmHealth.scheduleCheck() }
-        .sheet(item: Binding(
-            get: { noteStore.draftNote },
-            set: { noteStore.draftNote = $0 }
-        )) { draft in
-            PDFNoteEditorSheet(
-                note: draft,
-                savedWordsStore: savedWordsStore,
-                onJumpToPage: { note in
-                    guard let doc = pdfViewManager.pdfView?.document,
-                          note.pageIndex < doc.pageCount,
-                          let page = doc.page(at: note.pageIndex)
-                    else { return }
-                    pdfViewManager.pdfView?.go(to: page)
-                },
-                onSave: { noteStore.saveDraft($0) },
-                onCancel: { noteStore.cancelDraft() }
-            )
-        }
-        .sheet(isPresented: $showWorkspaceReview) {
-            QuizView(
-                store: savedWordsStore,
-                onContinueReading: { showWorkspaceReview = false }
-            )
-                .frame(width: 460, height: 560)
-        }
-        .sheet(isPresented: $showStats) {
-            NavigationStack {
-                ReadingStatsView(
-                    sessionStore: sessionStore,
-                    savedWordsStore: savedWordsStore
+            .onAppear {
+                if let documentURL, selectionState.documentURL != documentURL {
+                    selectionState.documentURL = documentURL
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
+                // Active window wins: focusing this window resumes its session.
+                guard let window = note.object as? NSWindow, window === hostWindow,
+                      let filename = selectionState.documentURL?.lastPathComponent,
+                      sessionStore.activeSession?.pdfFilename != filename
+                else { return }
+                sessionStore.startSession(for: filename)
+            }
+            .background(WindowAccessor { window in
+                hostWindow = window
+                // Additional documents open as native tabs by default; users
+                // can still drag a tab out into its own window.
+                window.tabbingMode = .preferred
+            })
+            .onDisappear {
+                if let filename = selectionState.documentURL?.lastPathComponent,
+                   sessionStore.activeSession?.pdfFilename == filename {
+                    sessionStore.endActiveSession()
+                }
+            }
+            .task {
+                recentDocumentStore.removeMissingDocuments()
+                await llmHealth.check()
+            }
+            .onChange(of: epubManager.loadedURL) { _, url in
+                // Dashboard cover: pull the book's declared cover image once.
+                guard let url,
+                      let document = epubManager.document,
+                      let coverPath = document.coverImagePath,
+                      coverStore.cover(for: url.path) == nil,
+                      let resource = try? document.resource(at: coverPath)
+                else { return }
+                coverStore.storeCover(imageData: resource.data, for: url.path)
+            }
+            .onChange(of: epubManager.chapterIndex) { _, chapter in
+                // Continue-reading cards track chapters the way PDFs track pages.
+                guard isEPUBDocument, let url = selectionState.documentURL,
+                      epubManager.chapterCount > 0 else { return }
+                recentDocumentStore.updateLastPage(
+                    for: url,
+                    pageIndex: chapter,
+                    pageCount: epubManager.chapterCount
                 )
-                .navigationTitle("Stats")
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") { showStats = false }
+            }
+            .onChange(of: llmProviderTypeRaw) { _, _ in llmHealth.scheduleCheck() }
+            .onChange(of: llmServerURL)       { _, _ in llmHealth.scheduleCheck() }
+            .onChange(of: llmModel)           { _, _ in llmHealth.scheduleCheck() }
+    }
+
+    private func withSheets(_ content: some View) -> some View {
+        content
+            .sheet(item: Binding(
+                get: { noteStore.draftNote },
+                set: { noteStore.draftNote = $0 }
+            )) { draft in
+                PDFNoteEditorSheet(
+                    note: draft,
+                    savedWordsStore: savedWordsStore,
+                    onJumpToPage: { note in
+                        guard let doc = pdfViewManager.pdfView?.document,
+                              note.pageIndex < doc.pageCount,
+                              let page = doc.page(at: note.pageIndex)
+                        else { return }
+                        pdfViewManager.pdfView?.go(to: page)
+                    },
+                    onSave: { noteStore.saveDraft($0) },
+                    onCancel: { noteStore.cancelDraft() }
+                )
+            }
+            .sheet(isPresented: $showWorkspaceReview) {
+                QuizView(
+                    store: savedWordsStore,
+                    onContinueReading: { showWorkspaceReview = false }
+                )
+                    .frame(width: 460, height: 560)
+            }
+            .sheet(isPresented: $showStats) {
+                NavigationStack {
+                    ReadingStatsView(
+                        sessionStore: sessionStore,
+                        savedWordsStore: savedWordsStore
+                    )
+                    .navigationTitle("Stats")
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { showStats = false }
+                        }
                     }
                 }
+                .frame(width: 420, height: 620)
             }
-            .frame(width: 420, height: 620)
-        }
-        .sheet(isPresented: Binding(
-            get: { !hasCompletedOnboarding },
-            set: { hasCompletedOnboarding = !$0 }
-        )) {
-            OnboardingView { hasCompletedOnboarding = true }
-                .frame(width: 560, height: 540)
-        }
+            .sheet(isPresented: Binding(
+                get: { !hasCompletedOnboarding },
+                set: { hasCompletedOnboarding = !$0 }
+            )) {
+                OnboardingView { hasCompletedOnboarding = true }
+                    .frame(width: 560, height: 540)
+            }
     }
 
     // MARK: - Reader Layout (3-panel, native)
