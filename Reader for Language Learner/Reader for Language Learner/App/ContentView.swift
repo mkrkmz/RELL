@@ -18,8 +18,14 @@ struct ContentView: View {
     @State private var selectionState   = SelectionState()
     @State private var searchManager    = PDFSearchManager()
     @State private var pdfViewManager   = PDFViewManager()
+    @State private var epubManager      = EPUBViewManager()
+    @State private var epubSearchManager = EPUBSearchManager()
     @State private var circuitBreaker   = CircuitBreaker()
     @State private var llmHealth        = LLMHealthMonitor()
+
+    private var isEPUBDocument: Bool {
+        selectionState.documentURL?.pathExtension.lowercased() == "epub"
+    }
 
     // Shared stores — owned by the App scene, injected via environment.
     @Environment(SavedWordsStore.self)     private var savedWordsStore
@@ -53,6 +59,7 @@ struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+    @AppStorage("epubFontSize") private var epubFontSize: Double = 18
     @AppStorage(LLMConfiguration.providerTypeKey) private var llmProviderTypeRaw: String = LLMConfiguration.defaultProviderType.rawValue
     @AppStorage(LLMConfiguration.serverURLKey)    private var llmServerURL: String = LLMConfiguration.defaultServerURL
     @AppStorage(LLMConfiguration.modelKey)        private var llmModel: String = LLMConfiguration.defaultModel
@@ -103,7 +110,7 @@ struct ContentView: View {
                         coverStore: coverStore,
                         sessionStore: sessionStore
                     )
-                    .onDrop(of: [.pdf], isTargeted: $isDropTargeted, perform: handleDrop)
+                    .onDrop(of: [.pdf, .epub], isTargeted: $isDropTargeted, perform: handleDrop)
                     .overlay { if isDropTargeted { dropOverlay } }
                     .toolbar { toolbarContent }
                     .navigationTitle(windowTitle)
@@ -114,7 +121,7 @@ struct ContentView: View {
         .frame(minWidth: DS.Layout.windowMin.width, minHeight: DS.Layout.windowMin.height)
         .preferredColorScheme(appTheme.colorScheme)
         .onDrop(
-            of: [.pdf],
+            of: [.pdf, .epub],
             isTargeted: selectionState.documentURL != nil ? $isDropTargeted : nil,
             perform: handleDrop
         )
@@ -155,6 +162,11 @@ struct ContentView: View {
                       sessionStore.activeSession?.pdfFilename == old {
                 sessionStore.endActiveSession()
             }
+            // Leaving an EPUB (close or switch to a PDF) releases the book
+            // and persists its reading position.
+            if newURL?.pathExtension.lowercased() != "epub", epubManager.document != nil {
+                epubManager.close()
+            }
         }
         .onChange(of: documentURL) { _, newValue in
             // Window value changed from outside (restoration, openWindow) —
@@ -192,6 +204,26 @@ struct ContentView: View {
         .task {
             recentDocumentStore.removeMissingDocuments()
             await llmHealth.check()
+        }
+        .onChange(of: epubManager.loadedURL) { _, url in
+            // Dashboard cover: pull the book's declared cover image once.
+            guard let url,
+                  let document = epubManager.document,
+                  let coverPath = document.coverImagePath,
+                  coverStore.cover(for: url.path) == nil,
+                  let resource = try? document.resource(at: coverPath)
+            else { return }
+            coverStore.storeCover(imageData: resource.data, for: url.path)
+        }
+        .onChange(of: epubManager.chapterIndex) { _, chapter in
+            // Continue-reading cards track chapters the way PDFs track pages.
+            guard isEPUBDocument, let url = selectionState.documentURL,
+                  epubManager.chapterCount > 0 else { return }
+            recentDocumentStore.updateLastPage(
+                for: url,
+                pageIndex: chapter,
+                pageCount: epubManager.chapterCount
+            )
         }
         .onChange(of: llmProviderTypeRaw) { _, _ in llmHealth.scheduleCheck() }
         .onChange(of: llmServerURL)       { _, _ in llmHealth.scheduleCheck() }
@@ -255,7 +287,8 @@ struct ContentView: View {
                 bookmarkStore:       bookmarkStore,
                 noteStore:           noteStore,
                 highlightStore:      highlightStore,
-                currentDocumentName: currentDocumentName
+                currentDocumentName: currentDocumentName,
+                epubManager:         isEPUBDocument ? epubManager : nil
             )
             .navigationSplitViewColumnWidth(
                 min: DS.Layout.sidebarMin,
@@ -286,11 +319,20 @@ struct ContentView: View {
         .navigationSplitViewStyle(.balanced)
     }
 
-    // ── PDF Viewer column ─────────────────────────────────────────────
+    // ── Reader column (PDF or EPUB) ───────────────────────────────────
     private var pdfColumn: some View {
         VStack(spacing: DS.Spacing.sm) {
-                    if searchManager.isFindBarVisible {
+                    if !isEPUBDocument, searchManager.isFindBarVisible {
                         FindBarView(searchManager: searchManager, onClose: closeFindBar)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
+                    if isEPUBDocument, epubSearchManager.isFindBarVisible {
+                        EPUBFindBarView(
+                            searchManager: epubSearchManager,
+                            epubManager: epubManager,
+                            onClose: closeFindBar
+                        )
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
@@ -298,6 +340,25 @@ struct ContentView: View {
                         readerContextStrip
                     }
 
+                    if isEPUBDocument {
+                        EPUBReaderView(
+                            documentURL: selectionState.documentURL,
+                            manager: epubManager,
+                            pageTheme: pageTheme,
+                            fontSize: epubFontSize,
+                            selectedText: Binding(
+                                get: { selectionState.selectedText },
+                                set: { selectionState.selectedText = $0 }
+                            ),
+                            contextSentence: Binding(
+                                get: { selectionState.contextSentence },
+                                set: { selectionState.contextSentence = $0 }
+                            ),
+                            savedWordsStore: savedWordsStore,
+                            quickLookup: quickLookup,
+                            hoverEnabled: hoverDictionaryEnabled
+                        )
+                    } else {
                     PDFKitView(
                         documentURL: selectionState.documentURL,
                         selectedText: Binding(
@@ -336,6 +397,7 @@ struct ContentView: View {
                         guard let newURL else { return }
                         restorePage(for: newURL.deletingPathExtension().lastPathComponent)
                     }
+                    }
 
                     if sentenceTranslationEnabled, !focusMode, let sentence = translatableSentence {
                         SentenceTranslationStrip(
@@ -353,7 +415,12 @@ struct ContentView: View {
         .background(Color(nsColor: pageTheme.backgroundColor))
     }
 
+    /// PDF: 1-based page. EPUB: 1-based chapter — feeds the same
+    /// SavedWord.pageNumber / Anki source fields.
     private var currentPageNumber: Int? {
+        if isEPUBDocument {
+            return epubManager.chapterCount > 0 ? epubManager.chapterIndex + 1 : nil
+        }
         guard let pdfView = pdfViewManager.pdfView,
               let page    = pdfView.currentPage,
               let idx     = pdfView.document?.index(for: page)
@@ -419,6 +486,12 @@ struct ContentView: View {
     }
 
     private var pageStatusText: String {
+        if isEPUBDocument {
+            guard epubManager.chapterCount > 0 else { return String(localized: "Opening book…") }
+            let chapter = String(localized: "Chapter \(epubManager.chapterIndex + 1) / \(epubManager.chapterCount)")
+            let percent = Int((epubManager.scrollFraction * 100).rounded())
+            return "\(chapter) · \(percent)%"
+        }
         guard pdfViewManager.pageCount > 0 else { return String(localized: "PDF ready") }
         if let currentPageNumber {
             return String(localized: "Page \(currentPageNumber) / \(pdfViewManager.pageCount)")
@@ -509,7 +582,7 @@ struct ContentView: View {
         // NavigationSplitView supplies the system sidebar toggle.
 
         ToolbarItem(placement: .navigation) {
-            if selectionState.documentURL != nil {
+            if selectionState.documentURL != nil, !isEPUBDocument {
                 PageIndicatorView(
                     currentPageIndex: pdfViewManager.currentPageIndex,
                     pageCount: pdfViewManager.pageCount
@@ -529,7 +602,7 @@ struct ContentView: View {
                 Label("Find", systemImage: "magnifyingglass")
             }
             .keyboardShortcut("f", modifiers: [.command])
-            .help("Find in PDF (⌘F)")
+            .help("Find (⌘F)")
             .disabled(selectionState.documentURL == nil)
 
             Button(action: toggleCurrentPageBookmark) {
@@ -540,17 +613,21 @@ struct ContentView: View {
             }
             .keyboardShortcut("b", modifiers: [.command])
             .help(isCurrentPageBookmarked ? "Remove Bookmark (⌘B)" : "Bookmark Page (⌘B)")
-            .disabled(selectionState.documentURL == nil)
+            .disabled(selectionState.documentURL == nil || isEPUBDocument)
         }
 
         ToolbarItemGroup(placement: .automatic) {
             if selectionState.documentURL != nil {
-                zoomControls
-                Button { pdfViewManager.fitToWidth() } label: {
-                    Label("Fit Width", systemImage: "arrow.left.and.right.text.vertical")
+                if isEPUBDocument {
+                    epubFontControls
+                } else {
+                    zoomControls
+                    Button { pdfViewManager.fitToWidth() } label: {
+                        Label("Fit Width", systemImage: "arrow.left.and.right.text.vertical")
+                    }
+                    .help("Fit to Width (⌘0)")
+                    .keyboardShortcut("0", modifiers: [.command])
                 }
-                .help("Fit to Width (⌘0)")
-                .keyboardShortcut("0", modifiers: [.command])
             }
         }
 
@@ -614,6 +691,45 @@ struct ContentView: View {
         }
     }
 
+    /// EPUB replaces optical zoom with text-size stepping (⌘+/− reused).
+    private var epubFontControls: some View {
+        HStack(spacing: 0) {
+            Button { epubFontSize = max(12, epubFontSize - 1) } label: {
+                Image(systemName: "textformat.size.smaller")
+                    .frame(width: 26, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .help("Smaller Text (⌘-)")
+            .accessibilityLabel(Text("Smaller Text"))
+            .keyboardShortcut("-", modifiers: [.command])
+
+            Divider().frame(height: 16)
+
+            Text("\(Int(epubFontSize))")
+                .font(DS.Typography.mono)
+                .foregroundStyle(DS.Color.textSecondary)
+                .frame(width: 30)
+
+            Divider().frame(height: 16)
+
+            Button { epubFontSize = min(28, epubFontSize + 1) } label: {
+                Image(systemName: "textformat.size.larger")
+                    .frame(width: 26, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .help("Larger Text (⌘+)")
+            .accessibilityLabel(Text("Larger Text"))
+            .keyboardShortcut("+", modifiers: [.command])
+        }
+        .buttonStyle(.borderless)
+        .background(DS.Color.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.sm)
+                .strokeBorder(DS.Color.separator, lineWidth: 0.5)
+        )
+    }
+
     private var zoomControls: some View {
         HStack(spacing: 0) {
             Button { pdfViewManager.zoomOut() } label: {
@@ -667,6 +783,9 @@ struct ContentView: View {
 
     private var windowTitle: String {
         guard let url = selectionState.documentURL else { return "RELL" }
+        if isEPUBDocument, let bookTitle = epubManager.bookTitle, !bookTitle.isEmpty {
+            return bookTitle
+        }
         return url.deletingPathExtension().lastPathComponent
     }
 
@@ -676,7 +795,7 @@ struct ContentView: View {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        panel.allowedContentTypes = [.pdf]
+        panel.allowedContentTypes = [.pdf, .epub]
         guard panel.runModal() == .OK, let url = panel.url else { return }
         openDocument(url)
     }
@@ -706,11 +825,16 @@ struct ContentView: View {
     }
 
     private func openFindBar() {
-        searchManager.showFindBar()
+        if isEPUBDocument {
+            epubSearchManager.showFindBar()
+        } else {
+            searchManager.showFindBar()
+        }
     }
 
     private func closeFindBar() {
         searchManager.closeFindBar()
+        epubSearchManager.closeFindBar()
     }
 
     private func toggleSidebar() {
@@ -785,24 +909,38 @@ struct ContentView: View {
             isSidebarVisible: showSidebar,
             isInspectorVisible: showInspector,
             focusMode: focusMode,
-            canGoToPreviousPage: pdfViewManager.canGoToPreviousPage,
-            canGoToNextPage: pdfViewManager.canGoToNextPage,
+            canGoToPreviousPage: isEPUBDocument
+                ? epubManager.canGoToPreviousChapter
+                : pdfViewManager.canGoToPreviousPage,
+            canGoToNextPage: isEPUBDocument
+                ? epubManager.canGoToNextChapter
+                : pdfViewManager.canGoToNextPage,
             recentDocuments: recentDocumentStore.recentDocuments,
             openDocument: { openDocument($0) },
             closeDocument: { closeDocument() },
             toggleSidebar: { toggleSidebar() },
             toggleInspector: { toggleInspector() },
             toggleFocusMode: { toggleFocusMode() },
-            goToPreviousPage: { pdfViewManager.goToPreviousPage() },
-            goToNextPage: { pdfViewManager.goToNextPage() },
+            goToPreviousPage: {
+                if isEPUBDocument { epubManager.previousChapter() }
+                else { pdfViewManager.goToPreviousPage() }
+            },
+            goToNextPage: {
+                if isEPUBDocument { epubManager.nextChapter() }
+                else { pdfViewManager.goToNextPage() }
+            },
             runModule: { runModule($0) },
             runLastModule: { focusInspectorAndRun() }
         )
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
-        guard let provider = providers.first else { return false }
-        provider.loadItem(forTypeIdentifier: UTType.pdf.identifier, options: nil) { item, _ in
+        guard let provider = providers.first,
+              let type = [UTType.pdf, UTType.epub].first(where: {
+                  provider.hasItemConformingToTypeIdentifier($0.identifier)
+              })
+        else { return false }
+        provider.loadItem(forTypeIdentifier: type.identifier, options: nil) { item, _ in
             let url: URL?
             if let u = item as? URL { url = u }
             else if let d = item as? Data { url = URL(dataRepresentation: d, relativeTo: nil) }

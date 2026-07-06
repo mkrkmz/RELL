@@ -45,6 +45,19 @@ final class DocumentCoverStore {
         memoryCache.object(forKey: path as NSString)
     }
 
+    /// Stores an externally supplied cover image (e.g. an EPUB's declared
+    /// cover). Written to the same disk cache `requestCover` reads, so it
+    /// survives restarts without re-extraction.
+    func storeCover(imageData: Data, for path: String) {
+        guard let image = NSImage(data: imageData),
+              image.size.width > 0, image.size.height > 0 else { return }
+        if let cacheURL = coverCacheURL(for: path) {
+            try? imageData.write(to: cacheURL, options: .atomic)
+        }
+        memoryCache.setObject(image, forKey: path as NSString)
+        revision += 1
+    }
+
     /// Loads the cover from disk or renders it from the PDF's first page.
     /// Safe to call repeatedly; duplicate requests for the same path are ignored.
     func requestCover(for path: String) {

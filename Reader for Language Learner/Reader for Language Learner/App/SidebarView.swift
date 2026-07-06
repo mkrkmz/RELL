@@ -52,12 +52,21 @@ struct SidebarView: View {
     var noteStore:       PDFNoteStore
     var highlightStore:  PDFHighlightStore
     var currentDocumentName: String?
+    /// Non-nil document ⇒ the window is showing an EPUB.
+    var epubManager: EPUBViewManager? = nil
 
     @State private var selectedTab: SidebarTab = .thumbnails
     @AppStorage("thumbnailSize") private var thumbnailSizeRaw = DS.ThumbnailSize.medium.rawValue
 
     private var thumbnailSize: DS.ThumbnailSize {
         DS.ThumbnailSize(rawValue: thumbnailSizeRaw) ?? .medium
+    }
+
+    private var isEPUB: Bool { epubManager?.document != nil }
+
+    /// Page thumbnails are a PDF concept — the tab disappears for EPUBs.
+    private var availableTabs: [SidebarTab] {
+        isEPUB ? [.outline, .annotations, .words] : SidebarTab.allCases
     }
 
     var body: some View {
@@ -73,13 +82,21 @@ struct SidebarView: View {
             // just makes sure the Words tab is frontmost.
             withAnimation(DS.Animation.springFast) { selectedTab = .words }
         }
+        .onChange(of: isEPUB) { _, _ in normalizeSelectedTab() }
+        .onAppear { normalizeSelectedTab() }
+    }
+
+    private func normalizeSelectedTab() {
+        if !availableTabs.contains(selectedTab) {
+            selectedTab = .outline
+        }
     }
 
     // MARK: - Icon Tab Bar
 
     private var tabBar: some View {
         HStack(spacing: 0) {
-            ForEach(SidebarTab.allCases) { tab in
+            ForEach(availableTabs) { tab in
                 tabBarButton(tab)
             }
         }
@@ -204,7 +221,11 @@ struct SidebarView: View {
                 )
             }
         case .outline:
-            PDFOutlineView(pdfViewManager: pdfViewManager)
+            if let epubManager, isEPUB {
+                EPUBOutlineView(manager: epubManager)
+            } else {
+                PDFOutlineView(pdfViewManager: pdfViewManager)
+            }
         case .annotations:
             AnnotationsView(
                 bookmarkStore:   bookmarkStore,

@@ -92,9 +92,12 @@ enum SpotlightIndexer {
     // MARK: - Documents
 
     static func indexDocument(at url: URL) {
-        let attributes = CSSearchableItemAttributeSet(contentType: .pdf)
+        let isEPUB = url.pathExtension.lowercased() == "epub"
+        let attributes = CSSearchableItemAttributeSet(contentType: isEPUB ? .epub : .pdf)
         attributes.title = url.deletingPathExtension().lastPathComponent
-        attributes.contentDescription = String(localized: "PDF in your RELL library")
+        attributes.contentDescription = isEPUB
+            ? String(localized: "Book in your RELL library")
+            : String(localized: "PDF in your RELL library")
         attributes.contentURL = url
 
         let item = CSSearchableItem(
