@@ -35,12 +35,23 @@ struct RecentDocument: Identifiable, Codable, Hashable {
         URL(fileURLWithPath: path)
     }
 
+    /// Drives the "Chapter" vs "Page" wording below — the store only ever
+    /// records a path, not a document kind, so the extension is the signal.
+    var isEPUB: Bool {
+        (path as NSString).pathExtension.lowercased() == "epub"
+    }
+
     var pageLabel: String {
-        guard let lastPageIndex else { return "Start reading" }
+        guard let lastPageIndex else { return String(localized: "Start reading") }
+        let number = lastPageIndex + 1
         if let pageCount, pageCount > 0 {
-            return "Page \(lastPageIndex + 1) of \(pageCount)"
+            return isEPUB
+                ? String(localized: "Chapter \(number) of \(pageCount)")
+                : String(localized: "Page \(number) of \(pageCount)")
         }
-        return "Page \(lastPageIndex + 1)"
+        return isEPUB
+            ? String(localized: "Chapter \(number)")
+            : String(localized: "Page \(number)")
     }
 
     /// Fraction of the document read (0...1), when both page values are known.

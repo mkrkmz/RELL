@@ -30,7 +30,9 @@ final class RecentDocumentStoreTests: XCTestCase {
         store.updateLastPage(for: url, pageIndex: 7)
 
         XCTAssertEqual(store.recentDocuments.first?.lastPageIndex, 7)
-        XCTAssertEqual(store.recentDocuments.first?.pageLabel, "Page 8")
+        // pageLabel is localized — compare against the same API so this
+        // assertion holds regardless of the host machine's system language.
+        XCTAssertEqual(store.recentDocuments.first?.pageLabel, String(localized: "Page \(8)"))
     }
 
     func testUpdateLastPageWithPageCountBuildsProgress() throws {
@@ -41,14 +43,31 @@ final class RecentDocumentStoreTests: XCTestCase {
         store.updateLastPage(for: url, pageIndex: 4, pageCount: 10)
 
         let document = try XCTUnwrap(store.recentDocuments.first)
-        XCTAssertEqual(document.pageLabel, "Page 5 of 10")
+        XCTAssertEqual(document.pageLabel, String(localized: "Page \(5) of \(10)"))
         XCTAssertEqual(document.readingProgress, 0.5)
     }
 
     func testReadingProgressNilWithoutPageCount() {
         let document = RecentDocument(path: "/tmp/a.pdf", filename: "a", lastPageIndex: 3)
         XCTAssertNil(document.readingProgress)
-        XCTAssertEqual(document.pageLabel, "Page 4")
+        XCTAssertEqual(document.pageLabel, String(localized: "Page \(4)"))
+    }
+
+    func testPageLabelUsesChapterWordingForEPUB() {
+        let withCount = RecentDocument(
+            path: "/tmp/book.epub", filename: "book",
+            lastPageIndex: 10, pageCount: 28
+        )
+        XCTAssertTrue(withCount.isEPUB)
+        XCTAssertEqual(withCount.pageLabel, String(localized: "Chapter \(11) of \(28)"))
+
+        let withoutCount = RecentDocument(path: "/tmp/book.epub", filename: "book", lastPageIndex: 2)
+        XCTAssertEqual(withoutCount.pageLabel, String(localized: "Chapter \(3)"))
+    }
+
+    func testIsEPUBIsCaseInsensitiveAndFalseForPDF() {
+        XCTAssertTrue(RecentDocument(path: "/tmp/a.EPUB", filename: "a").isEPUB)
+        XCTAssertFalse(RecentDocument(path: "/tmp/a.pdf", filename: "a").isEPUB)
     }
 
     func testDecodeLegacyDocumentWithoutPageCount() throws {

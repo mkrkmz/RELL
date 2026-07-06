@@ -20,7 +20,7 @@ enum SavedWordsFilter: String, CaseIterable, Identifiable {
     case needsReview = "Needs Review"
     case new = "New"
     case mastered = "Mastered"
-    case thisPDF = "This PDF"
+    case thisPDF = "This Document"
 
     var id: String { rawValue }
 }
@@ -365,7 +365,7 @@ struct SavedWordsListView: View {
                         .font(DS.Typography.subhead)
                         .foregroundStyle(DS.Color.textSecondary)
                     if selectedFilter == .thisPDF {
-                        Text("No vocabulary saved from this PDF yet. Select text and save it from the inspector.")
+                        Text("No vocabulary saved from this document yet. Select text and save it from the inspector.")
                             .font(DS.Typography.caption)
                             .foregroundStyle(DS.Color.textTertiary)
                             .multilineTextAlignment(.center)

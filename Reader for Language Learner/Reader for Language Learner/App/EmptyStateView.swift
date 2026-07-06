@@ -170,12 +170,12 @@ private struct DashboardHeader: View {
             Spacer()
 
             Button(action: onOpenPDF) {
-                Label("Open PDF", systemImage: "plus")
+                Label("Open", systemImage: "plus")
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .keyboardShortcut("o", modifiers: [.command])
-            .help("Open a PDF (⌘O)")
+            .help("Open a PDF or EPUB (⌘O)")
         }
     }
 }
@@ -501,7 +501,7 @@ private struct EmptyLibraryHero: View {
             }
 
             VStack(spacing: DS.Spacing.xs) {
-                Text("Start with a PDF")
+                Text("Start with a Book or PDF")
                     .font(DS.Typography.title)
                     .foregroundStyle(DS.Color.textPrimary)
                 Text("Open a document, select words as you read,\nand build your vocabulary.")
@@ -538,7 +538,7 @@ private struct DashboardFooter: View {
 
                 Spacer(minLength: DS.Spacing.md)
 
-                Label("Drop a PDF anywhere to open it", systemImage: "arrow.down.doc")
+                Label("Drop a PDF or EPUB anywhere to open it", systemImage: "arrow.down.doc")
                     .font(DS.Typography.caption)
                     .foregroundStyle(DS.Color.textTertiary)
                     .lineLimit(1)

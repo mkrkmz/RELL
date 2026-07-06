@@ -465,7 +465,7 @@ struct ContentView: View {
         HStack(spacing: DS.Spacing.sm) {
             readerContextChip(
                 icon: "doc.text",
-                text: currentDocumentName ?? "Open PDF"
+                text: currentDocumentName ?? "Open"
             )
             readerContextDivider
             readerContextChip(
@@ -512,7 +512,7 @@ struct ContentView: View {
             let percent = Int((epubManager.scrollFraction * 100).rounded())
             return "\(chapter) · \(percent)%"
         }
-        guard pdfViewManager.pageCount > 0 else { return String(localized: "PDF ready") }
+        guard pdfViewManager.pageCount > 0 else { return String(localized: "Ready") }
         if let currentPageNumber {
             return String(localized: "Page \(currentPageNumber) / \(pdfViewManager.pageCount)")
         }
@@ -614,9 +614,9 @@ struct ContentView: View {
 
         ToolbarItemGroup(placement: .primaryAction) {
             Button(action: openPDF) {
-                Label("Open PDF", systemImage: "folder.badge.plus")
+                Label("Open", systemImage: "folder.badge.plus")
             }
-            .help("Open PDF (⌘O)")
+            .help("Open a PDF or EPUB (⌘O)")
 
             Button(action: openFindBar) {
                 Label("Find", systemImage: "magnifyingglass")

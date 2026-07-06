@@ -50,7 +50,7 @@ struct OnboardingView: View {
             stepHeader(
                 icon: "book.pages",
                 title: "Welcome to RELL",
-                subtitle: "Read PDFs in the language you're learning and let AI explain every word in context."
+                subtitle: "Read books and PDFs in the language you're learning and let AI explain every word in context."
             )
 
             HStack(spacing: DS.Spacing.lg) {

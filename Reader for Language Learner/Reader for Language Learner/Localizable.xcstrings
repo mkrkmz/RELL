@@ -1,2500 +1,2084 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "" : {
-
-    },
-    "— you wrote “%@”" : {
-
-    },
-    "·" : {
-
-    },
-    "·  next %@" : {
-
-    },
-    "· best %lld" : {
-
-    },
-    "“%@”" : {
-
-    },
-    "(no data)" : {
-
-    },
-    "[%@]" : {
-
-    },
-    "/" : {
-
-    },
-    "%@  %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@  %2$@"
+  "sourceLanguage": "en",
+  "strings": {
+    "": {},
+    "%@  %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@  %2$@"
           }
         }
       }
     },
-    "%@ - mark this card and continue (%@)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ - mark this card and continue (%2$@)"
+    "%@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$@"
           }
         }
       }
     },
-    "%@ · %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ · %2$@"
+    "%@ (%lld)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ (%2$lld)"
           }
         }
       }
     },
-    "%@ (%lld)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ (%2$lld)"
+    "%@ - mark this card and continue (%@)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ - mark this card and continue (%2$@)"
           }
         }
       }
     },
-    "%@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@"
+    "%@ notes in %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ notes in %2$@"
           }
         }
       }
     },
-    "%@ notes in %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ notes in %2$@"
+    "%@ · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ · %2$@"
           }
         }
       }
     },
-    "%@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@"
+    "%@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@, %2$@"
           }
         }
       }
-    },
-    "%lld" : {
-
-    },
-    "%lld available" : {
-
-    },
-    "%lld cards exported!" : {
-
     },
-    "%lld characters" : {
-
-    },
-    "%lld day streak" : {
-
-    },
-    "%lld matches" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld eşleşme"
+    "%lld": {},
+    "%lld available": {},
+    "%lld cards exported!": {},
+    "%lld characters": {},
+    "%lld day streak": {},
+    "%lld matches": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld eşleşme"
           }
         }
       }
     },
-    "%lld minutes" : {
-
-    },
-    "%lld of %lld min today" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld min today"
+    "%lld minutes": {},
+    "%lld of %lld min today": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld of %2$lld min today"
           }
         }
       }
     },
-    "%lld of %lld minutes read today" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld minutes read today"
+    "%lld of %lld minutes read today": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld of %2$lld minutes read today"
           }
         }
       }
     },
-    "%lld of %lld selected" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld selected"
+    "%lld of %lld selected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld of %2$lld selected"
           }
         }
       }
     },
-    "%lld pages" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld sayfa"
+    "%lld pages": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sayfa"
           }
         }
       }
-    },
-    "%lld percent read" : {
-
     },
-    "%lld words selected" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kelime seçildi"
+    "%lld percent read": {},
+    "%lld words selected": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld kelime seçildi"
           }
         }
       }
     },
-    "%lld words still due" : {
-
-    },
-    "%lld-day streak" : {
-
-    },
-    "%lld." : {
-
-    },
-    "%lld%%" : {
-
-    },
-    "%lldpx" : {
-
-    },
-    "%llds" : {
-
-    },
-    "1 word selected" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 kelime seçildi"
+    "%lld words still due": {},
+    "%lld%%": {},
+    "%lld-day streak": {},
+    "%lld.": {},
+    "%lldpx": {},
+    "%llds": {},
+    "(no data)": {},
+    "/": {},
+    "1 word selected": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 kelime seçildi"
           }
         }
       }
-    },
-    "1-day streak" : {
-
-    },
-    "ACTIONS" : {
-
     },
-    "Active module, tap to deselect" : {
-
-    },
-    "Add" : {
-
-    },
-    "Add ${term} to RELL" : {
-
-    },
-    "Add existing tag" : {
-
-    },
-    "Add Note" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not Ekle"
+    "1-day streak": {},
+    "ACTIONS": {},
+    "ALL TIME": {},
+    "API Key": {},
+    "Active module, tap to deselect": {},
+    "Add": {},
+    "Add ${term} to RELL": {},
+    "Add Note": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Ekle"
           }
         }
       }
     },
-    "Add note…" : {
-
+    "Add Word": {
+      "comment": "Short title for the Add Word shortcut.",
+      "isCommentAutoGenerated": true
     },
-    "Add tag" : {
-
+    "Add Word to RELL": {
+      "comment": "Title of the intent to add a word to the RELL vocabulary.",
+      "isCommentAutoGenerated": true
     },
-    "Add Word" : {
-      "comment" : "Short title for the Add Word shortcut.",
-      "isCommentAutoGenerated" : true
-    },
-    "Add Word to RELL" : {
-      "comment" : "Title of the intent to add a word to the RELL vocabulary.",
-      "isCommentAutoGenerated" : true
-    },
-    "All decks" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tüm desteler"
+    "Add existing tag": {},
+    "Add note…": {},
+    "Add tag": {},
+    "All decks": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm desteler"
           }
         }
       }
-    },
-    "ALL TIME" : {
-
-    },
-    "All words mastered!" : {
-
     },
-    "Analyze With" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Şununla İncele"
+    "All words mastered!": {},
+    "Analyze With": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şununla İncele"
           }
         }
       }
     },
-    "Analyzing…" : {
-
-    },
-    "Anki" : {
-
-    },
-    "Annotations" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İşaretler"
+    "Analyzing…": {},
+    "Anki": {},
+    "Annotations": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşaretler"
           }
         }
       }
     },
-    "API Key" : {
-
-    },
-    "App & Page Themes" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uygulama ve sayfa temaları"
+    "App & Page Themes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama ve sayfa temaları"
           }
         }
       }
     },
-    "App Theme" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uygulama Teması"
+    "App Theme": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama Teması"
           }
         }
       }
     },
-    "Appearance" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Görünüm"
+    "Appearance": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görünüm"
           }
         }
       }
-    },
-    "Ask (↩)" : {
-
     },
-    "Ask a follow-up…" : {
-
-    },
-    "Asking %@…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ modeline soruluyor…"
+    "Ask (↩)": {},
+    "Ask a follow-up…": {},
+    "Asking %@…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ modeline soruluyor…"
           }
         }
       }
-    },
-    "Available Models" : {
-
-    },
-    "Back" : {
-
-    },
-    "Back (Card Answer)" : {
-
     },
-    "Back fields (LLM outputs)" : {
-
-    },
-    "Back to Home (Esc)" : {
-
-    },
-    "Back: " : {
-
-    },
-    "Backend" : {
-
-    },
-    "Book in your RELL library" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "RELL kitaplığınızdaki kitap"
+    "Available Models": {},
+    "Back": {},
+    "Back (Card Answer)": {},
+    "Back fields (LLM outputs)": {},
+    "Back to Home (Esc)": {},
+    "Back: ": {},
+    "Backend": {},
+    "Book in your RELL library": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RELL kitaplığınızdaki kitap"
           }
         }
       }
     },
-    "Bookmark" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yer İmi"
+    "Bookmark": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yer İmi"
           }
         }
       }
     },
-    "Bookmark %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ — yer imlerine ekle"
+    "Bookmark %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — yer imlerine ekle"
           }
         }
       }
     },
-    "Bookmark Page (⌘B)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sayfayı yer imlerine ekle (⌘B)"
+    "Bookmark Page (⌘B)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfayı yer imlerine ekle (⌘B)"
           }
         }
       }
     },
-    "Both use your AI provider. Turn them off to avoid extra requests." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İkisi de yapay zeka sağlayıcınızı kullanır. Ek istek istemiyorsanız kapatın."
+    "Both use your AI provider. Turn them off to avoid extra requests.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İkisi de yapay zeka sağlayıcınızı kullanır. Ek istek istemiyorsanız kapatın."
           }
         }
       }
-    },
-    "Browse…" : {
-
-    },
-    "Bulk Export to Anki" : {
-
-    },
-    "Cancel" : {
-
-    },
-    "Cancelled" : {
-
     },
-    "Category" : {
-
-    },
-    "CATEGORY" : {
-
-    },
-    "Change highlight color" : {
-
-    },
-    "Chapter %lld" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bölüm %lld"
+    "Browse…": {},
+    "Bulk Export to Anki": {},
+    "CATEGORY": {},
+    "CONTEXT": {},
+    "Cancel": {},
+    "Cancelled": {},
+    "Category": {},
+    "Change highlight color": {},
+    "Chapter %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bölüm %lld"
           }
         }
       }
     },
-    "Chapter %lld / %lld" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bölüm %lld / %lld"
+    "Chapter %lld / %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bölüm %lld / %lld"
           }
         }
       }
-    },
-    "Check" : {
-
     },
-    "Check Now" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Şimdi Denetle"
+    "Chapter %lld of %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bölüm %lld / %lld"
           }
         }
       }
     },
-    "Checked" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denetlendi"
+    "Check": {},
+    "Check Now": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi Denetle"
           }
         }
       }
     },
-    "Checking Connection…" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bağlantı Denetleniyor…"
+    "Checked": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetlendi"
           }
         }
       }
     },
-    "Checking…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denetleniyor…"
+    "Checking Connection…": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı Denetleniyor…"
           }
         }
       }
-    },
-    "Choose a module above" : {
-
-    },
-    "Clear" : {
-
-    },
-    "Clear All" : {
-
-    },
-    "Clear all %lld saved words?" : {
-
     },
-    "Clear all saved words" : {
-
-    },
-    "Clear Outputs" : {
-
-    },
-    "Clear search" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aramayı temizle"
+    "Checking…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetleniyor…"
           }
         }
       }
     },
-    "Click to jump to page" : {
-
-    },
-    "Click to reveal" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Görmek için tıklayın"
+    "Choose a module above": {},
+    "Clear": {},
+    "Clear All": {},
+    "Clear Outputs": {},
+    "Clear all %lld saved words?": {},
+    "Clear all saved words": {},
+    "Clear search": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aramayı temizle"
           }
         }
       }
-    },
-    "Click to reveal the definition" : {
-
     },
-    "Close (Esc)" : {
-
-    },
-    "Close Document" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Belgeyi Kapat"
+    "Click to jump to page": {},
+    "Click to reveal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görmek için tıklayın"
           }
         }
       }
     },
-    "Close document and return to Home (⇧⌘W)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Belgeyi kapatıp ana ekrana dön (⇧⌘W)"
+    "Click to reveal the definition": {},
+    "Close (Esc)": {},
+    "Close Document": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belgeyi Kapat"
           }
         }
       }
-    },
-    "Close Find (Esc)" : {
-
     },
-    "Collapse All" : {
-
-    },
-    "Connected" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bağlı"
+    "Close Find (Esc)": {},
+    "Close document and return to Home (⇧⌘W)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belgeyi kapatıp ana ekrana dön (⇧⌘W)"
           }
         }
       }
-    },
-    "Connected — you're ready to read" : {
-
-    },
-    "Connecting…" : {
-
     },
-    "Contents" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İçindekiler"
+    "Collapse All": {},
+    "Connected": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlı"
           }
         }
       }
     },
-    "Context" : {
-
-    },
-    "CONTEXT" : {
-
-    },
-    "Continue" : {
-
-    },
-    "Continue reading" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Okumaya devam et"
+    "Connected — you're ready to read": {},
+    "Connecting…": {},
+    "Contents": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçindekiler"
           }
         }
       }
-    },
-    "Continue Reading" : {
-
     },
-    "Continue reading %@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Continue reading %1$@, %2$@"
+    "Context": {},
+    "Continue": {},
+    "Continue Reading": {},
+    "Continue reading": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okumaya devam et"
           }
         }
       }
     },
-    "Copied!" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopyalandı!"
+    "Continue reading %@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Continue reading %1$@, %2$@"
           }
         }
       }
     },
-    "Copy" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopyala"
+    "Copied!": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı!"
           }
         }
       }
     },
-    "Copy result (⇧⌘C)" : {
-
-    },
-    "Copy Term" : {
-
-    },
-    "Copy Text" : {
-
-    },
-    "Copy Text from %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ metnini kopyala"
+    "Copy": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyala"
           }
         }
       }
-    },
-    "Correct!" : {
-
-    },
-    "Couldn't load a definition. Check your AI server." : {
-
-    },
-    "Couldn't translate — check your AI server." : {
-
-    },
-    "Count" : {
-
-    },
-    "Cram" : {
-
-    },
-    "Cram — practice without changing the schedule" : {
-
-    },
-    "Created %@" : {
-
-    },
-    "Creativity (Temperature)" : {
-
-    },
-    "Daily Goal" : {
-
     },
-    "Daily goal reached" : {
-
-    },
-    "Daily reading goal reached" : {
-
-    },
-    "Day" : {
-
-    },
-    "Deck" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deste"
+    "Copy Term": {},
+    "Copy Text": {},
+    "Copy Text from %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ metnini kopyala"
           }
         }
       }
-    },
-    "Deck: %@" : {
-
     },
-    "Definition: %@" : {
-
-    },
-    "Definitions stay in %@; meanings and translations use %@. You can change this anytime in Settings." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Definitions stay in %1$@; meanings and translations use %2$@. You can change this anytime in Settings."
+    "Copy result (⇧⌘C)": {},
+    "Correct!": {},
+    "Couldn't load a definition. Check your AI server.": {},
+    "Couldn't translate — check your AI server.": {},
+    "Count": {},
+    "Cram": {},
+    "Cram — practice without changing the schedule": {},
+    "Created %@": {},
+    "Creativity (Temperature)": {},
+    "Daily Goal": {},
+    "Daily goal reached": {},
+    "Daily reading goal reached": {},
+    "Day": {},
+    "Deck": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deste"
           }
         }
       }
-    },
-    "Delete" : {
-
-    },
-    "Detailed" : {
-
-    },
-    "Document Stats…" : {
-
     },
-    "Domain" : {
-
-    },
-    "Done" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bitti"
+    "Deck: %@": {},
+    "Definition: %@": {},
+    "Definitions stay in %@; meanings and translations use %@. You can change this anytime in Settings.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Definitions stay in %1$@; meanings and translations use %2$@. You can change this anytime in Settings."
           }
         }
       }
     },
-    "Double-click a word or drag\nto select a sentence." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir kelimeye çift tıklayın veya\ncümle seçmek için sürükleyin."
+    "Delete": {},
+    "Detailed": {},
+    "Document Stats…": {},
+    "Domain": {},
+    "Done": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitti"
           }
         }
       }
-    },
-    "Drill cards without affecting spaced-repetition timing." : {
-
-    },
-    "Drop a PDF anywhere to open it" : {
-
-    },
-    "e.g. rell medical vocab" : {
-
-    },
-    "e.g. rell vocabulary" : {
-
-    },
-    "Edit" : {
-
-    },
-    "Edit Note" : {
-
-    },
-    "Edit Notes…" : {
-
-    },
-    "Edit Tags…" : {
-
     },
-    "Enter Focus Mode" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odak Moduna Gir"
+    "Double-click a word or drag\nto select a sentence.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir kelimeye çift tıklayın veya\ncümle seçmek için sürükleyin."
           }
         }
       }
     },
-    "Error" : {
-
-    },
-    "Exit Focus Mode" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odak Modundan Çık"
+    "Drill cards without affecting spaced-repetition timing.": {},
+    "Drop a PDF or EPUB anywhere to open it": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açmak için bir PDF veya EPUB'ı herhangi bir yere bırakın"
           }
         }
       }
     },
-    "Exit Focus Mode (⇧⌘D)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odak modundan çık (⇧⌘D)"
+    "Edit": {},
+    "Edit Note": {},
+    "Edit Notes…": {},
+    "Edit Tags…": {},
+    "Enter Focus Mode": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak Moduna Gir"
           }
         }
       }
-    },
-    "Expand All" : {
-
-    },
-    "Export" : {
-
-    },
-    "Export Fields… (⌘E)" : {
-
     },
-    "Export to Anki" : {
-
-    },
-    "Exported to Anki!" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anki'ye aktarıldı!"
+    "Error": {},
+    "Exit Focus Mode": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak Modundan Çık"
           }
         }
       }
     },
-    "Fewer modules" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daha az modül"
+    "Exit Focus Mode (⇧⌘D)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak modundan çık (⇧⌘D)"
           }
         }
       }
     },
-    "Filter by deck (tag)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desteye (etikete) göre filtrele"
+    "Expand All": {},
+    "Export": {},
+    "Export Fields… (⌘E)": {},
+    "Export to Anki": {},
+    "Exported to Anki!": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anki'ye aktarıldı!"
           }
         }
       }
     },
-    "Find" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bul"
+    "Fewer modules": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha az modül"
           }
         }
       }
     },
-    "Find (⌘F)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bul (⌘F)"
+    "Filter by deck (tag)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desteye (etikete) göre filtrele"
           }
         }
       }
     },
-    "Find in book…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kitapta bul…"
+    "Find": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bul"
           }
         }
       }
     },
-    "Find in PDF (⌘F)" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF içinde bul (⌘F)"
+    "Find (⌘F)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bul (⌘F)"
           }
         }
       }
-    },
-    "Find in PDF…" : {
-
     },
-    "Fit to Width (⌘0)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Genişliğe sığdır (⌘0)"
+    "Find in PDF (⌘F)": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PDF içinde bul (⌘F)"
           }
         }
       }
     },
-    "Fit Width" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Genişliğe Sığdır"
+    "Find in PDF…": {},
+    "Find in book…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitapta bul…"
           }
         }
       }
     },
-    "Flashcard reveal, pick the word for a definition, or type the missing word." : {
-
-    },
-    "Focus Mode" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odak Modu"
+    "Fit Width": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genişliğe Sığdır"
           }
         }
       }
     },
-    "Focus Mode — hide panels (⇧⌘D)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odak modu — panelleri gizle (⇧⌘D)"
+    "Fit to Width (⌘0)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genişliğe sığdır (⌘0)"
           }
         }
       }
-    },
-    "from %@" : {
-
     },
-    "Front (Card Question)" : {
-
-    },
-    "Front: " : {
-
-    },
-    "General" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Genel"
+    "Flashcard reveal, pick the word for a definition, or type the missing word.": {},
+    "Focus Mode": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak Modu"
           }
         }
       }
-    },
-    "Generating response" : {
-
-    },
-    "Get Started" : {
-
     },
-    "Global Shortcut  ⌃⌥Space" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Genel Kısayol  ⌃⌥Space"
+    "Focus Mode — hide panels (⇧⌘D)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odak modu — panelleri gizle (⇧⌘D)"
           }
         }
       }
     },
-    "Go" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git"
+    "Front (Card Question)": {},
+    "Front: ": {},
+    "General": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genel"
           }
         }
       }
     },
-    "Goal" : {
-
-    },
-    "Has output" : {
-
-    },
-    "Hide extra modules" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ek modülleri gizle"
+    "Generating response": {},
+    "Get Started": {},
+    "Global Shortcut  ⌃⌥Space": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genel Kısayol  ⌃⌥Space"
           }
         }
       }
     },
-    "Hide Inspector" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denetçiyi Gizle"
+    "Go": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Git"
           }
         }
       }
     },
-    "Hide Sidebar" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kenar Çubuğunu Gizle"
+    "Goal": {},
+    "HINT": {},
+    "Has output": {},
+    "Hide Inspector": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetçiyi Gizle"
           }
         }
       }
-    },
-    "Hide translation" : {
-
-    },
-    "Higher values produce more creative/varied output. Lower values are more focused and deterministic. Changes take effect on the next request." : {
-
     },
-    "Highlight" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vurgula"
+    "Hide Sidebar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kenar Çubuğunu Gizle"
           }
         }
       }
     },
-    "HINT" : {
-
-    },
-    "Home" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ana Ekran"
+    "Hide extra modules": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ek modülleri gizle"
           }
         }
       }
     },
-    "Hover Dictionary" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İmleç Sözlüğü"
+    "Hide translation": {},
+    "Higher values produce more creative/varied output. Lower values are more focused and deterministic. Changes take effect on the next request.": {},
+    "Highlight": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vurgula"
           }
         }
       }
-    },
-    "Include all saved words" : {
-
-    },
-    "Include Source" : {
-
-    },
-    "Include Source (PDF + page)" : {
-
     },
-    "Jump to Page" : {
-
-    },
-    "Language Pair" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dil Çifti"
+    "Home": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ana Ekran"
           }
         }
       }
     },
-    "Larger Text" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daha Büyük Metin"
+    "Hover Dictionary": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İmleç Sözlüğü"
           }
         }
       }
     },
-    "Larger Text (⌘+)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daha büyük metin (⌘+)"
+    "Include Source": {},
+    "Include Source (document + page/chapter)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaynağı Ekle (belge + sayfa/bölüm)"
           }
         }
       }
-    },
-    "LAST 7 DAYS" : {
-
     },
-    "Latency" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gecikme"
+    "Include all saved words": {},
+    "Jump to Page": {},
+    "LAST 7 DAYS": {},
+    "LEARNING": {},
+    "LLM": {},
+    "LLM Server Connected": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LLM Sunucusu Bağlı"
           }
         }
       }
-    },
-    "LEARNING" : {
-
-    },
-    "Level" : {
-
     },
-    "Library · %lld documents" : {
-
-    },
-    "Library · 1 document" : {
-
-    },
-    "LLM" : {
-
-    },
-    "LLM Server Connected" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LLM Sunucusu Bağlı"
+    "LLM Server Status Unknown": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LLM Sunucu Durumu Bilinmiyor"
           }
         }
       }
     },
-    "LLM server status — %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LLM sunucu durumu — %@"
+    "LLM Server Unreachable": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LLM Sunucusuna Ulaşılamıyor"
           }
         }
       }
     },
-    "LLM Server Status Unknown" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LLM Sunucu Durumu Bilinmiyor"
+    "LLM server status — %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LLM sunucu durumu — %@"
           }
         }
       }
     },
-    "LLM server status: %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LLM sunucu durumu: %@"
+    "LLM server status: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LLM sunucu durumu: %@"
           }
         }
       }
     },
-    "LLM server unreachable" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LLM sunucusuna ulaşılamıyor"
+    "LLM server unreachable": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LLM sunucusuna ulaşılamıyor"
           }
         }
       }
     },
-    "LLM Server Unreachable" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LLM Sunucusuna Ulaşılamıyor"
+    "Language Pair": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dil Çifti"
           }
         }
       }
-    },
-    "Loading" : {
-
     },
-    "Look Up" : {
-      "comment" : "Shortcut name for the Look Up intent.",
-      "isCommentAutoGenerated" : true
-    },
-    "Look up ${term} in RELL" : {
-
-    },
-    "Look up a word…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir kelime arayın…"
+    "Larger Text": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha Büyük Metin"
           }
         }
       }
     },
-    "Look Up in Inspector" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denetçide Ara"
+    "Larger Text (⌘+)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha büyük metin (⌘+)"
           }
         }
       }
     },
-    "Look Up in RELL" : {
-      "comment" : "Title of the intent to look up a word in RELL.",
-      "isCommentAutoGenerated" : true
-    },
-    "Look up words from the menu bar, even when no window is open." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pencere açık olmasa bile menü çubuğundan kelime arayın."
+    "Latency": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gecikme"
           }
         }
       }
-    },
-    "Looking up…" : {
-
-    },
-    "Mark as %@ and continue" : {
-
     },
-    "Mark as…" : {
-
+    "Level": {},
+    "Library · %lld documents": {},
+    "Library · 1 document": {},
+    "Loading": {},
+    "Look Up": {
+      "comment": "Shortcut name for the Look Up intent.",
+      "isCommentAutoGenerated": true
     },
-    "Marks %@ as %@ and shows the next due word" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Marks %1$@ as %2$@ and shows the next due word"
+    "Look Up in Inspector": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetçide Ara"
           }
         }
       }
     },
-    "Marks the current card as %@ and advances review" : {
-
+    "Look Up in RELL": {
+      "comment": "Title of the intent to look up a word in RELL.",
+      "isCommentAutoGenerated": true
     },
-    "MASTERY" : {
-
-    },
-    "Menu Bar Icon" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menü Çubuğu Simgesi"
+    "Look up ${term} in RELL": {},
+    "Look up a word…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir kelime arayın…"
           }
         }
       }
-    },
-    "METADATA" : {
-
-    },
-    "min" : {
-
-    },
-    "Minutes" : {
-
     },
-    "Mode" : {
-
-    },
-    "Model" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Model"
+    "Look up words from the menu bar, even when no window is open.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencere açık olmasa bile menü çubuğundan kelime arayın."
           }
         }
       }
     },
-    "Modules" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modüller"
+    "Looking up…": {},
+    "MASTERY": {},
+    "METADATA": {},
+    "Mark as %@ and continue": {},
+    "Mark as…": {},
+    "Marks %@ as %@ and shows the next due word": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Marks %1$@ as %2$@ and shows the next due word"
           }
         }
       }
-    },
-    "More actions" : {
-
     },
-    "More modules" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daha fazla modül"
+    "Marks the current card as %@ and advances review": {},
+    "Menu Bar Icon": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü Çubuğu Simgesi"
           }
         }
       }
-    },
-    "Next %@" : {
-
-    },
-    "Next Match (↩)" : {
-
     },
-    "Next Match (⌘G)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sonraki eşleşme (⌘G)"
+    "Minutes": {},
+    "Mode": {},
+    "Model": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
           }
         }
       }
     },
-    "Next Page" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sonraki Sayfa"
+    "Modules": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modüller"
           }
         }
       }
     },
-    "No documents match “%@”" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” ile eşleşen belge yok"
+    "More actions": {},
+    "More modules": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha fazla modül"
           }
         }
       }
     },
-    "No matches" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eşleşme yok"
+    "NOTE": {},
+    "NOTES": {},
+    "Next %@": {},
+    "Next Match (↩)": {},
+    "Next Match (⌘G)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki eşleşme (⌘G)"
           }
         }
       }
     },
-    "No models found.\nIs the server running?" : {
-
-    },
-    "No Outline" : {
-
-    },
-    "No output" : {
-
-    },
-    "No Recent Documents" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Son Kullanılan Belge Yok"
+    "Next Page": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki Sayfa"
           }
         }
       }
-    },
-    "No results" : {
-
     },
-    "No saved words yet" : {
-
-    },
-    "No server right now? Continue anyway — you can set up a provider later in Settings → AI Provider." : {
-
-    },
-    "No table of contents" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İçindekiler tablosu yok"
+    "No Outline": {},
+    "No Recent Documents": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son Kullanılan Belge Yok"
           }
         }
       }
-    },
-    "No vocabulary saved from this PDF yet. Select text and save it from the inspector." : {
-
-    },
-    "Not quite" : {
-
     },
-    "NOTE" : {
-
-    },
-    "NOTES" : {
-
-    },
-    "Nothing is due right now. Keep reading or include all saved words in Review." : {
-
-    },
-    "Open %@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Open %1$@, %2$@"
+    "No documents match “%@”": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” ile eşleşen belge yok"
           }
         }
       }
     },
-    "Open a document, select words as you read,\nand build your vocabulary." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir belge açın, okurken kelimeleri seçin\nve kelime dağarcığınızı oluşturun."
+    "No matches": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleşme yok"
           }
         }
       }
     },
-    "Open a PDF (⌘O)" : {
-
+    "No models found.\nIs the server running?": {},
+    "No output": {},
+    "No results": {},
+    "No saved words yet": {},
+    "No server right now? Continue anyway — you can set up a provider later in Settings → AI Provider.": {},
+    "No table of contents": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçindekiler tablosu yok"
+          }
+        }
+      }
     },
-    "Open LLM Settings…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LLM Ayarlarını Aç…"
+    "No vocabulary saved from this document yet. Select text and save it from the inspector.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu belgeden henüz kaydedilmiş kelime yok. Metin seçip denetçiden kaydedin."
           }
         }
       }
     },
-    "Open PDF" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF Aç"
+    "Not quite": {},
+    "Nothing is due right now. Keep reading or include all saved words in Review.": {},
+    "Open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aç"
           }
         }
       }
     },
-    "Open PDF (⌘O)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF aç (⌘O)"
+    "Open %@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Open %1$@, %2$@"
           }
         }
       }
     },
-    "Open PDF…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF Aç…"
+    "Open LLM Settings…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LLM Ayarlarını Aç…"
           }
         }
       }
     },
-    "Open Recent" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Son Kullanılanlar"
+    "Open Recent": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son Kullanılanlar"
           }
         }
       }
     },
-    "Open Saved Words" : {
-
+    "Open Saved Words": {},
+    "Open a PDF or EPUB (⌘O)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir PDF veya EPUB aç (⌘O)"
+          }
+        }
+      }
     },
-    "Open the full review session" : {
-
+    "Open a document, select words as you read,\nand build your vocabulary.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir belge açın, okurken kelimeleri seçin\nve kelime dağarcığınızı oluşturun."
+          }
+        }
+      }
     },
-    "Open the Quick Lookup panel from any app." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hızlı Arama panelini her uygulamadan açın."
+    "Open the Quick Lookup panel from any app.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı Arama panelini her uygulamadan açın."
           }
         }
       }
     },
-    "Opening book…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kitap açılıyor…"
+    "Open the full review session": {},
+    "Opening book…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitap açılıyor…"
           }
         }
       }
     },
-    "Opens the Quick Lookup panel with a word and fetches its definition." : {
-      "comment" : "Text displayed in a notification when a word lookup is requested.",
-      "isCommentAutoGenerated" : true
+    "Opens the Quick Lookup panel with a word and fetches its definition.": {
+      "comment": "Text displayed in a notification when a word lookup is requested.",
+      "isCommentAutoGenerated": true
     },
-    "Opens the RELL review window to study due words." : {
-      "comment" : "Title of the intent to start vocabulary review.",
-      "isCommentAutoGenerated" : true
+    "Opens the RELL review window to study due words.": {
+      "comment": "Title of the intent to start vocabulary review.",
+      "isCommentAutoGenerated": true
     },
-    "Output may be incomplete — try 'Detailed' mode or increase max tokens in Settings." : {
-
+    "Open…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aç…"
+          }
+        }
+      }
     },
-    "p.%lld" : {
-
+    "Output may be incomplete — try 'Detailed' mode or increase max tokens in Settings.": {},
+    "PDF in your RELL library": {
+      "comment": "Description of a document that is indexed by Spotlight.",
+      "isCommentAutoGenerated": true
     },
-    "Page %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sayfa %@"
+    "Page %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfa %@"
           }
         }
       }
     },
-    "Page %lld" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sayfa %lld"
+    "Page %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfa %lld"
           }
         }
       }
     },
-    "Page %lld / %lld" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sayfa %lld / %lld"
+    "Page %lld / %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfa %lld / %lld"
           }
         }
       }
     },
-    "Page Theme" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sayfa Teması"
+    "Page %lld of %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfa %lld / %lld"
           }
         }
       }
     },
-    "Pages" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sayfalar"
+    "Page Theme": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfa Teması"
           }
         }
       }
-    },
-    "Panel Widths" : {
-
-    },
-    "PDF in your RELL library" : {
-      "comment" : "Description of a document that is indexed by Spotlight.",
-      "isCommentAutoGenerated" : true
     },
-    "PDF ready" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PDF hazır"
+    "Pages": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sayfalar"
           }
         }
       }
     },
-    "Practice Again" : {
-
-    },
-    "Press Return to look up · Esc to close" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aramak için Return · kapatmak için Esc"
+    "Panel Widths": {},
+    "Practice Again": {},
+    "Press Return to look up · Esc to close": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aramak için Return · kapatmak için Esc"
           }
         }
       }
-    },
-    "Preview (first card)" : {
-
     },
-    "Previous Match (⇧↩)" : {
-
-    },
-    "Previous Page" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Önceki Sayfa"
+    "Preview (first card)": {},
+    "Previous Match (⇧↩)": {},
+    "Previous Page": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki Sayfa"
           }
         }
       }
     },
-    "Prompts" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İstemler"
+    "Prompts": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstemler"
           }
         }
       }
-    },
-    "Pronounce" : {
-
     },
-    "Pronounce %@" : {
-
-    },
-    "Provider" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sağlayıcı"
+    "Pronounce": {},
+    "Pronounce %@": {},
+    "Provider": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sağlayıcı"
           }
         }
       }
-    },
-    "Queue for Review" : {
-
     },
-    "Quick Export to Anki" : {
-
-    },
-    "Quick Lookup" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hızlı Arama"
+    "Queue for Review": {},
+    "Quick Export to Anki": {},
+    "Quick Lookup": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı Arama"
           }
         }
       }
-    },
-    "Rate your recall below" : {
-
     },
-    "Read a little every day" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Her gün biraz okuyun"
+    "RELL translates and explains %@ content into %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "RELL translates and explains %1$@ content into %2$@."
           }
         }
       }
     },
-    "Reading & vocabulary stats" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Okuma ve kelime istatistikleri"
+    "Rate your recall below": {},
+    "Read a little every day": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her gün biraz okuyun"
           }
         }
       }
     },
-    "Reading %@" : {
-
-    },
-    "Reading Aids" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Okuma Yardımcıları"
+    "Read books and PDFs in the language you're learning and let AI explain every word in context.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğrendiğiniz dildeki kitapları ve PDF'leri okuyun; yapay zeka her kelimeyi bağlamı içinde açıklasın."
           }
         }
       }
     },
-    "Reading Context" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Okuma Bağlamı"
+    "Reading %@": {},
+    "Reading & vocabulary stats": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okuma ve kelime istatistikleri"
           }
         }
       }
-    },
-    "Reading minutes for the last 7 days" : {
-
     },
-    "Reading Note" : {
-
-    },
-    "Recent" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Son Kullanılanlar"
+    "Reading Aids": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okuma Yardımcıları"
           }
         }
       }
-    },
-    "Recent terms" : {
-
     },
-    "Recent: %@" : {
-
-    },
-    "Refresh (⌘R)" : {
-
-    },
-    "RELL translates and explains %@ content into %@." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "RELL translates and explains %1$@ content into %2$@."
+    "Reading Context": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okuma Bağlamı"
           }
         }
       }
     },
-    "Remove Bookmark (⌘B)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yer imini kaldır (⌘B)"
+    "Reading Note": {},
+    "Reading minutes for the last 7 days": {},
+    "Ready": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazır"
           }
         }
       }
     },
-    "Remove Bookmark from %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ — yer imini kaldır"
+    "Recent": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son Kullanılanlar"
           }
         }
       }
     },
-    "Remove from Library" : {
-
-    },
-    "Removed" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kaldırıldı"
+    "Recent terms": {},
+    "Recent: %@": {},
+    "Refresh (⌘R)": {},
+    "Remove Bookmark (⌘B)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yer imini kaldır (⌘B)"
           }
         }
       }
-    },
-    "Reopens the first-run setup: language pair, AI connection, and quick tour" : {
-
     },
-    "Request Timeout" : {
-
-    },
-    "Reset All" : {
-
-    },
-    "Reset all prompt settings to defaults?" : {
-
-    },
-    "Reset All to Defaults" : {
-
-    },
-    "Reset to default" : {
-
-    },
-    "Reset to default (%@)" : {
-
-    },
-    "Reset to default (30s)" : {
-
-    },
-    "Reset to Defaults" : {
-
-    },
-    "Results will stay here while you switch between modules." : {
-
-    },
-    "Retry" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yeniden Dene"
+    "Remove Bookmark from %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — yer imini kaldır"
           }
         }
       }
     },
-    "Return to Home" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ana ekrana dön"
+    "Remove from Library": {},
+    "Removed": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaldırıldı"
           }
         }
       }
-    },
-    "Reveal answer" : {
-
     },
-    "Review" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tekrar"
+    "Reopens the first-run setup: language pair, AI connection, and quick tour": {},
+    "Request Timeout": {},
+    "Reset All": {},
+    "Reset All to Defaults": {},
+    "Reset all prompt settings to defaults?": {},
+    "Reset to Defaults": {},
+    "Reset to default": {},
+    "Reset to default (%@)": {},
+    "Reset to default (30s)": {},
+    "Results will stay here while you switch between modules.": {},
+    "Retry": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Dene"
           }
         }
       }
     },
-    "Review (%lld)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tekrar (%lld)"
+    "Return to Home": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ana ekrana dön"
           }
         }
       }
     },
-    "Review %lld of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Review %1$lld of %2$lld"
+    "Reveal answer": {},
+    "Review": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekrar"
           }
         }
       }
-    },
-    "Review Activity" : {
-
-    },
-    "Review all" : {
-
     },
-    "Review card front: %@, mastery level %@, status %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Review card front: %1$@, mastery level %2$@, status %3$@"
+    "Review %lld of %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Review %1$lld of %2$lld"
           }
         }
       }
-    },
-    "Review card: %@" : {
-
-    },
-    "Review Center" : {
-
-    },
-    "Review Complete" : {
-
-    },
-    "Review every saved word instead of the due-first queue." : {
-
-    },
-    "Review More" : {
-
     },
-    "Review only words in a deck (tag)." : {
-
-    },
-    "Run All" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tümünü Çalıştır"
+    "Review (%lld)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekrar (%lld)"
           }
         }
       }
     },
-    "Run All (⇧⌘R)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tümünü çalıştır (⇧⌘R)"
+    "Review Activity": {},
+    "Review Center": {},
+    "Review Complete": {},
+    "Review More": {},
+    "Review all": {},
+    "Review card front: %@, mastery level %@, status %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Review card front: %1$@, mastery level %2$@, status %3$@"
           }
         }
       }
     },
-    "Run All Modules" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tüm Modülleri Çalıştır"
+    "Review card: %@": {},
+    "Review every saved word instead of the due-first queue.": {},
+    "Review only words in a deck (tag).": {},
+    "Run All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü Çalıştır"
           }
         }
       }
     },
-    "Run Last Module" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Son Modülü Çalıştır"
+    "Run All (⇧⌘R)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü çalıştır (⇧⌘R)"
           }
         }
       }
-    },
-    "Run this module to generate an explanation." : {
-
     },
-    "Save" : {
-
-    },
-    "Save %@" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ kaydet"
+    "Run All Modules": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm Modülleri Çalıştır"
           }
         }
       }
-    },
-    "Save failed: %@" : {
-
     },
-    "Save to vocabulary (⌘S)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kelime defterine kaydet (⌘S)"
+    "Run Last Module": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son Modülü Çalıştır"
           }
         }
       }
     },
-    "Save TSV" : {
-
-    },
-    "Save vocabulary from the reader, then review due words here." : {
-
-    },
-    "Save Word" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kelimeyi Kaydet"
+    "Run this module to generate an explanation.": {},
+    "SAVED OUTPUTS": {},
+    "SOURCE": {},
+    "Save": {},
+    "Save %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kaydet"
           }
         }
       }
     },
-    "Saved" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kaydedildi"
+    "Save TSV": {},
+    "Save Word": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kelimeyi Kaydet"
           }
         }
       }
-    },
-    "Saved · %@" : {
-
-    },
-    "Saved “%@” to your vocabulary." : {
-      "comment" : "A confirmation message that is displayed in a dialog when a word is added to the vocabulary. The argument is the word that was added.",
-      "isCommentAutoGenerated" : true
     },
-    "SAVED OUTPUTS" : {
-
-    },
-    "Saved!" : {
-
+    "Save failed: %@": {},
+    "Save to vocabulary (⌘S)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kelime defterine kaydet (⌘S)"
+          }
+        }
+      }
     },
-    "Saves a word to your RELL vocabulary for later review." : {
-      "comment" : "Description of the Add Word intent.",
-      "isCommentAutoGenerated" : true
+    "Save vocabulary from the reader, then review due words here.": {},
+    "Saved": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydedildi"
+          }
+        }
+      }
     },
-    "Search" : {
-
+    "Saved · %@": {},
+    "Saved “%@” to your vocabulary.": {
+      "comment": "A confirmation message that is displayed in a dialog when a word is added to the vocabulary. The argument is the word that was added.",
+      "isCommentAutoGenerated": true
     },
-    "Search notes" : {
-
+    "Saved!": {},
+    "Saves a word to your RELL vocabulary for later review.": {
+      "comment": "Description of the Add Word intent.",
+      "isCommentAutoGenerated": true
     },
-    "Search words, notes, sources…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kelime, not, kaynak ara…"
+    "Search": {},
+    "Search notes": {},
+    "Search words, notes, sources…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kelime, not, kaynak ara…"
           }
         }
       }
-    },
-    "Select All" : {
-
     },
-    "Select text to analyze" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İncelemek için metin seçin"
+    "Select All": {},
+    "Select text to analyze": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İncelemek için metin seçin"
           }
         }
       }
     },
-    "Selected text: %@" : {
-
-    },
-    "Sentence selection ready" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cümle seçimi hazır"
+    "Selected text: %@": {},
+    "Sentence Translation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cümle Çevirisi"
           }
         }
       }
     },
-    "Sentence Translation" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cümle Çevirisi"
+    "Sentence selection ready": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cümle seçimi hazır"
           }
         }
       }
     },
-    "Server" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sunucu"
+    "Server": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu"
           }
         }
       }
-    },
-    "Server URL" : {
-
     },
-    "Settings…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ayarlar…"
+    "Server URL": {},
+    "Settings…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar…"
           }
         }
       }
     },
-    "Short" : {
-
-    },
-    "Show %lld more modules" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld modül daha göster"
+    "Short": {},
+    "Show %lld more modules": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld modül daha göster"
           }
         }
       }
     },
-    "Show a quick definition when you hover over a word." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İmleci bir kelimenin üzerine getirince hızlı tanım göster."
+    "Show Inspector": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetçiyi Göster"
           }
         }
       }
-    },
-    "Show in Finder" : {
-
     },
-    "Show Inspector" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denetçiyi Göster"
+    "Show Sidebar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kenar Çubuğunu Göster"
           }
         }
       }
     },
-    "Show more (%lld)" : {
-
-    },
-    "Show Sidebar" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kenar Çubuğunu Göster"
+    "Show Welcome Tour Again": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karşılama Turunu Yeniden Göster"
           }
         }
       }
-    },
-    "Show the full library" : {
-
     },
-    "Show the other saved modules for this word" : {
-
-    },
-    "Show Welcome Tour Again" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Karşılama Turunu Yeniden Göster"
+    "Show a quick definition when you hover over a word.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İmleci bir kelimenin üzerine getirince hızlı tanım göster."
           }
         }
       }
-    },
-    "sk-..." : {
-
     },
-    "Skip" : {
-
-    },
-    "Smaller Text" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daha Küçük Metin"
+    "Show in Finder": {},
+    "Show more (%lld)": {},
+    "Show the full library": {},
+    "Show the other saved modules for this word": {},
+    "Skip": {},
+    "Smaller Text": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha Küçük Metin"
           }
         }
       }
     },
-    "Smaller Text (⌘-)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Daha küçük metin (⌘-)"
+    "Smaller Text (⌘-)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha küçük metin (⌘-)"
           }
         }
       }
-    },
-    "Sort" : {
-
-    },
-    "Sort the library" : {
-
-    },
-    "SOURCE" : {
-
     },
-    "Source Context" : {
-
-    },
-    "Speak" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seslendir"
+    "Sort": {},
+    "Sort the library": {},
+    "Source Context": {},
+    "Speak": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seslendir"
           }
         }
       }
-    },
-    "Start Review" : {
-
     },
-    "Start the current review queue" : {
-
+    "Start Review": {},
+    "Start Vocabulary Review": {
+      "comment": "Title of the intent to start the vocabulary review.",
+      "isCommentAutoGenerated": true
     },
-    "Start Vocabulary Review" : {
-      "comment" : "Title of the intent to start the vocabulary review.",
-      "isCommentAutoGenerated" : true
-    },
-    "Start with a PDF" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir PDF ile başlayın"
+    "Start reading": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okumaya başla"
           }
         }
       }
     },
-    "Stats" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İstatistikler"
+    "Start the current review queue": {},
+    "Start with a Book or PDF": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir Kitap veya PDF ile Başlayın"
           }
         }
       }
-    },
-    "Stop" : {
-
-    },
-    "Streaming output in progress" : {
-
     },
-    "Switch to %@ tab" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ sekmesine geç"
+    "Stats": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstatistikler"
           }
         }
       }
     },
-    "Switch to Detailed" : {
-
-    },
-    "Switch to Short" : {
-
-    },
-    "System Prompt Preamble" : {
-
-    },
-    "Tags" : {
-
-    },
-    "TAGS / DECKS" : {
-
-    },
-    "Tags: " : {
-
-    },
-    "Tap to flip and see the definition" : {
-
-    },
-    "Tap to reveal" : {
-
-    },
-    "Tap to run %@ analysis" : {
-
-    },
-    "Tap to view details" : {
-
-    },
-    "TERM" : {
-
-    },
-    "Test Connection" : {
-
-    },
-    "The model returned an empty answer. Try again or check the model in Settings." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Model boş yanıt döndürdü. Yeniden deneyin veya Ayarlar'dan modeli kontrol edin."
+    "Stop": {},
+    "Streaming output in progress": {},
+    "Switch to %@ tab": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sekmesine geç"
           }
         }
       }
     },
-    "The response will appear here as soon as the model starts producing text." : {
-
-    },
-    "Theme" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tema"
+    "Switch to Detailed": {},
+    "Switch to Short": {},
+    "System Prompt Preamble": {},
+    "TAGS / DECKS": {},
+    "TERM": {},
+    "TODAY": {},
+    "TYPE THE MISSING WORD": {},
+    "TYPE THE WORD": {},
+    "Tags": {},
+    "Tags: ": {},
+    "Tap to flip and see the definition": {},
+    "Tap to reveal": {},
+    "Tap to run %@ analysis": {},
+    "Tap to view details": {},
+    "Test Connection": {},
+    "The model returned an empty answer. Try again or check the model in Settings.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model boş yanıt döndürdü. Yeniden deneyin veya Ayarlar'dan modeli kontrol edin."
           }
         }
       }
-    },
-    "Thinking…" : {
-
-    },
-    "This PDF has no table of contents." : {
-
-    },
-    "This text is prepended to the built-in system prompt for every module. Leave empty to use the default. Use this to add domain-specific instructions (e.g. \"Always provide IPA pronunciation\")." : {
-
     },
-    "TODAY" : {
-
-    },
-    "Today's reading vs your daily goal — right-click to change the goal" : {
-
-    },
-    "Toggle Inspector" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denetçiyi Aç/Kapat"
+    "The response will appear here as soon as the model starts producing text.": {},
+    "Theme": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tema"
           }
         }
       }
     },
-    "Toggle Inspector (⌘⌥I)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denetçiyi aç/kapat (⌘⌥I)"
+    "Thinking…": {},
+    "This Document": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Belge"
           }
         }
       }
     },
-    "Translate the selected sentence below the page." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seçilen cümleyi sayfanın altında çevir."
+    "This PDF has no table of contents.": {},
+    "This text is prepended to the built-in system prompt for every module. Leave empty to use the default. Use this to add domain-specific instructions (e.g. \"Always provide IPA pronunciation\").": {},
+    "Today's reading vs your daily goal — right-click to change the goal": {},
+    "Toggle Inspector": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetçiyi Aç/Kapat"
           }
         }
       }
-    },
-    "Translating…" : {
-
-    },
-    "Try a different search term." : {
-
     },
-    "TYPE THE MISSING WORD" : {
-
-    },
-    "TYPE THE WORD" : {
-
-    },
-    "Type the word…" : {
-
-    },
-    "Unknown" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bilinmiyor"
+    "Toggle Inspector (⌘⌥I)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetçiyi aç/kapat (⌘⌥I)"
           }
         }
       }
     },
-    "Unreachable" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ulaşılamıyor"
+    "Translate the selected sentence below the page.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seçilen cümleyi sayfanın altında çevir."
           }
         }
       }
     },
-    "View all" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tümünü gör"
+    "Translating…": {},
+    "Try a different search term.": {},
+    "Type the word…": {},
+    "Unknown": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilinmiyor"
           }
         }
       }
-    },
-    "VOCABULARY GROWTH" : {
-
     },
-    "Vocabulary Review" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kelime Tekrarı"
+    "Unreachable": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ulaşılamıyor"
           }
         }
       }
     },
-    "Warning: output may be incomplete due to token limit" : {
-
-    },
-    "WHICH WORD FITS?" : {
-
+    "VOCABULARY GROWTH": {},
+    "View all": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü gör"
+          }
+        }
+      }
     },
-    "Word" : {
-      "comment" : "The title of the parameter for the word to be added.",
-      "isCommentAutoGenerated" : true
+    "Vocabulary Review": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kelime Tekrarı"
+          }
+        }
+      }
     },
-    "Word is saved to vocabulary. Review status: %@" : {
-
+    "WHICH WORD FITS?": {},
+    "Warning: output may be incomplete due to token limit": {},
+    "Word": {
+      "comment": "The title of the parameter for the word to be added.",
+      "isCommentAutoGenerated": true
     },
-    "Word saved!" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kelime kaydedildi!"
+    "Word is saved to vocabulary. Review status: %@": {},
+    "Word saved!": {
+      "extractionState": "stale",
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kelime kaydedildi!"
           }
         }
       }
     },
-    "Words" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kelimeler"
+    "Words": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kelimeler"
           }
         }
       }
     },
-    "Your review queue is clear. Include mastered words for extra practice." : {
-
-    },
-    "Zoom In" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yakınlaştır"
+    "Your review queue is clear. Include mastered words for extra practice.": {},
+    "Zoom In": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yakınlaştır"
           }
         }
       }
     },
-    "Zoom In (⌘+)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yakınlaştır (⌘+)"
+    "Zoom In (⌘+)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yakınlaştır (⌘+)"
           }
         }
       }
     },
-    "Zoom Out" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uzaklaştır"
+    "Zoom Out": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzaklaştır"
           }
         }
       }
     },
-    "Zoom Out (⌘-)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uzaklaştır (⌘-)"
+    "Zoom Out (⌘-)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzaklaştır (⌘-)"
           }
         }
       }
-    }
+    },
+    "[%@]": {},
+    "e.g. rell medical vocab": {},
+    "e.g. rell vocabulary": {},
+    "from %@": {},
+    "min": {},
+    "p.%lld": {},
+    "sk-...": {},
+    "·": {},
+    "·  next %@": {},
+    "· best %lld": {},
+    "— you wrote “%@”": {},
+    "“%@”": {}
   },
-  "version" : "1.1"
+  "version": "1.1"
 }

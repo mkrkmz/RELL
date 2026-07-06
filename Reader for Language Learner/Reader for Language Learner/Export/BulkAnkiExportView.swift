@@ -89,7 +89,7 @@ struct BulkAnkiExportView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "doc.text")
                                 .foregroundStyle(.secondary)
-                            Text("Include Source (PDF + page)")
+                            Text("Include Source (document + page/chapter)")
                                 .font(.subheadline)
                         }
                     }

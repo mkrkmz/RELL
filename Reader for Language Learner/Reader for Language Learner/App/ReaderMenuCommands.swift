@@ -16,7 +16,7 @@ struct ReaderMenuCommands: Commands {
     var body: some Commands {
         // ── File ──────────────────────────────────────────────────────
         CommandGroup(after: .newItem) {
-            Button("Open PDF…") {
+            Button("Open…") {
                 NotificationCenter.default.post(name: .openPDFCommand, object: nil)
             }
             .keyboardShortcut("o", modifiers: [.command])
