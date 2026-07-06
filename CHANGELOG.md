@@ -4,6 +4,56 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.9.0] - 2026-07-03
+
+RELL learns to read EPUBs. Books get the full vocabulary workflow — select,
+analyze, save, review — with zero new dependencies.
+
+### Added
+
+**EPUB reading**
+- Open `.epub` books (Open panel, drag & drop, Open Recent, multi-window
+  tabs — everything PDFs already do). Built on a dependency-free EPUB
+  engine: an in-house read-only ZIP decoder plus an EPUB 2/3 package parser.
+- Chapter-based reading with scroll position memory per book; ⌥⌘←/→
+  moves between chapters; the sidebar's Contents tab shows the book's
+  table of contents (EPUB3 nav with NCX fallback), with the current
+  chapter highlighted.
+- Page themes (Original / Sepia / Dark) apply to books via injected CSS;
+  ⌘+/− adjusts **text size** (12–28 px) instead of zoom.
+- The window title shows the book's real title; the dashboard shows the
+  book's cover (from the EPUB's declared cover image).
+
+**Vocabulary workflow in books**
+- Selecting text in a book drives the Inspector exactly like in PDFs:
+  auto-run analysis, all ten modules, Ask AI, sentence translation strip.
+  The surrounding sentence is captured as context for prompts and saved
+  words.
+- Right-click menu in books: Save Word, Look Up in Inspector,
+  Analyze With ▸ (all ten modules), Speak.
+- **Hover dictionary works in books:** rest the pointer on a word for a
+  quick definition, exactly like in PDFs (same cache, same setting).
+- Saved words record the book and chapter as their source; Spotlight
+  indexes books alongside PDFs.
+
+**In-book search**
+- ⌘F in a book searches the whole text: per-chapter results with match
+  counts and snippets; click a result to jump to that chapter with the
+  match highlighted. ⌘G / ⇧↩ steps through matches in the open chapter.
+
+**Progress**
+- The status strip shows "Chapter 3 / 28 · 42%"; the dashboard's
+  continue-reading cards track book progress by chapter.
+
+Compatibility verified against Project Gutenberg (EPUB3 and legacy) and
+Standard Ebooks productions.
+
+### Known limitations (by design, for now)
+
+- No DRM (Adobe/LCP) and no fixed-layout EPUB3 support.
+- Highlights, notes, and page bookmarks are not yet available in books
+  (PDF unaffected).
+
 ## [1.8.0] - 2026-07-03
 
 The structural release: RELL becomes a true multi-window Mac app with native
