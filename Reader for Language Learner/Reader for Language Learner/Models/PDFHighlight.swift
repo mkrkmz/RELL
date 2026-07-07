@@ -55,9 +55,47 @@ struct PDFHighlight: Identifiable, Codable, Hashable {
     var colorRaw: String
     var highlightRects: [PDFHighlightRect]
     var createdAt: Date = Date()
+    /// Optional user annotation attached to the highlight (added in 1.10;
+    /// absent from older persistence files, hence the custom decoder).
+    var note: String = ""
 
     var color: HighlightColor {
         HighlightColor(rawValue: colorRaw) ?? .yellow
+    }
+
+    init(
+        id: UUID = UUID(),
+        pdfFilename: String,
+        pageIndex: Int,
+        pageLabel: String,
+        selectedText: String,
+        colorRaw: String,
+        highlightRects: [PDFHighlightRect],
+        createdAt: Date = Date(),
+        note: String = ""
+    ) {
+        self.id = id
+        self.pdfFilename = pdfFilename
+        self.pageIndex = pageIndex
+        self.pageLabel = pageLabel
+        self.selectedText = selectedText
+        self.colorRaw = colorRaw
+        self.highlightRects = highlightRects
+        self.createdAt = createdAt
+        self.note = note
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        pdfFilename = try container.decode(String.self, forKey: .pdfFilename)
+        pageIndex = try container.decode(Int.self, forKey: .pageIndex)
+        pageLabel = try container.decode(String.self, forKey: .pageLabel)
+        selectedText = try container.decode(String.self, forKey: .selectedText)
+        colorRaw = try container.decode(String.self, forKey: .colorRaw)
+        highlightRects = try container.decode([PDFHighlightRect].self, forKey: .highlightRects)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        note = try container.decodeIfPresent(String.self, forKey: .note) ?? ""
     }
 }
 
@@ -124,6 +162,13 @@ final class PDFHighlightStore {
         highlights[index].colorRaw = color.rawValue
         save()
         notifyChange()
+    }
+
+    /// Notes aren't rendered on the page, so no annotation refresh is needed.
+    func updateNote(id: UUID, note: String) {
+        guard let index = highlights.firstIndex(where: { $0.id == id }) else { return }
+        highlights[index].note = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        save()
     }
 
     /// Lets the PDF coordinator re-render annotations regardless of SwiftUI

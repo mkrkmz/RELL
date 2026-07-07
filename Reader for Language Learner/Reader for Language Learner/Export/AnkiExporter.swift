@@ -18,6 +18,42 @@ struct AnkiNoteDraft {
     let source: String
 }
 
+/// Output flavors for bulk export. Raw values are stable — they back
+/// `@AppStorage("bulkExportFormat")`.
+enum ExportFormat: String, CaseIterable, Identifiable {
+    case ankiTSV = "Anki TSV"
+    case csv = "CSV"
+    case quizletTSV = "Quizlet"
+
+    var id: String { rawValue }
+
+    var fileExtension: String {
+        switch self {
+        case .ankiTSV, .quizletTSV: return "tsv"
+        case .csv: return "csv"
+        }
+    }
+
+    var contentType: UTType {
+        switch self {
+        case .ankiTSV, .quizletTSV: return .tabSeparatedText
+        case .csv: return .commaSeparatedText
+        }
+    }
+
+    /// One-line hint shown under the format picker.
+    var localizedHint: String {
+        switch self {
+        case .ankiTSV:
+            return String(localized: "Anki import file with HTML formatting, tags, and source.")
+        case .csv:
+            return String(localized: "Plain-text spreadsheet: Front, Back, Tags, Source columns.")
+        case .quizletTSV:
+            return String(localized: "Two columns (term and definition) for Quizlet's import box.")
+        }
+    }
+}
+
 enum AnkiExporter {
 
     // MARK: - Build Note
@@ -126,15 +162,61 @@ enum AnkiExporter {
         return header + "\n" + rows + "\n"
     }
 
+    // MARK: - Format Dispatch
+
+    static func document(from notes: [AnkiNoteDraft], format: ExportFormat) -> String {
+        switch format {
+        case .ankiTSV:    return tsvDocument(from: notes)
+        case .csv:        return csvDocument(from: notes)
+        case .quizletTSV: return quizletDocument(from: notes)
+        }
+    }
+
+    /// RFC 4180-style CSV with a header row. The back field is converted
+    /// from Anki HTML to plain text (real newlines survive inside quotes).
+    static func csvDocument(from notes: [AnkiNoteDraft]) -> String {
+        guard !notes.isEmpty else { return "" }
+        let header = "Front,Back,Tags,Source"
+        let rows = notes.map { note in
+            [note.front, plainText(fromAnkiHTML: note.back), note.tags, note.source]
+                .map(escapeCSV)
+                .joined(separator: ",")
+        }
+        return ([header] + rows).joined(separator: "\n") + "\n"
+    }
+
+    /// Quizlet's import box wants exactly `term<TAB>definition` per line —
+    /// no header, no extra columns, no embedded tabs or newlines.
+    static func quizletDocument(from notes: [AnkiNoteDraft]) -> String {
+        guard !notes.isEmpty else { return "" }
+        let rows = notes.map { note in
+            let term = note.front.replacingOccurrences(of: "\t", with: " ")
+            let definition = plainText(fromAnkiHTML: note.back)
+                .replacingOccurrences(of: "\n", with: " · ")
+                .replacingOccurrences(of: "\t", with: " ")
+            return "\(term)\t\(definition)"
+        }
+        return rows.joined(separator: "\n") + "\n"
+    }
+
+    /// Converts the note back's Anki HTML (built by `buildNote`) to plain
+    /// text: `<br>` → newline, `<b>`/`<i>` and any other tags stripped.
+    static func plainText(fromAnkiHTML html: String) -> String {
+        html
+            .replacingOccurrences(of: "<br>", with: "\n")
+            .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     // MARK: - Save
 
-    /// Opens NSSavePanel and writes the TSV file.
+    /// Opens NSSavePanel and writes the export file for the given format.
     @MainActor
-    static func saveTSV(content: String) async -> Bool {
+    static func save(content: String, format: ExportFormat) async -> Bool {
         let panel = NSSavePanel()
-        panel.title = "Export Anki Cards"
-        panel.nameFieldStringValue = defaultFilename()
-        panel.allowedContentTypes = [.tabSeparatedText]
+        panel.title = "Export Cards"
+        panel.nameFieldStringValue = defaultFilename(for: format)
+        panel.allowedContentTypes = [format.contentType]
         panel.canCreateDirectories = true
 
         let response: NSApplication.ModalResponse
@@ -150,17 +232,31 @@ enum AnkiExporter {
             try content.write(to: url, atomically: true, encoding: .utf8)
             return true
         } catch {
-            AppLogger.export.error("Anki export save failed: \(error.localizedDescription)")
+            AppLogger.export.error("Export save failed: \(error.localizedDescription)")
             return false
         }
     }
 
+    /// Legacy entry point used by the inspector's quick export.
+    @MainActor
+    static func saveTSV(content: String) async -> Bool {
+        await save(content: content, format: .ankiTSV)
+    }
+
     // MARK: - Helpers
 
-    private static func defaultFilename() -> String {
+    private static func defaultFilename(for format: ExportFormat) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        return "RELL_anki_\(formatter.string(from: Date())).tsv"
+        return "RELL_export_\(formatter.string(from: Date())).\(format.fileExtension)"
+    }
+
+    /// Quotes a CSV field when it contains a comma, quote, or newline.
+    private static func escapeCSV(_ value: String) -> String {
+        if value.contains(",") || value.contains("\"") || value.contains("\n") {
+            return "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+        }
+        return value
     }
 
     /// Escapes a field value for TSV: replace tabs with spaces, newlines with <br>.

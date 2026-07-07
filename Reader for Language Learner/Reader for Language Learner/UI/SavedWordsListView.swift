@@ -60,6 +60,13 @@ struct SavedWordsListView: View {
     @State private var showBulkExport = false
     @State private var showClearConfirm = false
 
+    // Multi-select mode for bulk deck assignment / deletion.
+    @State private var isSelecting = false
+    @State private var multiSelection: Set<UUID> = []
+    @State private var showBulkDeleteConfirm = false
+    @State private var showNewDeckPrompt = false
+    @State private var newDeckName = ""
+
     private var sortOrder: SavedWordsSortOrder {
         SavedWordsSortOrder(rawValue: sortRaw) ?? .dateDesc
     }
@@ -167,6 +174,26 @@ struct SavedWordsListView: View {
             titleVisibility: .visible
         ) {
             Button("Clear All", role: .destructive) { store.deleteAll() }
+        }
+        .confirmationDialog(
+            "Delete \(multiSelection.count) selected words?",
+            isPresented: $showBulkDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                store.delete(ids: multiSelection)
+                multiSelection = []
+                isSelecting = false
+            }
+        }
+        .alert("New Deck", isPresented: $showNewDeckPrompt) {
+            TextField("Deck name", text: $newDeckName)
+            Button("Add") {
+                store.addTag(newDeckName, toWordsWithIDs: multiSelection)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The deck will be added to all \(multiSelection.count) selected words.")
         }
     }
 
@@ -313,9 +340,27 @@ struct SavedWordsListView: View {
         } else {
             List {
                 ForEach(filteredWords) { word in
-                    SavedWordRow(word: word)
+                    HStack(spacing: DS.Spacing.sm) {
+                        if isSelecting {
+                            Image(systemName: multiSelection.contains(word.id)
+                                  ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(multiSelection.contains(word.id)
+                                                 ? DS.Color.accent : DS.Color.textTertiary)
+                        }
+                        SavedWordRow(word: word)
+                    }
                         .contentShape(Rectangle())
-                        .onTapGesture { selectedWord = word }
+                        .onTapGesture {
+                            if isSelecting {
+                                if multiSelection.contains(word.id) {
+                                    multiSelection.remove(word.id)
+                                } else {
+                                    multiSelection.insert(word.id)
+                                }
+                            } else {
+                                selectedWord = word
+                            }
+                        }
                         .contextMenu {
                             Button("Edit Notes…") { selectedWord = word }
                             Button {
@@ -409,7 +454,16 @@ struct SavedWordsListView: View {
 
     // MARK: - Bottom Toolbar
 
+    @ViewBuilder
     private var bottomToolbar: some View {
+        if isSelecting {
+            selectionToolbar
+        } else {
+            defaultToolbar
+        }
+    }
+
+    private var defaultToolbar: some View {
         HStack(spacing: DS.Spacing.sm) {
             Button {
                 showBulkExport = true
@@ -418,6 +472,16 @@ struct SavedWordsListView: View {
                     .font(DS.Typography.caption)
             }
             .disabled(store.words.isEmpty)
+
+            Button {
+                isSelecting = true
+                multiSelection = []
+            } label: {
+                Label("Select", systemImage: "checkmark.circle")
+                    .font(DS.Typography.caption)
+            }
+            .disabled(store.words.isEmpty)
+            .help("Select multiple words for bulk deck assignment or deletion")
 
             Spacer()
 
@@ -436,6 +500,89 @@ struct SavedWordsListView: View {
         .controlSize(.small)
         .padding(.horizontal, DS.Spacing.sm)
         .padding(.vertical, DS.Spacing.sm)
+    }
+
+    private var selectionToolbar: some View {
+        HStack(spacing: DS.Spacing.sm) {
+            Button("Done") {
+                isSelecting = false
+                multiSelection = []
+            }
+            .help("Exit selection mode")
+
+            Text(String(localized: "\(multiSelection.count) selected"))
+                .font(DS.Typography.caption)
+                .foregroundStyle(DS.Color.textTertiary)
+                .lineLimit(1)
+
+            Spacer(minLength: DS.Spacing.xs)
+
+            Button {
+                let visible = Set(filteredWords.map(\.id))
+                multiSelection = multiSelection == visible ? [] : visible
+            } label: {
+                Image(systemName: "checklist.checked")
+                    .font(DS.Typography.caption)
+            }
+            .buttonStyle(.plain)
+            .help("Select or deselect all visible words")
+
+            Menu {
+                Section("Add to Deck") {
+                    ForEach(store.allTags, id: \.self) { tag in
+                        Button(tag) {
+                            store.addTag(tag, toWordsWithIDs: multiSelection)
+                        }
+                    }
+                    Button("New Deck…") {
+                        newDeckName = ""
+                        showNewDeckPrompt = true
+                    }
+                }
+                if !tagsAcrossSelection.isEmpty {
+                    Section("Remove from Deck") {
+                        ForEach(tagsAcrossSelection, id: \.self) { tag in
+                            Button(tag) {
+                                store.removeTag(tag, fromWordsWithIDs: multiSelection)
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "tag")
+                    .font(DS.Typography.caption)
+            }
+            .menuStyle(.borderlessButton)
+            .frame(width: 34)
+            .disabled(multiSelection.isEmpty)
+            .help("Assign or remove decks for the selected words")
+
+            Button(role: .destructive) {
+                showBulkDeleteConfirm = true
+            } label: {
+                Image(systemName: "trash")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.danger.opacity(0.85))
+            }
+            .buttonStyle(.plain)
+            .disabled(multiSelection.isEmpty)
+            .help("Delete the selected words")
+        }
+        .controlSize(.small)
+        .padding(.horizontal, DS.Spacing.sm)
+        .padding(.vertical, DS.Spacing.sm)
+    }
+
+    /// Every deck present on at least one selected word.
+    private var tagsAcrossSelection: [String] {
+        var seen = Set<String>()
+        var ordered: [String] = []
+        for word in store.words where multiSelection.contains(word.id) {
+            for tag in word.tags where seen.insert(tag.lowercased()).inserted {
+                ordered.append(tag)
+            }
+        }
+        return ordered.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
 }
 

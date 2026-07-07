@@ -15,6 +15,8 @@ struct HighlightsView: View {
     var pdfViewManager:  PDFViewManager
     var currentFilename: String?
 
+    @State private var noteTarget: PDFHighlight?
+
     var body: some View {
         Group {
             if let filename = currentFilename {
@@ -29,6 +31,12 @@ struct HighlightsView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(item: $noteTarget) { highlight in
+            HighlightNoteEditorSheet(
+                highlight: highlight,
+                onSave: { highlightStore.updateNote(id: highlight.id, note: $0) }
+            )
+        }
     }
 
     // MARK: - List
@@ -38,10 +46,19 @@ struct HighlightsView: View {
             ForEach(entries) { highlight in
                 HighlightRow(
                     highlight: highlight,
-                    onRecolor: { highlightStore.updateColor(id: highlight.id, color: $0) }
+                    onRecolor: { highlightStore.updateColor(id: highlight.id, color: $0) },
+                    onEditNote: { noteTarget = highlight }
                 )
                 .contentShape(Rectangle())
                 .onTapGesture { navigate(to: highlight) }
+                .contextMenu {
+                    Button(highlight.note.isEmpty ? "Add Note…" : "Edit Note…") {
+                        noteTarget = highlight
+                    }
+                    Button("Delete", role: .destructive) {
+                        withAnimation { highlightStore.remove(id: highlight.id) }
+                    }
+                }
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     Button(role: .destructive) {
                         withAnimation { highlightStore.remove(id: highlight.id) }
@@ -95,6 +112,7 @@ struct HighlightsView: View {
 private struct HighlightRow: View {
     let highlight: PDFHighlight
     var onRecolor: (HighlightColor) -> Void
+    var onEditNote: () -> Void
 
     @State private var isHovered = false
 
@@ -122,13 +140,35 @@ private struct HighlightRow: View {
                         .font(DS.Typography.caption2)
                         .foregroundStyle(DS.Color.textTertiary)
                 }
+                if !highlight.note.isEmpty {
+                    HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.xxs) {
+                        Image(systemName: "note.text")
+                            .font(.system(size: 9))
+                            .foregroundStyle(DS.Color.textTertiary)
+                        Text(highlight.note)
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(DS.Color.textSecondary)
+                            .italic()
+                            .lineLimit(2)
+                    }
+                }
             }
 
             Spacer(minLength: DS.Spacing.xs)
 
             if isHovered {
-                recolorMenu
-                    .transition(.opacity)
+                HStack(spacing: DS.Spacing.xs) {
+                    Button(action: onEditNote) {
+                        Image(systemName: highlight.note.isEmpty ? "note.text.badge.plus" : "note.text")
+                            .font(.system(size: 11))
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help(highlight.note.isEmpty ? "Add a note" : "Edit note")
+
+                    recolorMenu
+                }
+                .transition(.opacity)
             } else {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 10, weight: .medium))
@@ -167,5 +207,61 @@ private struct HighlightRow: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .help("Change highlight color")
+    }
+}
+
+// MARK: - Note Editor Sheet
+
+private struct HighlightNoteEditorSheet: View {
+    let highlight: PDFHighlight
+    var onSave: (String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var text: String
+
+    init(highlight: PDFHighlight, onSave: @escaping (String) -> Void) {
+        self.highlight = highlight
+        self.onSave = onSave
+        _text = State(initialValue: highlight.note)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                Text("Note")
+                    .font(DS.Typography.headline)
+                Text("“\(String(highlight.selectedText.prefix(90)))”")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(2)
+            }
+
+            TextEditor(text: $text)
+                .font(DS.Typography.body)
+                .scrollContentBackground(.hidden)
+                .padding(DS.Spacing.xs)
+                .background(DS.Color.surfaceInset)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+                .frame(minHeight: 120)
+
+            HStack {
+                if !highlight.note.isEmpty {
+                    Button("Remove Note", role: .destructive) {
+                        onSave("")
+                        dismiss()
+                    }
+                }
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Save") {
+                    onSave(text)
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(DS.Spacing.lg)
+        .frame(width: 380)
     }
 }

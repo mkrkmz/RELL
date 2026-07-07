@@ -100,4 +100,40 @@ final class PDFHighlightStoreTests: XCTestCase {
         )
         XCTAssertEqual(highlight.color, .yellow)
     }
+
+    // MARK: - Notes
+
+    func testUpdateNotePersistsAcrossInstances() {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("highlights_note_\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        let first = PDFHighlightStore(fileURL: fileURL)
+        Self.retainedStores.append(first)
+        let highlight = makeHighlight(text: "annotated", color: .blue)
+        first.add(highlight)
+        first.updateNote(id: highlight.id, note: "  grammar point here  ")
+
+        let second = PDFHighlightStore(fileURL: fileURL)
+        Self.retainedStores.append(second)
+        XCTAssertEqual(second.highlights.first?.note, "grammar point here", "note is trimmed and persisted")
+
+        // Clearing the note also persists.
+        second.updateNote(id: highlight.id, note: "")
+        let third = PDFHighlightStore(fileURL: fileURL)
+        Self.retainedStores.append(third)
+        XCTAssertEqual(third.highlights.first?.note, "")
+    }
+
+    func testDecodesLegacyHighlightWithoutNoteField() throws {
+        // Pre-1.10 persistence files have no "note" key — decoding must not throw.
+        let legacyJSON = """
+        {"id":"\(UUID().uuidString)","pdfFilename":"doc","pageIndex":2,"pageLabel":"Page 3",
+         "selectedText":"old","colorRaw":"green","highlightRects":[],"createdAt":700000000}
+        """
+        let decoded = try JSONDecoder().decode(PDFHighlight.self, from: Data(legacyJSON.utf8))
+        XCTAssertEqual(decoded.note, "")
+        XCTAssertEqual(decoded.selectedText, "old")
+        XCTAssertEqual(decoded.color, .green)
+    }
 }

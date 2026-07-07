@@ -183,6 +183,7 @@ final class SavedWordsStore {
         guard !words[index].hasTag(tag) else { return }
         words[index].tags.append(tag)
         save()
+        SpotlightIndexer.index(words[index])   // tags feed the keywords
     }
 
     func removeTag(_ tag: String, from wordID: UUID) {
@@ -190,6 +191,44 @@ final class SavedWordsStore {
         let needle = tag.lowercased()
         words[index].tags.removeAll { $0.lowercased() == needle }
         save()
+        SpotlightIndexer.index(words[index])
+    }
+
+    // MARK: - Bulk operations (one save per call)
+
+    func addTag(_ rawTag: String, toWordsWithIDs ids: Set<UUID>) {
+        let tag = rawTag.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !tag.isEmpty else { return }
+        var changed: [SavedWord] = []
+        for index in words.indices
+        where ids.contains(words[index].id) && !words[index].hasTag(tag) {
+            words[index].tags.append(tag)
+            changed.append(words[index])
+        }
+        guard !changed.isEmpty else { return }
+        save()
+        changed.forEach { SpotlightIndexer.index($0) }
+    }
+
+    func removeTag(_ tag: String, fromWordsWithIDs ids: Set<UUID>) {
+        let needle = tag.lowercased()
+        var changed: [SavedWord] = []
+        for index in words.indices
+        where ids.contains(words[index].id) && words[index].hasTag(tag) {
+            words[index].tags.removeAll { $0.lowercased() == needle }
+            changed.append(words[index])
+        }
+        guard !changed.isEmpty else { return }
+        save()
+        changed.forEach { SpotlightIndexer.index($0) }
+    }
+
+    func delete(ids: Set<UUID>) {
+        let removed = words.filter { ids.contains($0.id) }
+        guard !removed.isEmpty else { return }
+        words.removeAll { ids.contains($0.id) }
+        save()
+        removed.forEach { SpotlightIndexer.removeWord(id: $0.id) }
     }
 
     func isDue(_ word: SavedWord, at referenceDate: Date = Date()) -> Bool {

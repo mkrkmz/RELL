@@ -16,7 +16,13 @@ struct BulkAnkiExportView: View {
     @State private var selectedIDs: Set<UUID> = []
     @State private var selectAll = true
 
+    @AppStorage("bulkExportFormat") private var formatRaw = ExportFormat.ankiTSV.rawValue
+
     @State private var exportResult: ExportResult?
+
+    private var format: ExportFormat {
+        ExportFormat(rawValue: formatRaw) ?? .ankiTSV
+    }
 
     private enum ExportResult {
         case success(Int)
@@ -66,6 +72,28 @@ struct BulkAnkiExportView: View {
                         ForEach(store.words) { word in
                             wordCheckRow(word)
                         }
+                    }
+
+                    Divider()
+
+                    // Export format
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Format")
+                            .font(.subheadline.weight(.medium))
+                        Picker("", selection: Binding(
+                            get: { format },
+                            set: { formatRaw = $0.rawValue }
+                        )) {
+                            ForEach(ExportFormat.allCases) { format in
+                                // Format names are proper nouns — not localized.
+                                Text(format.rawValue).tag(format)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        Text(format.localizedHint)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
 
                     Divider()
@@ -128,8 +156,8 @@ struct BulkAnkiExportView: View {
                 }
                 .keyboardShortcut(.cancelAction)
 
-                Button("Save TSV") {
-                    Task { await exportTSV() }
+                Button("Export…") {
+                    Task { await export() }
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(selectedIDs.isEmpty)
@@ -259,13 +287,13 @@ struct BulkAnkiExportView: View {
     }
 
     @MainActor
-    private func exportTSV() async {
+    private func export() async {
         let selectedWords = store.words.filter { selectedIDs.contains($0.id) }
         guard !selectedWords.isEmpty else { return }
 
         let notes = selectedWords.map { buildNote(from: $0) }
-        let content = AnkiExporter.tsvDocument(from: notes)
-        let saved = await AnkiExporter.saveTSV(content: content)
+        let content = AnkiExporter.document(from: notes, format: format)
+        let saved = await AnkiExporter.save(content: content, format: format)
 
         withAnimation(.easeInOut(duration: 0.2)) {
             exportResult = saved ? .success(notes.count) : .cancelled
