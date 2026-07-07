@@ -4,6 +4,36 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.9.2] - 2026-07-06
+
+Quality pass: real localization bugs fixed, test coverage extended, and a
+second CI type-check risk caught before it could bite a release.
+
+### Fixed
+
+- Sort/filter labels in the vocabulary list ("Newest", "This Document", …)
+  and two "File not found" messages were silently never localized: they
+  went through SwiftUI's plain-string `Text` initializer, which — unlike
+  `Text` with a string literal — never consults the string catalog. These
+  now resolve through `String(localized:)` / a `localizedTitle` property,
+  matching the pattern already used for sidebar tab titles.
+- `InspectorView.body` carried the same 24-modifier single-chain shape
+  that caused the v1.9.0 CI type-check timeout. Split into staged
+  modifier groups before it could fail the same way.
+
+### Added
+
+- Unit tests for `SpotlightIndexer` (identifier/deep-link round-trip),
+  `ReadingSessionStore` (session lifecycle, streaks, 7-day stats),
+  `QuickLookupPanelModel` (cache-hit lookup, save, reset), and
+  `EPUBSearchManager` (match counting, snippets) — all previously
+  untested code from the S3–S8 and EPUB work.
+
+### Changed
+
+- `CLAUDE.md` and `ARCHITECTURE.md` no longer describe RELL as PDF-only
+  or claim zero test coverage / no structured logging — both were stale.
+
 ## [1.9.1] - 2026-07-06
 
 A wording pass following EPUB support: the interface (and README) no longer
