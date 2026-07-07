@@ -4,6 +4,36 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.10.0] - 2026-07-08
+
+Learning-engine release, part one: the vocabulary backlog. Export to more
+tools, organize decks in bulk, and annotate highlights.
+
+### Added
+
+**Export formats**
+- Bulk export now offers three formats via a picker (your choice is
+  remembered): **Anki TSV** (unchanged), **CSV** (plain-text spreadsheet
+  with Front/Back/Tags/Source columns, RFC 4180 quoting), and **Quizlet**
+  (exactly `term<TAB>definition` per line for Quizlet's import box, HTML
+  stripped). The save dialog picks the right file type automatically.
+
+**Bulk deck management**
+- New **Select** mode in the Words list: check multiple words, then assign
+  them to an existing deck, create a new deck on the spot, remove a deck,
+  or delete them together — one click instead of word-by-word context
+  menus. A select-all toggle covers the currently filtered list.
+
+**Highlight notes**
+- Highlights can now carry a note: hover a highlight row (or right-click)
+  to add or edit one; notes show inline in the Highlights list and survive
+  restarts. Older highlight files load unchanged.
+
+### Changed
+
+- Adding or removing a deck now refreshes the word's Spotlight entry, so
+  deck names are immediately searchable system-wide.
+
 ## [1.9.2] - 2026-07-06
 
 Quality pass: real localization bugs fixed, test coverage extended, and a
