@@ -11,6 +11,17 @@ import XCTest
 
 @MainActor
 final class EPUBSearchManagerTests: XCTestCase {
+    // CI-only gotcha: the macos-15 runner's Swift toolchain SIGABRTs
+    // (libmalloc double-free) when XCTest's post-scope memory checker
+    // deallocates a @MainActor @Observable object created in a test body.
+    // Every EPUBSearchManager instance must outlive the test.
+    private static var retainedManagers: [EPUBSearchManager] = []
+
+    private func makeManager() -> EPUBSearchManager {
+        let manager = EPUBSearchManager()
+        Self.retainedManagers.append(manager)
+        return manager
+    }
 
     private static let containerXML = """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -80,7 +91,7 @@ final class EPUBSearchManagerTests: XCTestCase {
     }
 
     func testShortQueryIsIgnored() throws {
-        let manager = EPUBSearchManager()
+        let manager = makeManager()
         let document = try makeDocument()
         manager.query = "a"
         manager.runSearch(in: document)
@@ -90,7 +101,7 @@ final class EPUBSearchManagerTests: XCTestCase {
     }
 
     func testSearchFindsMatchesInOneChapterWithCorrectCount() throws {
-        let manager = EPUBSearchManager()
+        let manager = makeManager()
         let document = try makeDocument()
         manager.query = "lighthouse"
         manager.runSearch(in: document)
@@ -104,7 +115,7 @@ final class EPUBSearchManagerTests: XCTestCase {
     }
 
     func testSearchIsCaseInsensitiveAndCanSpanChapters() throws {
-        let manager = EPUBSearchManager()
+        let manager = makeManager()
         let document = try makeDocument()
         manager.query = "STORM"
         manager.runSearch(in: document)
@@ -117,7 +128,7 @@ final class EPUBSearchManagerTests: XCTestCase {
     }
 
     func testSearchWithNoMatchesReturnsEmptyButMarksSearched() throws {
-        let manager = EPUBSearchManager()
+        let manager = makeManager()
         let document = try makeDocument()
         manager.query = "dragon"
         manager.runSearch(in: document)
@@ -128,7 +139,7 @@ final class EPUBSearchManagerTests: XCTestCase {
     }
 
     func testClearResetsState() throws {
-        let manager = EPUBSearchManager()
+        let manager = makeManager()
         let document = try makeDocument()
         manager.query = "lighthouse"
         manager.runSearch(in: document)
@@ -141,7 +152,7 @@ final class EPUBSearchManagerTests: XCTestCase {
     }
 
     func testShowAndCloseFindBarTogglesVisibilityAndClears() throws {
-        let manager = EPUBSearchManager()
+        let manager = makeManager()
         let document = try makeDocument()
         manager.showFindBar()
         XCTAssertTrue(manager.isFindBarVisible)

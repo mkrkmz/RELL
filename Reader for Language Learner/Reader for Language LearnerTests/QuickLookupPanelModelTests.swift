@@ -13,17 +13,22 @@ import XCTest
 
 @MainActor
 final class QuickLookupPanelModelTests: XCTestCase {
+    // CI-only gotcha: the macos-15 runner's Swift toolchain SIGABRTs
+    // (libmalloc double-free) when XCTest's post-scope memory checker
+    // deallocates a @MainActor @Observable object created in a test body.
+    // Every store/service/model instance must outlive the test.
     private static var retainedStores: [SavedWordsStore] = []
     private static var retainedServices: [QuickLookupService] = []
+    private static var retainedModels: [QuickLookupPanelModel] = []
 
     func testTrimmedQueryStripsWhitespace() {
-        let model = QuickLookupPanelModel()
+        let model = makeModel()
         model.query = "  serendipity  "
         XCTAssertEqual(model.trimmedQuery, "serendipity")
     }
 
     func testLookupWithEmptyQueryStaysIdle() {
-        let model = QuickLookupPanelModel()
+        let model = makeModel()
         model.query = "   "
         model.lookup(service: makeService(), savedWords: makeStore())
         XCTAssertEqual(model.phase, .idle)
@@ -37,7 +42,7 @@ final class QuickLookupPanelModelTests: XCTestCase {
             llmOutputs: [ModuleType.definitionEN.rawValue: "Lasting for a very short time."]
         ))
 
-        let model = QuickLookupPanelModel()
+        let model = makeModel()
         model.query = "ephemeral"
         model.lookup(service: makeService(), savedWords: store)
 
@@ -51,7 +56,7 @@ final class QuickLookupPanelModelTests: XCTestCase {
             term: "Ephemeral", sentence: "", pdfFilename: nil, pageNumber: nil,
             mode: "word", domain: "general", llmOutputs: [:]
         ))
-        let model = QuickLookupPanelModel()
+        let model = makeModel()
 
         XCTAssertFalse(model.isCurrentTermSaved(in: store))
 
@@ -68,7 +73,7 @@ final class QuickLookupPanelModelTests: XCTestCase {
             llmOutputs: [ModuleType.definitionEN.rawValue: "Clear and easy to understand."]
         ))
 
-        let model = QuickLookupPanelModel()
+        let model = makeModel()
         model.query = "lucid"
         model.lookup(service: makeService(), savedWords: cacheStore)
 
@@ -79,7 +84,7 @@ final class QuickLookupPanelModelTests: XCTestCase {
     }
 
     func testSaveWordIsNoOpWhileIdle() {
-        let model = QuickLookupPanelModel()
+        let model = makeModel()
         let store = makeStore()
         model.saveWord(to: store)
         XCTAssertTrue(store.words.isEmpty)
@@ -92,7 +97,7 @@ final class QuickLookupPanelModelTests: XCTestCase {
             mode: "word", domain: "general",
             llmOutputs: [ModuleType.definitionEN.rawValue: "Clear and easy to understand."]
         ))
-        let model = QuickLookupPanelModel()
+        let model = makeModel()
         model.query = "lucid"
         model.lookup(service: makeService(), savedWords: store)
 
@@ -104,6 +109,12 @@ final class QuickLookupPanelModelTests: XCTestCase {
     }
 
     // MARK: - Helpers
+
+    private func makeModel() -> QuickLookupPanelModel {
+        let model = QuickLookupPanelModel()
+        Self.retainedModels.append(model)
+        return model
+    }
 
     private func makeStore() -> SavedWordsStore {
         let fileURL = FileManager.default.temporaryDirectory
