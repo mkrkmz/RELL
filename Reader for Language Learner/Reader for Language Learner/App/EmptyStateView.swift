@@ -295,11 +295,13 @@ private struct ContinueReadingHero: View {
     }
 
     private var metaText: String {
-        guard fileExists else { return "File not found — it may have been moved or deleted" }
+        guard fileExists else {
+            return String(localized: "File not found — it may have been moved or deleted")
+        }
         var parts = [document.pageLabel]
         if todayReadingTime > 0,
            let formatted = Self.durationFormatter.string(from: todayReadingTime) {
-            parts.append("\(formatted) today")
+            parts.append(String(localized: "\(formatted) today"))
         }
         parts.append(relativeOpenedText)
         return parts.joined(separator: "  ·  ")
@@ -467,7 +469,7 @@ private struct RecentDocumentRow: View {
     }
 
     private var trailingText: String {
-        guard fileExists else { return "File not found" }
+        guard fileExists else { return String(localized: "File not found") }
         return "\(document.pageLabel)  ·  \(Self.relativeFormatter.localizedString(for: document.lastOpenedAt, relativeTo: .now))"
     }
 

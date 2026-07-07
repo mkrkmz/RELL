@@ -2,20 +2,24 @@
 
 ## Genel Bakis
 
-RELL, sadece macOS icin gelistirilmis 3 panelli bir masaustu uygulamasidir: sol tarafta sidebar (sayfa onizleme, yer imleri, kaydedilen kelimeler, istatistikler), ortada PDF okuyucu, sag tarafta inspector (LLM destekli kelime analizi).
+RELL, sadece macOS icin gelistirilmis 3 panelli bir masaustu uygulamasidir: sol tarafta sidebar (sayfa onizleme/icindekiler, yer imleri, kaydedilen kelimeler), ortada okuyucu (PDF veya EPUB), sag tarafta inspector (LLM destekli kelime analizi). `NavigationSplitView` + `.inspector()` (native macOS panel API'leri) kullanir.
+
+Uygulama coklu pencere destekler (`WindowGroup(for: URL.self)`): her belge kendi penceresinde/native sekmesinde acilir; kelimeler/yer imleri/notlar/vurgular/son belgeler gibi belgeden bagimsiz store'lar App seviyesinde sahiplenilir ve `.environment()` ile tum pencerelere/Quick Lookup HUD'a enjekte edilir — boylece bir pencerede kaydedilen kelime digerinde aninda gorunur.
+
+Okuyucu, dosya uzantisina gore dallanir: `.pdf` → `PDFKitView` (PDFKit), `.epub` → `EPUBReaderView` (bagimsiz ZIP/OPF motoru + `WKWebView` render). Her iki yol da ayni `SelectionState`'i besler, bu yuzden Inspector/kelime kaydetme/Ask-AI akislarinin tumu formattan bagimsiz calisir.
 
 ```
 +-------------+------------------+-----------+
 |             |                  |           |
-|  Sidebar    |    PDF Reader    | Inspector |
+|  Sidebar    |  PDF/EPUB Reader | Inspector |
 | (daraltilir)|                  |(daraltilir)|
 |             |                  |           |
-| - Sayfalar  |  - Metin secimi  | - Modul   |
+| - Sayfalar* |  - Metin secimi  | - Modul   |
 | - Icerik    |  - Baglam menusu |   Izgara  |
 | - Yer imleri|  - Arama         | - Sonuc   |
 | - Kelimeler |                  |   Paneli  |
-| - Istatistik|                  | - Kaydet  |
 +-------------+------------------+-----------+
+* EPUB'da "Sayfalar" yerine "Icindekiler" (TOC) gosterilir
 ```
 
 ## Katman Mimarisi
@@ -55,12 +59,15 @@ final class SavedWordsStore { ... }
 
 | Sinif | Sorumluluk | Yasam Suresi |
 |-------|-----------|--------------|
-| `SelectionState` | Aktif PDF, secili metin, baglam cumlesi | ContentView @State |
-| `SavedWordsStore` | Kelime CRUD + JSON persistence | ContentView @State |
-| `ReadingSessionStore` | Okuma oturumu takibi + istatistik | ContentView @State |
+| `SelectionState` | Aktif belge, secili metin, baglam cumlesi | ContentView @State (pencere-basina) |
+| `SavedWordsStore` | Kelime CRUD + JSON persistence + Spotlight indeksleme | **App @State**, `.environment()` ile tum pencerelere/HUD'a |
+| `ReadingSessionStore` | Okuma oturumu takibi + istatistik/streak | App @State (paylasilan) |
+| `RecentDocumentStore`, `PDFBookmarkStore`, `PDFNoteStore`, `PDFHighlightStore`, `DocumentCoverStore` | Belgeden bagimsiz kalicilik | App @State (paylasilan) |
 | `InspectorViewModel` | LLM istek/yanit yonetimi + LRU cache | InspectorView @State |
-| `PDFViewManager` | PDFView koordinasyonu (zoom, sayfa) | ContentView @State |
-| `PDFSearchManager` | PDF icinde metin arama | ContentView @State |
+| `PDFViewManager` | PDFView koordinasyonu (zoom, sayfa) | ContentView @State (pencere-basina) |
+| `PDFSearchManager` | PDF icinde metin arama | ContentView @State (pencere-basina) |
+| `EPUBViewManager` | EPUB okuyucu durumu (bolum, scroll, tema, hover, kaynak servisi) | ContentView @State (pencere-basina) |
+| `EPUBSearchManager` | EPUB kitap-ici arama (bolum basina eslesme) | ContentView @State (pencere-basina) |
 | `SpeechManager` | Text-to-speech (singleton) | Static shared |
 
 ### Veri Akisi
@@ -224,17 +231,19 @@ Merkezi `DS` enum'u tum gorsel tokenlari icerir:
 
 ```
 Reader for Language Learner/
-  Reader_for_Language_LearnerApp.swift   # @main giris noktasi + menu komutlari
-  App/              # Ana UI goruntuleri
-  Models/           # @Observable state nesneleri + veri modelleri
+  Reader_for_Language_LearnerApp.swift   # @main giris noktasi, WindowGroup(for: URL.self), paylasilan store'lar, menu komutlari
+  App/              # Ana UI goruntuleri (body'ler asamali modifier fonksiyonlarina bolunmus)
+  Models/           # @Observable state nesneleri + veri modelleri + SpotlightIndexer
   LLM/              # LLM istemcisi, protokol, prompt sablonlari
-  Reader/           # PDF bilesenleri
+  Reader/           # Okuyucu bilesenleri
     PDF/            # PDFKit wrapper'lari
-    Bookmarks/      # Yer imi goruntusu
+    EPUB/           # Bagimsiz EPUB motoru: ZIPArchive, EPUBDocument, EPUBViewManager/ReaderView, EPUBSearchManager
+    Bookmarks/      # Yer imi goruntusu (PDF'e ozel)
     Stats/          # Okuma istatistikleri goruntusu
   UI/               # Tasarim sistemi + sonuc gosterimi
   Settings/         # Ayarlar goruntuleri (General, LLM, Appearance)
   Export/           # Anki entegrasyonu
   Speech/           # Text-to-speech
+  Localizable.xcstrings  # String Catalog (TR ceviriler)
   Assets.xcassets/  # Gorseller, uygulama ikonu, renkler
 ```

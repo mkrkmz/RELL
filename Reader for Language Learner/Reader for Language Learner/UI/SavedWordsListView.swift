@@ -13,6 +13,17 @@ enum SavedWordsSortOrder: String, CaseIterable, Identifiable {
     case alphaAsc = "A → Z"
     case alphaDesc = "Z → A"
     var id: String { rawValue }
+
+    /// Raw values back `@AppStorage("savedWordsSortOrder")` — keep them
+    /// stable and English; the picker displays this instead.
+    var localizedTitle: String {
+        switch self {
+        case .dateDesc:  return String(localized: "Newest")
+        case .dateAsc:   return String(localized: "Oldest")
+        case .alphaAsc:  return String(localized: "A → Z")
+        case .alphaDesc: return String(localized: "Z → A")
+        }
+    }
 }
 
 enum SavedWordsFilter: String, CaseIterable, Identifiable {
@@ -23,6 +34,16 @@ enum SavedWordsFilter: String, CaseIterable, Identifiable {
     case thisPDF = "This Document"
 
     var id: String { rawValue }
+
+    var localizedTitle: String {
+        switch self {
+        case .all:         return String(localized: "All")
+        case .needsReview: return String(localized: "Needs Review")
+        case .new:         return String(localized: "New")
+        case .mastered:    return String(localized: "Mastered")
+        case .thisPDF:     return String(localized: "This Document")
+        }
+    }
 }
 
 // MARK: - SavedWordsListView
@@ -214,7 +235,7 @@ struct SavedWordsListView: View {
             set: { selectedFilter = $0 }
         )) {
             ForEach(availableFilters) { filter in
-                Text(filter.rawValue).tag(filter)
+                Text(filter.localizedTitle).tag(filter)
             }
         }
         .labelsHidden()
@@ -226,7 +247,7 @@ struct SavedWordsListView: View {
             set: { sortRaw = $0.rawValue }
         )) {
             ForEach(SavedWordsSortOrder.allCases) { o in
-                Text(o.rawValue).tag(o)
+                Text(o.localizedTitle).tag(o)
             }
         }
         .labelsHidden()

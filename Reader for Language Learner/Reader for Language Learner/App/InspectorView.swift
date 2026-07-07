@@ -79,7 +79,14 @@ struct InspectorView: View {
 
     // MARK: - Body
 
+    // Staged like ContentView.body — a single 24-modifier chain here would
+    // risk the same "unable to type-check this expression in reasonable
+    // time" CI failure that ContentView hit (see CHANGELOG v1.9.0 fix).
     var body: some View {
+        withSheets(withPreferenceSync(withNotifications(withSelectionLifecycle(baseContent))))
+    }
+
+    private var baseContent: some View {
         ZStack {
             VisualEffectView(material: .contentBackground, blendingMode: .behindWindow)
                 .ignoresSafeArea()
@@ -99,116 +106,132 @@ struct InspectorView: View {
             }
         }
         .animation(DS.Animation.standard, value: hasSelection)
-        .onAppear {
-            // A fresh mount (inspector toggled back on) starts with empty
-            // @State — adopt the live selection so the panel isn't blank
-            // and menu-driven module runs can proceed.
-            displayedText = selectedText
-            let trimmed = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmed.isEmpty { refreshCache(term: trimmed) }
-        }
-        .onExitCommand { activeModule = nil }
-        .onChange(of: selectedText) { _, newText in
-            speechManager.stop()
-            selectionDebounceTask?.cancel()
-            selectionDebounceTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(90))
-                guard !Task.isCancelled else { return }
-                displayedText = newText
-                viewModel.resetAll()
-                let trimmed = newText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty {
-                    refreshCache(term: trimmed)
-                    viewModel.addToRecents(trimmed)
-                    // Auto-run: if cache missed (no outputs loaded) and feature is on, trigger last module
-                    if autoRunEnabled && viewModel.outputs.isEmpty {
-                        let module = lastUsedModule
-                        if module.isEnabled(mode: explainMode) {
-                            activeModule = module
-                            Task { await runModule(module, forceRefresh: false) }
+    }
+
+    private func withSelectionLifecycle(_ content: some View) -> some View {
+        content
+            .onAppear {
+                // A fresh mount (inspector toggled back on) starts with empty
+                // @State — adopt the live selection so the panel isn't blank
+                // and menu-driven module runs can proceed.
+                displayedText = selectedText
+                let trimmed = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty { refreshCache(term: trimmed) }
+            }
+            .onExitCommand { activeModule = nil }
+            .onChange(of: selectedText) { _, newText in
+                speechManager.stop()
+                selectionDebounceTask?.cancel()
+                selectionDebounceTask = Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(90))
+                    guard !Task.isCancelled else { return }
+                    displayedText = newText
+                    viewModel.resetAll()
+                    let trimmed = newText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty {
+                        refreshCache(term: trimmed)
+                        viewModel.addToRecents(trimmed)
+                        // Auto-run: if cache missed (no outputs loaded) and feature is on, trigger last module
+                        if autoRunEnabled && viewModel.outputs.isEmpty {
+                            let module = lastUsedModule
+                            if module.isEnabled(mode: explainMode) {
+                                activeModule = module
+                                Task { await runModule(module, forceRefresh: false) }
+                            }
                         }
+                    } else {
+                        activeModule = nil
                     }
-                } else {
-                    activeModule = nil
                 }
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in
-            guard hasSelection else { return }
-            focusAndRunLast()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .inspectorRunModule)) { note in
-            guard let raw = note.object as? String,
-                  let module = ModuleType(rawValue: raw),
-                  hasSelection,
-                  module.isEnabled(mode: explainMode)
-            else { return }
-            activeModule = module
-            lastUsedModule = module
-            if (viewModel.outputs[module] ?? "").isEmpty {
-                Task { await runModule(module, forceRefresh: false) }
+    }
+
+    private func withNotifications(_ content: some View) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in
+                guard hasSelection else { return }
+                focusAndRunLast()
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .inspectorRecentTermSelected)) { note in
-            guard let term = note.object as? String else { return }
-            displayedText = term
-            viewModel.resetAll()
-            refreshCache(term: term)
-            viewModel.addToRecents(term)
-            if autoRunEnabled && viewModel.outputs.isEmpty {
-                let module = lastUsedModule
-                if module.isEnabled(mode: explainMode) {
-                    activeModule = module
+            .onReceive(NotificationCenter.default.publisher(for: .inspectorRunModule)) { note in
+                guard let raw = note.object as? String,
+                      let module = ModuleType(rawValue: raw),
+                      hasSelection,
+                      module.isEnabled(mode: explainMode)
+                else { return }
+                activeModule = module
+                lastUsedModule = module
+                if (viewModel.outputs[module] ?? "").isEmpty {
                     Task { await runModule(module, forceRefresh: false) }
                 }
             }
-        }
-        .onChange(of: explainMode)  { _, _ in refreshCache(term: trimmedSelection) }
-        .onChange(of: explainDetail){ _, _ in refreshCache(term: trimmedSelection) }
-        .onChange(of: domainRaw)    { _, _ in
-            viewModel.outputs[.collocations] = nil
-            viewModel.errors[.collocations]  = nil
-            refreshCache(term: trimmedSelection)
-        }
-        .onChange(of: nativeLanguageRaw) { _, _ in
-            // Native language is part of the cache key — old entries stay
-            // valid under their own key; just reload for the new one.
-            refreshCache(term: trimmedSelection)
-        }
-        .onChange(of: llmProviderTypeRaw) { _, _ in
-            // Provider is part of the cache key — no wipe needed.
-            circuitBreaker.reset()
-            refreshCache(term: trimmedSelection)
-        }
-        .onChange(of: llmModel) { _, _ in
-            // Model is part of the cache key — no wipe needed.
-            circuitBreaker.reset()
-            refreshCache(term: trimmedSelection)
-        }
-        .onChange(of: llmServerURL) { _, _ in
-            // Server URL is NOT in the cache key: a different server behind
-            // the same model name may answer differently, so wipe.
-            circuitBreaker.reset()
-            viewModel.clearCache()
-            refreshCache(term: trimmedSelection)
-        }
-        .onChange(of: llmAPIKey) { _, _ in
-            circuitBreaker.reset()
-        }
-        .onChange(of: llmTimeout) { _, _ in
-            circuitBreaker.reset()
-        }
-        .sheet(isPresented: $showAnkiExport) {
-            AnkiExportView(
-                selectedText: trimmedSelection,
-                mode: explainMode,
-                domain: domainPreference,
-                outputs: viewModel.outputs,
-                pdfFilename: pdfFilename,
-                pageNumber: pageNumber,
-                contextSentence: contextSentence
-            )
-        }
+            .onReceive(NotificationCenter.default.publisher(for: .inspectorRecentTermSelected)) { note in
+                guard let term = note.object as? String else { return }
+                displayedText = term
+                viewModel.resetAll()
+                refreshCache(term: term)
+                viewModel.addToRecents(term)
+                if autoRunEnabled && viewModel.outputs.isEmpty {
+                    let module = lastUsedModule
+                    if module.isEnabled(mode: explainMode) {
+                        activeModule = module
+                        Task { await runModule(module, forceRefresh: false) }
+                    }
+                }
+            }
+    }
+
+    private func withPreferenceSync(_ content: some View) -> some View {
+        content
+            .onChange(of: explainMode)  { _, _ in refreshCache(term: trimmedSelection) }
+            .onChange(of: explainDetail){ _, _ in refreshCache(term: trimmedSelection) }
+            .onChange(of: domainRaw)    { _, _ in
+                viewModel.outputs[.collocations] = nil
+                viewModel.errors[.collocations]  = nil
+                refreshCache(term: trimmedSelection)
+            }
+            .onChange(of: nativeLanguageRaw) { _, _ in
+                // Native language is part of the cache key — old entries stay
+                // valid under their own key; just reload for the new one.
+                refreshCache(term: trimmedSelection)
+            }
+            .onChange(of: llmProviderTypeRaw) { _, _ in
+                // Provider is part of the cache key — no wipe needed.
+                circuitBreaker.reset()
+                refreshCache(term: trimmedSelection)
+            }
+            .onChange(of: llmModel) { _, _ in
+                // Model is part of the cache key — no wipe needed.
+                circuitBreaker.reset()
+                refreshCache(term: trimmedSelection)
+            }
+            .onChange(of: llmServerURL) { _, _ in
+                // Server URL is NOT in the cache key: a different server behind
+                // the same model name may answer differently, so wipe.
+                circuitBreaker.reset()
+                viewModel.clearCache()
+                refreshCache(term: trimmedSelection)
+            }
+            .onChange(of: llmAPIKey) { _, _ in
+                circuitBreaker.reset()
+            }
+            .onChange(of: llmTimeout) { _, _ in
+                circuitBreaker.reset()
+            }
+    }
+
+    private func withSheets(_ content: some View) -> some View {
+        content
+            .sheet(isPresented: $showAnkiExport) {
+                AnkiExportView(
+                    selectedText: trimmedSelection,
+                    mode: explainMode,
+                    domain: domainPreference,
+                    outputs: viewModel.outputs,
+                    pdfFilename: pdfFilename,
+                    pageNumber: pageNumber,
+                    contextSentence: contextSentence
+                )
+            }
     }
 
     // MARK: - Empty State

@@ -158,6 +158,16 @@
       }
     },
     "1-day streak": {},
+    "A → Z": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A → Z"
+          }
+        }
+      }
+    },
     "ACTIONS": {},
     "ALL TIME": {},
     "API Key": {},
@@ -185,6 +195,16 @@
     "Add existing tag": {},
     "Add note…": {},
     "Add tag": {},
+    "All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümü"
+          }
+        }
+      }
+    },
     "All decks": {
       "localizations": {
         "tr": {
@@ -657,6 +677,26 @@
         }
       }
     },
+    "File not found": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya bulunamadı"
+          }
+        }
+      }
+    },
+    "File not found — it may have been moved or deleted": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya bulunamadı — taşınmış veya silinmiş olabilir"
+          }
+        }
+      }
+    },
     "Filter by deck (tag)": {
       "localizations": {
         "tr": {
@@ -1028,6 +1068,16 @@
       }
     },
     "Marks the current card as %@ and advances review": {},
+    "Mastered": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğrenildi"
+          }
+        }
+      }
+    },
     "Menu Bar Icon": {
       "localizations": {
         "tr": {
@@ -1073,6 +1123,36 @@
     },
     "NOTE": {},
     "NOTES": {},
+    "Needs Review": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekrar Gerekli"
+          }
+        }
+      }
+    },
+    "New": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni"
+          }
+        }
+      }
+    },
+    "Newest": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Yeni"
+          }
+        }
+      }
+    },
     "Next %@": {},
     "Next Match (↩)": {},
     "Next Match (⌘G)": {
@@ -1153,6 +1233,16 @@
     },
     "Not quite": {},
     "Nothing is due right now. Keep reading or include all saved words in Review.": {},
+    "Oldest": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Eski"
+          }
+        }
+      }
+    },
     "Open": {
       "localizations": {
         "tr": {
@@ -1398,6 +1488,7 @@
       }
     },
     "Read books and PDFs in the language you're learning and let AI explain every word in context.": {
+      "extractionState": "stale",
       "localizations": {
         "tr": {
           "stringUnit": {
@@ -1912,6 +2003,7 @@
     },
     "Thinking…": {},
     "This Document": {
+      "extractionState": "stale",
       "localizations": {
         "tr": {
           "stringUnit": {
@@ -2027,6 +2119,16 @@
       }
     },
     "Your review queue is clear. Include mastered words for extra practice.": {},
+    "Z → A": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Z → A"
+          }
+        }
+      }
+    },
     "Zoom In": {
       "localizations": {
         "tr": {
