@@ -194,22 +194,15 @@ final class EPUBViewManager: NSObject {
         webView?.evaluateJavaScript(Self.appearanceScript(theme: theme, fontSize: fontSize))
     }
 
-    /// CSS pushed into every chapter. `!important`-free on purpose for text
-    /// styling inside the book body — publisher styles win where they are
-    /// specific; the reading-surface basics are ours.
+    /// CSS pushed into every chapter. Layout basics are ours; for sepia and
+    /// dark we must *override* publisher styling — most EPUBs set their own
+    /// `body { background:#fff; color:#000 }` (often on descendant elements
+    /// too), so the theme only takes effect when we force it with
+    /// `!important` on both the surface and the text-bearing descendants.
+    /// `.original` stays hands-off so a book's own colors show through.
     static func appearanceCSS(theme: PageTheme, fontSize: Double) -> String {
-        let colors: (background: String, text: String)
-        switch theme {
-        case .original: colors = ("#ffffff", "#1d1d1f")
-        case .sepia:    colors = ("#f4ecd8", "#5b4636")
-        case .dark:     colors = ("#1e1e1e", "#d8d8d8")
-        }
-        return """
-        html {
-            background: \(colors.background) !important;
-        }
+        let layout = """
         body {
-            color: \(colors.text);
             font-size: \(Int(fontSize))px;
             line-height: 1.6;
             max-width: 42em;
@@ -218,7 +211,47 @@ final class EPUBViewManager: NSObject {
             -webkit-hyphens: auto;
         }
         img, svg { max-width: 100%; height: auto; }
-        a { color: inherit; }
+        """
+
+        guard theme != .original else {
+            return layout + "\nhtml, body { background-color: #ffffff !important; }\n"
+        }
+
+        let colors: (background: String, text: String, link: String)
+        switch theme {
+        case .sepia: colors = ("#f4ecd8", "#5b4636", "#8a5a2b")
+        case .dark:  colors = ("#1e1e1e", "#d8d8d8", "#7db4e6")
+        case .original: colors = ("#ffffff", "#1d1d1f", "#0066cc")   // unreachable
+        }
+
+        // Force the surface, then cascade the text color down through every
+        // text-bearing element (publisher CSS often colors <p>/<span> directly)
+        // and strip element-level backgrounds (white callout boxes, etc.).
+        // Uses explicit `body <el>` selectors (specificity 0,0,2) rather than
+        // `:where()` (0,0,0) so we also win against the rare publisher rule
+        // that marks a text color `!important`.
+        let textElements = [
+            "p", "div", "span", "li", "ul", "ol", "dl", "dt", "dd",
+            "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "figure",
+            "figcaption", "td", "th", "section", "article", "header",
+            "footer", "em", "strong", "b", "i", "small", "sub", "sup",
+            "code", "pre",
+        ]
+        let textSelector = textElements.map { "body \($0)" }.joined(separator: ", ")
+
+        return layout + """
+
+        html, body { background-color: \(colors.background) !important; }
+        body { color: \(colors.text) !important; }
+        \(textSelector) {
+            color: inherit !important;
+            background-color: transparent !important;
+            border-color: currentColor !important;
+        }
+        body a, body a * {
+            color: \(colors.link) !important;
+            background-color: transparent !important;
+        }
         """
     }
 
