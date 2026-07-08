@@ -4,6 +4,18 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.10.1] - 2026-07-08
+
+### Fixed
+
+- **EPUB page themes now work.** Sepia and Dark had no visible effect —
+  the injected reader CSS only tinted the `<html>` background, so the
+  publisher's own `body { background:#fff; color:#000 }` painted right
+  over it and left the page white. The theme now forces the surface and
+  cascades the text color through the book's text elements with
+  `!important`, while the Original theme still leaves the book's own
+  colors untouched.
+
 ## [1.10.0] - 2026-07-08
 
 Learning-engine release, part one: the vocabulary backlog. Export to more
