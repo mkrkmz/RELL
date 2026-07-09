@@ -4,6 +4,23 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.11.0] - 2026-07-09
+
+### Added
+
+**EPUB highlights**
+- EPUBs now support the same highlight-and-annotate workflow as PDFs.
+  Select text, right-click, and choose a color from the Highlight
+  submenu to mark a passage — the mark persists across chapter reloads
+  and app relaunches, and survives font-size/window-resize reflow
+  since it's anchored by a text-quote (surrounding context + offset)
+  rather than fixed geometry.
+- New **Highlights** segment in the EPUB sidebar (Annotations tab)
+  lists every highlight for the open book, grouped by chapter. Tap a
+  row to jump straight to that chapter and scroll the mark into view.
+  Hover a row to add or edit a note, or recolor it; swipe or
+  right-click to delete.
+
 ## [1.10.1] - 2026-07-08
 
 ### Fixed
