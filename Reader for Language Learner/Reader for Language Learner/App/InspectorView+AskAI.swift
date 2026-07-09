@@ -67,6 +67,19 @@ extension InspectorView {
                 }
                 .font(DS.Typography.caption)
                 .fixedSize(horizontal: false, vertical: true)
+
+                if !exchange.answer.isEmpty {
+                    Spacer(minLength: DS.Spacing.xs)
+                    Button {
+                        copyToClipboard(exchange.answer, showFeedback: true)
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                            .font(.system(size: 9))
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Copy answer")
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -136,6 +149,13 @@ extension InspectorView {
 
         viewModel.followUpTask?.cancel()
 
+        // Prior turns for this selection, oldest first — capped so a long
+        // thread doesn't blow the prompt budget. Snapshotted before the new
+        // exchange is appended below, so it never includes itself.
+        let priorTurns = viewModel.followUps
+            .filter { $0.error == nil && !$0.answer.isEmpty }
+            .suffix(4)
+
         let exchangeID = UUID()
         viewModel.followUps.append(
             FollowUpExchange(id: exchangeID, question: question, answer: "", isLoading: true, error: nil)
@@ -151,6 +171,12 @@ extension InspectorView {
         if let active = activeModule, let output = viewModel.outputs[active]?
             .trimmingCharacters(in: .whitespacesAndNewlines), !output.isEmpty {
             contextLines.append("Current explanation: \(String(output.prefix(800)))")
+        }
+        if !priorTurns.isEmpty {
+            let history = priorTurns
+                .map { "Q: \($0.question)\nA: \($0.answer)" }
+                .joined(separator: "\n")
+            contextLines.append("Earlier in this conversation:\n\(history)")
         }
 
         let system = """

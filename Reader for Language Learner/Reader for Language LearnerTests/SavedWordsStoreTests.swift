@@ -44,6 +44,61 @@ final class SavedWordsStoreTests: XCTestCase {
         XCTAssertNotNil(updated?.nextReviewAt)
     }
 
+    func testApplyAgainLowersEaseFactor() {
+        let store = makeStore()
+        let word = SavedWord(term: "orbit", masteryLevel: .learning, reviewCount: 1)
+        store.add(word)
+
+        let updated = store.applyReview(.again, to: word)
+
+        XCTAssertEqual(updated?.easeFactor, 2.3)
+    }
+
+    func testApplyEasyRaisesEaseAndExtendsInterval() {
+        let store = makeStore()
+        let now = Date()
+        let word = SavedWord(term: "orbit", masteryLevel: .mastered, reviewCount: 4)
+        store.add(word)
+
+        let updated = store.applyReview(.easy, to: word, reviewedAt: now)
+
+        XCTAssertEqual(updated?.easeFactor, 2.65)
+        // Base mastered interval is 14 days; ease 2.65/2.5 rounds the scaled
+        // interval to 15 days.
+        let expected = Calendar.current.date(byAdding: .day, value: 15, to: now)
+        XCTAssertEqual(
+            updated?.nextReviewAt.map { Calendar.current.startOfDay(for: $0) },
+            expected.map { Calendar.current.startOfDay(for: $0) }
+        )
+    }
+
+    func testDefaultEaseFactorPreservesFixedIntervals() {
+        let store = makeStore()
+        let now = Date()
+        let word = SavedWord(term: "orbit", masteryLevel: .mastered, reviewCount: 4)
+        store.add(word)
+
+        let updated = store.applyReview(.good, to: word, reviewedAt: now)
+
+        let expected = Calendar.current.date(byAdding: .day, value: 7, to: now)
+        XCTAssertEqual(
+            updated?.nextReviewAt.map { Calendar.current.startOfDay(for: $0) },
+            expected.map { Calendar.current.startOfDay(for: $0) }
+        )
+    }
+
+    func testSetCEFRLevelAssignsAndClears() {
+        let store = makeStore()
+        let word = SavedWord(term: "orbit")
+        store.add(word)
+
+        store.setCEFRLevel(.b2, for: word)
+        XCTAssertEqual(store.words.first?.cefrLevel, "B2")
+
+        store.setCEFRLevel(nil, for: word)
+        XCTAssertNil(store.words.first?.cefrLevel)
+    }
+
     func testReviewedTodayCountTracksReviewedWords() {
         let store = makeStore()
         let word = SavedWord(term: "orbit")

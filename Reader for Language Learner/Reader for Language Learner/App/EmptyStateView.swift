@@ -109,7 +109,8 @@ struct EmptyStateView: View {
                 DashboardActivityCard(
                     todayReadingTime: todayReadingTime,
                     last7Days: sessionStore.last7Days,
-                    readingStreak: sessionStore.currentStreak
+                    readingStreak: sessionStore.currentStreak,
+                    streakAtRisk: sessionStore.isStreakAtRisk
                 )
             }
 

@@ -49,10 +49,18 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(DS.Color.textTertiary)
                     }
                 }
+                Toggle(isOn: $pageAnalysisEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Page Pre-Analysis")
+                        Text("Pre-fetch definitions for likely-unfamiliar words on the current page, so lookups are instant.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
             } header: {
                 Text("Reading Aids")
             } footer: {
-                Text("Both use your AI provider. Turn them off to avoid extra requests.")
+                Text("All three use your AI provider. Turn them off to avoid extra requests.")
                     .foregroundStyle(DS.Color.textTertiary)
             }
 
@@ -85,6 +93,36 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                Toggle(isOn: $dailyReminderEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Daily Reminder")
+                        Text("Get a nudge to review your words or hit your reading goal.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                .onChange(of: dailyReminderEnabled) { _, enabled in
+                    if enabled {
+                        Task { await DailyReminderManager.shared.requestAuthorizationAndSchedule() }
+                    } else {
+                        DailyReminderManager.shared.cancel()
+                    }
+                }
+                if dailyReminderEnabled {
+                    DatePicker(
+                        "Reminder Time",
+                        selection: $dailyReminderTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .onChange(of: dailyReminderTime) { _, _ in
+                        DailyReminderManager.shared.schedule()
+                    }
+                }
+            } header: {
+                Text("Reminders")
+            }
+
+            Section {
                 Button("Show Welcome Tour Again") {
                     hasCompletedOnboarding = false
                 }
@@ -98,8 +136,11 @@ struct GeneralSettingsView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+    @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
     @AppStorage("menuBarExtraEnabled") private var menuBarExtraEnabled = true
     @AppStorage(GlobalHotKeyManager.enabledKey) private var hotkeyEnabled = true
+    @AppStorage(DailyReminderManager.enabledKey) private var dailyReminderEnabled = false
+    @AppStorage(DailyReminderManager.timeKey) private var dailyReminderTime = DailyReminderManager.storedTime()
 
     // MARK: - Language Pair
 

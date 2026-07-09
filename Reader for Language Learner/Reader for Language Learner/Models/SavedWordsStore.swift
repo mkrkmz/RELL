@@ -177,6 +177,12 @@ final class SavedWordsStore {
     }
 
     /// Adds a tag (single token, trimmed) to a word if not already present.
+    func setCEFRLevel(_ level: CEFRLevel?, for word: SavedWord) {
+        guard let index = words.firstIndex(where: { $0.id == word.id }) else { return }
+        words[index].cefrLevel = level?.rawValue
+        save()
+    }
+
     func addTag(_ rawTag: String, to wordID: UUID) {
         let tag = rawTag.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !tag.isEmpty, let index = words.firstIndex(where: { $0.id == wordID }) else { return }
@@ -330,6 +336,7 @@ final class SavedWordsStore {
             if updated.masteryLevel == .mastered {
                 updated.masteryLevel = .learning
             }
+            updated.easeFactor = max(1.3, updated.easeFactor - 0.2)
             updated.nextReviewAt = Calendar.current.date(byAdding: .minute, value: 10, to: reviewedAt) ?? reviewedAt
         case .good:
             switch updated.masteryLevel {
@@ -339,29 +346,38 @@ final class SavedWordsStore {
             case .learning:
                 if updated.reviewCount >= 3 {
                     updated.masteryLevel = .mastered
-                    updated.nextReviewAt = Calendar.current.date(byAdding: .day, value: 3, to: reviewedAt) ?? reviewedAt
+                    updated.nextReviewAt = scheduledDate(byAdding: 3, to: reviewedAt, ease: updated.easeFactor)
                 } else {
-                    updated.nextReviewAt = Calendar.current.date(byAdding: .day, value: 1, to: reviewedAt) ?? reviewedAt
+                    updated.nextReviewAt = scheduledDate(byAdding: 1, to: reviewedAt, ease: updated.easeFactor)
                 }
             case .mastered:
-                updated.nextReviewAt = Calendar.current.date(byAdding: .day, value: 7, to: reviewedAt) ?? reviewedAt
+                updated.nextReviewAt = scheduledDate(byAdding: 7, to: reviewedAt, ease: updated.easeFactor)
             }
         case .easy:
+            updated.easeFactor = min(3.5, updated.easeFactor + 0.15)
             switch updated.masteryLevel {
             case .new:
                 updated.masteryLevel = .learning
-                updated.nextReviewAt = Calendar.current.date(byAdding: .day, value: 1, to: reviewedAt) ?? reviewedAt
+                updated.nextReviewAt = scheduledDate(byAdding: 1, to: reviewedAt, ease: updated.easeFactor)
             case .learning:
                 updated.masteryLevel = .mastered
-                updated.nextReviewAt = Calendar.current.date(byAdding: .day, value: 7, to: reviewedAt) ?? reviewedAt
+                updated.nextReviewAt = scheduledDate(byAdding: 7, to: reviewedAt, ease: updated.easeFactor)
             case .mastered:
-                updated.nextReviewAt = Calendar.current.date(byAdding: .day, value: 14, to: reviewedAt) ?? reviewedAt
+                updated.nextReviewAt = scheduledDate(byAdding: 14, to: reviewedAt, ease: updated.easeFactor)
             }
         }
 
         words[index] = updated
         save()
         return updated
+    }
+
+    /// Scales a base day interval by the word's ease factor relative to the
+    /// 2.5 neutral default, so words with the default ease keep today's
+    /// fixed schedule exactly while consistently-easy/hard words drift.
+    private func scheduledDate(byAdding baseDays: Int, to date: Date, ease: Double) -> Date {
+        let scaledDays = max(1, Int((Double(baseDays) * ease / 2.5).rounded()))
+        return Calendar.current.date(byAdding: .day, value: scaledDays, to: date) ?? date
     }
 
     private func reviewEventDates() -> [Date] {

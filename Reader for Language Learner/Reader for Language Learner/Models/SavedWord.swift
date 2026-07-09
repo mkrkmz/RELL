@@ -43,6 +43,27 @@ enum MasteryLevel: Int, Codable, CaseIterable {
     }
 }
 
+/// CEFR proficiency level, user-assigned per word. nil = unrated.
+enum CEFRLevel: String, CaseIterable, Codable, Identifiable {
+    case a1 = "A1"
+    case a2 = "A2"
+    case b1 = "B1"
+    case b2 = "B2"
+    case c1 = "C1"
+    case c2 = "C2"
+
+    var id: String { rawValue }
+
+    /// Badge tint for the saved-word row — green (beginner) through red (advanced).
+    var badgeColor: SwiftUI.Color {
+        switch self {
+        case .a1, .a2: return .green
+        case .b1, .b2: return .orange
+        case .c1, .c2: return .red
+        }
+    }
+}
+
 enum ReviewStatus {
     case new
     case due
@@ -99,6 +120,12 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     var lastReviewedAt: Date?
     var reviewHistory: [Date]
     var nextReviewAt: Date?
+    /// Per-word SRS ease multiplier (SM-2 style). 2.5 is the neutral default —
+    /// `nextReviewAt` scheduling multiplies its base interval by `easeFactor / 2.5`,
+    /// so untouched words keep today's fixed intervals exactly.
+    var easeFactor: Double
+    /// CEFRLevel.rawValue, user-assigned. nil = unrated.
+    var cefrLevel: String?
 
     init(
         id: UUID = UUID(),
@@ -117,7 +144,9 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         incorrectCount: Int = 0,
         lastReviewedAt: Date? = nil,
         reviewHistory: [Date] = [],
-        nextReviewAt: Date? = nil
+        nextReviewAt: Date? = nil,
+        easeFactor: Double = 2.5,
+        cefrLevel: String? = nil
     ) {
         self.id = id
         self.term = term
@@ -136,6 +165,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.lastReviewedAt = lastReviewedAt
         self.reviewHistory = reviewHistory
         self.nextReviewAt = nextReviewAt
+        self.easeFactor = easeFactor
+        self.cefrLevel = cefrLevel
     }
 
     /// Best available text for the back of a review card.
@@ -172,6 +203,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         case lastReviewedAt
         case reviewHistory
         case nextReviewAt
+        case easeFactor
+        case cefrLevel
     }
 
     init(from decoder: Decoder) throws {
@@ -193,6 +226,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         lastReviewedAt = try container.decodeIfPresent(Date.self, forKey: .lastReviewedAt)
         reviewHistory = try container.decodeIfPresent([Date].self, forKey: .reviewHistory) ?? []
         nextReviewAt = try container.decodeIfPresent(Date.self, forKey: .nextReviewAt)
+        easeFactor = try container.decodeIfPresent(Double.self, forKey: .easeFactor) ?? 2.5
+        cefrLevel = try container.decodeIfPresent(String.self, forKey: .cefrLevel)
     }
 
     var hasBeenReviewed: Bool {

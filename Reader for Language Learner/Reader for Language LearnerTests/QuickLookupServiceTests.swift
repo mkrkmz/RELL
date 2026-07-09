@@ -63,4 +63,9 @@ final class QuickLookupServiceTests: XCTestCase {
         let service = makeService()
         XCTAssertNil(service.cachedTranslation(for: "an unseen sentence"))
     }
+
+    func testCachedNativeMeaningMissReturnsNil() {
+        let service = makeService()
+        XCTAssertNil(service.cachedNativeMeaning(for: "unseen"))
+    }
 }

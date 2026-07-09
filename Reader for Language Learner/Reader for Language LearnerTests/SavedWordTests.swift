@@ -53,6 +53,8 @@ final class SavedWordTests: XCTestCase {
         XCTAssertEqual(decoded.id, id)
         XCTAssertEqual(decoded.term, "legacy")
         XCTAssertTrue(decoded.reviewHistory.isEmpty)
+        XCTAssertEqual(decoded.easeFactor, 2.5, "Words persisted before the ease-factor migration should default to the neutral ease")
+        XCTAssertNil(decoded.cefrLevel)
     }
 
     func testDefaultValues() {
@@ -69,6 +71,8 @@ final class SavedWordTests: XCTestCase {
         XCTAssertTrue(word.reviewHistory.isEmpty)
         XCTAssertTrue(word.isDue())
         XCTAssertEqual(word.reviewStatus, .new)
+        XCTAssertEqual(word.easeFactor, 2.5)
+        XCTAssertNil(word.cefrLevel)
     }
 
     func testEquality() {

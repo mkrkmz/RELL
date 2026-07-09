@@ -22,6 +22,7 @@ struct ContentView: View {
     @State private var epubSearchManager = EPUBSearchManager()
     @State private var circuitBreaker   = CircuitBreaker()
     @State private var llmHealth        = LLMHealthMonitor()
+    @State private var pageAnalysisService = PageAnalysisService()
 
     private var isEPUBDocument: Bool {
         selectionState.documentURL?.pathExtension.lowercased() == "epub"
@@ -61,6 +62,9 @@ struct ContentView: View {
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
     @AppStorage("epubFontSize") private var epubFontSize: Double = 18
+    /// Off by default — background vocabulary pre-warming from visible page
+    /// text. Every call site checks this before invoking the service.
+    @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
     @AppStorage(LLMConfiguration.providerTypeKey) private var llmProviderTypeRaw: String = LLMConfiguration.defaultProviderType.rawValue
     @AppStorage(LLMConfiguration.serverURLKey)    private var llmServerURL: String = LLMConfiguration.defaultServerURL
     @AppStorage(LLMConfiguration.modelKey)        private var llmModel: String = LLMConfiguration.defaultModel
@@ -241,6 +245,9 @@ struct ContentView: View {
                     pageIndex: chapter,
                     pageCount: epubManager.chapterCount
                 )
+                if pageAnalysisEnabled, let text = epubManager.document?.plainText(at: chapter) {
+                    pageAnalysisService.analyze(text: text, savedWordsStore: savedWordsStore, quickLookup: quickLookup)
+                }
             }
             .onChange(of: llmProviderTypeRaw) { _, _ in llmHealth.scheduleCheck() }
             .onChange(of: llmServerURL)       { _, _ in llmHealth.scheduleCheck() }
@@ -414,6 +421,9 @@ struct ContentView: View {
                                 pageIndex: index,
                                 pageCount: pdfView.document?.pageCount
                             )
+                        }
+                        if pageAnalysisEnabled, let text = page.string {
+                            pageAnalysisService.analyze(text: text, savedWordsStore: savedWordsStore, quickLookup: quickLookup)
                         }
                     }
                     .onChange(of: selectionState.documentURL) { _, newURL in

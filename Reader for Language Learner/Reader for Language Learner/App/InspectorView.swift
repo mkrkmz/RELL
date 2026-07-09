@@ -397,7 +397,7 @@ struct InspectorView: View {
 
         let client       = llmProvider
         let customPreamble = UserDefaults.standard.string(forKey: "customSystemPreamble") ?? ""
-        let systemPrompt = module.systemPrompt(customPreamble: customPreamble)
+        let systemPrompt = module.systemPrompt(customPreamble: customPreamble, nativeLanguage: nativeLanguage)
         let userPrompt   = module.userPrompt(
             term: trimmedSelection,
             mode: explainMode,

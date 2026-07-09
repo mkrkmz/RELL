@@ -16,6 +16,7 @@ import os
 final class QuickLookupService {
 
     @ObservationIgnored private var definitionCache = LRUCache<String, String>(capacity: 60)
+    @ObservationIgnored private var nativeMeaningCache = LRUCache<String, String>(capacity: 60)
     @ObservationIgnored private var translationCache = LRUCache<String, String>(capacity: 40)
     @ObservationIgnored private let gate = AsyncLimiter(limit: 1)
 
@@ -42,7 +43,7 @@ final class QuickLookupService {
 
         let native = Language.storedNative
         let module = ModuleType.definitionEN
-        let system = module.systemPrompt(customPreamble: "")
+        let system = module.systemPrompt(customPreamble: "", nativeLanguage: native)
         let user = module.userPrompt(term: term, mode: .word, detail: .short, nativeLanguage: native)
         let maxTokens = module.recommendedMaxTokens(mode: .word, detail: .short, modelIdentifier: LLMConfiguration().model)
 
@@ -54,6 +55,75 @@ final class QuickLookupService {
         )
         let cleaned = MarkdownUtils.sanitizeLLMOutput(text)
         definitionCache.set(key, cleaned)
+        return cleaned
+    }
+
+    /// Streams the definition token-by-token — `onToken` receives the full
+    /// accumulated text so far (matching InspectorView's append pattern) on
+    /// @MainActor. Cache hits still call `onToken` once with the full text
+    /// so callers don't need a separate cache-first branch.
+    @discardableResult
+    func streamDefinition(
+        for term: String,
+        onToken: @MainActor @escaping (String) -> Void
+    ) async throws -> String {
+        let key = normalize(term)
+        if let cached = definitionCache.get(key) {
+            onToken(cached)
+            return cached
+        }
+
+        let native = Language.storedNative
+        let module = ModuleType.definitionEN
+        let system = module.systemPrompt(customPreamble: "", nativeLanguage: native)
+        let user = module.userPrompt(term: term, mode: .word, detail: .short, nativeLanguage: native)
+        let maxTokens = module.recommendedMaxTokens(mode: .word, detail: .short, modelIdentifier: LLMConfiguration().model)
+
+        let local = isLocalProvider
+        if local { await gate.acquire() }
+        defer { if local { gate.release() } }
+
+        let provider = LLMConfiguration().makeProvider()
+        var accumulated = ""
+        _ = try await provider.stream(
+            system: system,
+            user: user,
+            temperature: module.recommendedTemperature,
+            maxTokens: maxTokens,
+            topP: 0.9
+        ) { token in
+            accumulated += token
+            onToken(accumulated)
+        }
+        let cleaned = MarkdownUtils.sanitizeLLMOutput(accumulated)
+        definitionCache.set(key, cleaned)
+        return cleaned
+    }
+
+    // MARK: - Native-language meaning (HUD subtitle)
+
+    func cachedNativeMeaning(for term: String) -> String? {
+        nativeMeaningCache.get(normalize(term))
+    }
+
+    func nativeMeaning(for term: String) async throws -> String {
+        let key = normalize(term)
+        if let cached = nativeMeaningCache.get(key) { return cached }
+
+        let native = Language.storedNative
+        let module = ModuleType.meaningTR
+        let system = module.systemPrompt(customPreamble: "", nativeLanguage: native)
+        let user = module.userPrompt(term: term, mode: .word, detail: .short, nativeLanguage: native)
+        let maxTokens = module.recommendedMaxTokens(mode: .word, detail: .short, modelIdentifier: LLMConfiguration().model)
+
+        let text = try await run(
+            system: system,
+            user: user,
+            maxTokens: maxTokens,
+            temperature: module.recommendedTemperature
+        )
+        let cleaned = MarkdownUtils.sanitizeLLMOutput(text)
+        nativeMeaningCache.set(key, cleaned)
         return cleaned
     }
 

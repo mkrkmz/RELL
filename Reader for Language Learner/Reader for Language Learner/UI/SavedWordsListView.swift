@@ -56,6 +56,7 @@ struct SavedWordsListView: View {
     @State private var searchText    = ""
     @State private var selectedFilter: SavedWordsFilter = .all
     @State private var selectedTag: String?
+    @State private var selectedCEFR: CEFRLevel?
     @State private var selectedWord: SavedWord?
     @State private var showBulkExport = false
     @State private var showClearConfirm = false
@@ -92,6 +93,11 @@ struct SavedWordsListView: View {
         // Tag / deck filter
         if let tag = selectedTag {
             result = result.filter { $0.hasTag(tag) }
+        }
+
+        // CEFR level filter
+        if let selectedCEFR {
+            result = result.filter { $0.cefrLevel == selectedCEFR.rawValue }
         }
 
         // Search
@@ -311,6 +317,39 @@ struct SavedWordsListView: View {
             .frame(maxWidth: 96)
             .help("Filter by deck (tag)")
         }
+
+        if !usedCEFRLevels.isEmpty {
+            Menu {
+                Button {
+                    selectedCEFR = nil
+                } label: {
+                    Label("All levels", systemImage: selectedCEFR == nil ? "checkmark" : "")
+                }
+                Divider()
+                ForEach(usedCEFRLevels) { level in
+                    Button {
+                        selectedCEFR = level
+                    } label: {
+                        Label(level.rawValue, systemImage: selectedCEFR == level ? "checkmark" : "")
+                    }
+                }
+            } label: {
+                HStack(spacing: 2) {
+                    Image(systemName: "graduationcap")
+                    Text(selectedCEFR?.rawValue ?? "CEFR")
+                        .lineLimit(1)
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .controlSize(.mini)
+            .frame(maxWidth: 80)
+            .help("Filter by CEFR level")
+        }
+    }
+
+    private var usedCEFRLevels: [CEFRLevel] {
+        let present = Set(store.words.compactMap { $0.cefrLevel.flatMap(CEFRLevel.init) })
+        return CEFRLevel.allCases.filter { present.contains($0) }
     }
 
     private var countText: some View {
@@ -378,6 +417,19 @@ struct SavedWordsListView: View {
                                         Label(level.label, systemImage: level.icon)
                                     }
                                     .disabled(word.masteryLevel == level)
+                                }
+                            }
+                            Menu("CEFR Level") {
+                                ForEach(CEFRLevel.allCases) { level in
+                                    Button {
+                                        store.setCEFRLevel(level, for: word)
+                                    } label: {
+                                        Label(level.rawValue, systemImage: word.cefrLevel == level.rawValue ? "checkmark" : "")
+                                    }
+                                }
+                                if word.cefrLevel != nil {
+                                    Divider()
+                                    Button("Clear Level") { store.setCEFRLevel(nil, for: word) }
                                 }
                             }
                             Menu("Deck") {
@@ -647,6 +699,16 @@ private struct SavedWordRow: View {
                             .padding(.horizontal, DS.Spacing.xs)
                             .padding(.vertical, 1)
                             .background(domain.badgeColor.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
+
+                    if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
+                        Text(cefr.rawValue)
+                            .font(DS.Typography.caption2.weight(.semibold))
+                            .foregroundStyle(cefr.badgeColor)
+                            .padding(.horizontal, DS.Spacing.xs)
+                            .padding(.vertical, 1)
+                            .background(cefr.badgeColor.opacity(0.12))
                             .clipShape(Capsule())
                     }
 

@@ -57,6 +57,10 @@ struct Reader_for_Language_LearnerApp: App {
 
         // ⌃⌥Space — system-wide Quick Lookup HUD.
         GlobalHotKeyManager.shared.configureForQuickLookup()
+
+        // Daily-goal reminder — becomes the UNUserNotificationCenter delegate
+        // and re-schedules if the user already opted in on a previous launch.
+        DailyReminderManager.shared.configure()
     }
 
     var body: some Scene {

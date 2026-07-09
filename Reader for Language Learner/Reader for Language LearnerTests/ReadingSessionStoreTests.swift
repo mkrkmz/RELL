@@ -139,6 +139,32 @@ final class ReadingSessionStoreTests: XCTestCase {
         XCTAssertEqual(store.longestStreak, 3)
     }
 
+    func testStreakAtRiskWhenYesterdayKeptItButTodayHasNoSessionYet() throws {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let store = try makeStore(seeding: [
+            session(pdfFilename: "book.pdf", startedAt: yesterday, endedAt: yesterday.addingTimeInterval(60)),
+        ])
+
+        XCTAssertEqual(store.currentStreak, 1)
+        XCTAssertTrue(store.isStreakAtRisk)
+    }
+
+    func testStreakNotAtRiskOnceTodayHasASession() throws {
+        let now = Date()
+        let store = try makeStore(seeding: [
+            session(pdfFilename: "book.pdf", startedAt: now.addingTimeInterval(-60), endedAt: now),
+        ])
+
+        XCTAssertFalse(store.isStreakAtRisk)
+    }
+
+    func testStreakNotAtRiskWhenThereIsNoStreak() throws {
+        let store = try makeStore(seeding: [])
+        XCTAssertFalse(store.isStreakAtRisk)
+    }
+
     func testLast7DaysHasSevenEntriesEndingToday() throws {
         let store = try makeStore(seeding: [])
         let days = store.last7Days

@@ -13,6 +13,7 @@ struct DashboardActivityCard: View {
     let todayReadingTime: Double
     let last7Days: [ReadingSessionStore.DayStats]
     let readingStreak: Int
+    var streakAtRisk: Bool = false
 
     @AppStorage("dailyReadingGoalMinutes") private var goalMinutes: Int = 20
 
@@ -45,10 +46,16 @@ struct DashboardActivityCard: View {
                     HStack(spacing: DS.Spacing.xs) {
                         Image(systemName: "flame.fill")
                             .font(.system(size: 10))
-                            .foregroundStyle(goalReached ? DS.Color.warning : DS.Color.textTertiary)
-                        Text(readingStreak == 1 ? "1-day streak" : "\(readingStreak)-day streak")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
+                            .foregroundStyle(streakAtRisk ? DS.Color.warning : (goalReached ? DS.Color.warning : DS.Color.textTertiary))
+                        if streakAtRisk {
+                            Text(readingStreak == 1 ? "1-day streak · read today to keep it" : "\(readingStreak)-day streak · read today to keep it")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(DS.Color.warning)
+                        } else {
+                            Text(readingStreak == 1 ? "1-day streak" : "\(readingStreak)-day streak")
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(DS.Color.textTertiary)
+                        }
                     }
                 } else {
                     Text("Read a little every day")

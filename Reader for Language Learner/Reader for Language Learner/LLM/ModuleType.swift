@@ -136,10 +136,10 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         }
     }
 
-    var outputLanguage: PromptTemplates.OutputLanguage {
+    func outputLanguage(nativeLanguage: Language) -> PromptTemplates.OutputLanguage {
         switch self {
         case .meaningTR:
-            return .turkishOnly
+            return .native(nativeLanguage)
         case .collocations:
             return .mixed
         case .definitionEN, .examplesEN, .etymologyEN, .pronunciationEN, .mnemonicEN,
@@ -160,8 +160,12 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         systemPrompt(customPreamble: "")
     }
 
-    func systemPrompt(customPreamble: String) -> String {
-        PromptTemplates.system(lang: outputLanguage, format: outputFormat, customPreamble: customPreamble)
+    func systemPrompt(customPreamble: String, nativeLanguage: Language = Language.storedNative) -> String {
+        PromptTemplates.system(
+            lang: outputLanguage(nativeLanguage: nativeLanguage),
+            format: outputFormat,
+            customPreamble: customPreamble
+        )
     }
 
     func isEnabled(mode: ExplainMode) -> Bool {

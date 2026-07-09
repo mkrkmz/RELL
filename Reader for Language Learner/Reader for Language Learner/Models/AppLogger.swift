@@ -17,6 +17,7 @@ enum AppLogger {
     static let ui          = Logger(subsystem: subsystem, category: "ui")
     static let speech      = Logger(subsystem: subsystem, category: "speech")
     static let export      = Logger(subsystem: subsystem, category: "export")
+    static let notifications = Logger(subsystem: subsystem, category: "notifications")
 }
 
 enum RELLJSONStore {

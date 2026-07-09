@@ -17,6 +17,7 @@ final class QuickLookupPanelModel {
     enum Phase: Equatable {
         case idle
         case loading
+        case streaming(String)
         case loaded(String)
         case failed(String)
     }
@@ -25,8 +26,12 @@ final class QuickLookupPanelModel {
     private(set) var phase: Phase = .idle
     /// The term the current phase belongs to (query may have changed since).
     private(set) var lookedUpTerm: String = ""
+    /// Native-language meaning, fetched after the definition settles. Shown
+    /// as a subtitle below the definition once it arrives.
+    private(set) var nativeMeaning: String?
 
     private var lookupTask: Task<Void, Never>?
+    private var nativeMeaningTask: Task<Void, Never>?
 
     var trimmedQuery: String {
         query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -37,23 +42,30 @@ final class QuickLookupPanelModel {
         guard !term.isEmpty else { return }
 
         lookupTask?.cancel()
+        nativeMeaningTask?.cancel()
         lookedUpTerm = term
+        nativeMeaning = nil
 
         // Cache-first: saved words and the LRU answer instantly.
         if let cached = service.cachedDefinition(for: term, savedWordsStore: savedWords) {
             phase = .loaded(cached)
+            fetchNativeMeaning(for: term, service: service)
             return
         }
 
         phase = .loading
         lookupTask = Task { [weak self] in
             do {
-                let definition = try await service.definition(for: term)
+                let definition = try await service.streamDefinition(for: term) { partial in
+                    guard let self, self.lookedUpTerm == term else { return }
+                    self.phase = .streaming(partial)
+                }
                 guard !Task.isCancelled, let self, self.lookedUpTerm == term else { return }
                 if definition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     self.phase = .failed(String(localized: "The model returned an empty answer. Try again or check the model in Settings."))
                 } else {
                     self.phase = .loaded(definition)
+                    self.fetchNativeMeaning(for: term, service: service)
                 }
             } catch {
                 guard !Task.isCancelled, let self, self.lookedUpTerm == term else { return }
@@ -62,8 +74,24 @@ final class QuickLookupPanelModel {
         }
     }
 
+    private func fetchNativeMeaning(for term: String, service: QuickLookupService) {
+        if let cached = service.cachedNativeMeaning(for: term) {
+            nativeMeaning = cached
+            return
+        }
+        nativeMeaningTask = Task { [weak self] in
+            guard let meaning = try? await service.nativeMeaning(for: term) else { return }
+            guard !Task.isCancelled, let self, self.lookedUpTerm == term else { return }
+            self.nativeMeaning = meaning
+        }
+    }
+
     func saveWord(to store: SavedWordsStore) {
         guard case .loaded(let definition) = phase, !lookedUpTerm.isEmpty else { return }
+        var outputs = [ModuleType.definitionEN.rawValue: definition]
+        if let nativeMeaning {
+            outputs[ModuleType.meaningTR.rawValue] = nativeMeaning
+        }
         store.add(SavedWord(
             term: lookedUpTerm,
             sentence: "",
@@ -71,7 +99,7 @@ final class QuickLookupPanelModel {
             pageNumber: nil,
             mode: ExplainMode.word.rawValue.lowercased(),
             domain: DomainPreference.general.rawValue.lowercased(),
-            llmOutputs: [ModuleType.definitionEN.rawValue: definition]
+            llmOutputs: outputs
         ))
     }
 
@@ -83,8 +111,10 @@ final class QuickLookupPanelModel {
 
     func reset() {
         lookupTask?.cancel()
+        nativeMeaningTask?.cancel()
         query = ""
         lookedUpTerm = ""
+        nativeMeaning = nil
         phase = .idle
     }
 }
@@ -135,8 +165,10 @@ struct QuickLookupPanelView: View {
                 idleHint
             case .loading:
                 loadingRow
+            case .streaming(let partial):
+                resultView(partial, isFinal: false)
             case .loaded(let definition):
-                resultView(definition)
+                resultView(definition, isFinal: true)
             case .failed(let message):
                 failureView(message)
             }
@@ -204,13 +236,16 @@ struct QuickLookupPanelView: View {
         .padding(.bottom, DS.Spacing.md)
     }
 
-    private func resultView(_ definition: String) -> some View {
+    private func resultView(_ definition: String, isFinal: Bool) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             Divider()
 
             // No ScrollView: self-sizing windows (menu bar extra, the HUD
             // panel) collapse a ScrollView to its ~zero ideal height. Plain
             // Text sizes the window to the content; definitions are short.
+            // `definition` already arrives cleaned once final (both the
+            // cache-hit and streamDefinition paths sanitize before handing
+            // it back); the streaming partial is intentionally left raw.
             Text(definition)
                 .font(DS.Typography.body)
                 .foregroundStyle(DS.Color.textPrimary)
@@ -219,20 +254,32 @@ struct QuickLookupPanelView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack {
-                SpeakButton(text: model.lookedUpTerm)
+            if isFinal, let nativeMeaning = model.nativeMeaning {
+                Text(nativeMeaning)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .textSelection(.enabled)
+                    .lineLimit(6)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
 
-                Spacer()
+            if isFinal {
+                HStack {
+                    SpeakButton(text: model.lookedUpTerm)
 
-                if model.isCurrentTermSaved(in: savedWordsStore) {
-                    Label("Saved", systemImage: "checkmark.circle.fill")
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.success)
-                } else {
-                    Button("Save Word") { model.saveWord(to: savedWordsStore) }
-                        .controlSize(.small)
-                        .keyboardShortcut("s", modifiers: [.command])
-                        .help("Save to vocabulary (⌘S)")
+                    Spacer()
+
+                    if model.isCurrentTermSaved(in: savedWordsStore) {
+                        Label("Saved", systemImage: "checkmark.circle.fill")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.success)
+                    } else {
+                        Button("Save Word") { model.saveWord(to: savedWordsStore) }
+                            .controlSize(.small)
+                            .keyboardShortcut("s", modifiers: [.command])
+                            .help("Save to vocabulary (⌘S)")
+                    }
                 }
             }
         }

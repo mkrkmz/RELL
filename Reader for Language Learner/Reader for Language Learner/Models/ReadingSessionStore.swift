@@ -115,6 +115,13 @@ final class ReadingSessionStore {
         return streak
     }
 
+    /// True when yesterday kept the streak alive but today has no session yet —
+    /// the streak is still intact but will break at midnight without one.
+    var isStreakAtRisk: Bool {
+        guard currentStreak > 0 else { return false }
+        return !sessions.contains { Calendar.current.isDateInToday($0.startedAt) }
+    }
+
     /// All-time longest reading streak (in days).
     var longestStreak: Int {
         guard !sessions.isEmpty else { return 0 }

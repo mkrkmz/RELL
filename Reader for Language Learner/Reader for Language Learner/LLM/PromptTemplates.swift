@@ -52,15 +52,19 @@ enum PromptTemplates {
 
     enum OutputLanguage {
         case englishOnly
-        case turkishOnly
+        /// The learner's configured native language (any of the 12 supported
+        /// languages) — was hardcoded to Turkish, which fought the user
+        /// prompt's own `\(nativeLanguage.promptInstruction)` line for every
+        /// non-Turkish native language.
+        case native(Language)
         case mixed  // EN fields + native-language fields side by side
 
         var constraint: String {
             switch self {
             case .englishOnly:
                 return "Output only in English."
-            case .turkishOnly:
-                return "Output only in Turkish."
+            case .native(let language):
+                return "Output only in \(language.nativeName)."
             case .mixed:
                 return "EN fields in English only. TR fields in Turkish only."
             }
@@ -68,8 +72,10 @@ enum PromptTemplates {
 
         var unknownFallback: String {
             switch self {
-            case .englishOnly, .mixed: return "Unknown"
-            case .turkishOnly:         return "Bilinmiyor"
+            case .englishOnly, .mixed:
+                return "Unknown"
+            case .native(let language):
+                return language == .turkish ? "Bilinmiyor" : "Unknown"
             }
         }
     }
