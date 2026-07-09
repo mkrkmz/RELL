@@ -4,6 +4,63 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.14.0] - 2026-07-09
+
+Learning-engine and AI-layer release, combining three sprints: smarter spaced
+repetition, a daily reminder, richer AI lookups, and opt-in background
+vocabulary warming.
+
+### Added
+
+**SRS ease factor**
+- Each word now carries its own SRS ease multiplier (SM-2 style, starts at a
+  neutral 2.5). Consistently marking a word "Again" shortens its future
+  intervals; marking it "Easy" stretches them. Words untouched by this keep
+  today's fixed review schedule exactly — the ease only scales the day-based
+  intervals, not the short relearning steps.
+
+**Daily reminder**
+- New Settings toggle schedules a local daily notification at a time you
+  choose, nudging you to hit your reading/review goal. Tapping it opens the
+  Vocabulary Review window.
+
+**Streak protection**
+- The dashboard now flags when your reading streak is still alive but at
+  risk — no session logged yet today — with a warning-colored "read today to
+  keep it" hint next to the streak count.
+
+**Quick Lookup HUD streaming + native meaning**
+- The ⌃⌥Space HUD now streams the definition token-by-token instead of
+  waiting for the full answer, and shows your native-language meaning as a
+  subtitle underneath once it arrives. Both are saved together when you
+  save the word.
+
+**Ask AI follow-up thread**
+- Follow-up questions now remember the last few turns of the conversation,
+  so a second question like "what about its opposite?" resolves correctly
+  instead of starting from zero context each time. Each answer also gets a
+  one-click copy button.
+
+**Page/chapter pre-analysis (off by default)**
+- A new "Page Pre-Analysis" toggle in Settings → Reading Aids scans the
+  visible page/chapter for likely-unfamiliar words (noun/verb/adjective,
+  via on-device lexical tagging — no network call for the scan itself) and
+  quietly pre-fetches their definitions in the background, so a later
+  lookup is instant. Works in both PDF and EPUB. Disabled, it makes zero
+  additional requests.
+
+**CEFR level badge**
+- Saved words can be tagged with a CEFR level (A1–C2) from the word list's
+  context menu; the level shows as a colored badge in the row and can be
+  used to filter the list.
+
+### Fixed
+
+- The "native-language meaning" module's system prompt hardcoded "Output
+  only in Turkish" regardless of the learner's actual configured native
+  language, contradicting its own user prompt for the other 11 supported
+  languages. It now follows the real native-language setting.
+
 ## [1.11.0] - 2026-07-09
 
 ### Added
