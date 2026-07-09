@@ -54,6 +54,7 @@ struct SidebarView: View {
     var currentDocumentName: String?
     /// Non-nil document ⇒ the window is showing an EPUB.
     var epubManager: EPUBViewManager? = nil
+    var epubHighlightStore: EPUBHighlightStore
 
     @State private var selectedTab: SidebarTab = .thumbnails
     @AppStorage("thumbnailSize") private var thumbnailSizeRaw = DS.ThumbnailSize.medium.rawValue
@@ -158,6 +159,9 @@ struct SidebarView: View {
     private func badgeCount(for tab: SidebarTab) -> Int {
         switch tab {
         case .annotations:
+            if isEPUB {
+                return epubHighlightStore.count(for: currentDocumentName)
+            }
             let marks = currentDocumentName.map { bookmarkStore.bookmarks(for: $0).count } ?? 0
             return marks
                 + highlightStore.count(for: currentDocumentName)
@@ -233,7 +237,9 @@ struct SidebarView: View {
                 noteStore:       noteStore,
                 savedWordsStore: savedWordsStore,
                 pdfViewManager:  pdfViewManager,
-                currentFilename: currentDocumentName
+                currentFilename: currentDocumentName,
+                epubManager:        isEPUB ? epubManager : nil,
+                epubHighlightStore: epubHighlightStore
             )
         case .words:
             WordsView(

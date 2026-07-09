@@ -74,6 +74,19 @@ final class EPUBSchemeHandler: NSObject, WKURLSchemeHandler {
     }
 }
 
+// MARK: - Selection Anchor
+
+/// Text-quote selector for a live selection — mirrors the W3C Web
+/// Annotation model closely enough for our purposes: enough context to
+/// re-find the same text after a chapter reload, independent of any fixed
+/// geometry (EPUB has none).
+struct EPUBSelectionAnchor: Equatable {
+    let quote: String
+    let prefix: String
+    let suffix: String
+    let startOffset: Int
+}
+
 // MARK: - Manager
 
 @MainActor
@@ -104,14 +117,24 @@ final class EPUBViewManager: NSObject {
     /// PDFKit's selection notifications provide on the PDF side.
     private(set) var lastSelectionText: String = ""
     private(set) var lastSelectionSentence: String?
+    /// Text-quote anchor for the live selection, computed in JS at the same
+    /// time as the sentence — consumed when the user picks a highlight color.
+    private(set) var lastSelectionAnchor: EPUBSelectionAnchor?
     /// Pushes selection changes into the window's SelectionState.
     @ObservationIgnored var onSelectionChange: ((_ text: String, _ sentence: String?) -> Void)?
+
+    /// Supplies the highlights to render for a given chapter archive path —
+    /// set by the reader view, which owns the store reference.
+    @ObservationIgnored var highlightsProvider: ((_ chapterPath: String) -> [EPUBHighlight])?
 
     @ObservationIgnored private var pendingScrollFraction: Double?
     @ObservationIgnored private var pendingFragment: String?
     @ObservationIgnored private var lastPositionSave = Date.distantPast
     /// Term to highlight once the next chapter finishes loading (search jump).
     @ObservationIgnored private var pendingFindTerm: String?
+    /// Highlight to scroll to once the next chapter finishes loading and its
+    /// marks have been rendered.
+    @ObservationIgnored private var pendingHighlightScrollID: UUID?
 
     // Hover dictionary — reuses the PDF side's popover UI and lookup flow.
     var hoverEnabled = true
@@ -121,6 +144,28 @@ final class EPUBViewManager: NSObject {
     @ObservationIgnored private let hoverModel = HoverLookupModel()
     @ObservationIgnored private var hoverTask: Task<Void, Never>?
     @ObservationIgnored private var currentHoverTerm = ""
+
+    @ObservationIgnored private var highlightsChangedObserver: NSObjectProtocol?
+
+    // MARK: Init
+
+    override init() {
+        super.init()
+        // The store mutates outside SwiftUI's view-update path (a WKWebView
+        // can't observe @Observable directly), so re-render on its broadcast —
+        // mirrors PDFKitView.Coordinator's .pdfHighlightsChanged handling.
+        highlightsChangedObserver = NotificationCenter.default.addObserver(
+            forName: .epubHighlightsChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.refreshHighlights() }
+        }
+    }
+
+    deinit {
+        if let highlightsChangedObserver {
+            NotificationCenter.default.removeObserver(highlightsChangedObserver)
+        }
+    }
 
     // MARK: Lifecycle
 
@@ -309,12 +354,66 @@ final class EPUBViewManager: NSObject {
         )
     }
 
-    func handleSelectionMessage(text: String, sentence: String?) {
+    func handleSelectionMessage(text: String, sentence: String?, anchor: EPUBSelectionAnchor?) {
         lastSelectionText = text
         lastSelectionSentence = sentence?.isEmpty == true ? nil : sentence
+        lastSelectionAnchor = anchor
         onSelectionChange?(text, lastSelectionSentence)
         // A deliberate selection supersedes a passive hover.
         if !text.isEmpty { closeHoverPopover() }
+    }
+
+    // MARK: Highlights
+
+    /// Re-renders this chapter's highlight marks from the current store
+    /// contents. Safe to call repeatedly — the JS side clears old marks
+    /// before re-wrapping.
+    func refreshHighlights() {
+        guard let webView, let document,
+              document.spinePaths.indices.contains(chapterIndex),
+              let highlightsProvider
+        else { return }
+        let chapterPath = document.spinePaths[chapterIndex]
+        let entries = highlightsProvider(chapterPath)
+        webView.evaluateJavaScript(Self.renderHighlightsScript(for: entries))
+    }
+
+    private static func renderHighlightsScript(for highlights: [EPUBHighlight]) -> String {
+        struct Entry: Encodable {
+            let id: String
+            let quote: String
+            let prefix: String
+            let suffix: String
+            let startOffset: Int
+            let color: String
+        }
+        let entries = highlights.map {
+            Entry(
+                id: $0.id.uuidString, quote: $0.quote, prefix: $0.prefix,
+                suffix: $0.suffix, startOffset: $0.startOffset, color: $0.color.webBackground
+            )
+        }
+        let json = (try? JSONEncoder().encode(entries)).flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
+        return "window.rellRenderHighlights(\(json));"
+    }
+
+    /// Opens a chapter and scrolls to a highlight's mark once it renders.
+    func openChapter(at index: Int, thenScrollToHighlight id: UUID) {
+        pendingHighlightScrollID = id
+        if index == chapterIndex {
+            refreshHighlights()
+            scrollToHighlight(id)
+            pendingHighlightScrollID = nil
+        } else {
+            openChapter(at: index)
+        }
+    }
+
+    private func scrollToHighlight(_ id: UUID) {
+        webView?.evaluateJavaScript(
+            "document.querySelector('mark[data-rell-highlight-id=\"\(id.uuidString)\"]')" +
+            "?.scrollIntoView({block: 'center'});"
+        )
     }
 
     // MARK: Find in page
@@ -413,7 +512,7 @@ final class EPUBViewManager: NSObject {
     func chapterDidFinishLoading(url: URL?) {
         // Navigation clears any DOM selection — mirror that in app state.
         if !lastSelectionText.isEmpty {
-            handleSelectionMessage(text: "", sentence: nil)
+            handleSelectionMessage(text: "", sentence: nil, anchor: nil)
         }
         // A link inside the book may have navigated to another chapter —
         // keep the index in sync with what is actually on screen.
@@ -423,6 +522,7 @@ final class EPUBViewManager: NSObject {
         }
 
         applyAppearance(theme: currentTheme, fontSize: currentFontSize)
+        refreshHighlights()
 
         if let fragment = pendingFragment {
             pendingFragment = nil
@@ -432,6 +532,10 @@ final class EPUBViewManager: NSObject {
             pendingFindTerm = nil
             pendingScrollFraction = nil
             findInPage(term)
+        } else if let highlightID = pendingHighlightScrollID {
+            pendingHighlightScrollID = nil
+            pendingScrollFraction = nil
+            scrollToHighlight(highlightID)
         } else if let fraction = pendingScrollFraction, fraction > 0 {
             pendingScrollFraction = nil
             scroll(toFraction: fraction)
@@ -515,9 +619,22 @@ extension EPUBViewManager: WKScriptMessageHandler {
                 }
             case Self.selectionMessageName:
                 if let body = message.body as? [String: Any] {
+                    let text = (body["text"] as? String) ?? ""
+                    var anchor: EPUBSelectionAnchor?
+                    if !text.isEmpty,
+                       let quote = body["quote"] as? String, !quote.isEmpty,
+                       let startOffset = body["startOffset"] as? Int {
+                        anchor = EPUBSelectionAnchor(
+                            quote: quote,
+                            prefix: (body["prefix"] as? String) ?? "",
+                            suffix: (body["suffix"] as? String) ?? "",
+                            startOffset: startOffset
+                        )
+                    }
                     handleSelectionMessage(
-                        text: (body["text"] as? String) ?? "",
-                        sentence: body["sentence"] as? String
+                        text: text,
+                        sentence: body["sentence"] as? String,
+                        anchor: anchor
                     )
                 }
             case Self.hoverMessageName:

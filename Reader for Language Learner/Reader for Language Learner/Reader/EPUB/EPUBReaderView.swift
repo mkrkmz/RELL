@@ -22,6 +22,7 @@ final class RELLEPUBWebView: WKWebView {
     var onContextSaveWord: (() -> Void)?
     var onContextLookUp:   (() -> Void)?
     var onContextAnalyze:  ((ModuleType) -> Void)?
+    var onContextHighlight: ((HighlightColor) -> Void)?
     var onContextSpeak:    (() -> Void)?
 
     override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
@@ -54,6 +55,24 @@ final class RELLEPUBWebView: WKWebView {
         )
         lookUpItem.target = self
         items.append(lookUpItem)
+
+        let highlightItem = NSMenuItem(title: String(localized: "Highlight"), action: nil, keyEquivalent: "")
+        let highlightSubmenu = NSMenu()
+        highlightSubmenu.autoenablesItems = false
+        for color in HighlightColor.allCases {
+            let item = NSMenuItem(
+                title: color.label,
+                action: #selector(fireHighlight(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.isEnabled = true
+            item.representedObject = color.rawValue
+            item.image = Self.swatchImage(for: color.nsColor)
+            highlightSubmenu.addItem(item)
+        }
+        highlightItem.submenu = highlightSubmenu
+        items.append(highlightItem)
 
         let analyzeItem = NSMenuItem(title: String(localized: "Analyze With"), action: nil, keyEquivalent: "")
         let analyzeSubmenu = NSMenu()
@@ -94,6 +113,23 @@ final class RELLEPUBWebView: WKWebView {
               let module = ModuleType(rawValue: raw) else { return }
         onContextAnalyze?(module)
     }
+
+    @objc private func fireHighlight(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let color = HighlightColor(rawValue: raw) else { return }
+        onContextHighlight?(color)
+    }
+
+    /// Small filled-circle swatch for the color submenu items.
+    private static func swatchImage(for color: NSColor) -> NSImage {
+        let size = NSSize(width: 12, height: 12)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        color.setFill()
+        NSBezierPath(ovalIn: NSRect(origin: .zero, size: size)).fill()
+        image.unlockFocus()
+        return image
+    }
 }
 
 // MARK: - Reader View
@@ -108,6 +144,7 @@ struct EPUBReaderView: NSViewRepresentable {
     @Binding var contextSentence: String?
     var savedWordsStore: SavedWordsStore
     var quickLookup: QuickLookupService
+    var epubHighlightStore: EPUBHighlightStore
     var hoverEnabled: Bool
 
     func makeNSView(context: Context) -> RELLEPUBWebView {
@@ -115,6 +152,9 @@ struct EPUBReaderView: NSViewRepresentable {
         configuration.setURLSchemeHandler(manager.schemeHandler, forURLScheme: EPUBScheme.scheme)
 
         let controller = configuration.userContentController
+        // highlightScript must precede selectionScript: the latter calls
+        // the anchor-computation function the former defines.
+        controller.addUserScript(Self.highlightScript)
         controller.addUserScript(Self.scrollScript)
         controller.addUserScript(Self.selectionScript)
         controller.addUserScript(Self.hoverScript)
@@ -185,6 +225,13 @@ struct EPUBReaderView: NSViewRepresentable {
 
         let manager = self.manager
         let store = self.savedWordsStore
+        let highlightStore = self.epubHighlightStore
+
+        manager.highlightsProvider = { [weak manager] chapterPath in
+            guard let bookFilename = manager?.loadedURL?.deletingPathExtension().lastPathComponent
+            else { return [] }
+            return highlightStore.highlights(for: bookFilename, chapterPath: chapterPath)
+        }
 
         webView.selectionProvider = { [weak manager] in
             manager?.lastSelectionText ?? ""
@@ -206,6 +253,23 @@ struct EPUBReaderView: NSViewRepresentable {
         webView.onContextLookUp = {
             NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
         }
+        webView.onContextHighlight = { [weak manager] color in
+            guard let manager, let anchor = manager.lastSelectionAnchor,
+                  let document = manager.document,
+                  let bookFilename = manager.loadedURL?.deletingPathExtension().lastPathComponent,
+                  let chapterPath = try? document.chapterPath(at: manager.chapterIndex)
+            else { return }
+            highlightStore.add(EPUBHighlight(
+                epubFilename: bookFilename,
+                chapterIndex: manager.chapterIndex,
+                chapterPath: chapterPath,
+                quote: anchor.quote,
+                prefix: anchor.prefix,
+                suffix: anchor.suffix,
+                startOffset: anchor.startOffset,
+                colorRaw: color.rawValue
+            ))
+        }
         webView.onContextAnalyze = { module in
             NotificationCenter.default.post(name: .inspectorRunModule, object: module.rawValue)
         }
@@ -218,6 +282,172 @@ struct EPUBReaderView: NSViewRepresentable {
     }
 
     // MARK: Injected scripts
+
+    /// Defines the shared text-offset walk plus anchor/render/unwrap
+    /// functions used both to capture a new highlight's anchor (in
+    /// selectionScript) and to re-render marks from the store (called by
+    /// Swift via `evaluateJavaScript`). Wrapping/unwrapping a `<mark>`
+    /// never changes character counts — only node boundaries — so absolute
+    /// text offsets stay valid across repeated re-renders and reflow
+    /// (font-size change, window resize).
+    private static let highlightScript = WKUserScript(
+        source: """
+        (function() {
+            function rellWalkTextNodes(root) {
+                var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                    acceptNode: function(node) {
+                        var p = node.parentElement;
+                        if (!p) { return NodeFilter.FILTER_REJECT; }
+                        var tag = p.tagName;
+                        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                });
+                var nodes = [];
+                var n;
+                while ((n = walker.nextNode())) { nodes.push(n); }
+                return nodes;
+            }
+
+            function rellFullText(nodes) {
+                var text = '';
+                var spans = [];
+                for (var i = 0; i < nodes.length; i++) {
+                    var t = nodes[i].textContent;
+                    spans.push({ start: text.length, end: text.length + t.length, node: nodes[i] });
+                    text += t;
+                }
+                return { text: text, spans: spans };
+            }
+
+            function rellUnwrapHighlights() {
+                var marks = document.querySelectorAll('mark[data-rell-highlight-id]');
+                marks.forEach(function(mark) {
+                    var parent = mark.parentNode;
+                    if (!parent) { return; }
+                    while (mark.firstChild) { parent.insertBefore(mark.firstChild, mark); }
+                    parent.removeChild(mark);
+                    parent.normalize();
+                });
+            }
+
+            /// Computes a text-quote anchor for a live Range — the DOM is
+            /// read as-is (existing marks don't skew offsets; see above).
+            function rellComputeAnchor(range) {
+                var walked = rellFullText(rellWalkTextNodes(document.body));
+
+                function offsetOf(container, localOffset) {
+                    for (var i = 0; i < walked.spans.length; i++) {
+                        if (walked.spans[i].node === container) {
+                            return walked.spans[i].start + localOffset;
+                        }
+                    }
+                    return -1;
+                }
+
+                var start = offsetOf(range.startContainer, range.startOffset);
+                var end = offsetOf(range.endContainer, range.endOffset);
+                if (start < 0 || end < 0 || end <= start) { return null; }
+
+                var CTX = 24;
+                return {
+                    quote: walked.text.substring(start, end),
+                    prefix: walked.text.substring(Math.max(0, start - CTX), start),
+                    suffix: walked.text.substring(end, Math.min(walked.text.length, end + CTX)),
+                    startOffset: start
+                };
+            }
+
+            /// Resolves a stored anchor to a live [start, end) offset pair:
+            /// try the saved offset first (fast path, valid unless the
+            /// chapter content itself changed), then prefix+quote+suffix,
+            /// then the bare quote as a last resort.
+            function rellResolvePosition(fullText, entry) {
+                if (entry.startOffset >= 0) {
+                    var atOffset = fullText.substr(entry.startOffset, entry.quote.length);
+                    if (atOffset === entry.quote) {
+                        return { start: entry.startOffset, end: entry.startOffset + entry.quote.length };
+                    }
+                }
+                if (entry.prefix || entry.suffix) {
+                    var needle = entry.prefix + entry.quote + entry.suffix;
+                    var idx = fullText.indexOf(needle);
+                    if (idx >= 0) {
+                        var start = idx + entry.prefix.length;
+                        return { start: start, end: start + entry.quote.length };
+                    }
+                }
+                var bare = fullText.indexOf(entry.quote);
+                if (bare >= 0) { return { start: bare, end: bare + entry.quote.length }; }
+                return null;
+            }
+
+            function rellNodeOffsetFor(spans, globalOffset) {
+                for (var i = 0; i < spans.length; i++) {
+                    if (globalOffset >= spans[i].start && globalOffset <= spans[i].end) {
+                        return { node: spans[i].node, offset: globalOffset - spans[i].start };
+                    }
+                }
+                return null;
+            }
+
+            function rellWrapRange(spans, start, end, id, color) {
+                var startPos = rellNodeOffsetFor(spans, start);
+                var endPos = rellNodeOffsetFor(spans, end);
+                if (!startPos || !endPos) { return; }
+                var range = document.createRange();
+                range.setStart(startPos.node, startPos.offset);
+                range.setEnd(endPos.node, endPos.offset);
+
+                var mark = document.createElement('mark');
+                mark.setAttribute('data-rell-highlight-id', id);
+                mark.style.backgroundColor = color;
+                mark.style.color = '#1d1d1f';
+                mark.style.borderRadius = '2px';
+                mark.style.padding = '0 1px';
+                // extractContents+insertNode (rather than surroundContents)
+                // handles ranges that span multiple elements or partial
+                // inline tags (e.g. a quote crossing into a <b>) uniformly.
+                var frag = range.extractContents();
+                mark.appendChild(frag);
+                range.insertNode(mark);
+            }
+
+            window.rellRenderHighlights = function(entries) {
+                rellUnwrapHighlights();
+                if (!entries || !entries.length) { return; }
+
+                // Resolve every entry against one pristine pre-wrap walk —
+                // resolution must happen before any wrapping mutates the DOM.
+                var walked0 = rellFullText(rellWalkTextNodes(document.body));
+                var resolved = [];
+                entries.forEach(function(e) {
+                    var pos = rellResolvePosition(walked0.text, e);
+                    if (pos) { resolved.push({ id: e.id, color: e.color, start: pos.start, end: pos.end }); }
+                });
+                resolved.sort(function(a, b) { return a.start - b.start; });
+
+                // Wrap one at a time, re-walking the (now-mutated) DOM
+                // before each wrap so node references are always fresh —
+                // chapters are small, so this is cheap and sidesteps any
+                // node-identity invalidation from the previous wrap.
+                var lastEnd = -1;
+                resolved.forEach(function(r) {
+                    if (r.start < lastEnd) { return; } // overlapping highlight — skip
+                    var walked = rellFullText(rellWalkTextNodes(document.body));
+                    rellWrapRange(walked.spans, r.start, r.end, r.id, r.color);
+                    lastEnd = r.end;
+                });
+            };
+
+            window.__rellComputeAnchor = rellComputeAnchor;
+        })();
+        """,
+        injectionTime: .atDocumentEnd,
+        forMainFrameOnly: true
+    )
 
     /// Throttled scroll reporting for reading-position persistence.
     private static let scrollScript = WKUserScript(
@@ -329,12 +559,22 @@ struct EPUBReaderView: NSViewRepresentable {
                     var sel = window.getSelection();
                     var text = sel ? sel.toString().trim() : '';
                     var sentence = '';
+                    var anchor = null;
                     if (text.length > 0 && sel.anchorNode) {
                         var block = enclosingBlock(sel.anchorNode);
                         sentence = sentenceAround(block ? block.innerText : '', text);
+                        if (sel.rangeCount > 0 && window.__rellComputeAnchor) {
+                            anchor = window.__rellComputeAnchor(sel.getRangeAt(0));
+                        }
                     }
                     window.webkit.messageHandlers.\(EPUBViewManager.selectionMessageName)
-                        .postMessage({ text: text, sentence: sentence });
+                        .postMessage({
+                            text: text, sentence: sentence,
+                            quote: anchor ? anchor.quote : '',
+                            prefix: anchor ? anchor.prefix : '',
+                            suffix: anchor ? anchor.suffix : '',
+                            startOffset: anchor ? anchor.startOffset : -1
+                        });
                 }, 120);
             });
         })();

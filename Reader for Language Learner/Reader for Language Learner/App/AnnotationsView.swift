@@ -15,6 +15,10 @@ struct AnnotationsView: View {
     var savedWordsStore: SavedWordsStore
     var pdfViewManager:  PDFViewManager
     var currentFilename: String?
+    /// Non-nil ⇒ the window is showing an EPUB; the Highlights segment
+    /// switches to the EPUB-backed list (marks/notes stay PDF-only for now).
+    var epubManager: EPUBViewManager? = nil
+    var epubHighlightStore: EPUBHighlightStore
 
     enum Segment: String, CaseIterable, Identifiable {
         case bookmarks = "Marks"
@@ -62,11 +66,19 @@ struct AnnotationsView: View {
                 currentFilename: currentFilename
             )
         case .highlights:
-            HighlightsView(
-                highlightStore:  highlightStore,
-                pdfViewManager:  pdfViewManager,
-                currentFilename: currentFilename
-            )
+            if let epubManager {
+                EPUBHighlightsView(
+                    highlightStore: epubHighlightStore,
+                    epubManager:    epubManager,
+                    currentFilename: currentFilename
+                )
+            } else {
+                HighlightsView(
+                    highlightStore:  highlightStore,
+                    pdfViewManager:  pdfViewManager,
+                    currentFilename: currentFilename
+                )
+            }
         case .notes:
             PDFNotesView(
                 noteStore:       noteStore,

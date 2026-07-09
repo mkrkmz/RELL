@@ -33,6 +33,7 @@ struct ContentView: View {
     @Environment(PDFBookmarkStore.self)    private var bookmarkStore
     @Environment(PDFNoteStore.self)        private var noteStore
     @Environment(PDFHighlightStore.self)   private var highlightStore
+    @Environment(EPUBHighlightStore.self)  private var epubHighlightStore
     @Environment(ReadingSessionStore.self) private var sessionStore
     @Environment(RecentDocumentStore.self) private var recentDocumentStore
     @Environment(DocumentCoverStore.self)  private var coverStore
@@ -308,7 +309,8 @@ struct ContentView: View {
                 noteStore:           noteStore,
                 highlightStore:      highlightStore,
                 currentDocumentName: currentDocumentName,
-                epubManager:         isEPUBDocument ? epubManager : nil
+                epubManager:         isEPUBDocument ? epubManager : nil,
+                epubHighlightStore:  epubHighlightStore
             )
             .navigationSplitViewColumnWidth(
                 min: DS.Layout.sidebarMin,
@@ -376,6 +378,7 @@ struct ContentView: View {
                             ),
                             savedWordsStore: savedWordsStore,
                             quickLookup: quickLookup,
+                            epubHighlightStore: epubHighlightStore,
                             hoverEnabled: hoverDictionaryEnabled
                         )
                     } else {
