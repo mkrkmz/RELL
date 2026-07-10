@@ -4,6 +4,48 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.15.0] - 2026-07-11
+
+EPUB catches up: the last PDF-only annotation features now work in books,
+plus a real dark-theme readability fix. First sprint of the UI/UX roadmap.
+
+### Added
+
+**EPUB bookmarks**
+- The toolbar Bookmark button (⌘B) — previously disabled for EPUBs — now
+  works in books. A bookmark captures your chapter and scroll position,
+  plus the first visible line of text as its label. Press ⌘B again at the
+  same spot to remove it. The Annotations sidebar's Marks segment lists
+  them; tap a row to jump straight back. Bookmarks can carry a note, same
+  as PDF bookmarks.
+
+**EPUB notes**
+- The Annotations sidebar's Notes segment now works for books: "New Note"
+  captures a thought at your current reading position; tap a saved note
+  to jump back to where you wrote it. Previously the segment showed an
+  empty PDF panel for EPUBs.
+
+### Fixed
+
+- **Highlighted text is readable in the Dark page theme.** Highlight marks
+  hardcoded near-black ink, which was illegible over a translucent mark on
+  a dark page. The ink now follows the page theme — light ink in Dark,
+  highlighter-dark ink in Original/Sepia — and re-renders when you switch
+  themes.
+- EPUB files opened before v1.9 could show their `.epub` extension in the
+  dashboard and Library titles; extensions are now stripped for both
+  formats via one shared helper.
+- The Annotations tab badge for EPUBs now counts bookmarks + highlights +
+  notes (was highlights only).
+- Several bookmark/highlight empty-state messages (both formats) were
+  never actually localized — they now resolve their Turkish translations.
+
+### Notes
+
+- An EPUB bookmark's position is approximate under reflow: changing the
+  font size after bookmarking can shift the exact scroll target slightly.
+  The captured text label always shows what was on screen at creation time.
+
 ## [1.14.0] - 2026-07-09
 
 Learning-engine and AI-layer release, combining three sprints: smarter spaced
