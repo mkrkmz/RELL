@@ -393,7 +393,7 @@ struct EPUBReaderView: NSViewRepresentable {
                 return null;
             }
 
-            function rellWrapRange(spans, start, end, id, color) {
+            function rellWrapRange(spans, start, end, id, color, ink) {
                 var startPos = rellNodeOffsetFor(spans, start);
                 var endPos = rellNodeOffsetFor(spans, end);
                 if (!startPos || !endPos) { return; }
@@ -404,7 +404,7 @@ struct EPUBReaderView: NSViewRepresentable {
                 var mark = document.createElement('mark');
                 mark.setAttribute('data-rell-highlight-id', id);
                 mark.style.backgroundColor = color;
-                mark.style.color = '#1d1d1f';
+                mark.style.color = ink || '#1d1d1f';
                 mark.style.borderRadius = '2px';
                 mark.style.padding = '0 1px';
                 // extractContents+insertNode (rather than surroundContents)
@@ -415,7 +415,7 @@ struct EPUBReaderView: NSViewRepresentable {
                 range.insertNode(mark);
             }
 
-            window.rellRenderHighlights = function(entries) {
+            window.rellRenderHighlights = function(entries, ink) {
                 rellUnwrapHighlights();
                 if (!entries || !entries.length) { return; }
 
@@ -437,7 +437,7 @@ struct EPUBReaderView: NSViewRepresentable {
                 resolved.forEach(function(r) {
                     if (r.start < lastEnd) { return; } // overlapping highlight — skip
                     var walked = rellFullText(rellWalkTextNodes(document.body));
-                    rellWrapRange(walked.spans, r.start, r.end, r.id, r.color);
+                    rellWrapRange(walked.spans, r.start, r.end, r.id, r.color, ink);
                     lastEnd = r.end;
                 });
             };

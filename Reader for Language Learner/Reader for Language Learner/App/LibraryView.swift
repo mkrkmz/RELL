@@ -267,9 +267,7 @@ private struct LibraryCard: View {
     }
 
     private var displayTitle: String {
-        document.filename
-            .replacingOccurrences(of: ".pdf", with: "", options: [.caseInsensitive, .anchored, .backwards])
-            .replacingOccurrences(of: "_", with: " ")
+        document.displayTitle
     }
 
     private var subtitleText: String {
@@ -308,9 +306,7 @@ private struct DocumentStatsSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     private var displayTitle: String {
-        document.filename
-            .replacingOccurrences(of: ".pdf", with: "", options: [.caseInsensitive, .anchored, .backwards])
-            .replacingOccurrences(of: "_", with: " ")
+        document.displayTitle
     }
 
     var body: some View {

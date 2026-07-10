@@ -41,6 +41,19 @@ struct RecentDocument: Identifiable, Codable, Hashable {
         (path as NSString).pathExtension.lowercased() == "epub"
     }
 
+    /// Filename cleaned for display. `registerOpen` stores extension-less
+    /// names, but entries persisted by older versions kept the extension —
+    /// strip a trailing .pdf/.epub defensively, and read underscores as spaces.
+    var displayTitle: String {
+        var title = filename
+        for ext in [".pdf", ".epub"] {
+            title = title.replacingOccurrences(
+                of: ext, with: "", options: [.caseInsensitive, .anchored, .backwards]
+            )
+        }
+        return title.replacingOccurrences(of: "_", with: " ")
+    }
+
     var pageLabel: String {
         guard let lastPageIndex else { return String(localized: "Start reading") }
         let number = lastPageIndex + 1

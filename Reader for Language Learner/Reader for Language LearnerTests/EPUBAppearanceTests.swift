@@ -46,4 +46,12 @@ final class EPUBAppearanceTests: XCTestCase {
         let css = EPUBViewManager.appearanceCSS(theme: .dark, fontSize: 22)
         XCTAssertTrue(css.contains("font-size: 22px"))
     }
+
+    func testHighlightInkIsLightOnDarkThemeAndDarkElsewhere() {
+        // Dark ink over a translucent mark on a dark page is unreadable —
+        // the regression this guards against (marks hardcoded #1d1d1f).
+        XCTAssertEqual(EPUBViewManager.highlightInk(for: .dark), "#e8e8e8")
+        XCTAssertEqual(EPUBViewManager.highlightInk(for: .original), "#1d1d1f")
+        XCTAssertEqual(EPUBViewManager.highlightInk(for: .sepia), "#1d1d1f")
+    }
 }

@@ -70,6 +70,23 @@ final class RecentDocumentStoreTests: XCTestCase {
         XCTAssertFalse(RecentDocument(path: "/tmp/a.pdf", filename: "a").isEPUB)
     }
 
+    func testDisplayTitleStripsLegacyExtensionsAndUnderscores() {
+        // Legacy entries persisted the filename with its extension.
+        XCTAssertEqual(
+            RecentDocument(path: "/tmp/a.pdf", filename: "My_Book.pdf").displayTitle,
+            "My Book"
+        )
+        XCTAssertEqual(
+            RecentDocument(path: "/tmp/b.epub", filename: "Crime_and_Punishment.EPUB").displayTitle,
+            "Crime and Punishment"
+        )
+        // Current entries are stored extension-less already — unchanged.
+        XCTAssertEqual(
+            RecentDocument(path: "/tmp/c.epub", filename: "Persuasion").displayTitle,
+            "Persuasion"
+        )
+    }
+
     func testDecodeLegacyDocumentWithoutPageCount() throws {
         let legacyJSON = """
         {"id":"\(UUID().uuidString)","path":"/tmp/a.pdf","filename":"a","lastOpenedAt":700000000,"lastPageIndex":2}

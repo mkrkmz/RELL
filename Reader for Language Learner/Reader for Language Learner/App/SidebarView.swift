@@ -55,6 +55,8 @@ struct SidebarView: View {
     /// Non-nil document ⇒ the window is showing an EPUB.
     var epubManager: EPUBViewManager? = nil
     var epubHighlightStore: EPUBHighlightStore
+    var epubBookmarkStore: EPUBBookmarkStore
+    var epubNoteStore: EPUBNoteStore
 
     @State private var selectedTab: SidebarTab = .thumbnails
     @AppStorage("thumbnailSize") private var thumbnailSizeRaw = DS.ThumbnailSize.medium.rawValue
@@ -160,7 +162,9 @@ struct SidebarView: View {
         switch tab {
         case .annotations:
             if isEPUB {
-                return epubHighlightStore.count(for: currentDocumentName)
+                return epubBookmarkStore.count(for: currentDocumentName)
+                    + epubHighlightStore.count(for: currentDocumentName)
+                    + epubNoteStore.count(for: currentDocumentName)
             }
             let marks = currentDocumentName.map { bookmarkStore.bookmarks(for: $0).count } ?? 0
             return marks
@@ -239,7 +243,9 @@ struct SidebarView: View {
                 pdfViewManager:  pdfViewManager,
                 currentFilename: currentDocumentName,
                 epubManager:        isEPUB ? epubManager : nil,
-                epubHighlightStore: epubHighlightStore
+                epubHighlightStore: epubHighlightStore,
+                epubBookmarkStore:  epubBookmarkStore,
+                epubNoteStore:      epubNoteStore
             )
         case .words:
             WordsView(

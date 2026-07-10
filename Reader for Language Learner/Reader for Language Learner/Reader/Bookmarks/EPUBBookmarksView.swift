@@ -1,21 +1,22 @@
 //
-//  PDFBookmarksView.swift
+//  EPUBBookmarksView.swift
 //  Reader for Language Learner
 //
-//  Sidebar panel listing user-created bookmarks for the open document.
-//  Tap a row → jump to that page.  Swipe left → delete.  Pencil icon → edit note.
+//  Sidebar panel listing bookmarks for the open book. Tap a row → jump to
+//  that chapter and scroll position. Swipe left → delete. Pencil → edit note.
+//  Mirrors PDFBookmarksView; the EPUB counterpart because the position model
+//  (chapter + scroll fraction vs. page index) differs.
 //
 
-import PDFKit
 import SwiftUI
 
-struct PDFBookmarksView: View {
+struct EPUBBookmarksView: View {
 
-    var bookmarkStore:   PDFBookmarkStore
-    var pdfViewManager:  PDFViewManager
-    var currentFilename: String?      // nil when no document is open
+    var bookmarkStore:   EPUBBookmarkStore
+    var epubManager:     EPUBViewManager
+    var currentFilename: String?
 
-    @State private var editingBookmark: PDFBookmark?
+    @State private var editingBookmark: EPUBBookmark?
 
     var body: some View {
         Group {
@@ -32,35 +33,39 @@ struct PDFBookmarksView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(item: $editingBookmark) { bookmark in
-            BookmarkNoteSheet(bookmark: bookmark, store: bookmarkStore)
+            EPUBBookmarkNoteSheet(bookmark: bookmark, store: bookmarkStore, chapterTitle: chapterTitle(for: bookmark))
         }
     }
 
     // MARK: - List
 
-    private func list(entries: [PDFBookmark]) -> some View {
+    private func list(entries: [EPUBBookmark]) -> some View {
         List {
             ForEach(entries) { bookmark in
-                BookmarkRow(bookmark: bookmark, onEdit: { editingBookmark = bookmark })
-                    .contentShape(Rectangle())
-                    .onTapGesture { navigate(to: bookmark) }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            withAnimation { bookmarkStore.remove(id: bookmark.id) }
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        Button { editingBookmark = bookmark } label: {
-                            Label("Edit Note", systemImage: "pencil")
-                        }
-                        .tint(.blue)
+                EPUBBookmarkRow(
+                    bookmark: bookmark,
+                    chapterTitle: chapterTitle(for: bookmark),
+                    onEdit: { editingBookmark = bookmark }
+                )
+                .contentShape(Rectangle())
+                .onTapGesture { navigate(to: bookmark) }
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        withAnimation { bookmarkStore.remove(id: bookmark.id) }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
                     }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(
-                        top: DS.Spacing.xxs, leading: DS.Spacing.sm,
-                        bottom: DS.Spacing.xxs, trailing: DS.Spacing.sm
-                    ))
+                    Button { editingBookmark = bookmark } label: {
+                        Label("Edit Note", systemImage: "pencil")
+                    }
+                    .tint(.blue)
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(
+                    top: DS.Spacing.xxs, leading: DS.Spacing.sm,
+                    bottom: DS.Spacing.xxs, trailing: DS.Spacing.sm
+                ))
             }
         }
         .listStyle(.plain)
@@ -69,12 +74,13 @@ struct PDFBookmarksView: View {
 
     // MARK: - Navigation
 
-    private func navigate(to bookmark: PDFBookmark) {
-        guard let doc = pdfViewManager.pdfView?.document,
-              bookmark.pageIndex < doc.pageCount,
-              let page = doc.page(at: bookmark.pageIndex)
-        else { return }
-        pdfViewManager.pdfView?.go(to: page)
+    private func navigate(to bookmark: EPUBBookmark) {
+        epubManager.openChapter(at: bookmark.chapterIndex, scrollTo: bookmark.scrollFraction)
+    }
+
+    private func chapterTitle(for bookmark: EPUBBookmark) -> String {
+        let title = epubManager.document?.chapterTitle(at: bookmark.chapterIndex) ?? ""
+        return title.isEmpty ? String(localized: "Chapter \(bookmark.chapterIndex + 1)") : title
     }
 
     // MARK: - Empty / No-doc States
@@ -83,7 +89,7 @@ struct PDFBookmarksView: View {
         DSEmptyState(
             icon:    "bookmark",
             title:   String(localized: "No Bookmarks"),
-            message: String(localized: "Press ⌘B to bookmark the current page.")
+            message: String(localized: "Press ⌘B to bookmark your current position.")
         )
     }
 
@@ -91,42 +97,49 @@ struct PDFBookmarksView: View {
         DSEmptyState(
             icon:    "doc.text",
             title:   String(localized: "No Document"),
-            message: String(localized: "Open a PDF to start adding bookmarks.")
+            message: String(localized: "Open a book to start adding bookmarks.")
         )
     }
 }
 
-// MARK: - BookmarkRow
+// MARK: - EPUBBookmarkRow
 
-private struct BookmarkRow: View {
-    let bookmark: PDFBookmark
+private struct EPUBBookmarkRow: View {
+    let bookmark: EPUBBookmark
+    let chapterTitle: String
     var onEdit: () -> Void
 
     @State private var isHovered = false
 
     var body: some View {
         HStack(spacing: DS.Spacing.sm) {
-            // Page badge
+            // Chapter badge
             ZStack {
                 RoundedRectangle(cornerRadius: DS.Radius.xs)
                     .fill(DS.Color.accentSubtle)
                     .frame(width: 36, height: 36)
-                Text("\(bookmark.pageIndex + 1)")
+                Text("\(bookmark.chapterIndex + 1)")
                     .font(DS.Typography.label)
                     .foregroundStyle(DS.Color.accent)
             }
 
             VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                Text(bookmark.pageLabel)
+                Text(chapterTitle)
                     .font(DS.Typography.subhead)
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
-                if !bookmark.note.isEmpty {
-                    Text(bookmark.note)
+                if !bookmark.snippet.isEmpty {
+                    Text(bookmark.snippet)
                         .font(DS.Typography.caption)
                         .foregroundStyle(DS.Color.textSecondary)
                         .lineLimit(2)
-                } else if isHovered {
+                }
+                if !bookmark.note.isEmpty {
+                    Text(bookmark.note)
+                        .font(DS.Typography.caption.italic())
+                        .foregroundStyle(DS.Color.textSecondary)
+                        .lineLimit(2)
+                } else if isHovered, bookmark.snippet.isEmpty {
                     Text("Add note…")
                         .font(DS.Typography.caption.italic())
                         .foregroundStyle(DS.Color.textTertiary)
@@ -163,22 +176,23 @@ private struct BookmarkRow: View {
     }
 }
 
-// MARK: - BookmarkNoteSheet
+// MARK: - EPUBBookmarkNoteSheet
 
-private struct BookmarkNoteSheet: View {
-    @State var bookmark: PDFBookmark
-    var store: PDFBookmarkStore
+private struct EPUBBookmarkNoteSheet: View {
+    @State var bookmark: EPUBBookmark
+    var store: EPUBBookmarkStore
+    let chapterTitle: String
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // ── Header ────────────────────────────────────────────────────
             HStack(spacing: DS.Spacing.sm) {
                 Image(systemName: "bookmark.fill")
                     .foregroundStyle(DS.Color.accent)
-                Text(bookmark.pageLabel)
+                Text(chapterTitle)
                     .font(DS.Typography.headline)
                     .foregroundStyle(DS.Color.textPrimary)
+                    .lineLimit(1)
                 Spacer()
                 Button("", systemImage: "xmark.circle.fill") { dismiss() }
                     .buttonStyle(.plain)
@@ -188,7 +202,6 @@ private struct BookmarkNoteSheet: View {
 
             Divider()
 
-            // ── Note editor ───────────────────────────────────────────────
             VStack(alignment: .leading, spacing: DS.Spacing.xs) {
                 Text("NOTE")
                     .dsOverlineLabel()
@@ -206,7 +219,6 @@ private struct BookmarkNoteSheet: View {
 
             Divider()
 
-            // ── Footer ────────────────────────────────────────────────────
             HStack {
                 Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)

@@ -90,16 +90,16 @@ struct EPUBHighlightsView: View {
     private var emptyState: some View {
         DSEmptyState(
             icon:    "highlighter",
-            title:   "No Highlights",
-            message: "Select text, right-click, and choose Highlight to mark passages."
+            title:   String(localized: "No Highlights"),
+            message: String(localized: "Select text, right-click, and choose Highlight to mark passages.")
         )
     }
 
     private var noDocumentState: some View {
         DSEmptyState(
             icon:    "doc.text",
-            title:   "No Document",
-            message: "Open a book to start highlighting."
+            title:   String(localized: "No Document"),
+            message: String(localized: "Open a book to start highlighting.")
         )
     }
 }

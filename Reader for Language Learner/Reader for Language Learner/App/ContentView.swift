@@ -35,6 +35,8 @@ struct ContentView: View {
     @Environment(PDFNoteStore.self)        private var noteStore
     @Environment(PDFHighlightStore.self)   private var highlightStore
     @Environment(EPUBHighlightStore.self)  private var epubHighlightStore
+    @Environment(EPUBBookmarkStore.self)   private var epubBookmarkStore
+    @Environment(EPUBNoteStore.self)       private var epubNoteStore
     @Environment(ReadingSessionStore.self) private var sessionStore
     @Environment(RecentDocumentStore.self) private var recentDocumentStore
     @Environment(DocumentCoverStore.self)  private var coverStore
@@ -317,7 +319,9 @@ struct ContentView: View {
                 highlightStore:      highlightStore,
                 currentDocumentName: currentDocumentName,
                 epubManager:         isEPUBDocument ? epubManager : nil,
-                epubHighlightStore:  epubHighlightStore
+                epubHighlightStore:  epubHighlightStore,
+                epubBookmarkStore:   epubBookmarkStore,
+                epubNoteStore:       epubNoteStore
             )
             .navigationSplitViewColumnWidth(
                 min: DS.Layout.sidebarMin,
@@ -646,7 +650,7 @@ struct ContentView: View {
             }
             .keyboardShortcut("b", modifiers: [.command])
             .help(isCurrentPageBookmarked ? "Remove Bookmark (⌘B)" : "Bookmark Page (⌘B)")
-            .disabled(selectionState.documentURL == nil || isEPUBDocument)
+            .disabled(selectionState.documentURL == nil)
         }
 
         ToolbarItemGroup(placement: .automatic) {
@@ -893,18 +897,55 @@ struct ContentView: View {
     }
 
     private var isCurrentPageBookmarked: Bool {
-        guard let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent,
-              let idx = currentPageNumber.map({ $0 - 1 })
+        guard let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent
         else { return false }
+        if isEPUBDocument {
+            return epubBookmarkStore.isBookmarked(
+                filename: filename,
+                chapterIndex: epubManager.chapterIndex,
+                near: epubManager.scrollFraction
+            )
+        }
+        guard let idx = currentPageNumber.map({ $0 - 1 }) else { return false }
         return bookmarkStore.isBookmarked(filename: filename, pageIndex: idx)
     }
 
     private func toggleCurrentPageBookmark() {
-        guard let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent,
-              let pageNum = currentPageNumber else { return }
+        guard let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent
+        else { return }
+        if isEPUBDocument {
+            toggleEPUBBookmark(filename: filename)
+            return
+        }
+        guard let pageNum = currentPageNumber else { return }
         let pageIndex = pageNum - 1
         let pageLabel = "Page \(pageNum)"
         bookmarkStore.toggle(filename: filename, pageIndex: pageIndex, pageLabel: pageLabel)
+    }
+
+    /// EPUB path: the position is captured immediately; the snippet (first
+    /// visible line, the row label) arrives async from the WebView — if an
+    /// existing bookmark is near this position it's removed synchronously,
+    /// otherwise the add waits for the snippet (falling back to "" on failure).
+    private func toggleEPUBBookmark(filename: String) {
+        let chapterIndex = epubManager.chapterIndex
+        let fraction = epubManager.scrollFraction
+        if let existing = epubBookmarkStore.bookmark(for: filename, chapterIndex: chapterIndex, near: fraction) {
+            epubBookmarkStore.remove(id: existing.id)
+            return
+        }
+        Task {
+            let snippet = await epubManager.visibleSnippet()
+            // Re-check: a second ⌘B may have landed while the JS ran.
+            guard epubBookmarkStore.bookmark(for: filename, chapterIndex: chapterIndex, near: fraction) == nil
+            else { return }
+            epubBookmarkStore.add(EPUBBookmark(
+                epubFilename: filename,
+                chapterIndex: chapterIndex,
+                scrollFraction: fraction,
+                snippet: snippet
+            ))
+        }
     }
 
     private func focusInspectorAndRun() {

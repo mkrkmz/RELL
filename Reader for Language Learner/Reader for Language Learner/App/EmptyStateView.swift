@@ -290,9 +290,7 @@ private struct ContinueReadingHero: View {
     }
 
     private var displayTitle: String {
-        document.filename
-            .replacingOccurrences(of: ".pdf", with: "", options: [.caseInsensitive, .anchored, .backwards])
-            .replacingOccurrences(of: "_", with: " ")
+        document.displayTitle
     }
 
     private var metaText: String {
@@ -475,9 +473,7 @@ private struct RecentDocumentRow: View {
     }
 
     private var displayTitle: String {
-        document.filename
-            .replacingOccurrences(of: ".pdf", with: "", options: [.caseInsensitive, .anchored, .backwards])
-            .replacingOccurrences(of: "_", with: " ")
+        document.displayTitle
     }
 
     private static let relativeFormatter: RelativeDateTimeFormatter = {

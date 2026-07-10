@@ -234,9 +234,20 @@ final class EPUBViewManager: NSObject {
     // MARK: Appearance
 
     func applyAppearance(theme: PageTheme, fontSize: Double) {
+        let themeChanged = currentTheme != theme
         currentTheme = theme
         currentFontSize = fontSize
         webView?.evaluateJavaScript(Self.appearanceScript(theme: theme, fontSize: fontSize))
+        // Highlight ink is baked into each <mark>'s inline style at render
+        // time, so a theme switch has to re-wrap the marks with the new ink.
+        if themeChanged { refreshHighlights() }
+    }
+
+    /// Ink color for highlighted text, per page theme. Light themes get
+    /// dark "physical highlighter" ink; the dark theme keeps its own light
+    /// text — dark ink over a translucent mark on a dark page is unreadable.
+    static func highlightInk(for theme: PageTheme) -> String {
+        theme == .dark ? "#e8e8e8" : "#1d1d1f"
     }
 
     /// CSS pushed into every chapter. Layout basics are ours; for sepia and
@@ -262,12 +273,9 @@ final class EPUBViewManager: NSObject {
             return layout + "\nhtml, body { background-color: #ffffff !important; }\n"
         }
 
-        let colors: (background: String, text: String, link: String)
-        switch theme {
-        case .sepia: colors = ("#f4ecd8", "#5b4636", "#8a5a2b")
-        case .dark:  colors = ("#1e1e1e", "#d8d8d8", "#7db4e6")
-        case .original: colors = ("#ffffff", "#1d1d1f", "#0066cc")   // unreachable
-        }
+        let colors: (background: String, text: String, link: String) = theme == .sepia
+            ? ("#f4ecd8", "#5b4636", "#8a5a2b")
+            : ("#1e1e1e", "#d8d8d8", "#7db4e6")
 
         // Force the surface, then cascade the text color down through every
         // text-bearing element (publisher CSS often colors <p>/<span> directly)
@@ -354,6 +362,35 @@ final class EPUBViewManager: NSObject {
         )
     }
 
+    /// First visible line of text in the viewport — the display label for a
+    /// bookmark created at the current position. Falls back to "" when the
+    /// probe finds nothing (image-only view, JS failure).
+    func visibleSnippet() async -> String {
+        guard let webView else { return "" }
+        let script = """
+        (function() {
+            var x = Math.floor(window.innerWidth / 2);
+            for (var y = 8; y < window.innerHeight; y += 24) {
+                var range = document.caretRangeFromPoint(x, y);
+                if (!range || !range.startContainer) { continue; }
+                var node = range.startContainer;
+                if (node.nodeType !== Node.TEXT_NODE) { continue; }
+                var text = node.textContent.substring(range.startOffset).trim();
+                if (text.length < 3) { text = node.textContent.trim(); }
+                // The caret usually lands mid-word — drop the partial word
+                // so the label starts on a word boundary.
+                if (range.startOffset > 0 && /\\S/.test(node.textContent.charAt(range.startOffset - 1))) {
+                    text = text.replace(/^\\S+\\s+/, '');
+                }
+                if (text.length >= 3) { return text.substring(0, 120); }
+            }
+            return '';
+        })();
+        """
+        let result = try? await webView.evaluateJavaScript(script)
+        return (result as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
     func handleSelectionMessage(text: String, sentence: String?, anchor: EPUBSelectionAnchor?) {
         lastSelectionText = text
         lastSelectionSentence = sentence?.isEmpty == true ? nil : sentence
@@ -375,10 +412,10 @@ final class EPUBViewManager: NSObject {
         else { return }
         let chapterPath = document.spinePaths[chapterIndex]
         let entries = highlightsProvider(chapterPath)
-        webView.evaluateJavaScript(Self.renderHighlightsScript(for: entries))
+        webView.evaluateJavaScript(Self.renderHighlightsScript(for: entries, ink: Self.highlightInk(for: currentTheme)))
     }
 
-    private static func renderHighlightsScript(for highlights: [EPUBHighlight]) -> String {
+    private static func renderHighlightsScript(for highlights: [EPUBHighlight], ink: String) -> String {
         struct Entry: Encodable {
             let id: String
             let quote: String
@@ -394,7 +431,7 @@ final class EPUBViewManager: NSObject {
             )
         }
         let json = (try? JSONEncoder().encode(entries)).flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
-        return "window.rellRenderHighlights(\(json));"
+        return "window.rellRenderHighlights(\(json), '\(ink)');"
     }
 
     /// Opens a chapter and scrolls to a highlight's mark once it renders.

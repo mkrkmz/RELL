@@ -15,10 +15,12 @@ struct AnnotationsView: View {
     var savedWordsStore: SavedWordsStore
     var pdfViewManager:  PDFViewManager
     var currentFilename: String?
-    /// Non-nil ⇒ the window is showing an EPUB; the Highlights segment
-    /// switches to the EPUB-backed list (marks/notes stay PDF-only for now).
+    /// Non-nil ⇒ the window is showing an EPUB; every segment switches to
+    /// its EPUB-backed counterpart (bookmarks, highlights, and notes).
     var epubManager: EPUBViewManager? = nil
     var epubHighlightStore: EPUBHighlightStore
+    var epubBookmarkStore: EPUBBookmarkStore
+    var epubNoteStore: EPUBNoteStore
 
     enum Segment: String, CaseIterable, Identifiable {
         case bookmarks = "Marks"
@@ -60,11 +62,19 @@ struct AnnotationsView: View {
     private var content: some View {
         switch segment {
         case .bookmarks:
-            PDFBookmarksView(
-                bookmarkStore:   bookmarkStore,
-                pdfViewManager:  pdfViewManager,
-                currentFilename: currentFilename
-            )
+            if let epubManager {
+                EPUBBookmarksView(
+                    bookmarkStore:   epubBookmarkStore,
+                    epubManager:     epubManager,
+                    currentFilename: currentFilename
+                )
+            } else {
+                PDFBookmarksView(
+                    bookmarkStore:   bookmarkStore,
+                    pdfViewManager:  pdfViewManager,
+                    currentFilename: currentFilename
+                )
+            }
         case .highlights:
             if let epubManager {
                 EPUBHighlightsView(
@@ -80,12 +90,20 @@ struct AnnotationsView: View {
                 )
             }
         case .notes:
-            PDFNotesView(
-                noteStore:       noteStore,
-                savedWordsStore: savedWordsStore,
-                pdfViewManager:  pdfViewManager,
-                currentFilename: currentFilename
-            )
+            if let epubManager {
+                EPUBNotesView(
+                    noteStore:       epubNoteStore,
+                    epubManager:     epubManager,
+                    currentFilename: currentFilename
+                )
+            } else {
+                PDFNotesView(
+                    noteStore:       noteStore,
+                    savedWordsStore: savedWordsStore,
+                    pdfViewManager:  pdfViewManager,
+                    currentFilename: currentFilename
+                )
+            }
         }
     }
 }
