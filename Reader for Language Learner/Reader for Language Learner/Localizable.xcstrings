@@ -2753,6 +2753,46 @@
           }
         }
       }
+    },
+    "Marks": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşaretler"
+          }
+        }
+      }
+    },
+    "Highlights": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vurgular"
+          }
+        }
+      }
+    },
+    "Notes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notlar"
+          }
+        }
+      }
+    },
+    "No Table of Contents": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İçindekiler Yok"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

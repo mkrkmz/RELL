@@ -173,7 +173,7 @@ struct QuickLookupPanelView: View {
                 failureView(message)
             }
         }
-        .frame(width: 420)
+        .frame(width: DS.Layout.hudWidth)
         .modifier(PanelChrome(style: style))
         .onGeometryChange(for: CGSize.self, of: \.size) { size in
             onSizeChange?(size)
@@ -332,7 +332,7 @@ private struct PanelChrome: ViewModifier {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.lg)
-                        .strokeBorder(DS.Color.separator.opacity(0.35), lineWidth: 0.8)
+                        .strokeBorder(DS.Color.hairline, lineWidth: 0.8)
                 )
         case .menuBar:
             // The MenuBarExtra window supplies its own material and corners.

@@ -44,7 +44,7 @@ struct DashboardWordCard: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 1)
+                .strokeBorder(DS.Color.hairline, lineWidth: 1)
         )
         .animation(DS.Animation.standard, value: isFlipped)
         .animation(DS.Animation.standard, value: currentWord?.id)
@@ -120,7 +120,7 @@ struct DashboardWordCard: View {
                 VStack(spacing: DS.Spacing.xs) {
                     HStack(spacing: DS.Spacing.sm) {
                         Text(word.term)
-                            .font(.system(size: 22, weight: .semibold))
+                            .font(DS.Typography.wordDisplay)
                             .foregroundStyle(DS.Color.textPrimary)
                             .multilineTextAlignment(.center)
                             .minimumScaleFactor(0.7)

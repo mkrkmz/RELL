@@ -53,7 +53,6 @@ struct LLMSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: providerType.requiresAPIKey ? 420 : 380)
         .onChange(of: serverURL)       { connectionStatus = .idle }
         .onChange(of: model)           { connectionStatus = .idle }
         .onChange(of: providerTypeRaw) { connectionStatus = .idle }

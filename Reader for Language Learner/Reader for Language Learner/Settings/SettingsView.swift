@@ -42,8 +42,9 @@ struct SettingsView: View {
                 .tabItem { Label("Appearance", systemImage: "paintpalette") }
                 .tag(SettingsTab.appearance)
         }
-        // Fixed width keeps the window tidy; height adapts to the tallest tab
-        .frame(width: 540)
+        // One fixed size for every tab (sized to the tallest, Prompts) —
+        // per-tab heights made the window visibly jump when switching tabs.
+        .frame(width: DS.Layout.settingsWindow.width, height: DS.Layout.settingsWindow.height)
     }
 }
 

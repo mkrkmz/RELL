@@ -29,7 +29,7 @@ struct EPUBFindBarView: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.separator.opacity(0.30), lineWidth: 0.6)
+                .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
         )
     }
 

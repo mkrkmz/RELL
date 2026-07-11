@@ -91,7 +91,7 @@ struct OnboardingView: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 1)
+                .strokeBorder(DS.Color.hairline, lineWidth: 1)
         )
     }
 
@@ -136,7 +136,7 @@ struct OnboardingView: View {
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.md)
-                    .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 1)
+                    .strokeBorder(DS.Color.hairline, lineWidth: 1)
             )
 
             Text("No server right now? Continue anyway — you can set up a provider later in Settings → AI Provider.")

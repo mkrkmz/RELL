@@ -90,16 +90,16 @@ struct EPUBHighlightsView: View {
     private var emptyState: some View {
         DSEmptyState(
             icon:    "highlighter",
-            title:   String(localized: "No Highlights"),
-            message: String(localized: "Select text, right-click, and choose Highlight to mark passages.")
+            title:   "No Highlights",
+            message: "Select text, right-click, and choose Highlight to mark passages."
         )
     }
 
     private var noDocumentState: some View {
         DSEmptyState(
             icon:    "doc.text",
-            title:   String(localized: "No Document"),
-            message: String(localized: "Open a book to start highlighting.")
+            title:   "No Document",
+            message: "Open a book to start highlighting."
         )
     }
 }
@@ -126,7 +126,7 @@ private struct EPUBHighlightRow: View {
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(2)
                 HStack(spacing: DS.Spacing.xs) {
-                    Text(String(localized: "Chapter \(highlight.chapterIndex + 1)"))
+                    Text("Chapter \(highlight.chapterIndex + 1)")
                         .font(DS.Typography.caption2)
                         .foregroundStyle(DS.Color.textTertiary)
                     Text("·")

@@ -237,32 +237,11 @@ struct InspectorView: View {
     // MARK: - Empty State
 
     var emptyState: some View {
-        VStack(spacing: DS.Spacing.lg) {
-            Spacer()
-
-            ZStack {
-                Circle()
-                    .fill(DS.Color.accentSubtle)
-                    .frame(width: 72, height: 72)
-                Image(systemName: "text.cursor")
-                    .font(.system(size: 30, weight: .light))
-                    .foregroundStyle(DS.Color.accent)
-            }
-
-            VStack(spacing: DS.Spacing.xs) {
-                Text("Select text to analyze")
-                    .font(DS.Typography.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
-                Text("Double-click a word or drag\nto select a sentence.")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-            }
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        DSEmptyState(
+            icon: "text.cursor",
+            title: "Select text to analyze",
+            message: "Double-click a word or drag\nto select a sentence."
+        )
     }
 
     // MARK: - Selection Content

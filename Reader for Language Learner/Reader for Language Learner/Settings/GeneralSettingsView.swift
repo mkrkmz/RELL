@@ -130,7 +130,6 @@ struct GeneralSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 480)
     }
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true

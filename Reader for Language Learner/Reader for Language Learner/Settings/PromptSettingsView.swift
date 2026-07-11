@@ -68,7 +68,6 @@ struct PromptSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 520)
         .confirmationDialog(
             "Reset all prompt settings to defaults?",
             isPresented: $showResetConfirm,

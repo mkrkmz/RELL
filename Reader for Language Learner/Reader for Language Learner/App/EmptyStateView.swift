@@ -57,10 +57,10 @@ struct EmptyStateView: View {
                                 statsProvider: documentStats(for:),
                                 onBack: { showLibrary = false }
                             )
-                            .frame(maxWidth: 880, alignment: .topLeading)
+                            .frame(maxWidth: DS.Layout.libraryContentWidth, alignment: .topLeading)
                         } else {
                             dashboardColumn
-                                .frame(maxWidth: 640, alignment: .topLeading)
+                                .frame(maxWidth: DS.Layout.dashboardContentWidth, alignment: .topLeading)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .top)
@@ -76,7 +76,7 @@ struct EmptyStateView: View {
                     bookmarkCount: bookmarkStore?.bookmarks.count ?? 0,
                     reviewedTodayCount: reviewedTodayCount
                 )
-                .frame(maxWidth: 640)
+                .frame(maxWidth: DS.Layout.dashboardContentWidth)
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, DS.Spacing.xxl)
                 .padding(.bottom, DS.Spacing.lg)
@@ -241,7 +241,7 @@ private struct ContinueReadingHero: View {
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.lg)
                     .strokeBorder(
-                        isHovered ? DS.Color.accentMuted : DS.Color.separator.opacity(0.3),
+                        isHovered ? DS.Color.accentMuted : DS.Color.hairline,
                         lineWidth: 1
                     )
             )
@@ -268,7 +268,7 @@ private struct ContinueReadingHero: View {
             Image(nsImage: cover)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: 52, height: 68)
+                .frame(width: DS.Layout.coverHero.width, height: DS.Layout.coverHero.height)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.sm)
@@ -279,7 +279,7 @@ private struct ContinueReadingHero: View {
             Image(systemName: "book.pages")
                 .font(.system(size: 21, weight: .light))
                 .foregroundStyle(DS.Color.accent)
-                .frame(width: 52, height: 68)
+                .frame(width: DS.Layout.coverHero.width, height: DS.Layout.coverHero.height)
                 .background(DS.Color.accentSubtle)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
@@ -378,7 +378,7 @@ private struct RecentDocumentList: View {
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.md)
-                    .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 1)
+                    .strokeBorder(DS.Color.hairline, lineWidth: 1)
             )
         }
     }
@@ -446,7 +446,7 @@ private struct RecentDocumentRow: View {
             Image(nsImage: cover)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
-                .frame(width: 22, height: 28)
+                .frame(width: DS.Layout.coverMini.width, height: DS.Layout.coverMini.height)
                 .clipShape(RoundedRectangle(cornerRadius: 3))
                 .overlay(
                     RoundedRectangle(cornerRadius: 3)
@@ -457,7 +457,7 @@ private struct RecentDocumentRow: View {
             Image(systemName: fileExists ? "doc.text" : "questionmark.folder")
                 .font(.system(size: 12, weight: .regular))
                 .foregroundStyle(DS.Color.textTertiary)
-                .frame(width: 22, height: 28)
+                .frame(width: DS.Layout.coverMini.width, height: DS.Layout.coverMini.height)
                 .background(DS.Color.surfaceInset.opacity(0.6))
                 .clipShape(RoundedRectangle(cornerRadius: 3))
         }

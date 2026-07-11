@@ -75,7 +75,7 @@ struct DashboardActivityCard: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 1)
+                .strokeBorder(DS.Color.hairline, lineWidth: 1)
         )
         .contextMenu {
             Section("Daily Goal") {
@@ -123,7 +123,7 @@ struct DashboardActivityCard: View {
                     .symbolEffect(.bounce, value: goalReached)
             } else {
                 Text("\(Int(progress * 100))%")
-                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .font(DS.Typography.statNumber(9, weight: .semibold))
                     .foregroundStyle(DS.Color.textSecondary)
             }
         }
@@ -158,7 +158,7 @@ struct DashboardActivityCard: View {
                 AxisValueLabel {
                     if let label = value.as(String.self) {
                         Text(label.prefix(1))
-                            .font(.system(size: 8))
+                            .font(DS.Typography.micro(8))
                             .foregroundStyle(DS.Color.textTertiary)
                     }
                 }

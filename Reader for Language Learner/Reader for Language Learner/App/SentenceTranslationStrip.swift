@@ -46,7 +46,7 @@ struct SentenceTranslationStrip: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 0.6)
+                .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
         )
         .task(id: sentence) { await load() }
         .accessibilityElement(children: .combine)

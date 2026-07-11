@@ -88,16 +88,16 @@ struct EPUBBookmarksView: View {
     private var emptyState: some View {
         DSEmptyState(
             icon:    "bookmark",
-            title:   String(localized: "No Bookmarks"),
-            message: String(localized: "Press ⌘B to bookmark your current position.")
+            title:   "No Bookmarks",
+            message: "Press ⌘B to bookmark your current position."
         )
     }
 
     private var noDocumentState: some View {
         DSEmptyState(
             icon:    "doc.text",
-            title:   String(localized: "No Document"),
-            message: String(localized: "Open a book to start adding bookmarks.")
+            title:   "No Document",
+            message: "Open a book to start adding bookmarks."
         )
     }
 }

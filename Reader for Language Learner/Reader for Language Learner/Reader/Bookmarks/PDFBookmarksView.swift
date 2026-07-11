@@ -82,16 +82,16 @@ struct PDFBookmarksView: View {
     private var emptyState: some View {
         DSEmptyState(
             icon:    "bookmark",
-            title:   String(localized: "No Bookmarks"),
-            message: String(localized: "Press ⌘B to bookmark the current page.")
+            title:   "No Bookmarks",
+            message: "Press ⌘B to bookmark the current page."
         )
     }
 
     private var noDocumentState: some View {
         DSEmptyState(
             icon:    "doc.text",
-            title:   String(localized: "No Document"),
-            message: String(localized: "Open a PDF to start adding bookmarks.")
+            title:   "No Document",
+            message: "Open a PDF to start adding bookmarks."
         )
     }
 }

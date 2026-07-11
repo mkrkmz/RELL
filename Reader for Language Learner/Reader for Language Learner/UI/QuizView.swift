@@ -302,7 +302,7 @@ struct QuizView: View {
             Text("WHICH WORD FITS?")
                 .font(DS.Typography.caption2.weight(.bold))
                 .foregroundStyle(DS.Color.textTertiary)
-            cardScroll(maxHeight: 220) {
+            cardScroll(maxHeight: DS.Layout.cardBackHeightCompact) {
                 Text(maskedDefinition(for: word))
                     .font(DS.Typography.body)
                     .foregroundStyle(DS.Color.textPrimary)
@@ -407,7 +407,7 @@ struct QuizView: View {
                 .font(DS.Typography.caption2.weight(.bold))
                 .foregroundStyle(DS.Color.textTertiary)
 
-            cardScroll(maxHeight: 220) {
+            cardScroll(maxHeight: DS.Layout.cardBackHeightCompact) {
                 VStack(alignment: .leading, spacing: DS.Spacing.md) {
                     if let cloze = clozeSentence(for: word) {
                         Text("“\(cloze)”")
@@ -504,7 +504,7 @@ struct QuizView: View {
     private func cardFace(content: some View, isFront: Bool) -> some View {
         content
             .padding(DS.Spacing.lg)
-            .frame(maxWidth: .infinity, minHeight: 160)
+            .frame(maxWidth: .infinity, minHeight: DS.Layout.cardFrontMinHeight)
             .background(DS.Color.surfaceElevated)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
             .overlay(
@@ -522,7 +522,7 @@ struct QuizView: View {
                 .foregroundStyle(DS.Color.textTertiary)
             HStack(spacing: DS.Spacing.sm) {
                 Text(word.term)
-                    .font(.system(size: 28, weight: .semibold, design: .default))
+                    .font(DS.Typography.wordDisplayLarge)
                     .foregroundStyle(DS.Color.textPrimary)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.72)
@@ -539,7 +539,7 @@ struct QuizView: View {
 
     /// Flashcard back: every saved module, summary-first with "Show more".
     private func backContent(for word: SavedWord) -> some View {
-        backSections(for: word, maxHeight: 300)
+        backSections(for: word, maxHeight: DS.Layout.cardBackHeightExpanded)
     }
 
     /// Reveal card for choice/typed modes — the question hid the term, so the
@@ -548,7 +548,7 @@ struct QuizView: View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             HStack(spacing: DS.Spacing.sm) {
                 Text(word.term)
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(DS.Typography.wordDisplay)
                     .foregroundStyle(DS.Color.textPrimary)
                     .minimumScaleFactor(0.72)
                 SpeakButton(text: word.term, size: 13)
@@ -556,7 +556,7 @@ struct QuizView: View {
                 masteryBadge(word.masteryLevel)
             }
             Divider()
-            backSections(for: word, maxHeight: 220)
+            backSections(for: word, maxHeight: DS.Layout.cardBackHeightCompact)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -759,7 +759,7 @@ struct QuizView: View {
     private func resultStat(value: String, label: String, color: Color) -> some View {
         VStack(spacing: DS.Spacing.xxs) {
             Text(value)
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(DS.Typography.statNumber(32))
                 .foregroundStyle(color)
             Text(label)
                 .font(DS.Typography.caption2)

@@ -13,17 +13,11 @@ struct EPUBOutlineView: View {
 
     var body: some View {
         if manager.tocEntries.isEmpty {
-            VStack(spacing: DS.Spacing.sm) {
-                Spacer()
-                Image(systemName: "list.bullet.rectangle")
-                    .font(.system(size: 24, weight: .ultraLight))
-                    .foregroundStyle(DS.Color.textTertiary)
-                Text("No table of contents")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            DSEmptyState(
+                icon: "list.bullet.rectangle",
+                title: "No Table of Contents",
+                message: nil
+            )
         } else {
             List(manager.tocEntries) { entry in
                 Button {

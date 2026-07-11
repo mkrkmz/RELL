@@ -123,7 +123,7 @@ struct LibraryView: View {
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.sm)
-                    .strokeBorder(DS.Color.separator.opacity(0.3), lineWidth: 0.7)
+                    .strokeBorder(DS.Color.hairline, lineWidth: 0.7)
             )
 
             Picker("Sort", selection: $sortOrderRaw) {

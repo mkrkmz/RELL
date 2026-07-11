@@ -125,7 +125,7 @@ struct SidebarView: View {
 
                     if badgeCount > 0 {
                         Text("\(min(badgeCount, 99))")
-                            .font(.system(size: 8, weight: .bold))
+                            .font(DS.Typography.micro(8, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 3)
                             .padding(.vertical, 1)
@@ -136,7 +136,7 @@ struct SidebarView: View {
                 }
 
                 Text(tab.localizedTitle)
-                    .font(.system(size: 9, weight: isSelected ? .semibold : .regular))
+                    .font(DS.Typography.micro(9, weight: isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? DS.Color.accent : DS.Color.textTertiary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)

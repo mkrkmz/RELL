@@ -35,7 +35,6 @@ struct AppearanceSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 340)
     }
 
     // MARK: - Page Theme Grid

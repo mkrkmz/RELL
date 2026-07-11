@@ -49,7 +49,7 @@ struct ReadingStatsView: View {
 
             HStack(alignment: .lastTextBaseline, spacing: DS.Spacing.xs) {
                 Text(formatMinutes(sessionStore.todayReadingTime))
-                    .font(.system(size: 42, weight: .bold, design: .rounded))
+                    .font(DS.Typography.statNumber(42))
                     .foregroundStyle(DS.Color.textPrimary)
                     .contentTransition(.numericText(countsDown: false))
                     .id(tick)   // force re-render each tick

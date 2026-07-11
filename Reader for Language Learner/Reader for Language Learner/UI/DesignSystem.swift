@@ -94,6 +94,26 @@ enum DS {
         static var label:    SwiftUI.Font { .subheadline.weight(.medium) }
         static var overline: SwiftUI.Font { .caption2.weight(.heavy) }
         static var mono:     SwiftUI.Font { .system(.caption, design: .monospaced) }
+
+        /// A saved word's term, shown large — flashcards, word cards.
+        static var wordDisplay:      SwiftUI.Font { .system(size: 22, weight: .semibold) }
+        /// The larger variant — the flashcard front, the single most
+        /// prominent term on screen.
+        static var wordDisplayLarge: SwiftUI.Font { .system(size: 28, weight: .semibold) }
+
+        /// Numeric display with tabular/rounded digits — ring percentages,
+        /// stat counters, quiz results. Always `.rounded`; size varies by
+        /// context, so this stays a function rather than a fixed constant.
+        static func statNumber(_ size: CGFloat, weight: SwiftUI.Font.Weight = .bold) -> SwiftUI.Font {
+            .system(size: size, weight: weight, design: .rounded)
+        }
+
+        /// Tiny UI chrome text — sidebar tab labels, count badges, chart
+        /// axis ticks. Deliberately fixed-size, not a Dynamic Type role:
+        /// these sit in space-constrained chrome, not body content.
+        static func micro(_ size: CGFloat = 9, weight: SwiftUI.Font.Weight = .regular) -> SwiftUI.Font {
+            .system(size: size, weight: weight)
+        }
     }
 
     // MARK: - Spacing
@@ -157,10 +177,32 @@ enum DS {
         static let windowMin     = CGSize(width: 900,  height: 600)
         static let windowDefault = CGSize(width: 1200, height: 800)
 
+        /// One fixed size for every Settings tab — sized to the tallest
+        /// (Prompts, 520pt) so switching tabs doesn't resize the window.
+        static let settingsWindow = CGSize(width: 540, height: 520)
+
         // Thumbnail strip sizes (width; height is 4:3 ratio)
         static let thumbnailSmall:  CGFloat = 80
         static let thumbnailMedium: CGFloat = 120
         static let thumbnailLarge:  CGFloat = 160
+
+        // Dashboard / Library content columns (EmptyStateView).
+        static let dashboardContentWidth: CGFloat = 640
+        static let libraryContentWidth:   CGFloat = 880
+
+        // Document cover thumbnails (EmptyStateView, LibraryView).
+        static let coverHero = CGSize(width: 52, height: 68)
+        static let coverMini = CGSize(width: 22, height: 28)
+
+        /// Quick Lookup HUD panel width.
+        static let hudWidth: CGFloat = 420
+
+        // QuizView card body heights — the flashcard front's minimum, and
+        // the back/reveal scroll area's two size tiers (compact vs. the
+        // flashcard back, which has more room to spare).
+        static let cardFrontMinHeight: CGFloat = 160
+        static let cardBackHeightCompact:  CGFloat = 220
+        static let cardBackHeightExpanded: CGFloat = 300
     }
 
     enum ThumbnailSize: String, CaseIterable, Identifiable {
@@ -245,10 +287,13 @@ struct DSSectionHeader<Trailing: View>: View {
 /// Replaces ad-hoc VStack-with-icon patterns in every view.
 struct DSEmptyState: View {
     let icon: String
-    let title: String
-    let message: String?
+    /// `LocalizedStringKey`, not `String` — a `Text(String)` call silently
+    /// skips the string catalog (see CLAUDE.md), and every call site here is
+    /// static app copy, so literals resolve through the catalog for free.
+    let title: LocalizedStringKey
+    let message: LocalizedStringKey?
     var action: (() -> Void)? = nil
-    var actionLabel: String? = nil
+    var actionLabel: LocalizedStringKey? = nil
 
     var body: some View {
         VStack(spacing: DS.Spacing.lg) {

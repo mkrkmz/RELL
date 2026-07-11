@@ -144,16 +144,16 @@ struct EPUBNotesView: View {
     private var emptyState: some View {
         DSEmptyState(
             icon:    "note.text",
-            title:   String(localized: "No Notes"),
-            message: String(localized: "Use New Note to capture a thought at your current position.")
+            title:   "No Notes",
+            message: "Use New Note to capture a thought at your current position."
         )
     }
 
     private var noDocumentState: some View {
         DSEmptyState(
             icon:    "doc.text",
-            title:   String(localized: "No Document"),
-            message: String(localized: "Open a book to start taking notes.")
+            title:   "No Document",
+            message: "Open a book to start taking notes."
         )
     }
 }

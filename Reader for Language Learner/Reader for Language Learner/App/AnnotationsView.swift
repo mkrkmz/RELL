@@ -27,6 +27,15 @@ struct AnnotationsView: View {
         case highlights = "Highlights"
         case notes = "Notes"
         var id: String { rawValue }
+
+        /// Raw value stays English — it keys `@AppStorage` persistence.
+        var localizedTitle: String {
+            switch self {
+            case .bookmarks:  return String(localized: "Marks")
+            case .highlights: return String(localized: "Highlights")
+            case .notes:      return String(localized: "Notes")
+            }
+        }
     }
 
     @AppStorage("annotationsSegment") private var segmentRaw = Segment.bookmarks.rawValue
@@ -42,7 +51,7 @@ struct AnnotationsView: View {
                 set: { segmentRaw = $0.rawValue }
             )) {
                 ForEach(Segment.allCases) { segment in
-                    Text(segment.rawValue).tag(segment)
+                    Text(segment.localizedTitle).tag(segment)
                 }
             }
             .labelsHidden()
