@@ -874,6 +874,52 @@ struct ContentView: View {
         epubSearchManager.closeFindBar()
     }
 
+    /// "Find Next" — jumps to the next match of whatever query is already
+    /// in the find bar. A no-op if nothing has been searched yet.
+    private func findNext() {
+        if isEPUBDocument {
+            epubManager.findInPage(epubSearchManager.query, forward: true)
+        } else {
+            searchManager.next()
+        }
+    }
+
+    private func findPrevious() {
+        if isEPUBDocument {
+            epubManager.findInPage(epubSearchManager.query, forward: false)
+        } else {
+            searchManager.previous()
+        }
+    }
+
+    /// Menu-bar mirror of the toolbar's zoom/font-size controls — EPUB has
+    /// no optical zoom, so "zoom" steps its reader font size instead.
+    private func menuZoomIn() {
+        if isEPUBDocument { epubFontSize = min(28, epubFontSize + 1) }
+        else { pdfViewManager.zoomIn() }
+    }
+
+    private func menuZoomOut() {
+        if isEPUBDocument { epubFontSize = max(12, epubFontSize - 1) }
+        else { pdfViewManager.zoomOut() }
+    }
+
+    /// "Actual Size" — 100% for PDF, the default reader font size for EPUB.
+    private func menuActualSize() {
+        if isEPUBDocument { epubFontSize = 18 }
+        else { pdfViewManager.actualSize() }
+    }
+
+    private var isCurrentTermSaved: Bool {
+        let term = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !term.isEmpty else { return false }
+        return savedWordsStore.isSaved(
+            term: term,
+            pdfFilename: selectionState.documentURL?.deletingPathExtension().lastPathComponent,
+            pageNumber: currentPageNumber
+        )
+    }
+
     private func toggleSidebar() {
         columnVisibility = showSidebar ? .detailOnly : .all
     }
@@ -990,6 +1036,10 @@ struct ContentView: View {
                 ? epubManager.canGoToNextChapter
                 : pdfViewManager.canGoToNextPage,
             recentDocuments: recentDocumentStore.recentDocuments,
+            isEPUBDocument: isEPUBDocument,
+            isCurrentPageBookmarked: isCurrentPageBookmarked,
+            isCurrentTermSaved: isCurrentTermSaved,
+            pageTheme: pageTheme,
             openDocument: { openDocument($0) },
             closeDocument: { closeDocument() },
             toggleSidebar: { toggleSidebar() },
@@ -1004,7 +1054,20 @@ struct ContentView: View {
                 else { pdfViewManager.goToNextPage() }
             },
             runModule: { runModule($0) },
-            runLastModule: { focusInspectorAndRun() }
+            runLastModule: { focusInspectorAndRun() },
+            clearRecentDocuments: { recentDocumentStore.clear() },
+            showFind: { openFindBar() },
+            findNext: { findNext() },
+            findPrevious: { findPrevious() },
+            toggleBookmark: { toggleCurrentPageBookmark() },
+            toggleSaveWord: {
+                revealInspectorThenRepost(.inspectorToggleSaveWord, object: nil, forcePost: true)
+            },
+            zoomIn: { menuZoomIn() },
+            zoomOut: { menuZoomOut() },
+            actualSize: { menuActualSize() },
+            fitToWidth: { pdfViewManager.fitToWidth() },
+            setPageTheme: { pageThemeRaw = $0.rawValue }
         )
     }
 

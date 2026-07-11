@@ -34,42 +34,55 @@ extension InspectorView {
 
     private func followUpRow(_ exchange: FollowUpExchange) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-            HStack(alignment: .top, spacing: DS.Spacing.xs) {
-                Image(systemName: "person.fill")
-                    .font(.system(size: 9))
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .padding(.top, 2)
-                Text(exchange.question)
-                    .font(DS.Typography.caption.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .textSelection(.enabled)
-            }
+            // Grouped separately from the copy button below: `.combine` would
+            // otherwise swallow the button into one inert element, losing its
+            // VoiceOver action.
+            Group {
+                HStack(alignment: .top, spacing: DS.Spacing.xs) {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .padding(.top, 2)
+                    Text(exchange.question)
+                        .font(DS.Typography.caption.weight(.semibold))
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .textSelection(.enabled)
+                }
 
-            HStack(alignment: .top, spacing: DS.Spacing.xs) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 9))
-                    .foregroundStyle(DS.Color.accent)
-                    .padding(.top, 2)
-                Group {
-                    if let error = exchange.error {
-                        Text(error)
-                            .foregroundStyle(DS.Color.danger)
-                    } else if exchange.answer.isEmpty && exchange.isLoading {
-                        HStack(spacing: DS.Spacing.xs) {
-                            ProgressView().controlSize(.small)
-                            Text("Thinking…").foregroundStyle(DS.Color.textTertiary)
+                HStack(alignment: .top, spacing: DS.Spacing.xs) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 9))
+                        .foregroundStyle(DS.Color.accent)
+                        .padding(.top, 2)
+                    Group {
+                        if let error = exchange.error {
+                            Text(error)
+                                .foregroundStyle(DS.Color.danger)
+                        } else if exchange.answer.isEmpty && exchange.isLoading {
+                            HStack(spacing: DS.Spacing.xs) {
+                                ProgressView().controlSize(.small)
+                                Text("Thinking…").foregroundStyle(DS.Color.textTertiary)
+                            }
+                        } else {
+                            Text(exchange.answer)
+                                .foregroundStyle(DS.Color.textSecondary)
+                                .textSelection(.enabled)
                         }
-                    } else {
-                        Text(exchange.answer)
-                            .foregroundStyle(DS.Color.textSecondary)
-                            .textSelection(.enabled)
+                    }
+                    .font(DS.Typography.caption)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                    if !exchange.answer.isEmpty {
+                        Spacer(minLength: DS.Spacing.xs)
                     }
                 }
-                .font(DS.Typography.caption)
-                .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(followUpAccessibilityLabel(exchange))
 
-                if !exchange.answer.isEmpty {
-                    Spacer(minLength: DS.Spacing.xs)
+            if !exchange.answer.isEmpty {
+                HStack {
+                    Spacer()
                     Button {
                         copyToClipboard(exchange.answer, showFeedback: true)
                     } label: {
@@ -79,6 +92,7 @@ extension InspectorView {
                     }
                     .buttonStyle(.plain)
                     .help("Copy answer")
+                    .accessibilityLabel("Copy answer")
                 }
             }
         }
@@ -86,6 +100,16 @@ extension InspectorView {
         .padding(DS.Spacing.sm)
         .background(DS.Color.surfaceInset.opacity(0.6))
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+    }
+
+    private func followUpAccessibilityLabel(_ exchange: FollowUpExchange) -> String {
+        if let error = exchange.error {
+            return String(localized: "Question: \(exchange.question). Error: \(error)")
+        }
+        if exchange.answer.isEmpty && exchange.isLoading {
+            return String(localized: "Question: \(exchange.question). Thinking…")
+        }
+        return String(localized: "Question: \(exchange.question). Answer: \(exchange.answer)")
     }
 
     private var inputRow: some View {

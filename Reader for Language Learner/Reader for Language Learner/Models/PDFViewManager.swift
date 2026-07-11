@@ -102,6 +102,14 @@ final class PDFViewManager {
         updateZoomLabel()
     }
 
+    /// Resets to 100% scale — the View menu's "Actual Size".
+    func actualSize() {
+        guard let pdfView else { return }
+        pdfView.autoScales = false
+        pdfView.scaleFactor = 1.0
+        updateZoomLabel()
+    }
+
     private func updateZoomLabel() {
         let percentage = Int((pdfView?.scaleFactor ?? 1.0) * 100)
         zoomLabel = "\(percentage)%"

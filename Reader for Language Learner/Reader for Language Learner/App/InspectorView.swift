@@ -178,6 +178,9 @@ struct InspectorView: View {
                     }
                 }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .inspectorToggleSaveWord)) { _ in
+                toggleSaveWord()
+            }
     }
 
     private func withPreferenceSync(_ content: some View) -> some View {
@@ -568,4 +571,7 @@ extension Notification.Name {
     static let inspectorRecentTermSelected = Notification.Name("inspectorRecentTermSelected")
     /// Runs a specific module; `object` is the `ModuleType` raw value.
     static let inspectorRunModule        = Notification.Name("inspectorRunModule")
+    /// Posted by the Save Word menu command (and ⌘D once routed through the
+    /// menu bridge) — the panel must be mounted to reach `viewModel.outputs`.
+    static let inspectorToggleSaveWord   = Notification.Name("inspectorToggleSaveWord")
 }

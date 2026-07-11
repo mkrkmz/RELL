@@ -17,6 +17,10 @@ struct ReaderCommands {
     var canGoToPreviousPage: Bool
     var canGoToNextPage: Bool
     var recentDocuments: [RecentDocument]
+    var isEPUBDocument: Bool
+    var isCurrentPageBookmarked: Bool
+    var isCurrentTermSaved: Bool
+    var pageTheme: PageTheme
 
     var openDocument: (URL) -> Void
     var closeDocument: () -> Void
@@ -27,6 +31,18 @@ struct ReaderCommands {
     var goToNextPage: () -> Void
     var runModule: (ModuleType) -> Void
     var runLastModule: () -> Void
+    var clearRecentDocuments: () -> Void
+
+    var showFind: () -> Void
+    var findNext: () -> Void
+    var findPrevious: () -> Void
+    var toggleBookmark: () -> Void
+    var toggleSaveWord: () -> Void
+    var zoomIn: () -> Void
+    var zoomOut: () -> Void
+    var actualSize: () -> Void
+    var fitToWidth: () -> Void
+    var setPageTheme: (PageTheme) -> Void
 }
 
 // Menus only need to re-render when the observable state changes;
@@ -41,6 +57,10 @@ extension ReaderCommands: Equatable {
             && lhs.canGoToPreviousPage == rhs.canGoToPreviousPage
             && lhs.canGoToNextPage == rhs.canGoToNextPage
             && lhs.recentDocuments == rhs.recentDocuments
+            && lhs.isEPUBDocument == rhs.isEPUBDocument
+            && lhs.isCurrentPageBookmarked == rhs.isCurrentPageBookmarked
+            && lhs.isCurrentTermSaved == rhs.isCurrentTermSaved
+            && lhs.pageTheme == rhs.pageTheme
     }
 }
 

@@ -148,6 +148,15 @@ final class RecentDocumentStore {
         removed.forEach { SpotlightIndexer.removeDocument(path: $0.path) }
     }
 
+    /// Empties the whole recent-documents list ("Open Recent ▸ Clear Menu").
+    /// The files themselves are untouched.
+    func clear() {
+        let removed = documents
+        documents.removeAll()
+        save()
+        removed.forEach { SpotlightIndexer.removeDocument(path: $0.path) }
+    }
+
     private func trim() {
         if documents.count > maxDocuments {
             documents = Array(documents.prefix(maxDocuments))

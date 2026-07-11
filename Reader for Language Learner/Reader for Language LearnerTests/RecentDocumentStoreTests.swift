@@ -111,6 +111,17 @@ final class RecentDocumentStoreTests: XCTestCase {
         XCTAssertEqual(store.recentDocuments.first?.filename, "astro-keep")
     }
 
+    func testClearEmptiesTheWholeList() throws {
+        let store = makeStore()
+        store.registerOpen(url: try makeTempPDF(named: "astro-a"))
+        store.registerOpen(url: try makeTempPDF(named: "astro-b"))
+        XCTAssertEqual(store.recentDocuments.count, 2)
+
+        store.clear()
+
+        XCTAssertTrue(store.recentDocuments.isEmpty)
+    }
+
     private func makeStore() -> RecentDocumentStore {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)

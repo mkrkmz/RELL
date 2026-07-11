@@ -30,6 +30,23 @@ struct ReaderMenuCommands: Commands {
                 .disabled(reader?.hasDocument != true)
         }
 
+        // ── Edit (Find) ───────────────────────────────────────────────
+        CommandGroup(after: .textEditing) {
+            Divider()
+
+            Button("Find…") { reader?.showFind() }
+                .keyboardShortcut("f", modifiers: [.command])
+                .disabled(reader?.hasDocument != true)
+
+            Button("Find Next") { reader?.findNext() }
+                .keyboardShortcut("g", modifiers: [.command])
+                .disabled(reader?.hasDocument != true)
+
+            Button("Find Previous") { reader?.findPrevious() }
+                .keyboardShortcut("g", modifiers: [.command, .shift])
+                .disabled(reader?.hasDocument != true)
+        }
+
         // ── View ──────────────────────────────────────────────────────
         CommandGroup(after: .sidebar) {
             Button(reader?.isSidebarVisible == true ? "Hide Sidebar" : "Show Sidebar") {
@@ -51,6 +68,42 @@ struct ReaderMenuCommands: Commands {
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
             .disabled(reader?.hasDocument != true)
+
+            Divider()
+
+            Button("Zoom In") { reader?.zoomIn() }
+                .keyboardShortcut("+", modifiers: [.command])
+                .disabled(reader?.hasDocument != true)
+
+            Button("Zoom Out") { reader?.zoomOut() }
+                .keyboardShortcut("-", modifiers: [.command])
+                .disabled(reader?.hasDocument != true)
+
+            Button("Actual Size") { reader?.actualSize() }
+                .keyboardShortcut("0", modifiers: [.command, .shift])
+                .disabled(reader?.hasDocument != true)
+
+            Button("Fit to Width") { reader?.fitToWidth() }
+                .keyboardShortcut("0", modifiers: [.command])
+                .disabled(reader?.hasDocument != true || reader?.isEPUBDocument == true)
+
+            Divider()
+
+            pageThemeMenu
+
+            Divider()
+
+            Button(reader?.isCurrentPageBookmarked == true ? "Remove Bookmark" : "Add Bookmark") {
+                reader?.toggleBookmark()
+            }
+            .keyboardShortcut("b", modifiers: [.command])
+            .disabled(reader?.hasDocument != true)
+
+            Button(reader?.isCurrentTermSaved == true ? "Remove from Saved" : "Save Word") {
+                reader?.toggleSaveWord()
+            }
+            .keyboardShortcut("d", modifiers: [.command])
+            .disabled(reader?.hasSelection != true)
         }
 
         // ── Go ────────────────────────────────────────────────────────
@@ -106,8 +159,28 @@ struct ReaderMenuCommands: Commands {
                     // already open, otherwise opens a new window/tab.
                     Button(document.filename) { openWindow(value: document.url) }
                 }
+                Divider()
+                Button("Clear Menu") { reader?.clearRecentDocuments() }
             }
         }
         .disabled(reader == nil)
+    }
+
+    /// Mirrors the toolbar's Theme menu (App/Page sections) so the choice is
+    /// also reachable — and its current selection visible — from the menu bar.
+    private var pageThemeMenu: some View {
+        Menu("Page Theme") {
+            ForEach(PageTheme.allCases) { theme in
+                Button {
+                    reader?.setPageTheme(theme)
+                } label: {
+                    HStack {
+                        Label(theme.displayName, systemImage: theme.iconName)
+                        if reader?.pageTheme == theme { Spacer(); Image(systemName: "checkmark") }
+                    }
+                }
+            }
+        }
+        .disabled(reader?.hasDocument != true)
     }
 }

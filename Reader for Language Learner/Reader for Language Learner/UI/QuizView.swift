@@ -254,6 +254,12 @@ struct QuizView: View {
                 .opacity(isFlipped ? 0 : 1)
         }
         .onTapGesture { flipCard() }
+        .focusable()
+        .onKeyPress(.space) { flipCard(); return .handled }
+        .onKeyPress(.return) { flipCard(); return .handled }
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(isFlipped ? "Card back" : "Card front")
+        .accessibilityHint("Press space or return to flip")
 
         if !isFlipped {
             Text("Tap to reveal")
@@ -358,6 +364,14 @@ struct QuizView: View {
         }
         .buttonStyle(.plain)
         .disabled(isFlipped)
+        .accessibilityLabel(choiceAccessibilityLabel(option: option, isCorrect: isCorrect, isSelected: isSelected))
+    }
+
+    private func choiceAccessibilityLabel(option: String, isCorrect: Bool, isSelected: Bool) -> String {
+        guard isFlipped else { return option }
+        if isCorrect { return String(localized: "\(option), correct answer") }
+        if isSelected { return String(localized: "\(option), your answer, incorrect") }
+        return option
     }
 
     // MARK: - Typed Recall Body (cloze → type the word)

@@ -2793,6 +2793,176 @@
           }
         }
       }
+    },
+    "Find…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bul…"
+          }
+        }
+      }
+    },
+    "Find Next": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonrakini Bul"
+          }
+        }
+      }
+    },
+    "Find Previous": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öncekini Bul"
+          }
+        }
+      }
+    },
+    "Actual Size": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerçek Boyut"
+          }
+        }
+      }
+    },
+    "Fit to Width": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genişliğe Sığdır"
+          }
+        }
+      }
+    },
+    "Remove Bookmark": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yer İmini Kaldır"
+          }
+        }
+      }
+    },
+    "Add Bookmark": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yer İmi Ekle"
+          }
+        }
+      }
+    },
+    "Remove from Saved": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kayıtlılardan Kaldır"
+          }
+        }
+      }
+    },
+    "Clear Menu": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menüyü Temizle"
+          }
+        }
+      }
+    },
+    "Card front": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kartın ön yüzü"
+          }
+        }
+      }
+    },
+    "Card back": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kartın arka yüzü"
+          }
+        }
+      }
+    },
+    "Press space or return to flip": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çevirmek için boşluk veya enter tuşuna bas"
+          }
+        }
+      }
+    },
+    "%@, correct answer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, doğru cevap"
+          }
+        }
+      }
+    },
+    "%@, your answer, incorrect": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, senin cevabın, yanlış"
+          }
+        }
+      }
+    },
+    "Question: %@. Error: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soru: %@. Hata: %@"
+          }
+        }
+      }
+    },
+    "Question: %@. Thinking…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soru: %@. Düşünüyor…"
+          }
+        }
+      }
+    },
+    "Question: %@. Answer: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soru: %@. Cevap: %@"
+          }
+        }
+      }
     }
   },
   "version": "1.1"
