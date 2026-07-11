@@ -4,6 +4,38 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.18.0] - 2026-07-12
+
+Motion polish and a real bug fix: reading position restore had a gap that
+could leave you back on page 1. Fourth sprint of the UI/UX roadmap.
+
+### Fixed
+
+- **Reopening a document from the dashboard could silently forget your
+  page.** The reading-position restore only ever listened for a document
+  change inside an already-open reader; clicking a dashboard card opens
+  a document through a different path that never triggered it, so a
+  freshly launched window always landed on page 1 regardless of where
+  you left off. Restore now fires from the actual place a window adopts
+  its document, with a timeout fallback so it can't silently break again.
+
+### Changed
+
+- Showing/hiding the sidebar, inspector, and Focus Mode now animate
+  instead of snapping, with a matching curve in both directions.
+- The onboarding flow's steps slide in from the direction you're
+  navigating — forward on Continue, backward on Back — instead of a flat
+  cross-fade.
+- The Annotations sidebar now fades between Marks/Highlights/Notes
+  instead of hard-cutting.
+- All motion in the app now respects **Reduce Motion** (System Settings
+  → Accessibility): the above transitions fall back to a plain fade or
+  no animation at all when it's on.
+- A handful of ad-hoc animation durations scattered across the inspector
+  status dot, the quiz flashcard flip, and the streaming "Generating…"
+  indicator now share the same three or four named curves as everything
+  else, instead of each hardcoding its own.
+
 ## [1.17.0] - 2026-07-12
 
 Every action that lived only on a toolbar button or a right-click now also
