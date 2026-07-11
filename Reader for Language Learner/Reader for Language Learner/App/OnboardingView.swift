@@ -12,6 +12,10 @@ struct OnboardingView: View {
     let onFinish: () -> Void
 
     @State private var step = 0
+    /// Which edge the next step slides in from — flipped by Continue/Back so
+    /// the transition always matches the direction the user is navigating.
+    @State private var direction: Edge = .trailing
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @AppStorage(Language.targetLanguageKey) private var targetRaw = Language.defaultTarget.rawValue
     @AppStorage(Language.nativeLanguageKey) private var nativeRaw = Language.defaultNative.rawValue
@@ -32,15 +36,26 @@ struct OnboardingView: View {
                 default: tourStep
                 }
             }
+            .id(step)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .padding(.horizontal, DS.Spacing.xxl)
             .padding(.top, DS.Spacing.xxl)
-            .transition(.opacity)
-            .animation(DS.Animation.standard, value: step)
+            .transition(stepTransition)
+            .animation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion), value: step)
 
             footer
         }
         .background(DS.Color.surface)
+    }
+
+    /// Slides in from `direction`; a plain fade when Reduce Motion is on.
+    private var stepTransition: AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        let exitEdge: Edge = direction == .trailing ? .leading : .trailing
+        return .asymmetric(
+            insertion: .move(edge: direction).combined(with: .opacity),
+            removal: .move(edge: exitEdge).combined(with: .opacity)
+        )
     }
 
     // MARK: - Step 1: Language Pair
@@ -292,12 +307,12 @@ struct OnboardingView: View {
             Spacer()
 
             if step > 0 {
-                Button("Back") { step -= 1 }
+                Button("Back") { direction = .leading; step -= 1 }
                     .buttonStyle(.bordered)
             }
 
             if step < Self.stepCount - 1 {
-                Button("Continue") { step += 1 }
+                Button("Continue") { direction = .trailing; step += 1 }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
             } else {

@@ -147,6 +147,28 @@ enum DS {
         static var spring:     SwiftUI.Animation { .spring(duration: 0.3, bounce: 0.2) }
         static var springFast: SwiftUI.Animation { .spring(duration: 0.22, bounce: 0.15) }
         static var snappy:     SwiftUI.Animation { .spring(duration: 0.18, bounce: 0.0) }
+        /// The quiz flashcard's 3D flip — deliberately a touch longer than
+        /// `standard` so the gesture reads with some weight.
+        static var cardFlip:   SwiftUI.Animation { .easeInOut(duration: 0.25) }
+        /// Continuous breathing pulse for live-status indicators (e.g. the
+        /// LLM connection dot). The only repeating token — everything else
+        /// in this enum is a one-shot transition curve.
+        static var pulse:      SwiftUI.Animation { .easeInOut(duration: 0.6).repeatForever(autoreverses: true) }
+
+        /// `base`, or a near-instant animation when Reduce Motion is on.
+        /// `Animation` has no environment access of its own, so callers pass
+        /// `\.accessibilityReduceMotion` from their own environment.
+        static func respecting(_ base: SwiftUI.Animation, reduceMotion: Bool) -> SwiftUI.Animation? {
+            reduceMotion ? nil : base
+        }
+    }
+
+    // MARK: - Transitions
+
+    /// A directional slide+fade, or a plain fade when Reduce Motion is on —
+    /// same environment-forwarding rationale as `Animation.respecting`.
+    static func slideTransition(edge: Edge, reduceMotion: Bool) -> AnyTransition {
+        reduceMotion ? .opacity : .move(edge: edge).combined(with: .opacity)
     }
 
     // MARK: - Shadow
@@ -381,21 +403,25 @@ private struct DSToastModifier: ViewModifier {
     var variant: DSToast.Variant
     var duration: Double
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func body(content: Content) -> some View {
         content.overlay(alignment: .top) {
             if isPresented {
                 DSToast(message: message, variant: variant)
                     .padding(.top, DS.Spacing.xl)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .transition(DS.slideTransition(edge: .top, reduceMotion: reduceMotion))
                     .task(id: message) {
                         try? await Task.sleep(for: .seconds(duration))
-                        withAnimation(DS.Animation.standard) { isPresented = false }
+                        withAnimation(DS.Animation.respecting(DS.Animation.standard, reduceMotion: reduceMotion)) {
+                            isPresented = false
+                        }
                     }
                     .zIndex(999)
                     .allowsHitTesting(false)
             }
         }
-        .animation(DS.Animation.spring, value: isPresented)
+        .animation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion), value: isPresented)
     }
 }
 

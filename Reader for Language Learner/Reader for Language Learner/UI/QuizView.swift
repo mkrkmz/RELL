@@ -900,11 +900,11 @@ struct QuizView: View {
     }
 
     private func flipCard() {
-        withAnimation(.easeInOut(duration: 0.25)) { isFlipped = true }
+        withAnimation(DS.Animation.cardFlip) { isFlipped = true }
     }
 
     private func revealAnswer() {
-        withAnimation(.easeInOut(duration: 0.2)) { isFlipped = true }
+        withAnimation(DS.Animation.standard) { isFlipped = true }
     }
 
     /// Records a grade. In cram mode scheduling is left untouched (no

@@ -40,6 +40,7 @@ struct ContentView: View {
     @Environment(ReadingSessionStore.self) private var sessionStore
     @Environment(RecentDocumentStore.self) private var recentDocumentStore
     @Environment(DocumentCoverStore.self)  private var coverStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showInspector = true
@@ -197,11 +198,13 @@ struct ContentView: View {
                 if selectionState.documentURL != newValue {
                     selectionState.documentURL = newValue
                     closeFindBar()
+                    restorePageIfPDF(newValue)
                 }
             }
             .onAppear {
                 if let documentURL, selectionState.documentURL != documentURL {
                     selectionState.documentURL = documentURL
+                    restorePageIfPDF(documentURL)
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
@@ -840,9 +843,17 @@ struct ContentView: View {
     private func openDocument(_ url: URL) {
         if selectionState.documentURL == nil || selectionState.documentURL == url {
             // Dashboard (or same document): this window adopts the document.
+            // Setting both bindings here pre-empts the `.onChange(of:
+            // documentURL)` guard below (`selectionState.documentURL` is
+            // already equal to `newValue` by the time that closure runs),
+            // so this is the one place that reliably sees "a document was
+            // just opened in this window" for the dashboard-click path —
+            // restore the reading position directly instead of relying on
+            // onChange/onAppear to catch it.
             documentURL = url
             selectionState.documentURL = url
             closeFindBar()
+            restorePageIfPDF(url)
         } else {
             // Another document is already on screen — open side by side
             // (a native tab by default). openWindow dedupes by URL.
@@ -921,24 +932,34 @@ struct ContentView: View {
     }
 
     private func toggleSidebar() {
-        columnVisibility = showSidebar ? .detailOnly : .all
+        withAnimation(DS.Animation.respecting(DS.Animation.standard, reduceMotion: reduceMotion)) {
+            columnVisibility = showSidebar ? .detailOnly : .all
+        }
     }
 
-    private func toggleInspector() { showInspector.toggle() }
+    private func toggleInspector() {
+        withAnimation(DS.Animation.respecting(DS.Animation.standard, reduceMotion: reduceMotion)) {
+            showInspector.toggle()
+        }
+    }
 
     /// Enters focus mode by hiding both side panels, remembering their prior
-    /// state so exiting restores exactly what was visible.
+    /// state so exiting restores exactly what was visible. Symmetric curve
+    /// in both directions — entering and exiting focus mode should feel the
+    /// same, not snap one way and glide the other.
     private func toggleFocusMode() {
-        if focusMode {
-            focusMode = false
-            columnVisibility = preFocusSidebar ? .all : .detailOnly
-            showInspector = preFocusInspector
-        } else {
-            preFocusSidebar = showSidebar
-            preFocusInspector = showInspector
-            focusMode = true
-            columnVisibility = .detailOnly
-            showInspector = false
+        withAnimation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion)) {
+            if focusMode {
+                focusMode = false
+                columnVisibility = preFocusSidebar ? .all : .detailOnly
+                showInspector = preFocusInspector
+            } else {
+                preFocusSidebar = showSidebar
+                preFocusInspector = showInspector
+                focusMode = true
+                columnVisibility = .detailOnly
+                showInspector = false
+            }
         }
     }
 
@@ -1099,15 +1120,62 @@ struct ContentView: View {
         readingPositionsData = (try? JSONEncoder().encode(dict)) ?? Data()
     }
 
+    /// A window adopting its very first document (via `.onAppear` or the
+    /// `documentURL` binding changing from outside) never sees
+    /// `PDFKitView`'s own `.onChange(of: selectionState.documentURL)` fire —
+    /// that view doesn't exist in the hierarchy yet at the moment the URL
+    /// first lands, and SwiftUI never fires `.onChange` retroactively for
+    /// the state change that caused a view to mount. This covers that gap;
+    /// the PDFKitView-scoped `.onChange` still handles same-window switches
+    /// to a different PDF once the reader is already showing.
+    private func restorePageIfPDF(_ url: URL?) {
+        guard let url, url.pathExtension.lowercased() != "epub" else { return }
+        restorePage(for: url.deletingPathExtension().lastPathComponent)
+    }
+
+    /// Restores the saved page for a newly-opened document. Event-driven
+    /// when possible: `PDFKitView.Coordinator.requestDocumentUpdate` assigns
+    /// `pdfView.document` asynchronously (a `DispatchQueue.main.async` hop),
+    /// which is what the old blind `Task.sleep(0.3s)` was really waiting
+    /// out — PDFKit posts `.PDFViewDocumentChanged` the moment that
+    /// assignment lands, so we restore right on that signal instead of
+    /// guessing a delay. The 0.3s timeout always still runs as a fallback,
+    /// both because the notification could in principle be unreliable and
+    /// because `pdfViewManager.pdfView` itself can still be nil here (a
+    /// brand-new window's `PDFKitView.makeNSView` hasn't necessarily run by
+    /// the time this fires) — bailing out early in that case, instead of
+    /// falling through to the timeout, is what silently broke restore on
+    /// first open.
     private func restorePage(for filename: String) {
         guard let index = decodedPositions()[filename] else { return }
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(0.3))
-            guard let doc = pdfViewManager.pdfView?.document,
+
+        var didRestore = false
+        var observer: NSObjectProtocol?
+
+        func attempt() {
+            guard !didRestore,
+                  let pdfView = pdfViewManager.pdfView,
+                  let doc = pdfView.document,
                   index < doc.pageCount,
                   let page = doc.page(at: index)
             else { return }
-            pdfViewManager.pdfView?.go(to: page)
+            didRestore = true
+            pdfView.go(to: page)
+            if let observer { NotificationCenter.default.removeObserver(observer) }
+        }
+
+        if let pdfView = pdfViewManager.pdfView {
+            observer = NotificationCenter.default.addObserver(
+                forName: Notification.Name.PDFViewDocumentChanged,
+                object: pdfView,
+                queue: .main
+            ) { _ in attempt() }
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(0.3))
+            if let observer { NotificationCenter.default.removeObserver(observer) }
+            attempt()
         }
     }
 

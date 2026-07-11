@@ -557,7 +557,7 @@ struct PulsingDot: View {
             .frame(width: 7, height: 7)
             .scaleEffect(scale)
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+                withAnimation(DS.Animation.pulse) {
                     scale = 1.0
                 }
             }

@@ -134,9 +134,7 @@ struct StreamingActivityIndicator: View {
                         .scaleEffect(animating ? 1.0 : 0.5)
                         .opacity(animating ? 1.0 : 0.3)
                         .animation(
-                            .easeInOut(duration: 0.55)
-                                .repeatForever(autoreverses: true)
-                                .delay(Double(index) * 0.18),
+                            DS.Animation.pulse.delay(Double(index) * 0.18),
                             value: animating
                         )
                 }

@@ -39,6 +39,7 @@ struct AnnotationsView: View {
     }
 
     @AppStorage("annotationsSegment") private var segmentRaw = Segment.bookmarks.rawValue
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var segment: Segment {
         Segment(rawValue: segmentRaw) ?? .bookmarks
@@ -63,6 +64,9 @@ struct AnnotationsView: View {
             Divider()
 
             content
+                .id(segment)
+                .transition(.opacity)
+                .animation(DS.Animation.respecting(DS.Animation.fast, reduceMotion: reduceMotion), value: segment)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
