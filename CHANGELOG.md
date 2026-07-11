@@ -4,6 +4,42 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.16.0] - 2026-07-12
+
+Design-system cleanup: one consistent visual language across borders,
+empty states, typography, and the Settings window. No new features —
+this sprint is quality-of-life polish, second of the UI/UX roadmap.
+
+### Changed
+
+- **Card and panel borders are consistent.** Nine spots across the
+  dashboard, onboarding, Quick Lookup HUD, EPUB find bar, and the reader
+  toolbar were drawing their own slightly-different border opacity;
+  they now all use the same `hairline` token the inspector already
+  standardized on.
+- **Settings no longer resizes when you switch tabs.** Each of the four
+  tabs (General, LLM, Prompts, Appearance) had its own fixed height,
+  so the window visibly jumped switching between them. One fixed size
+  now covers all four, sized to the tallest (Prompts); shorter tabs
+  just leave breathing room instead of resizing the window.
+- Several empty states (the EPUB table-of-contents panel, the inspector's
+  "select text" hint) now use the shared `DSEmptyState` component instead
+  of a hand-rolled layout, and picked up proper Turkish translations in
+  the process — `DSEmptyState` was silently skipping the string catalog
+  for every literal call site since it took plain `String` instead of a
+  localizable key.
+- Recurring one-off sizes (dashboard cover art, Quick Lookup HUD width,
+  the dashboard/library content columns, quiz-card heights) now live as
+  named `DS.Layout` constants instead of scattered magic numbers.
+- Added a small set of typography roles for patterns that were genuinely
+  duplicated (a saved word's term shown large, rounded-digit stat
+  numbers, tiny sidebar/badge chrome text) so those five call sites
+  share one definition instead of five near-identical ones.
+- The Annotations sidebar's "Marks / Highlights / Notes" segmented
+  control is now actually localized — like `DSEmptyState`, it was
+  building its labels with a raw `String`, which always shows English
+  regardless of the system language.
+
 ## [1.15.0] - 2026-07-11
 
 EPUB catches up: the last PDF-only annotation features now work in books,
