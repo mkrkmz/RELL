@@ -4,6 +4,31 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.17.0] - 2026-07-12
+
+Every action that lived only on a toolbar button or a right-click now also
+has a menu-bar home — so it's discoverable, keyboard-reachable, and shows
+up correctly for full-keyboard-access and VoiceOver users. Third sprint of
+the UI/UX roadmap.
+
+### Added
+
+- **Edit menu:** Find… (⌘F), Find Next (⌘G), Find Previous (⇧⌘G) — works
+  for both PDF and EPUB.
+- **View menu:** Zoom In (⌘+), Zoom Out (⌘−), Actual Size (⇧⌘0), Fit to
+  Width (⌘0, PDF only — EPUB reflows continuously, so this stays disabled
+  there), a Page Theme submenu (Original/Sepia/Dark with a checkmark on
+  the active one), Add/Remove Bookmark (⌘B), and Save Word/Remove from
+  Saved (⌘D) — all reflecting live document state, including a properly
+  toggling label ("Add Bookmark" ⇄ "Remove Bookmark", etc.).
+- **File ▸ Open Recent ▸ Clear Menu** — empties the recent-documents list
+  in one step; the files themselves are untouched.
+- Flashcards in Review can now be flipped with Space or Return, not just
+  a tap, and expose proper VoiceOver labels/hints. Multiple-choice options
+  now announce whether they were correct or incorrect after you answer.
+  Ask AI follow-up exchanges read as one coherent Q&A unit to VoiceOver
+  instead of five disconnected fragments.
+
 ## [1.16.0] - 2026-07-12
 
 Design-system cleanup: one consistent visual language across borders,
