@@ -42,7 +42,7 @@ struct LLMSettingsView: View {
                 }
                 timeoutRow
             } header: {
-                Text(providerType.rawValue)
+                Text(providerType.localizedTitle)
             } footer: {
                 Text(providerFooterText)
                     .foregroundStyle(DS.Color.textTertiary)
@@ -65,7 +65,7 @@ struct LLMSettingsView: View {
         LabeledContent("Backend") {
             Picker("", selection: $providerTypeRaw) {
                 ForEach(LLMProviderType.allCases) { provider in
-                    Label(provider.rawValue, systemImage: provider.iconName)
+                    Label(provider.localizedTitle, systemImage: provider.iconName)
                         .tag(provider.rawValue)
                 }
             }

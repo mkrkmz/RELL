@@ -213,7 +213,7 @@ struct GeneralSettingsView: View {
         LabeledContent("Domain") {
             Picker("", selection: $domainRaw) {
                 ForEach(DomainPreference.allCases) { d in
-                    Text(d.rawValue).tag(d.rawValue)
+                    Text(d.localizedTitle).tag(d.rawValue)
                 }
             }
             .labelsHidden()

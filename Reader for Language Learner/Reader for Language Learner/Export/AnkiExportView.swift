@@ -130,7 +130,7 @@ struct AnkiExportView: View {
                     .lineLimit(2)
                     .truncationMode(.tail)
                 if domain != .general {
-                    Text("[\(domain.rawValue)]")
+                    Text("[\(domain.localizedTitle)]")
                         .font(.caption2)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)

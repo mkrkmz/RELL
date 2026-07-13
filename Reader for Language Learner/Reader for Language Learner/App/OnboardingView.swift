@@ -255,7 +255,7 @@ struct OnboardingView: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.separator.opacity(0.28), lineWidth: 1)
+                .strokeBorder(DS.Color.hairlineStrong, lineWidth: 1)
         )
     }
 
@@ -299,7 +299,7 @@ struct OnboardingView: View {
             HStack(spacing: DS.Spacing.xs) {
                 ForEach(0..<Self.stepCount, id: \.self) { index in
                     Circle()
-                        .fill(index == step ? DS.Color.accent : DS.Color.separator.opacity(0.5))
+                        .fill(index == step ? DS.Color.accent : DS.Color.hairlineStrong)
                         .frame(width: 6, height: 6)
                 }
             }

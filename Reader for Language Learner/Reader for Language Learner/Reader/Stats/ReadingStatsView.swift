@@ -120,7 +120,7 @@ struct ReadingStatsView: View {
             }
             .chartYAxis {
                 AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { val in
-                    AxisGridLine().foregroundStyle(DS.Color.separator.opacity(0.4))
+                    AxisGridLine().foregroundStyle(DS.Color.hairlineStrong)
                     AxisValueLabel {
                         if let v = val.as(Double.self) {
                             Text(String(format: "%dm", Int(v)))
@@ -189,7 +189,7 @@ struct ReadingStatsView: View {
                 }
                 .chartYAxis {
                     AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { _ in
-                        AxisGridLine().foregroundStyle(DS.Color.separator.opacity(0.4))
+                        AxisGridLine().foregroundStyle(DS.Color.hairlineStrong)
                         AxisValueLabel()
                     }
                 }

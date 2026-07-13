@@ -201,7 +201,7 @@ private struct HighlightRow: View {
             Circle()
                 .fill(Color(nsColor: highlight.color.nsColor))
                 .frame(width: 14, height: 14)
-                .overlay(Circle().strokeBorder(DS.Color.separator.opacity(0.5), lineWidth: 0.5))
+                .overlay(Circle().strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.5))
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)

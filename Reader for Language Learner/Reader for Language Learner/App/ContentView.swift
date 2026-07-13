@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var searchManager    = PDFSearchManager()
     @State private var pdfViewManager   = PDFViewManager()
     @State private var epubManager      = EPUBViewManager()
+    @State private var toastCenter      = ToastCenter()
     @State private var epubSearchManager = EPUBSearchManager()
     @State private var circuitBreaker   = CircuitBreaker()
     @State private var llmHealth        = LLMHealthMonitor()
@@ -103,7 +104,21 @@ struct ContentView: View {
     // (`the compiler is unable to type-check this expression in reasonable
     // time`) even though a warm local cache let it slide.
     var body: some View {
-        withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))
+        withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent))))
+    }
+
+    /// Window-level toast overlay + environment injection, so any view in
+    /// this window (note rows, context menus, bookmark toggle) can confirm a
+    /// silent action through the shared `ToastCenter`.
+    private func withToast(_ content: some View) -> some View {
+        @Bindable var toastCenter = toastCenter
+        return content
+            .dsToast(
+                isPresented: $toastCenter.isPresented,
+                message: toastCenter.message,
+                variant: toastCenter.variant
+            )
+            .environment(toastCenter)
     }
 
     private var baseContent: some View {
@@ -393,6 +408,7 @@ struct ContentView: View {
                             savedWordsStore: savedWordsStore,
                             quickLookup: quickLookup,
                             epubHighlightStore: epubHighlightStore,
+                            toastCenter: toastCenter,
                             hoverEnabled: hoverDictionaryEnabled
                         )
                     } else {
@@ -412,6 +428,7 @@ struct ContentView: View {
                         noteStore: noteStore,
                         highlightStore: highlightStore,
                         quickLookup: quickLookup,
+                        toastCenter: toastCenter,
                         hoverEnabled: hoverDictionaryEnabled,
                         pageTheme: pageTheme
                     )
@@ -987,7 +1004,11 @@ struct ContentView: View {
         guard let pageNum = currentPageNumber else { return }
         let pageIndex = pageNum - 1
         let pageLabel = "Page \(pageNum)"
-        bookmarkStore.toggle(filename: filename, pageIndex: pageIndex, pageLabel: pageLabel)
+        let added = bookmarkStore.toggle(filename: filename, pageIndex: pageIndex, pageLabel: pageLabel)
+        toastCenter.show(
+            added ? String(localized: "Bookmark added") : String(localized: "Bookmark removed"),
+            variant: .info
+        )
     }
 
     /// EPUB path: the position is captured immediately; the snippet (first
@@ -999,6 +1020,7 @@ struct ContentView: View {
         let fraction = epubManager.scrollFraction
         if let existing = epubBookmarkStore.bookmark(for: filename, chapterIndex: chapterIndex, near: fraction) {
             epubBookmarkStore.remove(id: existing.id)
+            toastCenter.show(String(localized: "Bookmark removed"), variant: .info)
             return
         }
         Task {
@@ -1012,6 +1034,7 @@ struct ContentView: View {
                 scrollFraction: fraction,
                 snippet: snippet
             ))
+            toastCenter.show(String(localized: "Bookmark added"), variant: .info)
         }
     }
 

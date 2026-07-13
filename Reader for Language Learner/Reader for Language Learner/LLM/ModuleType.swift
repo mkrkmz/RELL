@@ -13,6 +13,13 @@ enum ExplainMode: String, CaseIterable, Identifiable {
     case sentence = "Sentence"
 
     var id: String { rawValue }
+
+    var localizedTitle: String {
+        switch self {
+        case .word:     return String(localized: "Word")
+        case .sentence: return String(localized: "Sentence")
+        }
+    }
 }
 
 enum ExplainDetail: String, CaseIterable, Identifiable {
@@ -31,6 +38,17 @@ enum DomainPreference: String, CaseIterable, Identifiable {
     case technical = "Technical"
 
     var id: String { rawValue }
+
+    var localizedTitle: String {
+        switch self {
+        case .general:   return String(localized: "General")
+        case .academic:  return String(localized: "Academic")
+        case .legal:     return String(localized: "Legal")
+        case .business:  return String(localized: "Business")
+        case .medical:   return String(localized: "Medical")
+        case .technical: return String(localized: "Technical")
+        }
+    }
 
     /// Badge tint for domain pills in saved-word rows.
     var badgeColor: SwiftUI.Color {

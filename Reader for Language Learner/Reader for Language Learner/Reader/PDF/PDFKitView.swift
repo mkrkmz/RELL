@@ -21,6 +21,7 @@ struct PDFKitView: NSViewRepresentable {
     var noteStore: PDFNoteStore
     var highlightStore: PDFHighlightStore
     var quickLookup: QuickLookupService
+    var toastCenter: ToastCenter
     var hoverEnabled: Bool = true
     var pageTheme: PageTheme = .original
 
@@ -32,6 +33,7 @@ struct PDFKitView: NSViewRepresentable {
                     noteStore: noteStore,
                     highlightStore: highlightStore,
                     quickLookup: quickLookup,
+                    toastCenter: toastCenter,
                     hoverEnabled: hoverEnabled)
     }
 
@@ -58,6 +60,7 @@ struct PDFKitView: NSViewRepresentable {
         context.coordinator.noteStore = noteStore
         context.coordinator.highlightStore = highlightStore
         context.coordinator.quickLookup = quickLookup
+        context.coordinator.toastCenter = toastCenter
         context.coordinator.setHoverEnabled(hoverEnabled)
         context.coordinator.requestDocumentUpdate(using: documentURL)
         context.coordinator.applyTheme(pageTheme)
@@ -98,6 +101,7 @@ struct PDFKitView: NSViewRepresentable {
         var noteStore: PDFNoteStore
         var highlightStore: PDFHighlightStore
         var quickLookup: QuickLookupService
+        var toastCenter: ToastCenter
         var hoverEnabled: Bool
 
         /// Key for identifying auto-generated highlight annotations.
@@ -120,7 +124,7 @@ struct PDFKitView: NSViewRepresentable {
         private var lastSavedWordsCount: Int = 0
         private var lastNotesCount: Int = 0
         
-        init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore, highlightStore: PDFHighlightStore, quickLookup: QuickLookupService, hoverEnabled: Bool) {
+        init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore, highlightStore: PDFHighlightStore, quickLookup: QuickLookupService, toastCenter: ToastCenter, hoverEnabled: Bool) {
             self.selectedText = selectedText
             self.contextSentence = contextSentence
             self.searchManager = searchManager
@@ -128,6 +132,7 @@ struct PDFKitView: NSViewRepresentable {
             self.noteStore = noteStore
             self.highlightStore = highlightStore
             self.quickLookup = quickLookup
+            self.toastCenter = toastCenter
             self.hoverEnabled = hoverEnabled
         }
 
@@ -581,6 +586,7 @@ struct PDFKitView: NSViewRepresentable {
                     domain: "general",
                     llmOutputs: [:]
                 ))
+                self.toastCenter.show(String(localized: "Word saved!"))
             }
         }
 

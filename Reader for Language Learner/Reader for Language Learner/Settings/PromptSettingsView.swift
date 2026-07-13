@@ -93,7 +93,7 @@ struct PromptSettingsView: View {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.separator.opacity(0.35), lineWidth: 0.8)
+                        .strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.8)
                 )
 
             HStack {

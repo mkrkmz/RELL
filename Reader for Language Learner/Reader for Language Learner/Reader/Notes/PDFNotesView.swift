@@ -12,6 +12,8 @@ struct PDFNotesView: View {
     var pdfViewManager: PDFViewManager
     var currentFilename: String?
 
+    @Environment(ToastCenter.self) private var toastCenter
+
     @State private var searchText = ""
     @State private var filter: PDFNoteFilter = .all
     @State private var editingNote: PDFNote?
@@ -155,6 +157,9 @@ struct PDFNotesView: View {
                 existing.masteryLevel = .learning
                 existing.nextReviewAt = Date()
                 savedWordsStore.update(existing)
+                toastCenter.show(String(localized: "Queued for review"), variant: .info)
+            } else {
+                toastCenter.show(String(localized: "Already saved"), variant: .info)
             }
             return
         }
@@ -172,6 +177,7 @@ struct PDFNotesView: View {
             nextReviewAt: queueForReview ? Date() : nil
         )
         savedWordsStore.add(word)
+        toastCenter.show(String(localized: "Word saved!"))
     }
 
     private func navigate(to note: PDFNote) {
@@ -290,6 +296,7 @@ private struct PDFNoteRow: View {
 }
 
 struct PDFNoteEditorSheet: View {
+    @Environment(ToastCenter.self) private var toastCenter
     @State var note: PDFNote
     var savedWordsStore: SavedWordsStore
     var onJumpToPage: (PDFNote) -> Void
@@ -426,6 +433,9 @@ struct PDFNoteEditorSheet: View {
                 existing.masteryLevel = .learning
                 existing.nextReviewAt = Date()
                 savedWordsStore.update(existing)
+                toastCenter.show(String(localized: "Queued for review"), variant: .info)
+            } else {
+                toastCenter.show(String(localized: "Already saved"), variant: .info)
             }
             return
         }
@@ -444,5 +454,6 @@ struct PDFNoteEditorSheet: View {
                 nextReviewAt: queueForReview ? Date() : nil
             )
         )
+        toastCenter.show(String(localized: "Word saved!"))
     }
 }

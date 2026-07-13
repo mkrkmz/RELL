@@ -315,7 +315,7 @@ struct InspectorView: View {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.separator.opacity(0.22), lineWidth: 0.5)
+                        .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
                 )
                 .contentShape(Rectangle())
         }

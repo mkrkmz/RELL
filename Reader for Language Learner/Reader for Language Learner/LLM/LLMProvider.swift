@@ -87,12 +87,20 @@ enum LLMProviderType: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Display name. Product names stay as-is; only "Compatible" translates.
+    var localizedTitle: String {
+        switch self {
+        case .lmStudio, .ollama, .anthropic: return rawValue
+        case .openAI: return String(localized: "OpenAI Compatible")
+        }
+    }
+
     var description: String {
         switch self {
-        case .lmStudio:  return "Local server via LM Studio"
-        case .ollama:    return "Local server via Ollama"
-        case .openAI:    return "OpenAI, OpenRouter, Together, or any compatible API"
-        case .anthropic: return "Anthropic Claude API"
+        case .lmStudio:  return String(localized: "Local server via LM Studio")
+        case .ollama:    return String(localized: "Local server via Ollama")
+        case .openAI:    return String(localized: "OpenAI, OpenRouter, Together, or any compatible API")
+        case .anthropic: return String(localized: "Anthropic Claude API")
         }
     }
 

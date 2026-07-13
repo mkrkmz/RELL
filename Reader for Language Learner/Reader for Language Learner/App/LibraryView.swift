@@ -159,11 +159,12 @@ enum LibrarySortOrder: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// Raw values back `@AppStorage` — keep them stable; the picker shows this.
     var label: String {
         switch self {
-        case .lastOpened: return "Last opened"
-        case .name:       return "Name"
-        case .progress:   return "Progress"
+        case .lastOpened: return String(localized: "Last opened")
+        case .name:       return String(localized: "Name")
+        case .progress:   return String(localized: "Progress")
         }
     }
 }
@@ -258,7 +259,7 @@ private struct LibraryCard: View {
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.sm)
                 .strokeBorder(
-                    isHovered ? DS.Color.accentMuted : DS.Color.separator.opacity(0.35),
+                    isHovered ? DS.Color.accentMuted : DS.Color.hairlineStrong,
                     lineWidth: isHovered ? 1.2 : 0.7
                 )
         )

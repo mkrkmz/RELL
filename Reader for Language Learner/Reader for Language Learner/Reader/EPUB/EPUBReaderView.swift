@@ -145,6 +145,7 @@ struct EPUBReaderView: NSViewRepresentable {
     var savedWordsStore: SavedWordsStore
     var quickLookup: QuickLookupService
     var epubHighlightStore: EPUBHighlightStore
+    var toastCenter: ToastCenter
     var hoverEnabled: Bool
 
     func makeNSView(context: Context) -> RELLEPUBWebView {
@@ -226,6 +227,7 @@ struct EPUBReaderView: NSViewRepresentable {
         let manager = self.manager
         let store = self.savedWordsStore
         let highlightStore = self.epubHighlightStore
+        let toastCenter = self.toastCenter
 
         manager.highlightsProvider = { [weak manager] chapterPath in
             guard let bookFilename = manager?.loadedURL?.deletingPathExtension().lastPathComponent
@@ -249,6 +251,7 @@ struct EPUBReaderView: NSViewRepresentable {
                 domain: "general",
                 llmOutputs: [:]
             ))
+            toastCenter.show(String(localized: "Word saved!"))
         }
         webView.onContextLookUp = {
             NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)

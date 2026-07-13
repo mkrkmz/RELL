@@ -106,7 +106,7 @@ struct DashboardActivityCard: View {
     private var goalRing: some View {
         ZStack {
             Circle()
-                .stroke(DS.Color.separator.opacity(0.35), lineWidth: 3.5)
+                .stroke(DS.Color.hairlineStrong, lineWidth: 3.5)
 
             Circle()
                 .trim(from: 0, to: progress)
@@ -149,7 +149,7 @@ struct DashboardActivityCard: View {
             if goalMinutes > 0 {
                 RuleMark(y: .value("Goal", goalMinutes))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                    .foregroundStyle(DS.Color.separator.opacity(0.7))
+                    .foregroundStyle(DS.Color.separator)
             }
         }
         .chartYAxis(.hidden)

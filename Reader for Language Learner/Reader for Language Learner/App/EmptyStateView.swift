@@ -272,7 +272,7 @@ private struct ContinueReadingHero: View {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.separator.opacity(0.4), lineWidth: 0.5)
+                        .strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.5)
                 )
                 .transition(.opacity)
         } else {
@@ -450,7 +450,7 @@ private struct RecentDocumentRow: View {
                 .clipShape(RoundedRectangle(cornerRadius: 3))
                 .overlay(
                     RoundedRectangle(cornerRadius: 3)
-                        .strokeBorder(DS.Color.separator.opacity(0.4), lineWidth: 0.5)
+                        .strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.5)
                 )
                 .transition(.opacity)
         } else {

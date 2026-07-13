@@ -64,6 +64,11 @@ enum DS {
         /// so the whole surface reads as one system.
         static var hairline: SwiftUI.Color { separator.opacity(0.18) }
 
+        /// Emphasized hairline for borders that must read against busy content
+        /// (card faces, chart grid lines, swatch rings). Second and final step
+        /// of the separator scale — anything stronger uses `separator` itself.
+        static var hairlineStrong: SwiftUI.Color { separator.opacity(0.4) }
+
         // ── Surface scale ───────────────────────────────────────────────────
         // Three fixed levels so panels/cards stop each inventing their own
         // opacity. `panel` = outer container, `cardInset` = sunken content

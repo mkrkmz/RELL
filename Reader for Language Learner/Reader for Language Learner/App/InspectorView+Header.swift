@@ -67,7 +67,7 @@ extension InspectorView {
                 HStack(spacing: DS.Spacing.xxs) {
                     ForEach(ExplainMode.allCases) { mode in
                         Button { explainMode = mode } label: {
-                            Text(mode.rawValue)
+                            Text(mode.localizedTitle)
                                 .font(DS.Typography.caption2.weight(explainMode == mode ? .bold : .regular))
                                 .foregroundStyle(explainMode == mode ? DS.Color.accent : DS.Color.textTertiary)
                                 .padding(.horizontal, DS.Spacing.sm)
@@ -241,7 +241,7 @@ extension InspectorView {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 .overlay(
                     RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.separator.opacity(0.22), lineWidth: 0.5)
+                        .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
                 )
         }
         .menuStyle(.borderlessButton)

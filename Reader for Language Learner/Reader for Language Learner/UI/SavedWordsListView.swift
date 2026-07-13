@@ -463,45 +463,31 @@ struct SavedWordsListView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: DS.Spacing.md) {
-            Spacer()
-            Image(systemName: searchText.isEmpty && selectedFilter == .all ? "star" : "magnifyingglass")
-                .font(.system(size: 28, weight: .ultraLight))
-                .foregroundStyle(DS.Color.textTertiary)
-            VStack(spacing: DS.Spacing.xs) {
-                if searchText.isEmpty && selectedFilter == .all {
-                    Text("No saved words yet")
-                        .font(DS.Typography.subhead)
-                        .foregroundStyle(DS.Color.textSecondary)
-                    Text("Save vocabulary from the reader, then review due words here.")
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(3)
-                } else {
-                    Text("No results")
-                        .font(DS.Typography.subhead)
-                        .foregroundStyle(DS.Color.textSecondary)
-                    if selectedFilter == .thisPDF {
-                        Text("No vocabulary saved from this document yet. Select text and save it from the inspector.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                            .multilineTextAlignment(.center)
-                    } else if selectedFilter == .needsReview {
-                        Text("Nothing is due right now. Keep reading or include all saved words in Review.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                            .multilineTextAlignment(.center)
-                    } else if !searchText.isEmpty {
-                        Text("Try a different search term.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
-            }
-            Spacer()
+        DSEmptyState(
+            icon: searchText.isEmpty && selectedFilter == .all ? "star" : "magnifyingglass",
+            title: emptyStateTitle,
+            message: emptyStateMessage
+        )
+    }
+
+    private var emptyStateTitle: LocalizedStringKey {
+        searchText.isEmpty && selectedFilter == .all ? "No saved words yet" : "No results"
+    }
+
+    private var emptyStateMessage: LocalizedStringKey? {
+        if searchText.isEmpty && selectedFilter == .all {
+            return "Save vocabulary from the reader, then review due words here."
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if selectedFilter == .thisPDF {
+            return "No vocabulary saved from this document yet. Select text and save it from the inspector."
+        }
+        if selectedFilter == .needsReview {
+            return "Nothing is due right now. Keep reading or include all saved words in Review."
+        }
+        if !searchText.isEmpty {
+            return "Try a different search term."
+        }
+        return nil
     }
 
     // MARK: - Bottom Toolbar
@@ -693,7 +679,7 @@ private struct SavedWordRow: View {
                     // Domain badge (hidden for General to reduce noise)
                     let domain = DomainPreference(rawValue: word.domain) ?? .general
                     if domain != .general {
-                        Text(domain.rawValue)
+                        Text(domain.localizedTitle)
                             .font(DS.Typography.caption2.weight(.semibold))
                             .foregroundStyle(domain.badgeColor)
                             .padding(.horizontal, DS.Spacing.xs)

@@ -87,7 +87,7 @@ struct ReviewHeatmapView: View {
                                         .frame(width: cellSize, height: cellSize)
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 1.3)
-                                                .strokeBorder(DS.Color.separator.opacity(0.08), lineWidth: 0.4)
+                                                .strokeBorder(DS.Color.hairline, lineWidth: 0.4)
                                         )
                                         .help(helpText(for: day))
                                         .accessibilityLabel(helpText(for: day))
@@ -115,7 +115,7 @@ struct ReviewHeatmapView: View {
     }
 
     private func color(for count: Int) -> Color {
-        guard count > 0 else { return DS.Color.separator.opacity(0.2) }
+        guard count > 0 else { return DS.Color.hairline }
         let intensity = 0.32 + (0.58 * Double(count) / Double(maxCount))
         return DS.Color.success.opacity(intensity)
     }

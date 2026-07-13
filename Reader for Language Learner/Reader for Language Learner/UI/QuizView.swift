@@ -23,6 +23,14 @@ enum QuizMode: String, CaseIterable, Identifiable {
         case .typed:          return "keyboard"
         }
     }
+
+    var localizedTitle: String {
+        switch self {
+        case .flashcard:      return String(localized: "Flashcard")
+        case .multipleChoice: return String(localized: "Choice")
+        case .typed:          return String(localized: "Type")
+        }
+    }
 }
 
 struct QuizView: View {
@@ -121,7 +129,7 @@ struct QuizView: View {
                     set: { quizModeRaw = $0.rawValue }
                 )) {
                     ForEach(QuizMode.allCases) { mode in
-                        Label(mode.rawValue, systemImage: mode.icon).tag(mode)
+                        Label(mode.localizedTitle, systemImage: mode.icon).tag(mode)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -255,6 +263,7 @@ struct QuizView: View {
         }
         .onTapGesture { flipCard() }
         .focusable()
+        .focusEffectDisabled()
         .onKeyPress(.space) { flipCard(); return .handled }
         .onKeyPress(.return) { flipCard(); return .handled }
         .accessibilityAddTraits(.isButton)
@@ -330,10 +339,10 @@ struct QuizView: View {
         let isCorrect = option == correct
         let isSelected = mcSelectedIndex == index
         let tint: Color = {
-            guard isFlipped else { return DS.Color.separator.opacity(0.4) }
+            guard isFlipped else { return DS.Color.hairlineStrong }
             if isCorrect { return DS.Color.success }
             if isSelected { return DS.Color.danger }
-            return DS.Color.separator.opacity(0.3)
+            return DS.Color.hairlineStrong
         }()
 
         return Button {
@@ -523,7 +532,7 @@ struct QuizView: View {
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: DS.Radius.lg)
-                    .strokeBorder(DS.Color.separator.opacity(0.4), lineWidth: 0.8)
+                    .strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.8)
             )
             .dsShadow(DS.Shadow.card)
             .padding(.horizontal, DS.Spacing.md)
