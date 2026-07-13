@@ -4,6 +4,28 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.20.0] - 2026-07-13
+
+A mechanical but overdue cleanup: every fixed-size font in the app now goes
+through one shared declaration instead of being retyped at each call site.
+Second sprint of the UI roadmap v6.
+
+### Changed
+
+- All ~65 icon glyph sizes (`Image(systemName:)` throughout the reader,
+  inspector, library, and quiz) now go through a single shared
+  `DS.Typography.icon(_:weight:)` declaration instead of each spelling
+  out its own `.font(.system(size:...))`. Visually identical — this is
+  about having one place to change icon sizing, not a redesign.
+  The library search field's font, the Quick Lookup HUD's search text,
+  and a saved word's flashcard-front size now use real text styles
+  (`.title2`, `DS.Typography.title`) instead of a hardcoded point
+  size, so they scale with the system's text-size setting.
+- Introduced the `// DS-exempt: <reason>` convention for the rare
+  literal one-off (a language flag emoji) that has no meaningful
+  shared token — documented in CLAUDE.md so it doesn't get
+  re-litigated next time someone greps for raw font sizes.
+
 ## [1.19.0] - 2026-07-13
 
 The blue-rectangle flashcard fix, plus feedback for every silent action.

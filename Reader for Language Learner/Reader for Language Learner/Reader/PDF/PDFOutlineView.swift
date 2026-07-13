@@ -100,7 +100,7 @@ struct PDFOutlineView: View {
         VStack(spacing: DS.Spacing.md) {
             Spacer()
             Image(systemName: "list.bullet.indent")
-                .font(.system(size: 32, weight: .ultraLight))
+                .font(DS.Typography.icon(32, weight: .ultraLight))
                 .foregroundStyle(DS.Color.textTertiary)
             VStack(spacing: DS.Spacing.xs) {
                 Text("No Outline")
@@ -181,7 +181,7 @@ struct PDFOutlineItemView: View {
                 Group {
                     if hasChildren {
                         Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                            .font(.system(size: 9, weight: .semibold))
+                            .font(DS.Typography.icon(9, weight: .semibold))
                             .foregroundStyle(DS.Color.textTertiary)
                     } else {
                         Circle()

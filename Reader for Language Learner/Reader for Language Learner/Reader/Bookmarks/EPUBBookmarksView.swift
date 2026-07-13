@@ -154,7 +154,7 @@ private struct EPUBBookmarkRow: View {
             if isHovered {
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(DS.Typography.icon(11, weight: .medium))
                         .foregroundStyle(DS.Color.textSecondary)
                         .frame(width: 26, height: 26)
                         .background(DS.Color.surfaceInset)
@@ -164,7 +164,7 @@ private struct EPUBBookmarkRow: View {
                 .transition(.opacity.combined(with: .scale))
             } else {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DS.Typography.icon(10, weight: .medium))
                     .foregroundStyle(DS.Color.textTertiary)
             }
         }

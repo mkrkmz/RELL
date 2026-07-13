@@ -175,6 +175,7 @@ struct GeneralSettingsView: View {
     ) -> some View {
         VStack(spacing: DS.Spacing.sm) {
             Text(language.flag)
+                // DS-exempt: one-off emoji glyph size, not a text-style role.
                 .font(.system(size: 40))
 
             VStack(spacing: DS.Spacing.xxs) {

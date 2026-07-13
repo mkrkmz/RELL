@@ -143,7 +143,7 @@ private struct HighlightRow: View {
                 if !highlight.note.isEmpty {
                     HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.xxs) {
                         Image(systemName: "note.text")
-                            .font(.system(size: 9))
+                            .font(DS.Typography.icon(9))
                             .foregroundStyle(DS.Color.textTertiary)
                         Text(highlight.note)
                             .font(DS.Typography.caption2)
@@ -160,7 +160,7 @@ private struct HighlightRow: View {
                 HStack(spacing: DS.Spacing.xs) {
                     Button(action: onEditNote) {
                         Image(systemName: highlight.note.isEmpty ? "note.text.badge.plus" : "note.text")
-                            .font(.system(size: 11))
+                            .font(DS.Typography.icon(11))
                             .foregroundStyle(DS.Color.textSecondary)
                     }
                     .buttonStyle(.plain)
@@ -171,7 +171,7 @@ private struct HighlightRow: View {
                 .transition(.opacity)
             } else {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(DS.Typography.icon(10, weight: .medium))
                     .foregroundStyle(DS.Color.textTertiary)
             }
         }

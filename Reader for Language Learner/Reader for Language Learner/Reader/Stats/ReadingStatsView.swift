@@ -76,7 +76,7 @@ struct ReadingStatsView: View {
                 HStack(spacing: DS.Spacing.xs) {
                     Image(systemName: "flame.fill")
                         .foregroundStyle(.orange)
-                        .font(.system(size: 11))
+                        .font(DS.Typography.icon(11))
                     Text("\(streak) day streak")
                         .font(DS.Typography.caption2.weight(.semibold))
                         .foregroundStyle(DS.Color.textSecondary)
@@ -342,7 +342,7 @@ struct ReadingStatsView: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(DS.Typography.icon(14))
                 .foregroundStyle(iconColor)
             Text(value)
                 .font(DS.Typography.headline)

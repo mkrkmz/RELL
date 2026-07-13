@@ -664,7 +664,7 @@ private struct SavedWordRow: View {
                     if let pdf = word.pdfFilename {
                         HStack(spacing: 3) {
                             Image(systemName: "doc.text")
-                                .font(.system(size: 9))
+                                .font(DS.Typography.icon(9))
                             Text(pdf)
                                 .lineLimit(1)
                                 .truncationMode(.middle)

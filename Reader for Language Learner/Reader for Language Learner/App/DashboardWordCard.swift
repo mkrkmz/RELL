@@ -189,7 +189,7 @@ struct DashboardWordCard: View {
     private var caughtUpRow: some View {
         HStack(spacing: DS.Spacing.sm) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 14))
+                .font(DS.Typography.icon(14))
                 .foregroundStyle(DS.Color.success)
 
             Text(caughtUpText)

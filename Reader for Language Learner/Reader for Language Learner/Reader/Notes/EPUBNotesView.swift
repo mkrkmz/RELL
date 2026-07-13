@@ -186,7 +186,7 @@ private struct EPUBNoteRow: View {
                 Spacer()
                 if isHovered {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(DS.Typography.icon(10, weight: .medium))
                         .foregroundStyle(DS.Color.textTertiary)
                 }
             }

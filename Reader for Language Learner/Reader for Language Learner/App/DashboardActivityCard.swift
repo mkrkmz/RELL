@@ -45,7 +45,7 @@ struct DashboardActivityCard: View {
                 if readingStreak > 0 {
                     HStack(spacing: DS.Spacing.xs) {
                         Image(systemName: "flame.fill")
-                            .font(.system(size: 10))
+                            .font(DS.Typography.icon(10))
                             .foregroundStyle(streakAtRisk ? DS.Color.warning : (goalReached ? DS.Color.warning : DS.Color.textTertiary))
                         if streakAtRisk {
                             Text(readingStreak == 1 ? "1-day streak · read today to keep it" : "\(readingStreak)-day streak · read today to keep it")
@@ -118,7 +118,7 @@ struct DashboardActivityCard: View {
 
             if goalReached {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(DS.Typography.icon(12, weight: .bold))
                     .foregroundStyle(DS.Color.success)
                     .symbolEffect(.bounce, value: goalReached)
             } else {

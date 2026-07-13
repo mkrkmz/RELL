@@ -65,7 +65,7 @@ struct TagChip: View {
     var body: some View {
         HStack(spacing: DS.Spacing.xxs) {
             Image(systemName: "tag.fill")
-                .font(.system(size: 8))
+                .font(DS.Typography.icon(8))
                 .foregroundStyle(DS.Color.accent.opacity(0.8))
             Text(tag)
                 .font(DS.Typography.caption2.weight(.medium))
@@ -74,7 +74,7 @@ struct TagChip: View {
             if let onRemove {
                 Button(action: onRemove) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 7, weight: .bold))
+                        .font(DS.Typography.icon(7, weight: .bold))
                         .foregroundStyle(DS.Color.textTertiary)
                 }
                 .buttonStyle(.plain)

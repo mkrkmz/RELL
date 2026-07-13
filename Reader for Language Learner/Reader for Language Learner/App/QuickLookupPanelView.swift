@@ -189,12 +189,12 @@ struct QuickLookupPanelView: View {
     private var searchField: some View {
         HStack(spacing: DS.Spacing.sm) {
             Image(systemName: "character.book.closed")
-                .font(.system(size: 15, weight: .medium))
+                .font(DS.Typography.icon(15, weight: .medium))
                 .foregroundStyle(DS.Color.accent)
 
             TextField("Look up a word…", text: $model.query)
                 .textFieldStyle(.plain)
-                .font(.system(size: 17))
+                .font(.title2)
                 .focused($searchFocused)
                 .onSubmit { model.lookup(service: quickLookup, savedWords: savedWordsStore) }
 

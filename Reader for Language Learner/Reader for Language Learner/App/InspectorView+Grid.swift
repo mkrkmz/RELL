@@ -52,7 +52,7 @@ extension InspectorView {
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "play.fill")
-                    .font(.system(size: 8, weight: .bold))
+                    .font(DS.Typography.icon(8, weight: .bold))
                 Text("Run All")
                     .font(DS.Typography.caption2.weight(.semibold))
             }
@@ -83,7 +83,7 @@ extension InspectorView {
         } label: {
             HStack(spacing: DS.Spacing.xs) {
                 Image(systemName: showMoreModules ? "chevron.up" : "chevron.down")
-                    .font(.system(size: 8, weight: .bold))
+                    .font(DS.Typography.icon(8, weight: .bold))
                 Text(showMoreModules ? "Fewer modules" : "More modules")
                 if !showMoreModules && overflowHasOutput {
                     Circle()
@@ -127,7 +127,7 @@ extension InspectorView {
             VStack(spacing: DS.Spacing.xxs) {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: module.iconName)
-                        .font(.system(size: compact ? 12 : 14, weight: .medium))
+                        .font(DS.Typography.icon(compact ? 12 : 14, weight: .medium))
                         .symbolEffect(.pulse, isActive: isLoading)
                         .frame(width: compact ? 14 : 18, height: compact ? 14 : 18)
 

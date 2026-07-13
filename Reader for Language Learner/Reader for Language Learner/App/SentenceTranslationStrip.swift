@@ -24,7 +24,7 @@ struct SentenceTranslationStrip: View {
     var body: some View {
         HStack(alignment: .top, spacing: DS.Spacing.sm) {
             Image(systemName: "character.bubble")
-                .font(.system(size: 12, weight: .semibold))
+                .font(DS.Typography.icon(12, weight: .semibold))
                 .foregroundStyle(DS.Color.accent)
                 .padding(.top, 1)
 
@@ -34,7 +34,7 @@ struct SentenceTranslationStrip: View {
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(DS.Typography.icon(10, weight: .semibold))
                     .foregroundStyle(DS.Color.textTertiary)
             }
             .buttonStyle(.plain)

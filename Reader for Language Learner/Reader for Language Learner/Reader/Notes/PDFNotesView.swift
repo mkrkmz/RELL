@@ -283,7 +283,7 @@ private struct PDFNoteRow: View {
     private func rowAction(systemName: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 11, weight: .medium))
+                .font(DS.Typography.icon(11, weight: .medium))
                 .foregroundStyle(DS.Color.textSecondary)
                 .frame(width: 26, height: 26)
                 .background(DS.Color.surfaceInset)

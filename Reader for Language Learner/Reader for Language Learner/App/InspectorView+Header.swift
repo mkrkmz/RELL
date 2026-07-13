@@ -89,7 +89,7 @@ extension InspectorView {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: explainDetail == .short ? "text.alignleft" : "text.alignjustify")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(DS.Typography.icon(10, weight: .medium))
                         Text(explainDetail == .short ? "Short" : "Detailed")
                             .font(DS.Typography.caption2)
                     }
@@ -124,7 +124,7 @@ extension InspectorView {
         if !recents.isEmpty {
             HStack(spacing: DS.Spacing.xs) {
                 Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 9, weight: .medium))
+                    .font(DS.Typography.icon(9, weight: .medium))
                     .foregroundStyle(DS.Color.textTertiary)
 
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -235,7 +235,7 @@ extension InspectorView {
             .disabled(isAnyLoading)
         } label: {
             Image(systemName: "ellipsis.circle")
-                .font(.system(size: 12, weight: .medium))
+                .font(DS.Typography.icon(12, weight: .medium))
                 .frame(width: 28, height: 28)
                 .background(DS.Color.surfaceInset)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))

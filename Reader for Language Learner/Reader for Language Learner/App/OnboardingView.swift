@@ -123,7 +123,7 @@ struct OnboardingView: View {
             VStack(spacing: DS.Spacing.md) {
                 HStack(spacing: DS.Spacing.sm) {
                     Image(systemName: "link")
-                        .font(.system(size: 11))
+                        .font(DS.Typography.icon(11))
                         .foregroundStyle(DS.Color.textTertiary)
                     Text(UserDefaults.standard.string(forKey: LLMConfiguration.serverURLKey) ?? LLMConfiguration.defaultServerURL)
                         .font(DS.Typography.mono)
@@ -232,7 +232,7 @@ struct OnboardingView: View {
     private func tourRow(icon: String, title: String, detail: String) -> some View {
         HStack(alignment: .top, spacing: DS.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 15, weight: .medium))
+                .font(DS.Typography.icon(15, weight: .medium))
                 .foregroundStyle(DS.Color.accent)
                 .frame(width: 30, height: 30)
                 .background(DS.Color.accentSubtle)
@@ -268,7 +268,7 @@ struct OnboardingView: View {
                     .fill(DS.Color.accentSubtle)
                     .frame(width: 64, height: 64)
                 Image(systemName: icon)
-                    .font(.system(size: 26, weight: .light))
+                    .font(DS.Typography.icon(26, weight: .light))
                     .foregroundStyle(DS.Color.accent)
             }
 

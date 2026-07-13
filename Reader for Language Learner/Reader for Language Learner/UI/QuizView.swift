@@ -129,7 +129,7 @@ struct QuizView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: DS.Spacing.lg) {
                 Image(systemName: "brain.filled.head.profile")
-                    .font(.system(size: 38, weight: .light))
+                    .font(DS.Typography.icon(38, weight: .light))
                     .foregroundStyle(DS.Color.accent)
 
                 VStack(spacing: DS.Spacing.xs) {
@@ -722,7 +722,7 @@ struct QuizView: View {
         Button(action: action) {
             VStack(spacing: DS.Spacing.xs) {
                 Image(systemName: icon)
-                    .font(.system(size: 22))
+                    .font(DS.Typography.icon(22))
                 Text(label)
                     .font(DS.Typography.caption.weight(.semibold))
             }
@@ -744,7 +744,7 @@ struct QuizView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: DS.Spacing.lg) {
                 Image(systemName: sessionAgain == 0 ? "star.fill" : "checkmark.circle.fill")
-                    .font(.system(size: 46, weight: .light))
+                    .font(DS.Typography.icon(46, weight: .light))
                     .foregroundStyle(sessionAgain == 0 ? .yellow : DS.Color.success)
 
                 VStack(spacing: DS.Spacing.xs) {
@@ -838,7 +838,7 @@ struct QuizView: View {
         VStack(spacing: DS.Spacing.lg) {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 40, weight: .light))
+                .font(DS.Typography.icon(40, weight: .light))
                 .foregroundStyle(DS.Color.success)
             VStack(spacing: DS.Spacing.xs) {
                 Text("All words mastered!")
@@ -899,7 +899,7 @@ struct QuizView: View {
     private func reviewStat(icon: String, value: String, label: String, color: Color) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .semibold))
+                .font(DS.Typography.icon(13, weight: .semibold))
                 .foregroundStyle(color)
             Text(value)
                 .font(DS.Typography.headline)

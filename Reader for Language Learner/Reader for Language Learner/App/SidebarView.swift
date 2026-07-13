@@ -117,7 +117,7 @@ struct SidebarView: View {
             VStack(spacing: 3) {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: isSelected ? tab.selectedIconName : tab.iconName)
-                        .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
+                        .font(DS.Typography.icon(14, weight: isSelected ? .semibold : .regular))
                         .foregroundStyle(isSelected ? DS.Color.accent : DS.Color.textSecondary)
                         // Fixed box so every symbol centers identically
                         // regardless of its intrinsic width/baseline.

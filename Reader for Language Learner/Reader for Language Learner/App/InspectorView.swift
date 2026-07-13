@@ -309,7 +309,7 @@ struct InspectorView: View {
     ) -> some View {
         Button(role: role, action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 12, weight: .medium))
+                .font(DS.Typography.icon(12, weight: .medium))
                 .frame(width: 28, height: 28)
                 .background(DS.Color.surfaceInset)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))

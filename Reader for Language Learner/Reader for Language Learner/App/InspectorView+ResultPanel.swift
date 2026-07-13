@@ -32,7 +32,7 @@ extension InspectorView {
         VStack(spacing: DS.Spacing.md) {
             Spacer()
             Image(systemName: "sparkles")
-                .font(.system(size: 28, weight: .light))
+                .font(DS.Typography.icon(28, weight: .light))
                 .foregroundStyle(DS.Color.textTertiary)
                 .symbolEffect(.pulse.wholeSymbol, options: .repeating)
             Text("Choose a module above")
@@ -69,7 +69,7 @@ extension InspectorView {
 
             HStack(spacing: DS.Spacing.sm) {
                 Image(systemName: module.iconName)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(DS.Typography.icon(11, weight: .semibold))
                     .foregroundStyle(module.accentColor)
                     .frame(width: 20, height: 20)
                     .background(module.accentColor.opacity(0.12))
@@ -165,7 +165,7 @@ extension InspectorView {
     ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 11, weight: .medium))
+                .font(DS.Typography.icon(11, weight: .medium))
                 .frame(width: 26, height: 26)
                 .background(DS.Color.surfaceInset)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
@@ -331,7 +331,7 @@ extension InspectorView {
 
     var truncationWarningBadge: some View {
         Image(systemName: "exclamationmark.triangle.fill")
-            .font(.system(size: 10))
+            .font(DS.Typography.icon(10))
             .foregroundStyle(DS.Color.warning)
             .help("Output may be incomplete — try 'Detailed' mode or increase max tokens in Settings.")
             .accessibilityLabel("Warning: output may be incomplete due to token limit")
@@ -369,7 +369,7 @@ extension InspectorView {
         VStack(spacing: DS.Spacing.sm) {
             Spacer()
             Image(systemName: module.iconName)
-                .font(.system(size: 24, weight: .light))
+                .font(DS.Typography.icon(24, weight: .light))
                 .foregroundStyle(DS.Color.textTertiary)
             Text("Run this module to generate an explanation.")
                 .font(DS.Typography.caption)

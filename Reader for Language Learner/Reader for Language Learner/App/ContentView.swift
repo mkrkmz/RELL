@@ -591,7 +591,7 @@ struct ContentView: View {
     private func readerContextChip(icon: String, text: String) -> some View {
         HStack(spacing: DS.Spacing.xs) {
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(DS.Typography.icon(10, weight: .semibold))
                 .foregroundStyle(DS.Color.textTertiary)
 
             Text(text)
@@ -610,7 +610,7 @@ struct ContentView: View {
     ) -> some View {
         HStack(spacing: DS.Spacing.xs) {
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(DS.Typography.icon(10, weight: .semibold))
                 .foregroundStyle(tint)
             Text("\(value) \(label)")
                 .lineLimit(1)

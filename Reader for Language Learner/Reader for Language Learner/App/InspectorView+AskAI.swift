@@ -40,7 +40,7 @@ extension InspectorView {
             Group {
                 HStack(alignment: .top, spacing: DS.Spacing.xs) {
                     Image(systemName: "person.fill")
-                        .font(.system(size: 9))
+                        .font(DS.Typography.icon(9))
                         .foregroundStyle(DS.Color.textTertiary)
                         .padding(.top, 2)
                     Text(exchange.question)
@@ -51,7 +51,7 @@ extension InspectorView {
 
                 HStack(alignment: .top, spacing: DS.Spacing.xs) {
                     Image(systemName: "sparkles")
-                        .font(.system(size: 9))
+                        .font(DS.Typography.icon(9))
                         .foregroundStyle(DS.Color.accent)
                         .padding(.top, 2)
                     Group {
@@ -87,7 +87,7 @@ extension InspectorView {
                         copyToClipboard(exchange.answer, showFeedback: true)
                     } label: {
                         Image(systemName: "doc.on.doc")
-                            .font(.system(size: 9))
+                            .font(DS.Typography.icon(9))
                             .foregroundStyle(DS.Color.textTertiary)
                     }
                     .buttonStyle(.plain)
@@ -115,7 +115,7 @@ extension InspectorView {
     private var inputRow: some View {
         HStack(spacing: DS.Spacing.xs) {
             Image(systemName: "sparkles")
-                .font(.system(size: 11))
+                .font(DS.Typography.icon(11))
                 .foregroundStyle(DS.Color.accent)
 
             TextField("Ask a follow-up…", text: $followUpQuestion, axis: .vertical)

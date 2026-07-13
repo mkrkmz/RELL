@@ -413,7 +413,7 @@ struct CollocationItemView: View {
                     if !entry.exampleEN.isEmpty {
                         HStack(alignment: .top, spacing: DS.Spacing.xs) {
                             Image(systemName: "quote.opening")
-                                .font(.system(size: 9, weight: .medium))
+                                .font(DS.Typography.icon(9, weight: .medium))
                                 .foregroundStyle(DS.Color.accent.opacity(0.55))
                                 .padding(.top, 3)
                             Text(entry.exampleEN)

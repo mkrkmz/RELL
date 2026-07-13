@@ -274,6 +274,16 @@
         }
       }
     },
+    "Academic" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akademik"
+          }
+        }
+      }
+    },
     "ACTIONS" : {
 
     },
@@ -419,6 +429,16 @@
     "All words mastered!" : {
 
     },
+    "Already saved" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaten kayıtlı"
+          }
+        }
+      }
+    },
     "Analyze With" : {
       "localizations" : {
         "tr" : {
@@ -451,6 +471,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İşaretler"
+          }
+        }
+      }
+    },
+    "Anthropic Claude API" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anthropic Claude API"
           }
         }
       }
@@ -565,12 +595,32 @@
         }
       }
     },
+    "Bookmark added" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yer imi eklendi"
+          }
+        }
+      }
+    },
     "Bookmark Page (⌘B)" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sayfayı yer imlerine ekle (⌘B)"
+          }
+        }
+      }
+    },
+    "Bookmark removed" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yer imi kaldırıldı"
           }
         }
       }
@@ -591,6 +641,16 @@
     },
     "Bulk Export to Anki" : {
 
+    },
+    "Business" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İş"
+          }
+        }
+      }
     },
     "Cancel" : {
 
@@ -723,6 +783,16 @@
         }
       }
     },
+    "Choice" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçmeli"
+          }
+        }
+      }
+    },
     "Choose a module above" : {
 
     },
@@ -812,6 +882,26 @@
     },
     "Close Find (Esc)" : {
 
+    },
+    "Close Review" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrarı kapat"
+          }
+        }
+      }
+    },
+    "Close Review (Esc)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrarı kapat (Esc)"
+          }
+        }
+      }
     },
     "Collapse All" : {
 
@@ -1343,6 +1433,16 @@
         }
       }
     },
+    "Flashcard" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kart"
+          }
+        }
+      }
+    },
     "Flashcard reveal, pick the word for a definition, or type the missing word." : {
 
     },
@@ -1568,6 +1668,16 @@
     "LAST 7 DAYS" : {
 
     },
+    "Last opened" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son açılan"
+          }
+        }
+      }
+    },
     "Latency" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1581,6 +1691,16 @@
     },
     "LEARNING" : {
 
+    },
+    "Legal" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hukuk"
+          }
+        }
+      }
     },
     "Level" : {
 
@@ -1659,6 +1779,26 @@
     },
     "Loading" : {
 
+    },
+    "Local server via LM Studio" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LM Studio ile yerel sunucu"
+          }
+        }
+      }
+    },
+    "Local server via Ollama" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ollama ile yerel sunucu"
+          }
+        }
+      }
     },
     "Look Up" : {
       "comment" : "Shortcut name for the Look Up intent.",
@@ -1746,6 +1886,16 @@
     "MASTERY" : {
 
     },
+    "Medical" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tıp"
+          }
+        }
+      }
+    },
     "Menu Bar Icon" : {
       "localizations" : {
         "tr" : {
@@ -1797,6 +1947,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Daha fazla modül"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad"
           }
         }
       }
@@ -2215,6 +2375,26 @@
         }
       }
     },
+    "OpenAI Compatible" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI Uyumlu"
+          }
+        }
+      }
+    },
+    "OpenAI, OpenRouter, Together, or any compatible API" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI, OpenRouter, Together veya uyumlu herhangi bir API"
+          }
+        }
+      }
+    },
     "Opening book…" : {
       "localizations" : {
         "tr" : {
@@ -2395,6 +2575,16 @@
         }
       }
     },
+    "Progress" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlerleme"
+          }
+        }
+      }
+    },
     "Prompts" : {
       "localizations" : {
         "tr" : {
@@ -2453,6 +2643,16 @@
     },
     "Queue for Review" : {
 
+    },
+    "Queued for review" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar kuyruğuna alındı"
+          }
+        }
+      }
     },
     "Quick Export to Anki" : {
 
@@ -2989,6 +3189,16 @@
     "Selected text: %@" : {
 
     },
+    "Sentence" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümle"
+          }
+        }
+      }
+    },
     "Sentence selection ready" : {
       "localizations" : {
         "tr" : {
@@ -3232,6 +3442,16 @@
     "Tap to view details" : {
 
     },
+    "Technical" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teknik"
+          }
+        }
+      }
+    },
     "TERM" : {
 
     },
@@ -3363,6 +3583,16 @@
         }
       }
     },
+    "Type" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yazma"
+          }
+        }
+      }
+    },
     "TYPE THE MISSING WORD" : {
 
     },
@@ -3447,7 +3677,6 @@
 
     },
     "Word saved!" : {
-      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -3516,236 +3745,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uzaklaştır (⌘-)"
-          }
-        }
-      }
-    },
-    "Sentence" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cümle"
-          }
-        }
-      }
-    },
-    "Academic" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Akademik"
-          }
-        }
-      }
-    },
-    "Legal" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hukuk"
-          }
-        }
-      }
-    },
-    "Business" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İş"
-          }
-        }
-      }
-    },
-    "Medical" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tıp"
-          }
-        }
-      }
-    },
-    "Technical" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Teknik"
-          }
-        }
-      }
-    },
-    "Flashcard" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kart"
-          }
-        }
-      }
-    },
-    "Choice" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seçmeli"
-          }
-        }
-      }
-    },
-    "Type" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yazma"
-          }
-        }
-      }
-    },
-    "OpenAI Compatible" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OpenAI Uyumlu"
-          }
-        }
-      }
-    },
-    "Local server via LM Studio" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LM Studio ile yerel sunucu"
-          }
-        }
-      }
-    },
-    "Local server via Ollama" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ollama ile yerel sunucu"
-          }
-        }
-      }
-    },
-    "OpenAI, OpenRouter, Together, or any compatible API" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OpenAI, OpenRouter, Together veya uyumlu herhangi bir API"
-          }
-        }
-      }
-    },
-    "Anthropic Claude API" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anthropic Claude API"
-          }
-        }
-      }
-    },
-    "Last opened" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Son açılan"
-          }
-        }
-      }
-    },
-    "Name" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ad"
-          }
-        }
-      }
-    },
-    "Progress" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İlerleme"
-          }
-        }
-      }
-    },
-    "Bookmark added" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yer imi eklendi"
-          }
-        }
-      }
-    },
-    "Bookmark removed" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yer imi kaldırıldı"
-          }
-        }
-      }
-    },
-    "Queued for review" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tekrar kuyruğuna alındı"
-          }
-        }
-      }
-    },
-    "Already saved" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zaten kayıtlı"
-          }
-        }
-      }
-    },
-    "Close Review" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tekrarı kapat"
-          }
-        }
-      }
-    },
-    "Close Review (Esc)" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tekrarı kapat (Esc)"
           }
         }
       }

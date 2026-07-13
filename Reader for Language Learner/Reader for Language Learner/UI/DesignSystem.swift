@@ -119,6 +119,23 @@ enum DS {
         static func micro(_ size: CGFloat = 9, weight: SwiftUI.Font.Weight = .regular) -> SwiftUI.Font {
             .system(size: size, weight: weight)
         }
+
+        /// `Image(systemName:)` glyph sizing. Icons don't benefit from Dynamic
+        /// Type the way text does, so this stays a plain size+weight wrapper —
+        /// its job is centralizing the app's ~60 icon call sites into one
+        /// declaration, not making them scale. Distinct from `micro`, which is
+        /// for small fixed-size *text* chrome, not icon glyphs.
+        static func icon(_ size: CGFloat, weight: SwiftUI.Font.Weight = .regular) -> SwiftUI.Font {
+            .system(size: size, weight: weight)
+        }
+
+        /// Large light-weight icon in a circular accent badge — the shared
+        /// empty-state hero glyph (`DSEmptyState`, the dashboard's own
+        /// "continue reading" hero). A literal duplicate of two call sites,
+        /// not a catch-all for every big icon: other hero-sized icons
+        /// (flashcard results, module empty states) are genuinely different
+        /// sizes per context and stay as `icon(_:weight:)` calls.
+        static var iconHero: SwiftUI.Font { .system(size: 30, weight: .light) }
     }
 
     // MARK: - Spacing
@@ -331,7 +348,7 @@ struct DSEmptyState: View {
                     .fill(DS.Color.accentSubtle)
                     .frame(width: 72, height: 72)
                 Image(systemName: icon)
-                    .font(.system(size: 30, weight: .light))
+                    .font(DS.Typography.iconHero)
                     .foregroundStyle(DS.Color.accent)
             }
 

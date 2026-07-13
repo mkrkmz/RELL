@@ -110,7 +110,7 @@ struct LibraryView: View {
 
             HStack(spacing: DS.Spacing.xs) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 11))
+                    .font(DS.Typography.icon(11))
                     .foregroundStyle(DS.Color.textTertiary)
                 TextField("Search", text: $searchText)
                     .textFieldStyle(.plain)
@@ -141,7 +141,7 @@ struct LibraryView: View {
     private var emptyResult: some View {
         VStack(spacing: DS.Spacing.sm) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 22, weight: .light))
+                .font(DS.Typography.icon(22, weight: .light))
                 .foregroundStyle(DS.Color.textTertiary)
             Text("No documents match \u{201C}\(searchText)\u{201D}")
                 .font(DS.Typography.subhead)
@@ -238,7 +238,7 @@ private struct LibraryCard: View {
             } else {
                 DS.Color.accentSubtle
                 Image(systemName: fileExists ? "book.pages" : "questionmark.folder")
-                    .font(.system(size: 24, weight: .light))
+                    .font(DS.Typography.icon(24, weight: .light))
                     .foregroundStyle(DS.Color.accent.opacity(0.7))
             }
         }
@@ -371,7 +371,7 @@ private struct DocumentStatsSheet: View {
     private func statCell(icon: String, value: String, label: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             Image(systemName: icon)
-                .font(.system(size: 13))
+                .font(DS.Typography.icon(13))
                 .foregroundStyle(tint)
             Text(value)
                 .font(DS.Typography.headline)

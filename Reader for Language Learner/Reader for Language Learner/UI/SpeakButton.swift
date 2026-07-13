@@ -27,7 +27,7 @@ struct SpeakButton: View {
             SpeechManager.shared.speak(text, voice: voice, rate: Float(speechRate))
         } label: {
             Image(systemName: "speaker.wave.2")
-                .font(.system(size: size, weight: .medium))
+                .font(DS.Typography.icon(size, weight: .medium))
                 .foregroundStyle(DS.Color.textTertiary)
                 .contentShape(Rectangle())
         }

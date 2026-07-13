@@ -205,7 +205,7 @@ private struct ContinueReadingHero: View {
                         .textCase(.uppercase)
 
                     Text(displayTitle)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(DS.Typography.title)
                         .foregroundStyle(DS.Color.textPrimary)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
@@ -219,7 +219,7 @@ private struct ContinueReadingHero: View {
                 Spacer(minLength: DS.Spacing.lg)
 
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(DS.Typography.icon(14, weight: .semibold))
                     .foregroundStyle(isHovered ? DS.Color.accent : DS.Color.textTertiary)
             }
             .padding(DS.Spacing.lg)
@@ -277,7 +277,7 @@ private struct ContinueReadingHero: View {
                 .transition(.opacity)
         } else {
             Image(systemName: "book.pages")
-                .font(.system(size: 21, weight: .light))
+                .font(DS.Typography.icon(21, weight: .light))
                 .foregroundStyle(DS.Color.accent)
                 .frame(width: DS.Layout.coverHero.width, height: DS.Layout.coverHero.height)
                 .background(DS.Color.accentSubtle)
@@ -350,7 +350,7 @@ private struct RecentDocumentList: View {
                         HStack(spacing: DS.Spacing.xxs) {
                             Text("View all")
                             Image(systemName: "chevron.right")
-                                .font(.system(size: 8, weight: .semibold))
+                                .font(DS.Typography.icon(8, weight: .semibold))
                         }
                         .font(DS.Typography.caption)
                         .foregroundStyle(DS.Color.accent)
@@ -413,7 +413,7 @@ private struct RecentDocumentRow: View {
                     .lineLimit(1)
 
                 Image(systemName: "arrow.right")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(DS.Typography.icon(10, weight: .semibold))
                     .foregroundStyle(DS.Color.accent)
                     .opacity(isHovered && fileExists ? 1 : 0)
             }
@@ -455,7 +455,7 @@ private struct RecentDocumentRow: View {
                 .transition(.opacity)
         } else {
             Image(systemName: fileExists ? "doc.text" : "questionmark.folder")
-                .font(.system(size: 12, weight: .regular))
+                .font(DS.Typography.icon(12, weight: .regular))
                 .foregroundStyle(DS.Color.textTertiary)
                 .frame(width: DS.Layout.coverMini.width, height: DS.Layout.coverMini.height)
                 .background(DS.Color.surfaceInset.opacity(0.6))
@@ -495,7 +495,7 @@ private struct EmptyLibraryHero: View {
                     .fill(DS.Color.accentSubtle)
                     .frame(width: 76, height: 76)
                 Image(systemName: "book.pages")
-                    .font(.system(size: 30, weight: .light))
+                    .font(DS.Typography.iconHero)
                     .foregroundStyle(DS.Color.accent)
             }
 
