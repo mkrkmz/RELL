@@ -297,7 +297,8 @@ struct ContentView: View {
             .sheet(isPresented: $showWorkspaceReview) {
                 QuizView(
                     store: savedWordsStore,
-                    onContinueReading: { showWorkspaceReview = false }
+                    onContinueReading: { showWorkspaceReview = false },
+                    onClose: { showWorkspaceReview = false }
                 )
                     .frame(width: 460, height: 560)
             }

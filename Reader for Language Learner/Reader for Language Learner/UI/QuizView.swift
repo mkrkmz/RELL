@@ -37,6 +37,10 @@ struct QuizView: View {
     var store: SavedWordsStore
     var onContinueReading: (() -> Void)? = nil
     var onOpenSavedWords: (() -> Void)? = nil
+    /// Set by modal hosts (the dashboard review sheet): shows a close button
+    /// and binds Esc, so the quiz can be left mid-session. Window/sidebar
+    /// hosts leave it nil — they already have their own exit.
+    var onClose: (() -> Void)? = nil
 
     @State private var queue: [SavedWord] = []
     @State private var currentIndex = 0
@@ -94,6 +98,29 @@ struct QuizView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(DS.Animation.standard, value: isFinished)
+        .overlay(alignment: .topTrailing) { closeButton }
+        // cancelAction alone doesn't fire in this sheet; cancelOperation:
+        // via the responder chain is the reliable macOS Esc path.
+        .onExitCommand { onClose?() }
+    }
+
+    /// Rendered only for modal hosts. `.cancelAction` is what makes Esc work:
+    /// without a cancel-action button in the tree, Esc dies in the focusable
+    /// flashcard's key-press chain and the sheet is inescapable mid-quiz.
+    @ViewBuilder
+    private var closeButton: some View {
+        if let onClose {
+            Button(action: onClose) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(DS.Typography.body)
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
+            .accessibilityLabel("Close Review")
+            .help("Close Review (Esc)")
+            .padding(DS.Spacing.sm)
+        }
     }
 
     // MARK: - Start Screen
@@ -229,6 +256,8 @@ struct QuizView: View {
                 .foregroundStyle(DS.Color.textTertiary)
             }
             .padding(.horizontal, DS.Spacing.md)
+            // Keep the progress bar clear of the floating close button.
+            .padding(.trailing, onClose != nil ? DS.Spacing.xl : 0)
 
             Spacer()
 
@@ -266,6 +295,11 @@ struct QuizView: View {
         .focusEffectDisabled()
         .onKeyPress(.space) { flipCard(); return .handled }
         .onKeyPress(.return) { flipCard(); return .handled }
+        .onKeyPress(.escape) {
+            guard let onClose else { return .ignored }
+            onClose()
+            return .handled
+        }
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(isFlipped ? "Card back" : "Card front")
         .accessibilityHint("Press space or return to flip")

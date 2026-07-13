@@ -3729,6 +3729,26 @@
           }
         }
       }
+    },
+    "Close Review" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrarı kapat"
+          }
+        }
+      }
+    },
+    "Close Review (Esc)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrarı kapat (Esc)"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
