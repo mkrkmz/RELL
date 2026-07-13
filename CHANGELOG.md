@@ -4,6 +4,40 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.19.0] - 2026-07-13
+
+The blue-rectangle flashcard fix, plus feedback for every silent action.
+First sprint of the UI roadmap v6.
+
+### Fixed
+
+- **A blue rectangle no longer appears around Review flashcards.** The
+  keyboard-accessibility work in 1.17 made the card focusable, which
+  also made macOS draw its system focus ring around the whole card.
+  The ring is now suppressed; flipping with Space/Return, tapping, and
+  the VoiceOver labels all still work exactly as before.
+
+### Added
+
+- Actions that used to complete in silence now confirm with a brief
+  toast: saving a word from the PDF or EPUB right-click menu, adding or
+  removing a bookmark (⌘B), and saving a word from a note — including
+  honest variants when the word was already saved or just re-queued
+  for review.
+
+### Changed
+
+- The Review mode picker (Flashcard/Choice/Type), inspector mode tabs,
+  Anki export domain tags, LLM provider names, and the Library sort menu
+  are now properly localized — they previously showed raw English labels
+  even on Turkish systems.
+- The saved-words panel's four empty states (no words yet, none in this
+  document, nothing to review, no search matches) now use the shared
+  empty-state component instead of a hand-rolled layout.
+- The last stray hand-picked border opacities moved onto the design
+  system's two-step hairline scale, so card faces, chart grid lines, and
+  swatch rings read consistently in both light and dark mode.
+
 ## [1.18.0] - 2026-07-12
 
 Motion polish and a real bug fix: reading position restore had a gap that
