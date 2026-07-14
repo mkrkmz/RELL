@@ -89,6 +89,26 @@ enum Language: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    // MARK: - Speech
+
+    /// BCP-47 code for `AVSpeechSynthesisVoice(language:)` lookups.
+    var speechCode: String {
+        switch self {
+        case .english:    return "en-US"
+        case .turkish:    return "tr-TR"
+        case .german:     return "de-DE"
+        case .french:     return "fr-FR"
+        case .spanish:    return "es-ES"
+        case .japanese:   return "ja-JP"
+        case .korean:     return "ko-KR"
+        case .chinese:    return "zh-CN"
+        case .arabic:     return "ar-SA"
+        case .portuguese: return "pt-BR"
+        case .russian:    return "ru-RU"
+        case .italian:    return "it-IT"
+        }
+    }
+
     // MARK: - Prompt Instruction
 
     /// Instruction string for LLM prompts: "Write in Turkish only."

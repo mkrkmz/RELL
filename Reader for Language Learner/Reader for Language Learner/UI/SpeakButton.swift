@@ -15,16 +15,11 @@ struct SpeakButton: View {
     @AppStorage("speechRate") private var speechRate: Double = 0.5
     @AppStorage(Language.targetLanguageKey) private var targetRaw = Language.defaultTarget.rawValue
 
-    private var voice: VoiceOption {
-        switch Language(rawValue: targetRaw) ?? .english {
-        case .turkish: return .turkish
-        default:       return .englishUS
-        }
-    }
+    private var language: Language { Language(rawValue: targetRaw) ?? .english }
 
     var body: some View {
         Button {
-            SpeechManager.shared.speak(text, voice: voice, rate: Float(speechRate))
+            SpeechManager.shared.speak(text, language: language, rate: Float(speechRate))
         } label: {
             Image(systemName: "speaker.wave.2")
                 .font(DS.Typography.icon(size, weight: .medium))

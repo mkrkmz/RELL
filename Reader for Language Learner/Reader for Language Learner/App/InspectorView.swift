@@ -27,7 +27,6 @@ struct InspectorView: View {
         DomainPreference(rawValue: domainRaw) ?? .general
     }
     @State var activeModule: ModuleType?
-    @State var voiceOption: VoiceOption = .englishUS
     @AppStorage("speechRate") var speechRate: Double = 0.5
     @State var lastUsedModule: ModuleType = .definitionEN
     @State var showAnkiExport = false
@@ -488,7 +487,7 @@ struct InspectorView: View {
 
     func speakSelection() {
         guard hasSelection else { return }
-        speechManager.speak(trimmedSelection, voice: voiceOption, rate: Float(speechRate))
+        speechManager.speak(trimmedSelection, language: Language.storedTarget, rate: Float(speechRate))
     }
 
     func toggleSaveWord() {

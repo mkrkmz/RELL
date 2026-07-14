@@ -21,6 +21,7 @@ struct ReaderCommands {
     var isCurrentPageBookmarked: Bool
     var isCurrentTermSaved: Bool
     var pageTheme: PageTheme
+    var speechState: SpeechManager.PlaybackState
 
     var openDocument: (URL) -> Void
     var closeDocument: () -> Void
@@ -43,6 +44,11 @@ struct ReaderCommands {
     var actualSize: () -> Void
     var fitToWidth: () -> Void
     var setPageTheme: (PageTheme) -> Void
+
+    var readAloud: () -> Void
+    var pauseSpeech: () -> Void
+    var resumeSpeech: () -> Void
+    var stopSpeech: () -> Void
 }
 
 // Menus only need to re-render when the observable state changes;
@@ -61,6 +67,7 @@ extension ReaderCommands: Equatable {
             && lhs.isCurrentPageBookmarked == rhs.isCurrentPageBookmarked
             && lhs.isCurrentTermSaved == rhs.isCurrentTermSaved
             && lhs.pageTheme == rhs.pageTheme
+            && lhs.speechState == rhs.speechState
     }
 }
 

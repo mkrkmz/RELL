@@ -59,4 +59,21 @@ final class LanguageTests: XCTestCase {
         XCTAssertEqual(Language.defaultNative, .turkish)
         XCTAssertEqual(Language.defaultTarget, .english)
     }
+
+    func testSpeechCodeIsValidBCP47ForEveryCase() {
+        let pattern = try! NSRegularExpression(pattern: "^[a-z]{2}-[A-Z]{2}$")
+        for lang in Language.allCases {
+            let code = lang.speechCode
+            let range = NSRange(code.startIndex..., in: code)
+            XCTAssertNotNil(
+                pattern.firstMatch(in: code, range: range),
+                "\(lang) speechCode \"\(code)\" isn't a valid xx-XX BCP-47 code"
+            )
+        }
+    }
+
+    func testSpeechCodesAreUnique() {
+        let codes = Language.allCases.map(\.speechCode)
+        XCTAssertEqual(Set(codes).count, codes.count, "speechCode should uniquely identify each language")
+    }
 }

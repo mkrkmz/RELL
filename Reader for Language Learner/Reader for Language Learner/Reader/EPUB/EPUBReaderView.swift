@@ -280,7 +280,7 @@ struct EPUBReaderView: NSViewRepresentable {
             guard let manager else { return }
             let text = manager.lastSelectionText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else { return }
-            SpeechManager.shared.speak(text, voice: .englishUS, rate: 0.5)
+            SpeechManager.shared.speakResolved(text)
         }
     }
 

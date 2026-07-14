@@ -678,7 +678,7 @@ struct PDFKitView: NSViewRepresentable {
             let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else { return }
             Task { @MainActor in
-                SpeechManager.shared.speak(text, voice: .englishUS, rate: 0.5)
+                SpeechManager.shared.speakResolved(text)
             }
         }
 

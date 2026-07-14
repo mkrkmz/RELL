@@ -4,6 +4,34 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.22.0] - 2026-07-14
+
+Text-to-speech now speaks in the language you're actually learning, not
+always English, and you can pause it, stop it, or read a whole page at
+once. Fourth and final sprint of the UI roadmap v6.
+
+### Fixed
+
+- **Speaking a selection always used an English voice, regardless of
+  your target language.** Right-click ▸ Speak (PDF and EPUB) and the
+  inspector's Speak button now use a voice matching whatever language
+  you're actually studying, with a graceful fallback if that exact
+  voice isn't installed.
+
+### Added
+
+- **Speech ▸ Read Page Aloud** (⌥⌘R) reads the whole current page (PDF)
+  or chapter (EPUB), not just a selection — with Pause/Resume (⌥⌘P)
+  and Stop (⌥⌘.) alongside it in the same menu.
+- A floating playback bar appears at the bottom of the window whenever
+  something is being read: pause/resume, stop, a progress bar, and a
+  quick Slow/Normal/Fast rate picker.
+- A Speech section in Settings ▸ General exposes the speaking rate as
+  a slider — it was already stored, just never surfaced anywhere.
+- Long text is now split into sentences and queued instead of being
+  hard-cut at 500 characters — pauses land at natural sentence breaks,
+  and whole-page reads aren't truncated at all.
+
 ## [1.21.0] - 2026-07-14
 
 Library and saved-words search finally have parity, right-clicking a document

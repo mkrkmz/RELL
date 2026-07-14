@@ -65,6 +65,23 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    HStack {
+                        Text("Speaking Rate")
+                        Spacer()
+                        Text(speechRateLabel)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                    Slider(value: $speechRate, in: 0.35...0.65)
+                }
+            } header: {
+                Text("Speech")
+            } footer: {
+                Text("Used by pronounce buttons and Read Page Aloud (Speech menu).")
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+
+            Section {
                 Toggle(isOn: $menuBarExtraEnabled) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Menu Bar Icon")
@@ -136,7 +153,16 @@ struct GeneralSettingsView: View {
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
     @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
+    @AppStorage("speechRate") private var speechRate: Double = 0.5
     @AppStorage("menuBarExtraEnabled") private var menuBarExtraEnabled = true
+
+    private var speechRateLabel: LocalizedStringKey {
+        switch speechRate {
+        case ..<0.45: return "Slow"
+        case 0.45..<0.55: return "Normal"
+        default: return "Fast"
+        }
+    }
     @AppStorage(GlobalHotKeyManager.enabledKey) private var hotkeyEnabled = true
     @AppStorage(DailyReminderManager.enabledKey) private var dailyReminderEnabled = false
     @AppStorage(DailyReminderManager.timeKey) private var dailyReminderTime = DailyReminderManager.storedTime()

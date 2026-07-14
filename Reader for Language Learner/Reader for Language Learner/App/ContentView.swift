@@ -29,6 +29,8 @@ struct ContentView: View {
         selectionState.documentURL?.pathExtension.lowercased() == "epub"
     }
 
+    private var speechManager: SpeechManager { SpeechManager.shared }
+
     // Shared stores — owned by the App scene, injected via environment.
     @Environment(SavedWordsStore.self)     private var savedWordsStore
     @Environment(QuickLookupService.self)  private var quickLookup
@@ -104,7 +106,20 @@ struct ContentView: View {
     // (`the compiler is unable to type-check this expression in reasonable
     // time`) even though a warm local cache let it slide.
     var body: some View {
-        withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent))))
+        withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))))
+    }
+
+    /// Floating playback bar while SpeechManager is speaking/paused — shared
+    /// by the inspector's Speak button and Speech ▸ Read Page Aloud.
+    private func withSpeechPlayback(_ content: some View) -> some View {
+        content.overlay(alignment: .bottom) {
+            if speechManager.state != .idle {
+                SpeechPlaybackBar(manager: speechManager)
+                    .padding(.bottom, DS.Spacing.xl)
+                    .transition(DS.slideTransition(edge: .bottom, reduceMotion: reduceMotion))
+            }
+        }
+        .animation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion), value: speechManager.state)
     }
 
     /// Window-level toast overlay + environment injection, so any view in
@@ -1085,6 +1100,7 @@ struct ContentView: View {
             isCurrentPageBookmarked: isCurrentPageBookmarked,
             isCurrentTermSaved: isCurrentTermSaved,
             pageTheme: pageTheme,
+            speechState: speechManager.state,
             openDocument: { openDocument($0) },
             closeDocument: { closeDocument() },
             toggleSidebar: { toggleSidebar() },
@@ -1112,8 +1128,28 @@ struct ContentView: View {
             zoomOut: { menuZoomOut() },
             actualSize: { menuActualSize() },
             fitToWidth: { pdfViewManager.fitToWidth() },
-            setPageTheme: { pageThemeRaw = $0.rawValue }
+            setPageTheme: { pageThemeRaw = $0.rawValue },
+            readAloud: { readCurrentPageAloud() },
+            pauseSpeech: { speechManager.pause() },
+            resumeSpeech: { speechManager.resume() },
+            stopSpeech: { speechManager.stop() }
         )
+    }
+
+    /// PDF: the current page's full text. EPUB: the current chapter's
+    /// (async JS-evaluated) plain text. Either way, no character cap —
+    /// whole-page reads are meant to run to completion, not truncate at the
+    /// 500-char default used for word/selection speak.
+    private func readCurrentPageAloud() {
+        if isEPUBDocument {
+            Task {
+                let text = await epubManager.currentChapterPlainText()
+                speechManager.speakResolved(text, limit: nil)
+            }
+        } else {
+            guard let text = pdfViewManager.pdfView?.currentPage?.string else { return }
+            speechManager.speakResolved(text, limit: nil)
+        }
     }
 
     private func handleDrop(_ providers: [NSItemProvider]) -> Bool {

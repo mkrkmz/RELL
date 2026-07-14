@@ -3816,6 +3816,146 @@
           }
         }
       }
+    },
+    "Read Page Aloud" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfayı Sesli Oku"
+          }
+        }
+      }
+    },
+    "Pause" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duraklat"
+          }
+        }
+      }
+    },
+    "Resume" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devam Et"
+          }
+        }
+      }
+    },
+    "Stop Speaking" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşmayı Durdur"
+          }
+        }
+      }
+    },
+    "Slow" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yavaş"
+          }
+        }
+      }
+    },
+    "Normal" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        }
+      }
+    },
+    "Fast" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hızlı"
+          }
+        }
+      }
+    },
+    "Speaking Rate" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşma Hızı"
+          }
+        }
+      }
+    },
+    "Speech" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşma"
+          }
+        }
+      }
+    },
+    "Used by pronounce buttons and Read Page Aloud (Speech menu)." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telaffuz düğmeleri ve Sayfayı Sesli Oku (Konuşma menüsü) tarafından kullanılır."
+          }
+        }
+      }
+    },
+    "Resume speaking" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşmaya devam et"
+          }
+        }
+      }
+    },
+    "Pause speaking" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşmayı duraklat"
+          }
+        }
+      }
+    },
+    "Stop speaking" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşmayı durdur"
+          }
+        }
+      }
+    },
+    "Speech rate" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşma hızı"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

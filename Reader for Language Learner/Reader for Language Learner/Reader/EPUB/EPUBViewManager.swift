@@ -391,6 +391,14 @@ final class EPUBViewManager: NSObject {
         return (result as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 
+    /// Plain text of the current chapter, for "Read Chapter Aloud". Chapter
+    /// scope (not full-book) matches how EPUB navigation already works here.
+    func currentChapterPlainText() async -> String {
+        guard let webView else { return "" }
+        let result = try? await webView.evaluateJavaScript("document.body.innerText")
+        return (result as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
     func handleSelectionMessage(text: String, sentence: String?, anchor: EPUBSelectionAnchor?) {
         lastSelectionText = text
         lastSelectionSentence = sentence?.isEmpty == true ? nil : sentence

@@ -122,6 +122,30 @@ struct ReaderMenuCommands: Commands {
                 .keyboardShortcut("v", modifiers: [.command, .option])
         }
 
+        // ── Speech ────────────────────────────────────────────────────
+        // Deliberately not ⇧⌘S/⇧⌘X — those already belong to the inspector's
+        // speak-selection/stop buttons, a different action (selection, not
+        // the whole page) that shouldn't share a shortcut with this one.
+        CommandMenu("Speech") {
+            Button("Read Page Aloud") { reader?.readAloud() }
+                .keyboardShortcut("r", modifiers: [.command, .option])
+                .disabled(reader?.hasDocument != true)
+
+            Button((reader?.speechState ?? .idle) == .paused ? "Resume" : "Pause") {
+                if reader?.speechState == .paused {
+                    reader?.resumeSpeech()
+                } else {
+                    reader?.pauseSpeech()
+                }
+            }
+            .keyboardShortcut("p", modifiers: [.command, .option])
+            .disabled((reader?.speechState ?? .idle) == .idle)
+
+            Button("Stop Speaking") { reader?.stopSpeech() }
+                .keyboardShortcut(".", modifiers: [.command, .option])
+                .disabled((reader?.speechState ?? .idle) == .idle)
+        }
+
         // ── Modules ───────────────────────────────────────────────────
         CommandMenu("Modules") {
             ForEach(Array(ModuleType.menuOrder.enumerated()), id: \.element) { index, module in
