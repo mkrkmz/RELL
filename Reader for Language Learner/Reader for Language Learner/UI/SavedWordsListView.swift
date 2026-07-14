@@ -54,6 +54,7 @@ struct SavedWordsListView: View {
 
     @AppStorage("savedWordsSortOrder") private var sortRaw = SavedWordsSortOrder.dateDesc.rawValue
     @State private var searchText    = ""
+    @FocusState private var searchFocused: Bool
     @State private var selectedFilter: SavedWordsFilter = .all
     @State private var selectedTag: String?
     @State private var selectedCEFR: CEFRLevel?
@@ -206,33 +207,31 @@ struct SavedWordsListView: View {
     // MARK: - Search Bar
 
     private var searchBar: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            Image(systemName: "magnifyingglass")
-                .font(.caption)
-                .foregroundStyle(DS.Color.textTertiary)
-
-            TextField("Search words, notes, sources…", text: $searchText)
-                .textFieldStyle(.plain)
-                .font(DS.Typography.callout)
-
-            if !searchText.isEmpty {
-                Button {
-                    withAnimation(DS.Animation.fast) { searchText = "" }
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
-                .buttonStyle(.plain)
-                .transition(.scale.combined(with: .opacity))
-            }
+        ZStack {
+            searchShortcutButton
+            DSSearchField(
+                text: $searchText,
+                placeholder: "Search words, notes, sources…",
+                focused: $searchFocused
+            )
+            .help("Search saved words (⇧⌘F)")
         }
-        .padding(.horizontal, DS.Spacing.md)
-        .padding(.vertical, DS.Spacing.sm)
-        .background(DS.Color.surfaceInset)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         .padding(.horizontal, DS.Spacing.sm)
         .padding(.top, DS.Spacing.sm)
-        .animation(DS.Animation.fast, value: searchText.isEmpty)
+    }
+
+    /// Invisible button that keeps ⇧⌘F focusing the search field regardless
+    /// of what currently has focus — a plain `.keyboardShortcut` on
+    /// `DSSearchField` itself would have no default action to trigger. Live
+    /// only while the Words tab is actually rendered (SidebarView's tab
+    /// switch instantiates just the selected case), so this can't steal ⌘F
+    /// from the reader's in-document Find while another tab is showing.
+    private var searchShortcutButton: some View {
+        Button { searchFocused = true } label: { Color.clear }
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .keyboardShortcut("f", modifiers: [.command, .shift])
+            .accessibilityHidden(true)
     }
 
     // MARK: - Filter Bar

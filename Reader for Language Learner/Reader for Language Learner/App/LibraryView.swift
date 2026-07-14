@@ -21,6 +21,7 @@ struct LibraryView: View {
     @State private var searchText = ""
     @State private var statsDocument: RecentDocument?
     @AppStorage("librarySortOrder") private var sortOrderRaw: String = LibrarySortOrder.lastOpened.rawValue
+    @FocusState private var searchFocused: Bool
 
     private var sortOrder: LibrarySortOrder {
         LibrarySortOrder(rawValue: sortOrderRaw) ?? .lastOpened
@@ -108,23 +109,12 @@ struct LibraryView: View {
 
             Spacer(minLength: DS.Spacing.md)
 
-            HStack(spacing: DS.Spacing.xs) {
-                Image(systemName: "magnifyingglass")
-                    .font(DS.Typography.icon(11))
-                    .foregroundStyle(DS.Color.textTertiary)
-                TextField("Search", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .font(DS.Typography.subhead)
+            ZStack {
+                searchShortcutButton
+                DSSearchField(text: $searchText, focused: $searchFocused)
+                    .frame(width: 180)
+                    .help("Search the library (⇧⌘F)")
             }
-            .padding(.horizontal, DS.Spacing.sm)
-            .padding(.vertical, 5)
-            .frame(width: 180)
-            .background(DS.Color.surfaceInset)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.sm)
-                    .strokeBorder(DS.Color.hairline, lineWidth: 0.7)
-            )
 
             Picker("Sort", selection: $sortOrderRaw) {
                 ForEach(LibrarySortOrder.allCases) { order in
@@ -138,17 +128,23 @@ struct LibraryView: View {
         }
     }
 
+    /// Invisible button that keeps ⇧⌘F focusing the search field regardless
+    /// of what currently has focus — a plain `.keyboardShortcut` on
+    /// `DSSearchField` itself would have no default action to trigger.
+    private var searchShortcutButton: some View {
+        Button { searchFocused = true } label: { Color.clear }
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .keyboardShortcut("f", modifiers: [.command, .shift])
+            .accessibilityHidden(true)
+    }
+
     private var emptyResult: some View {
-        VStack(spacing: DS.Spacing.sm) {
-            Image(systemName: "magnifyingglass")
-                .font(DS.Typography.icon(22, weight: .light))
-                .foregroundStyle(DS.Color.textTertiary)
-            Text("No documents match \u{201C}\(searchText)\u{201D}")
-                .font(DS.Typography.subhead)
-                .foregroundStyle(DS.Color.textTertiary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, DS.Spacing.xxxl)
+        DSEmptyState(
+            icon: "magnifyingglass",
+            title: "No Results",
+            message: "No documents match \u{201C}\(searchText)\u{201D}."
+        )
     }
 }
 
@@ -179,6 +175,7 @@ private struct LibraryCard: View {
     var onShowStats: (() -> Void)?
 
     @State private var isHovered = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var fileExists: Bool {
         FileManager.default.fileExists(atPath: document.path)
@@ -213,6 +210,11 @@ private struct LibraryCard: View {
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
         .contextMenu {
+            if let onOpen {
+                Button("Open", action: onOpen)
+                    .disabled(!fileExists)
+                Divider()
+            }
             if let onShowStats {
                 Button("Document Stats…", action: onShowStats)
             }
@@ -252,6 +254,9 @@ private struct LibraryCard: View {
                         .frame(width: geo.size.width * progress)
                 }
                 .frame(height: 3)
+                // DS-exempt: dims directly against the cover photo, which is
+                // full-color and theme-independent — a semantic surface
+                // token would fight the image instead of sitting under it.
                 .background(.black.opacity(0.18))
             }
         }
@@ -264,6 +269,7 @@ private struct LibraryCard: View {
                 )
         )
         .dsShadow(isHovered ? DS.Shadow.card : DS.Shadow.subtle)
+        .scaleEffect(isHovered && !reduceMotion ? 1.02 : 1)
         .animation(DS.Animation.standard, value: cover)
     }
 

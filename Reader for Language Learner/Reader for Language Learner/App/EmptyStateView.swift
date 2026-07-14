@@ -254,6 +254,11 @@ private struct ContinueReadingHero: View {
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
         .contextMenu {
+            if let onOpen {
+                Button("Open", action: onOpen)
+                    .disabled(!fileExists)
+                Divider()
+            }
             Button("Show in Finder") {
                 NSWorkspace.shared.activateFileViewerSelecting([document.url])
             }
@@ -427,6 +432,11 @@ private struct RecentDocumentRow: View {
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
         .contextMenu {
+            if let onOpen {
+                Button("Open", action: onOpen)
+                    .disabled(!fileExists)
+                Divider()
+            }
             Button("Show in Finder") {
                 NSWorkspace.shared.activateFileViewerSelecting([document.url])
             }

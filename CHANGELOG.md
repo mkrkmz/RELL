@@ -4,6 +4,36 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.21.0] - 2026-07-14
+
+Library and saved-words search finally have parity, right-clicking a document
+card gets you an actual Open item, and hovering a library cover reads a
+little more alive. Third sprint of the UI roadmap v6.
+
+### Added
+
+- Right-clicking a library cover, the dashboard's "Continue reading" card,
+  or a recent-document row now shows **Open** as the first item — not
+  just Show in Finder — so it works the same way Finder's own context
+  menus do.
+- Shift-⌘F focuses the Library or Saved Words search field, whichever
+  is currently visible.
+
+### Changed
+
+- The Library and Saved Words search fields share one implementation
+  now instead of two that had quietly drifted apart: both get a clear
+  button, a hairline border, and Esc-to-clear (an empty field lets Esc
+  fall through to whatever it normally does, like Library's Back).
+- Library's "no results" state now uses the same shared empty-state
+  layout as everywhere else in the app, instead of its own one-off
+  version.
+- Hovering a library cover now lifts very slightly instead of just
+  swapping its border color, unless Reduce Motion is on.
+- A few context-menu labels ("Show in Finder", "Document Stats…",
+  "Remove from Library") that were only ever in English are now
+  properly localized.
+
 ## [1.20.0] - 2026-07-13
 
 A mechanical but overdue cleanup: every fixed-size font in the app now goes
