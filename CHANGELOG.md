@@ -4,6 +4,41 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.23.0] - 2026-07-17
+
+The AI panel now actually works in all 12 supported languages, not just
+English and Turkish. First sprint of the UI roadmap v7.
+
+### Fixed
+
+- **Collocations were broken for every native language except Turkish.**
+  The prompt hardcoded Turkish labels and demanded a Turkish translation
+  regardless of your actual native language, and the parser only
+  recognized those Turkish labels — so learners with any other native
+  language got raw fallback text instead of parsed collocation cards.
+- Explanation modules (Definition, Examples, Etymology, Pronunciation,
+  Mnemonic, Synonyms, Word Family, Usage Notes) were hardcoded to always
+  explain in English, regardless of what language you're actually
+  studying. They now follow your target language.
+
+### Added
+
+- Saved words without a CEFR level now get one automatically in the
+  background when you save them, using the same local/cloud model you
+  already have configured. A "Estimate Missing Levels" action in Saved
+  Words backfills existing words in bulk. Auto-estimated levels show a
+  small sparkle marker; assigning a level yourself always wins and is
+  never overwritten.
+- The LLM API key now lives in the Keychain instead of plaintext
+  UserDefaults — a one-time silent migration moves any existing key on
+  first launch.
+
+### Changed
+
+- CLAUDE.md's LLM architecture notes were rewritten to match reality
+  (four providers, retry/circuit-breaker resilience, health monitoring,
+  the 50-entry disk-persisted cache) — they had drifted since v1.8.
+
 ## [1.22.0] - 2026-07-14
 
 Text-to-speech now speaks in the language you're actually learning, not
