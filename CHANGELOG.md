@@ -4,6 +4,32 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.24.0] - 2026-07-17
+
+Your library can now be organized into collections and pinned to the top,
+and your saved words remember which language they're actually in. Second
+sprint of the UI roadmap v7.
+
+### Added
+
+- **Pin documents** in the library so they stay easy to find — pinned
+  documents survive the 48-document trim and always sort to the top,
+  regardless of the chosen sort order.
+- **Collections**: group library documents into named folders via
+  right-click ▸ Add to Collection. Manage (rename/delete) them from the
+  same menu; deleting a collection just un-groups its documents, it
+  never removes them from the library.
+- New filter chips above the library grid: All, Pinned, PDF, EPUB, and
+  one per collection.
+- Saved words now remember the language you were learning when you
+  saved them, shown as a small flag next to the CEFR badge. A language
+  filter appears in Saved Words once more than one language is present.
+- Bulk actions in Saved Words: assign CEFR level, mastery, or language
+  to every selected word at once.
+- The bulk Anki export sheet can now be scoped by deck, CEFR level,
+  mastery, or language before you pick individual cards — handy once
+  your vocabulary spans more than one book or language.
+
 ## [1.23.0] - 2026-07-17
 
 The AI panel now actually works in all 12 supported languages, not just
