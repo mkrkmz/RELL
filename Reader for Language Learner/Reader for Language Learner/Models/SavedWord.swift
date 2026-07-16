@@ -124,8 +124,11 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     /// `nextReviewAt` scheduling multiplies its base interval by `easeFactor / 2.5`,
     /// so untouched words keep today's fixed intervals exactly.
     var easeFactor: Double
-    /// CEFRLevel.rawValue, user-assigned. nil = unrated.
+    /// CEFRLevel.rawValue. nil = unrated.
     var cefrLevel: String?
+    /// True when `cefrLevel` came from the LLM estimator rather than the
+    /// user — auto values show an AI marker and manual assignment clears this.
+    var cefrIsAuto: Bool
 
     init(
         id: UUID = UUID(),
@@ -146,7 +149,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         reviewHistory: [Date] = [],
         nextReviewAt: Date? = nil,
         easeFactor: Double = 2.5,
-        cefrLevel: String? = nil
+        cefrLevel: String? = nil,
+        cefrIsAuto: Bool = false
     ) {
         self.id = id
         self.term = term
@@ -167,6 +171,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.nextReviewAt = nextReviewAt
         self.easeFactor = easeFactor
         self.cefrLevel = cefrLevel
+        self.cefrIsAuto = cefrIsAuto
     }
 
     /// Best available text for the back of a review card.
@@ -205,6 +210,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         case nextReviewAt
         case easeFactor
         case cefrLevel
+        case cefrIsAuto
     }
 
     init(from decoder: Decoder) throws {
@@ -228,6 +234,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         nextReviewAt = try container.decodeIfPresent(Date.self, forKey: .nextReviewAt)
         easeFactor = try container.decodeIfPresent(Double.self, forKey: .easeFactor) ?? 2.5
         cefrLevel = try container.decodeIfPresent(String.self, forKey: .cefrLevel)
+        cefrIsAuto = try container.decodeIfPresent(Bool.self, forKey: .cefrIsAuto) ?? false
     }
 
     var hasBeenReviewed: Bool {

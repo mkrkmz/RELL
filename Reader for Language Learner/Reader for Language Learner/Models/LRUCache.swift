@@ -87,8 +87,8 @@ extension LRUCache: Codable where Key: Codable, Value: Codable {
 }
 
 /// Uniquely identifies a lookup context for cache keying.
-/// Includes provider + model + native language so that switching any of them
-/// neither hits stale entries nor wipes still-valid ones.
+/// Includes provider + model + native/target languages so that switching any
+/// of them neither hits stale entries nor wipes still-valid ones.
 struct OutputCacheKey: Hashable, Codable {
     let term: String
     let mode: String
@@ -97,15 +97,16 @@ struct OutputCacheKey: Hashable, Codable {
     let provider: String
     let model: String
     var native: String = ""
+    var target: String = ""
 }
 
 extension OutputCacheKey {
     private enum CodingKeys: String, CodingKey {
-        case term, mode, detail, domain, provider, model, native
+        case term, mode, detail, domain, provider, model, native, target
     }
 
-    // Custom decode: `native` was added after the first persisted snapshots,
-    // so it falls back to "" when missing.
+    // Custom decode: `native` (and later `target`) were added after the first
+    // persisted snapshots, so they fall back to "" when missing.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         term     = try container.decode(String.self, forKey: .term)
@@ -115,5 +116,6 @@ extension OutputCacheKey {
         provider = try container.decode(String.self, forKey: .provider)
         model    = try container.decode(String.self, forKey: .model)
         native   = try container.decodeIfPresent(String.self, forKey: .native) ?? ""
+        target   = try container.decodeIfPresent(String.self, forKey: .target) ?? ""
     }
 }

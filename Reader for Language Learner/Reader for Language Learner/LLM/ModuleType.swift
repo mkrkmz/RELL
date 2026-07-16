@@ -88,19 +88,22 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
 
     /// Static title — used in result panel header.
     var title: String {
-        title(nativeLanguage: Language.storedNative)
+        title(nativeLanguage: Language.storedNative, targetLanguage: Language.storedTarget)
     }
 
-    /// Dynamic title that adapts to the current native language.
-    func title(nativeLanguage: Language) -> String {
+    /// Dynamic title that adapts to the current native and target languages.
+    /// Raw values / CodingKeys keep their `…EN` names — they key persisted
+    /// `SavedWord.llmOutputs` dictionaries and must never change.
+    func title(nativeLanguage: Language, targetLanguage: Language = Language.storedTarget) -> String {
+        let code = targetLanguage.shortCode
         switch self {
-        case .definitionEN:    return "Definition (EN)"
+        case .definitionEN:    return "Definition (\(code))"
         case .meaningTR:       return "\(nativeLanguage.nativeName) \(nativeLanguage.meaningTitle)"
-        case .collocations:    return "Collocations (EN+\(nativeLanguage.flag))"
-        case .examplesEN:      return "Examples (EN)"
-        case .etymologyEN:     return "Etymology (EN)"
-        case .pronunciationEN: return "Pronunciation (EN)"
-        case .mnemonicEN:      return "Mnemonic (EN)"
+        case .collocations:    return "Collocations (\(code)+\(nativeLanguage.flag))"
+        case .examplesEN:      return "Examples (\(code))"
+        case .etymologyEN:     return "Etymology (\(code))"
+        case .pronunciationEN: return "Pronunciation (\(code))"
+        case .mnemonicEN:      return "Mnemonic (\(code))"
         case .synonymsEN:      return "Synonyms & Antonyms"
         case .wordFamilyEN:    return "Word Family"
         case .usageNotesEN:    return "Usage Notes"
@@ -126,7 +129,7 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
     var shortTitle: String {
         switch self {
         case .definitionEN:    return "Define"
-        case .meaningTR:       return "Türkçe"
+        case .meaningTR:       return Language.storedNative.nativeName
         case .collocations:    return "Colloc."
         case .examplesEN:      return "Examples"
         case .etymologyEN:     return "Etymology"
@@ -154,15 +157,18 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         }
     }
 
-    func outputLanguage(nativeLanguage: Language) -> PromptTemplates.OutputLanguage {
+    func outputLanguage(
+        nativeLanguage: Language,
+        targetLanguage: Language = Language.storedTarget
+    ) -> PromptTemplates.OutputLanguage {
         switch self {
         case .meaningTR:
             return .native(nativeLanguage)
         case .collocations:
-            return .mixed
+            return .mixed(native: nativeLanguage, target: targetLanguage)
         case .definitionEN, .examplesEN, .etymologyEN, .pronunciationEN, .mnemonicEN,
              .synonymsEN, .wordFamilyEN, .usageNotesEN:
-            return .englishOnly
+            return .target(targetLanguage)
         }
     }
 
@@ -178,9 +184,13 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         systemPrompt(customPreamble: "")
     }
 
-    func systemPrompt(customPreamble: String, nativeLanguage: Language = Language.storedNative) -> String {
+    func systemPrompt(
+        customPreamble: String,
+        nativeLanguage: Language = Language.storedNative,
+        targetLanguage: Language = Language.storedTarget
+    ) -> String {
         PromptTemplates.system(
-            lang: outputLanguage(nativeLanguage: nativeLanguage),
+            lang: outputLanguage(nativeLanguage: nativeLanguage, targetLanguage: targetLanguage),
             format: outputFormat,
             customPreamble: customPreamble
         )
@@ -320,11 +330,13 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         detail: ExplainDetail,
         domain: DomainPreference = .general,
         context: String? = nil,
-        nativeLanguage: Language = Language.storedNative
+        nativeLanguage: Language = Language.storedNative,
+        targetLanguage: Language = Language.storedTarget
     ) -> String {
         let domainLine = domain != .general
             ? "\nDomain: \(domain.rawValue). Adapt the explanation."
             : ""
+        let target = targetLanguage.rawValue
         
         let ctxBlock = context.map {
             """
@@ -342,7 +354,7 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            Define it in English.
+            Define it in \(target).
             \(context != nil
                 ? "Write exactly 2 short paragraphs: first this context, then general meaning."
                 : (detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs."))
@@ -352,7 +364,7 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
             return """
             Sentence: \(term)\(domainLine)
 
-            Explain this sentence in plain English.
+            Explain this sentence in plain \(target).
             \(detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs.")
             """
 
@@ -384,6 +396,9 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         // MARK: Collocations (EN+TR)
         // ──────────────────────────────────────
 
+        // The literal `*Example:*` / `*Translation:*` labels are parser
+        // targets (`ResultParser.parseCollocationEntries`) — always English,
+        // never localized; only the bracketed content follows the languages.
         case (.collocations, .word):
             let count = detail == .short ? 3 : 5
             let native = nativeLanguage.rawValue
@@ -393,8 +408,8 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
             List \(count) common collocations. Use exactly this format:
 
             N. **[collocation]:** [meaning in \(native), \(native) only]
-               - *Örnek Cümle:* "[one English example sentence]"
-               - *Türkçe Çeviri:* "[Turkish translation of the example]"
+               - *Example:* "[one \(target) example sentence]"
+               - *Translation:* "[\(native) translation of the example]"
 
             Blank line between items. Start numbering at 1.
             """
@@ -408,8 +423,8 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
             Extract \(count) key collocations or phrases from this sentence. Use exactly this format:
 
             N. **[collocation/phrase]:** [meaning in \(native), \(native) only]
-               - *Örnek Cümle:* "[one short English example sentence using this collocation]"
-               - *Türkçe Çeviri:* "[Turkish translation of the example]"
+               - *Example:* "[one short \(target) example sentence using this collocation]"
+               - *Translation:* "[\(native) translation of the example]"
 
             Blank line between items. Start numbering at 1.
             """

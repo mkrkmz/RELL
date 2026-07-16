@@ -13,7 +13,9 @@ struct LLMSettingsView: View {
     @AppStorage(LLMConfiguration.serverURLKey)    private var serverURL = LLMConfiguration.defaultServerURL
     @AppStorage(LLMConfiguration.modelKey)        private var model     = LLMConfiguration.defaultModel
     @AppStorage(LLMConfiguration.timeoutKey)      private var timeout: Double = LLMConfiguration.defaultTimeout
-    @AppStorage(LLMConfiguration.apiKeyKey)       private var apiKey    = ""
+    /// Keychain-backed (not @AppStorage): loaded in `.task`, persisted on
+    /// change via `LLMConfiguration.setAPIKey`.
+    @State private var apiKey = ""
 
     @State private var connectionStatus: ConnectionStatus = .idle
     @State private var discoveredModels: [String] = []
@@ -53,10 +55,20 @@ struct LLMSettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .task { apiKey = LLMConfiguration.storedAPIKey }
         .onChange(of: serverURL)       { connectionStatus = .idle }
         .onChange(of: model)           { connectionStatus = .idle }
         .onChange(of: providerTypeRaw) { connectionStatus = .idle }
-        .onChange(of: apiKey)          { connectionStatus = .idle }
+        .onChange(of: apiKey) { _, newValue in
+            connectionStatus = .idle
+            // setAPIKey no-ops on identical values, so the initial `.task`
+            // load doesn't cause a spurious write or notification.
+            let changed = newValue != LLMConfiguration.storedAPIKey
+            LLMConfiguration.setAPIKey(newValue)
+            if changed {
+                NotificationCenter.default.post(name: .llmAPIKeyChanged, object: nil)
+            }
+        }
     }
 
     // MARK: - Provider Picker

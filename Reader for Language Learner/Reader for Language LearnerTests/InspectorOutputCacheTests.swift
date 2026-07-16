@@ -74,11 +74,41 @@ final class InspectorOutputCacheTests: XCTestCase {
         )
         XCTAssertFalse(viewModel.loadFromCache(key: germanKey))
     }
+
+    func testDifferentTargetLanguageMisses() {
+        let fileURL = makeTempFileURL()
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+
+        let viewModel = makeViewModel(fileURL: fileURL)
+        viewModel.outputs[.definitionEN] = "a circular path"
+        viewModel.snapshotToCache(key: makeKey())
+        viewModel.resetAll()
+
+        let germanTargetKey = OutputCacheKey(
+            term: "orbit", mode: "Word", detail: "Short", domain: "General",
+            provider: "LM Studio", model: "test-model", native: "Turkish",
+            target: "German"
+        )
+        XCTAssertFalse(viewModel.loadFromCache(key: germanTargetKey))
+    }
 }
 
 @MainActor
 final class ParsedResultCacheTests: XCTestCase {
 
+    func testCollocationEntriesParseCurrentEnglishLabels() {
+        let content = """
+        1. **take orbit:** yörüngeye girmek
+           - *Example:* "The satellite took orbit."
+           - *Translation:* "Uydu yörüngeye girdi."
+        """
+        let entries = ParsedResultCache.collocationEntries(for: content)
+        XCTAssertEqual(entries.count, 1)
+        XCTAssertEqual(entries.first?.example, "The satellite took orbit.")
+        XCTAssertEqual(entries.first?.translationNative, "Uydu yörüngeye girdi.")
+    }
+
+    // Legacy Turkish labels (pre-v1.23 cached outputs) must keep parsing.
     func testCollocationEntriesAreMemoizedWithStableIdentity() {
         let content = """
         1. **take orbit:** yörüngeye girmek

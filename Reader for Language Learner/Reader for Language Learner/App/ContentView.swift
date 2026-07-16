@@ -287,6 +287,11 @@ struct ContentView: View {
             .onChange(of: llmProviderTypeRaw) { _, _ in llmHealth.scheduleCheck() }
             .onChange(of: llmServerURL)       { _, _ in llmHealth.scheduleCheck() }
             .onChange(of: llmModel)           { _, _ in llmHealth.scheduleCheck() }
+            .onReceive(NotificationCenter.default.publisher(for: .llmAPIKeyChanged)) { _ in
+                // Keychain-backed key has no @AppStorage to observe — settings
+                // announces changes so the status light re-probes cloud providers.
+                llmHealth.scheduleCheck()
+            }
     }
 
     private func withSheets(_ content: some View) -> some View {

@@ -76,4 +76,21 @@ final class LanguageTests: XCTestCase {
         let codes = Language.allCases.map(\.speechCode)
         XCTAssertEqual(Set(codes).count, codes.count, "speechCode should uniquely identify each language")
     }
+
+    func testUnknownWordIsNonEmptyForEveryCase() {
+        for lang in Language.allCases {
+            XCTAssertFalse(lang.unknownWord.isEmpty, "\(lang) has no unknownWord fallback")
+        }
+        XCTAssertEqual(Language.turkish.unknownWord, "Bilinmiyor")
+        XCTAssertEqual(Language.english.unknownWord, "Unknown")
+    }
+
+    func testShortCodesAreTwoLettersAndUnique() {
+        for lang in Language.allCases {
+            XCTAssertEqual(lang.shortCode.count, 2, "\(lang) shortCode should be two letters")
+            XCTAssertEqual(lang.shortCode, lang.shortCode.uppercased())
+        }
+        let codes = Language.allCases.map(\.shortCode)
+        XCTAssertEqual(Set(codes).count, codes.count, "shortCode should uniquely identify each language")
+    }
 }

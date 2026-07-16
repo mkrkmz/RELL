@@ -51,31 +51,41 @@ enum PromptTemplates {
     // MARK: - Output Language
 
     enum OutputLanguage {
-        case englishOnly
+        /// The learner's configured target language — was hardcoded to
+        /// English (`englishOnly`), which made every explanation module an
+        /// English-teaching tool regardless of what the user studies.
+        case target(Language)
         /// The learner's configured native language (any of the 12 supported
         /// languages) — was hardcoded to Turkish, which fought the user
         /// prompt's own `\(nativeLanguage.promptInstruction)` line for every
         /// non-Turkish native language.
         case native(Language)
-        case mixed  // EN fields + native-language fields side by side
+        /// Target-language fields + native-language fields side by side
+        /// (collocations). Structural labels stay literal English — they are
+        /// parser targets (`ResultParser`), never localized in the prompt.
+        case mixed(native: Language, target: Language)
 
         var constraint: String {
             switch self {
-            case .englishOnly:
-                return "Output only in English."
+            case .target(let language):
+                // Keep the English wording byte-identical to the old
+                // `.englishOnly` constraint so English-target prompts don't drift.
+                return language == .english
+                    ? "Output only in English."
+                    : "Output only in \(language.nativeName)."
             case .native(let language):
                 return "Output only in \(language.nativeName)."
-            case .mixed:
-                return "EN fields in English only. TR fields in Turkish only."
+            case .mixed(let native, let target):
+                return "Structural labels in English. Example sentences in \(target.rawValue) only. Meanings and translations in \(native.rawValue) only."
             }
         }
 
         var unknownFallback: String {
             switch self {
-            case .englishOnly, .mixed:
+            case .target(let language), .native(let language):
+                return language.unknownWord
+            case .mixed:
                 return "Unknown"
-            case .native(let language):
-                return language == .turkish ? "Bilinmiyor" : "Unknown"
             }
         }
     }

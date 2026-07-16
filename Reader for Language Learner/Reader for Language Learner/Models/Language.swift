@@ -89,6 +89,24 @@ enum Language: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// Two-letter display code for module title suffixes, e.g. "Definition (DE)".
+    var shortCode: String {
+        switch self {
+        case .english:    return "EN"
+        case .turkish:    return "TR"
+        case .german:     return "DE"
+        case .french:     return "FR"
+        case .spanish:    return "ES"
+        case .japanese:   return "JA"
+        case .korean:     return "KO"
+        case .chinese:    return "ZH"
+        case .arabic:     return "AR"
+        case .portuguese: return "PT"
+        case .russian:    return "RU"
+        case .italian:    return "IT"
+        }
+    }
+
     // MARK: - Speech
 
     /// BCP-47 code for `AVSpeechSynthesisVoice(language:)` lookups.
@@ -126,6 +144,24 @@ enum Language: String, CaseIterable, Identifiable, Codable {
         case .portuguese: return "Escreva apenas em português."
         case .russian:    return "Пишите только на русском."
         case .italian:    return "Scrivi solo in italiano."
+        }
+    }
+
+    /// "Unknown" in the language itself — the model's fallback answer when unsure.
+    var unknownWord: String {
+        switch self {
+        case .english:    return "Unknown"
+        case .turkish:    return "Bilinmiyor"
+        case .german:     return "Unbekannt"
+        case .french:     return "Inconnu"
+        case .spanish:    return "Desconocido"
+        case .japanese:   return "不明"
+        case .korean:     return "알 수 없음"
+        case .chinese:    return "未知"
+        case .arabic:     return "غير معروف"
+        case .portuguese: return "Desconhecido"
+        case .russian:    return "Неизвестно"
+        case .italian:    return "Sconosciuto"
         }
     }
 

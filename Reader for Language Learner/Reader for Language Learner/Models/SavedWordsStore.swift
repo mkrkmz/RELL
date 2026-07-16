@@ -81,6 +81,9 @@ final class SavedWordsStore {
         words.insert(word, at: 0)
         save()
         SpotlightIndexer.index(word)
+        // Interested services (CEFR estimator) hook new saves through this —
+        // save call sites stay decoupled from LLM plumbing.
+        NotificationCenter.default.post(name: .savedWordAdded, object: word.id)
     }
 
     func update(_ word: SavedWord) {
@@ -176,10 +179,21 @@ final class SavedWordsStore {
         words.reduce(0) { $0 + ($1.hasTag(tag) ? 1 : 0) }
     }
 
-    /// Adds a tag (single token, trimmed) to a word if not already present.
+    /// User-initiated CEFR assignment — always wins over auto estimates.
     func setCEFRLevel(_ level: CEFRLevel?, for word: SavedWord) {
         guard let index = words.firstIndex(where: { $0.id == word.id }) else { return }
         words[index].cefrLevel = level?.rawValue
+        words[index].cefrIsAuto = false
+        save()
+    }
+
+    /// Estimator-initiated CEFR assignment — only ever fills an unrated word,
+    /// so a user value can never be silently overwritten.
+    func setAutoCEFRLevel(_ level: CEFRLevel, forWordID id: UUID) {
+        guard let index = words.firstIndex(where: { $0.id == id }) else { return }
+        guard words[index].cefrLevel == nil else { return }
+        words[index].cefrLevel = level.rawValue
+        words[index].cefrIsAuto = true
         save()
     }
 

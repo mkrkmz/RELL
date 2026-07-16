@@ -52,6 +52,8 @@ struct SavedWordsListView: View {
     var store: SavedWordsStore
     var currentDocumentName: String?
 
+    @Environment(CEFREstimator.self) private var cefrEstimator
+
     @AppStorage("savedWordsSortOrder") private var sortRaw = SavedWordsSortOrder.dateDesc.rawValue
     @State private var searchText    = ""
     @FocusState private var searchFocused: Bool
@@ -317,19 +319,32 @@ struct SavedWordsListView: View {
             .help("Filter by deck (tag)")
         }
 
-        if !usedCEFRLevels.isEmpty {
+        if !usedCEFRLevels.isEmpty || cefrEstimator.unratedCount > 0 {
             Menu {
-                Button {
-                    selectedCEFR = nil
-                } label: {
-                    Label("All levels", systemImage: selectedCEFR == nil ? "checkmark" : "")
-                }
-                Divider()
-                ForEach(usedCEFRLevels) { level in
+                if !usedCEFRLevels.isEmpty {
                     Button {
-                        selectedCEFR = level
+                        selectedCEFR = nil
                     } label: {
-                        Label(level.rawValue, systemImage: selectedCEFR == level ? "checkmark" : "")
+                        Label("All levels", systemImage: selectedCEFR == nil ? "checkmark" : "")
+                    }
+                    Divider()
+                    ForEach(usedCEFRLevels) { level in
+                        Button {
+                            selectedCEFR = level
+                        } label: {
+                            Label(level.rawValue, systemImage: selectedCEFR == level ? "checkmark" : "")
+                        }
+                    }
+                    Divider()
+                }
+                if cefrEstimator.isRunningBulk {
+                    Text("Estimating… \(cefrEstimator.bulkCompleted)/\(cefrEstimator.bulkTotal)")
+                    Button("Cancel Estimation") { cefrEstimator.cancelBulk() }
+                } else if cefrEstimator.unratedCount > 0 {
+                    Button {
+                        cefrEstimator.estimateMissing()
+                    } label: {
+                        Label("Estimate Missing Levels (\(cefrEstimator.unratedCount))", systemImage: "sparkle")
                     }
                 }
             } label: {
@@ -688,13 +703,20 @@ private struct SavedWordRow: View {
                     }
 
                     if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
-                        Text(cefr.rawValue)
-                            .font(DS.Typography.caption2.weight(.semibold))
-                            .foregroundStyle(cefr.badgeColor)
-                            .padding(.horizontal, DS.Spacing.xs)
-                            .padding(.vertical, 1)
-                            .background(cefr.badgeColor.opacity(0.12))
-                            .clipShape(Capsule())
+                        HStack(spacing: 2) {
+                            if word.cefrIsAuto {
+                                Image(systemName: "sparkle")
+                                    .font(DS.Typography.icon(7, weight: .semibold))
+                            }
+                            Text(cefr.rawValue)
+                                .font(DS.Typography.caption2.weight(.semibold))
+                        }
+                        .foregroundStyle(cefr.badgeColor)
+                        .padding(.horizontal, DS.Spacing.xs)
+                        .padding(.vertical, 1)
+                        .background(cefr.badgeColor.opacity(0.12))
+                        .clipShape(Capsule())
+                        .help(word.cefrIsAuto ? "AI-estimated level" : "CEFR level")
                     }
 
                     Spacer()

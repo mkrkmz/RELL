@@ -36,6 +36,7 @@ struct Reader_for_Language_LearnerApp: App {
     @State private var recentDocumentStore = RecentDocumentStore()
     @State private var coverStore        = DocumentCoverStore()
     @State private var ankiPrefs         = AnkiModulePreferences()
+    @State private var cefrEstimator:    CEFREstimator
 
     init() {
         // The HUD panel lives outside the SwiftUI scene tree, so it gets its
@@ -44,6 +45,8 @@ struct Reader_for_Language_LearnerApp: App {
         let lookup = QuickLookupService()
         _savedWordsStore = State(initialValue: savedWords)
         _quickLookup = State(initialValue: lookup)
+        // Listens for .savedWordAdded — estimates CEFR for unrated new words.
+        _cefrEstimator = State(initialValue: CEFREstimator(savedWordsStore: savedWords))
         QuickLookupPanelController.shared.configure(
             savedWordsStore: savedWords,
             quickLookup: lookup
@@ -83,6 +86,7 @@ struct Reader_for_Language_LearnerApp: App {
                 .environment(recentDocumentStore)
                 .environment(coverStore)
                 .environment(ankiPrefs)
+                .environment(cefrEstimator)
         }
         .defaultSize(width: 1200, height: 800)
         .commands {
@@ -126,4 +130,8 @@ private struct MenuBarQuickLookupView: View {
 
 extension Notification.Name {
     static let openPDFCommand = Notification.Name("openPDFCommand")
+    /// Posted by SavedWordsStore.add with the new word's UUID as `object`.
+    static let savedWordAdded = Notification.Name("savedWordAdded")
+    /// Posted by LLM settings when the Keychain-backed API key changes.
+    static let llmAPIKeyChanged = Notification.Name("llmAPIKeyChanged")
 }

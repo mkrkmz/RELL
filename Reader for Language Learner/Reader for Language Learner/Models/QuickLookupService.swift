@@ -25,20 +25,20 @@ final class QuickLookupService {
     /// Instant definition from a saved word or the in-memory cache, if present.
     /// Returns nil when a fresh `definition(for:)` call is needed.
     func cachedDefinition(for term: String, savedWordsStore: SavedWordsStore?) -> String? {
-        let key = normalize(term)
-        guard !key.isEmpty else { return nil }
+        let normalized = normalize(term)
+        guard !normalized.isEmpty else { return nil }
 
-        if let saved = savedWordsStore?.words.first(where: { normalize($0.term) == key }) {
+        if let saved = savedWordsStore?.words.first(where: { normalize($0.term) == normalized }) {
             let definition = saved.reviewDefinition
             if !definition.isEmpty, definition != "No definition saved." {
                 return definition
             }
         }
-        return definitionCache.get(key)
+        return definitionCache.get(cacheKey(term, language: Language.storedTarget))
     }
 
     func definition(for term: String) async throws -> String {
-        let key = normalize(term)
+        let key = cacheKey(term, language: Language.storedTarget)
         if let cached = definitionCache.get(key) { return cached }
 
         let native = Language.storedNative
@@ -67,7 +67,7 @@ final class QuickLookupService {
         for term: String,
         onToken: @MainActor @escaping (String) -> Void
     ) async throws -> String {
-        let key = normalize(term)
+        let key = cacheKey(term, language: Language.storedTarget)
         if let cached = definitionCache.get(key) {
             onToken(cached)
             return cached
@@ -103,11 +103,11 @@ final class QuickLookupService {
     // MARK: - Native-language meaning (HUD subtitle)
 
     func cachedNativeMeaning(for term: String) -> String? {
-        nativeMeaningCache.get(normalize(term))
+        nativeMeaningCache.get(cacheKey(term, language: Language.storedNative))
     }
 
     func nativeMeaning(for term: String) async throws -> String {
-        let key = normalize(term)
+        let key = cacheKey(term, language: Language.storedNative)
         if let cached = nativeMeaningCache.get(key) { return cached }
 
         let native = Language.storedNative
@@ -130,13 +130,12 @@ final class QuickLookupService {
     // MARK: - Translation (sentence strip)
 
     func cachedTranslation(for sentence: String) -> String? {
-        let key = normalize(sentence)
-        guard !key.isEmpty else { return nil }
-        return translationCache.get(key)
+        guard !normalize(sentence).isEmpty else { return nil }
+        return translationCache.get(cacheKey(sentence, language: Language.storedNative))
     }
 
     func translate(sentence: String) async throws -> String {
-        let key = normalize(sentence)
+        let key = cacheKey(sentence, language: Language.storedNative)
         if let cached = translationCache.get(key) { return cached }
 
         let native = Language.storedNative
@@ -177,5 +176,12 @@ final class QuickLookupService {
 
     private func normalize(_ string: String) -> String {
         string.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    /// Caches are in-memory but survive language switches within a session —
+    /// keying by the output language keeps a mid-session native/target change
+    /// from serving stale-language entries.
+    private func cacheKey(_ string: String, language: Language) -> String {
+        "\(language.rawValue)|\(normalize(string))"
     }
 }

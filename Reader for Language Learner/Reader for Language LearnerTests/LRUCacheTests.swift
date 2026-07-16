@@ -152,5 +152,27 @@ final class LRUCacheTests: XCTestCase {
         """
         let decoded = try JSONDecoder().decode(OutputCacheKey.self, from: Data(legacyJSON.utf8))
         XCTAssertEqual(decoded.native, "")
+        XCTAssertEqual(decoded.target, "")
+    }
+
+    func testOutputCacheKeyDistinguishesTargetLanguage() {
+        let english = OutputCacheKey(
+            term: "orbit", mode: "Word", detail: "Short", domain: "General",
+            provider: "LM Studio", model: "m", native: "Turkish", target: "English"
+        )
+        let german = OutputCacheKey(
+            term: "orbit", mode: "Word", detail: "Short", domain: "General",
+            provider: "LM Studio", model: "m", native: "Turkish", target: "German"
+        )
+        XCTAssertNotEqual(english, german)
+    }
+
+    func testOutputCacheKeyDecodesV122PayloadWithoutTarget() throws {
+        let json = """
+        {"term":"orbit","mode":"Word","detail":"Short","domain":"General","provider":"LM Studio","model":"m","native":"Turkish"}
+        """
+        let decoded = try JSONDecoder().decode(OutputCacheKey.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.native, "Turkish")
+        XCTAssertEqual(decoded.target, "")
     }
 }

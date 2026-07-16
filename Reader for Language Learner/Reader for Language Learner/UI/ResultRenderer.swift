@@ -321,6 +321,18 @@ struct UsageNotesResultView: View {
         ParsedResultCache.usageNoteRows(for: content)
     }
 
+    /// The FREQ/REG/CONFUSE/CAUTION machine labels are prompt/parser tokens —
+    /// localization happens here at display time only. Unknown labels render raw.
+    private func displayLabel(_ label: String) -> String {
+        switch label.uppercased() {
+        case "FREQ":    return String(localized: "Frequency")
+        case "REG":     return String(localized: "Register")
+        case "CONFUSE": return String(localized: "Confusion")
+        case "CAUTION": return String(localized: "Caution")
+        default:        return label
+        }
+    }
+
     var body: some View {
         if rows.isEmpty {
             AttributedResultView(content: content)
@@ -328,7 +340,7 @@ struct UsageNotesResultView: View {
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                     HStack(alignment: .top, spacing: DS.Spacing.md) {
-                        Text(row.label)
+                        Text(displayLabel(row.label))
                             .font(DS.Typography.caption.weight(.bold))
                             .foregroundStyle(DS.Color.accentStrong)
                             .padding(.horizontal, DS.Spacing.sm)
@@ -407,24 +419,24 @@ struct CollocationItemView: View {
             }
 
             // ── Example + translation ─────────────────────────────────────
-            if !entry.exampleEN.isEmpty || !entry.translationTR.isEmpty {
+            if !entry.example.isEmpty || !entry.translationNative.isEmpty {
                 VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
 
-                    if !entry.exampleEN.isEmpty {
+                    if !entry.example.isEmpty {
                         HStack(alignment: .top, spacing: DS.Spacing.xs) {
                             Image(systemName: "quote.opening")
                                 .font(DS.Typography.icon(9, weight: .medium))
                                 .foregroundStyle(DS.Color.accent.opacity(0.55))
                                 .padding(.top, 3)
-                            Text(entry.exampleEN)
+                            Text(entry.example)
                                 .font(DS.Typography.callout)
                                 .italic()
                                 .foregroundStyle(DS.Color.textSecondary)
                         }
                     }
 
-                    if !entry.translationTR.isEmpty {
-                        Text(entry.translationTR)
+                    if !entry.translationNative.isEmpty {
+                        Text(entry.translationNative)
                             .font(DS.Typography.caption)
                             .foregroundStyle(DS.Color.textTertiary)
                             .padding(.leading, 18)

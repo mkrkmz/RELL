@@ -1,33 +1,15 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
-    "— you wrote “%@”" : {
-
-    },
-    "·" : {
-
-    },
-    "·  next %@" : {
-
-    },
-    "· best %lld" : {
-
-    },
-    "“%@”" : {
-
-    },
-    "(no data)" : {
-
-    },
-    "[%@]" : {
-
-    },
-    "/" : {
-
-    },
+    "" : {},
+    "— you wrote “%@”" : {},
+    "·" : {},
+    "·  next %@" : {},
+    "· best %lld" : {},
+    "“%@”" : {},
+    "(no data)" : {},
+    "[%@]" : {},
+    "/" : {},
     "%@  %@" : {
       "localizations" : {
         "en" : {
@@ -122,21 +104,11 @@
         }
       }
     },
-    "%lld" : {
-
-    },
-    "%lld available" : {
-
-    },
-    "%lld cards exported!" : {
-
-    },
-    "%lld characters" : {
-
-    },
-    "%lld day streak" : {
-
-    },
+    "%lld" : {},
+    "%lld available" : {},
+    "%lld cards exported!" : {},
+    "%lld characters" : {},
+    "%lld day streak" : {},
     "%lld matches" : {
       "localizations" : {
         "tr" : {
@@ -147,9 +119,7 @@
         }
       }
     },
-    "%lld minutes" : {
-
-    },
+    "%lld minutes" : {},
     "%lld of %lld min today" : {
       "localizations" : {
         "en" : {
@@ -190,9 +160,7 @@
         }
       }
     },
-    "%lld percent read" : {
-
-    },
+    "%lld percent read" : {},
     "%lld selected" : {
       "localizations" : {
         "tr" : {
@@ -213,12 +181,8 @@
         }
       }
     },
-    "%lld words still due" : {
-
-    },
-    "%lld-day streak" : {
-
-    },
+    "%lld words still due" : {},
+    "%lld-day streak" : {},
     "%lld-day streak · read today to keep it" : {
       "localizations" : {
         "tr" : {
@@ -229,18 +193,10 @@
         }
       }
     },
-    "%lld." : {
-
-    },
-    "%lld%%" : {
-
-    },
-    "%lldpx" : {
-
-    },
-    "%llds" : {
-
-    },
+    "%lld." : {},
+    "%lld%%" : {},
+    "%lldpx" : {},
+    "%llds" : {},
     "1 word selected" : {
       "localizations" : {
         "tr" : {
@@ -251,9 +207,7 @@
         }
       }
     },
-    "1-day streak" : {
-
-    },
+    "1-day streak" : {},
     "1-day streak · read today to keep it" : {
       "localizations" : {
         "tr" : {
@@ -284,12 +238,8 @@
         }
       }
     },
-    "ACTIONS" : {
-
-    },
-    "Active module, tap to deselect" : {
-
-    },
+    "ACTIONS" : {},
+    "Active module, tap to deselect" : {},
     "Actual Size" : {
       "localizations" : {
         "tr" : {
@@ -300,12 +250,8 @@
         }
       }
     },
-    "Add" : {
-
-    },
-    "Add ${term} to RELL" : {
-
-    },
+    "Add" : {},
+    "Add ${term} to RELL" : {},
     "Add a note" : {
       "localizations" : {
         "tr" : {
@@ -336,9 +282,7 @@
         }
       }
     },
-    "Add existing tag" : {
-
-    },
+    "Add existing tag" : {},
     "Add Note" : {
       "localizations" : {
         "tr" : {
@@ -349,9 +293,7 @@
         }
       }
     },
-    "Add note…" : {
-
-    },
+    "Add note…" : {},
     "Add Note…" : {
       "localizations" : {
         "tr" : {
@@ -362,9 +304,7 @@
         }
       }
     },
-    "Add tag" : {
-
-    },
+    "Add tag" : {},
     "Add to Deck" : {
       "localizations" : {
         "tr" : {
@@ -423,12 +363,8 @@
         }
       }
     },
-    "ALL TIME" : {
-
-    },
-    "All words mastered!" : {
-
-    },
+    "ALL TIME" : {},
+    "All words mastered!" : {},
     "Already saved" : {
       "localizations" : {
         "tr" : {
@@ -449,12 +385,8 @@
         }
       }
     },
-    "Analyzing…" : {
-
-    },
-    "Anki" : {
-
-    },
+    "Analyzing…" : {},
+    "Anki" : {},
     "Anki import file with HTML formatting, tags, and source." : {
       "localizations" : {
         "tr" : {
@@ -485,9 +417,7 @@
         }
       }
     },
-    "API Key" : {
-
-    },
+    "API Key" : {},
     "App & Page Themes" : {
       "localizations" : {
         "tr" : {
@@ -518,12 +448,8 @@
         }
       }
     },
-    "Ask (↩)" : {
-
-    },
-    "Ask a follow-up…" : {
-
-    },
+    "Ask (↩)" : {},
+    "Ask a follow-up…" : {},
     "Asking %@…" : {
       "localizations" : {
         "tr" : {
@@ -544,27 +470,13 @@
         }
       }
     },
-    "Available Models" : {
-
-    },
-    "Back" : {
-
-    },
-    "Back (Card Answer)" : {
-
-    },
-    "Back fields (LLM outputs)" : {
-
-    },
-    "Back to Home (Esc)" : {
-
-    },
-    "Back: " : {
-
-    },
-    "Backend" : {
-
-    },
+    "Available Models" : {},
+    "Back" : {},
+    "Back (Card Answer)" : {},
+    "Back fields (LLM outputs)" : {},
+    "Back to Home (Esc)" : {},
+    "Back: " : {},
+    "Backend" : {},
     "Book in your RELL library" : {
       "localizations" : {
         "tr" : {
@@ -636,12 +548,8 @@
         }
       }
     },
-    "Browse…" : {
-
-    },
-    "Bulk Export to Anki" : {
-
-    },
+    "Browse…" : {},
+    "Bulk Export to Anki" : {},
     "Business" : {
       "localizations" : {
         "tr" : {
@@ -652,12 +560,8 @@
         }
       }
     },
-    "Cancel" : {
-
-    },
-    "Cancelled" : {
-
-    },
+    "Cancel" : {},
+    "Cancelled" : {},
     "Card back" : {
       "localizations" : {
         "tr" : {
@@ -678,12 +582,8 @@
         }
       }
     },
-    "Category" : {
-
-    },
-    "CATEGORY" : {
-
-    },
+    "Category" : {},
+    "CATEGORY" : {},
     "CEFR" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -705,9 +605,7 @@
         }
       }
     },
-    "Change highlight color" : {
-
-    },
+    "Change highlight color" : {},
     "Chapter %lld" : {
       "localizations" : {
         "tr" : {
@@ -738,9 +636,7 @@
         }
       }
     },
-    "Check" : {
-
-    },
+    "Check" : {},
     "Check Now" : {
       "localizations" : {
         "tr" : {
@@ -793,21 +689,11 @@
         }
       }
     },
-    "Choose a module above" : {
-
-    },
-    "Clear" : {
-
-    },
-    "Clear All" : {
-
-    },
-    "Clear all %lld saved words?" : {
-
-    },
-    "Clear all saved words" : {
-
-    },
+    "Choose a module above" : {},
+    "Clear" : {},
+    "Clear All" : {},
+    "Clear all %lld saved words?" : {},
+    "Clear all saved words" : {},
     "Clear Level" : {
       "localizations" : {
         "tr" : {
@@ -828,9 +714,7 @@
         }
       }
     },
-    "Clear Outputs" : {
-
-    },
+    "Clear Outputs" : {},
     "Clear search" : {
       "localizations" : {
         "tr" : {
@@ -841,9 +725,7 @@
         }
       }
     },
-    "Click to jump to page" : {
-
-    },
+    "Click to jump to page" : {},
     "Click to reveal" : {
       "localizations" : {
         "tr" : {
@@ -854,12 +736,8 @@
         }
       }
     },
-    "Click to reveal the definition" : {
-
-    },
-    "Close (Esc)" : {
-
-    },
+    "Click to reveal the definition" : {},
+    "Close (Esc)" : {},
     "Close Document" : {
       "localizations" : {
         "tr" : {
@@ -880,9 +758,7 @@
         }
       }
     },
-    "Close Find (Esc)" : {
-
-    },
+    "Close Find (Esc)" : {},
     "Close Review" : {
       "localizations" : {
         "tr" : {
@@ -903,9 +779,7 @@
         }
       }
     },
-    "Collapse All" : {
-
-    },
+    "Collapse All" : {},
     "Connected" : {
       "localizations" : {
         "tr" : {
@@ -916,12 +790,8 @@
         }
       }
     },
-    "Connected — you're ready to read" : {
-
-    },
-    "Connecting…" : {
-
-    },
+    "Connected — you're ready to read" : {},
+    "Connecting…" : {},
     "Contents" : {
       "localizations" : {
         "tr" : {
@@ -932,15 +802,9 @@
         }
       }
     },
-    "Context" : {
-
-    },
-    "CONTEXT" : {
-
-    },
-    "Continue" : {
-
-    },
+    "Context" : {},
+    "CONTEXT" : {},
+    "Continue" : {},
     "Continue reading" : {
       "localizations" : {
         "tr" : {
@@ -951,9 +815,7 @@
         }
       }
     },
-    "Continue Reading" : {
-
-    },
+    "Continue Reading" : {},
     "Continue reading %@, %@" : {
       "localizations" : {
         "en" : {
@@ -989,15 +851,9 @@
       "comment" : "A button that copies the current answer to the clipboard.",
       "isCommentAutoGenerated" : true
     },
-    "Copy result (⇧⌘C)" : {
-
-    },
-    "Copy Term" : {
-
-    },
-    "Copy Text" : {
-
-    },
+    "Copy result (⇧⌘C)" : {},
+    "Copy Term" : {},
+    "Copy Text" : {},
     "Copy Text from %@" : {
       "localizations" : {
         "tr" : {
@@ -1008,39 +864,17 @@
         }
       }
     },
-    "Correct!" : {
-
-    },
-    "Couldn't load a definition. Check your AI server." : {
-
-    },
-    "Couldn't translate — check your AI server." : {
-
-    },
-    "Count" : {
-
-    },
-    "Cram" : {
-
-    },
-    "Cram — practice without changing the schedule" : {
-
-    },
-    "Created %@" : {
-
-    },
-    "Creativity (Temperature)" : {
-
-    },
-    "Daily Goal" : {
-
-    },
-    "Daily goal reached" : {
-
-    },
-    "Daily reading goal reached" : {
-
-    },
+    "Correct!" : {},
+    "Couldn't load a definition. Check your AI server." : {},
+    "Couldn't translate — check your AI server." : {},
+    "Count" : {},
+    "Cram" : {},
+    "Cram — practice without changing the schedule" : {},
+    "Created %@" : {},
+    "Creativity (Temperature)" : {},
+    "Daily Goal" : {},
+    "Daily goal reached" : {},
+    "Daily reading goal reached" : {},
     "Daily Reminder" : {
       "localizations" : {
         "tr" : {
@@ -1051,9 +885,7 @@
         }
       }
     },
-    "Day" : {
-
-    },
+    "Day" : {},
     "Deck" : {
       "localizations" : {
         "tr" : {
@@ -1074,12 +906,8 @@
         }
       }
     },
-    "Deck: %@" : {
-
-    },
-    "Definition: %@" : {
-
-    },
+    "Deck: %@" : {},
+    "Definition: %@" : {},
     "Definitions stay in %@; meanings and translations use %@. You can change this anytime in Settings." : {
       "localizations" : {
         "en" : {
@@ -1090,9 +918,7 @@
         }
       }
     },
-    "Delete" : {
-
-    },
+    "Delete" : {},
     "Delete %lld selected words?" : {
       "localizations" : {
         "tr" : {
@@ -1123,9 +949,7 @@
         }
       }
     },
-    "Detailed" : {
-
-    },
+    "Detailed" : {},
     "Document Stats…" : {
       "localizations" : {
         "tr" : {
@@ -1136,9 +960,7 @@
         }
       }
     },
-    "Domain" : {
-
-    },
+    "Domain" : {},
     "Done" : {
       "localizations" : {
         "tr" : {
@@ -1159,9 +981,7 @@
         }
       }
     },
-    "Drill cards without affecting spaced-repetition timing." : {
-
-    },
+    "Drill cards without affecting spaced-repetition timing." : {},
     "Drop a PDF or EPUB anywhere to open it" : {
       "localizations" : {
         "tr" : {
@@ -1172,15 +992,9 @@
         }
       }
     },
-    "e.g. rell medical vocab" : {
-
-    },
-    "e.g. rell vocabulary" : {
-
-    },
-    "Edit" : {
-
-    },
+    "e.g. rell medical vocab" : {},
+    "e.g. rell vocabulary" : {},
+    "Edit" : {},
     "Edit note" : {
       "localizations" : {
         "tr" : {
@@ -1191,9 +1005,7 @@
         }
       }
     },
-    "Edit Note" : {
-
-    },
+    "Edit Note" : {},
     "Edit Note…" : {
       "localizations" : {
         "tr" : {
@@ -1204,12 +1016,8 @@
         }
       }
     },
-    "Edit Notes…" : {
-
-    },
-    "Edit Tags…" : {
-
-    },
+    "Edit Notes…" : {},
+    "Edit Tags…" : {},
     "Enter Focus Mode" : {
       "localizations" : {
         "tr" : {
@@ -1220,9 +1028,7 @@
         }
       }
     },
-    "Error" : {
-
-    },
+    "Error" : {},
     "Exit Focus Mode" : {
       "localizations" : {
         "tr" : {
@@ -1253,18 +1059,10 @@
         }
       }
     },
-    "Expand All" : {
-
-    },
-    "Export" : {
-
-    },
-    "Export Fields… (⌘E)" : {
-
-    },
-    "Export to Anki" : {
-
-    },
+    "Expand All" : {},
+    "Export" : {},
+    "Export Fields… (⌘E)" : {},
+    "Export to Anki" : {},
     "Export…" : {
       "localizations" : {
         "tr" : {
@@ -1377,9 +1175,7 @@
         }
       }
     },
-    "Find in PDF…" : {
-
-    },
+    "Find in PDF…" : {},
     "Find Next" : {
       "localizations" : {
         "tr" : {
@@ -1450,9 +1246,7 @@
         }
       }
     },
-    "Flashcard reveal, pick the word for a definition, or type the missing word." : {
-
-    },
+    "Flashcard reveal, pick the word for a definition, or type the missing word." : {},
     "Focus Mode" : {
       "localizations" : {
         "tr" : {
@@ -1483,15 +1277,9 @@
         }
       }
     },
-    "from %@" : {
-
-    },
-    "Front (Card Question)" : {
-
-    },
-    "Front: " : {
-
-    },
+    "from %@" : {},
+    "Front (Card Question)" : {},
+    "Front: " : {},
     "General" : {
       "localizations" : {
         "tr" : {
@@ -1502,9 +1290,7 @@
         }
       }
     },
-    "Generating response" : {
-
-    },
+    "Generating response" : {},
     "Get a nudge to review your words or hit your reading goal." : {
       "localizations" : {
         "tr" : {
@@ -1515,9 +1301,7 @@
         }
       }
     },
-    "Get Started" : {
-
-    },
+    "Get Started" : {},
     "Global Shortcut  ⌃⌥Space" : {
       "localizations" : {
         "tr" : {
@@ -1538,12 +1322,8 @@
         }
       }
     },
-    "Goal" : {
-
-    },
-    "Has output" : {
-
-    },
+    "Goal" : {},
+    "Has output" : {},
     "Hide extra modules" : {
       "localizations" : {
         "tr" : {
@@ -1574,12 +1354,8 @@
         }
       }
     },
-    "Hide translation" : {
-
-    },
-    "Higher values produce more creative/varied output. Lower values are more focused and deterministic. Changes take effect on the next request." : {
-
-    },
+    "Hide translation" : {},
+    "Higher values produce more creative/varied output. Lower values are more focused and deterministic. Changes take effect on the next request." : {},
     "Highlight" : {
       "localizations" : {
         "tr" : {
@@ -1600,9 +1376,7 @@
         }
       }
     },
-    "HINT" : {
-
-    },
+    "HINT" : {},
     "Home" : {
       "localizations" : {
         "tr" : {
@@ -1623,12 +1397,8 @@
         }
       }
     },
-    "Include all saved words" : {
-
-    },
-    "Include Source" : {
-
-    },
+    "Include all saved words" : {},
+    "Include Source" : {},
     "Include Source (document + page/chapter)" : {
       "localizations" : {
         "tr" : {
@@ -1639,9 +1409,7 @@
         }
       }
     },
-    "Jump to Page" : {
-
-    },
+    "Jump to Page" : {},
     "Language Pair" : {
       "localizations" : {
         "tr" : {
@@ -1672,9 +1440,7 @@
         }
       }
     },
-    "LAST 7 DAYS" : {
-
-    },
+    "LAST 7 DAYS" : {},
     "Last opened" : {
       "localizations" : {
         "tr" : {
@@ -1696,9 +1462,7 @@
         }
       }
     },
-    "LEARNING" : {
-
-    },
+    "LEARNING" : {},
     "Legal" : {
       "localizations" : {
         "tr" : {
@@ -1709,18 +1473,10 @@
         }
       }
     },
-    "Level" : {
-
-    },
-    "Library · %lld documents" : {
-
-    },
-    "Library · 1 document" : {
-
-    },
-    "LLM" : {
-
-    },
+    "Level" : {},
+    "Library · %lld documents" : {},
+    "Library · 1 document" : {},
+    "LLM" : {},
     "LLM Server Connected" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1784,9 +1540,7 @@
         }
       }
     },
-    "Loading" : {
-
-    },
+    "Loading" : {},
     "Local server via LM Studio" : {
       "localizations" : {
         "tr" : {
@@ -1811,9 +1565,7 @@
       "comment" : "Shortcut name for the Look Up intent.",
       "isCommentAutoGenerated" : true
     },
-    "Look up ${term} in RELL" : {
-
-    },
+    "Look up ${term} in RELL" : {},
     "Look up a word…" : {
       "localizations" : {
         "tr" : {
@@ -1848,15 +1600,9 @@
         }
       }
     },
-    "Looking up…" : {
-
-    },
-    "Mark as %@ and continue" : {
-
-    },
-    "Mark as…" : {
-
-    },
+    "Looking up…" : {},
+    "Mark as %@ and continue" : {},
+    "Mark as…" : {},
     "Marks" : {
       "localizations" : {
         "tr" : {
@@ -1877,9 +1623,7 @@
         }
       }
     },
-    "Marks the current card as %@ and advances review" : {
-
-    },
+    "Marks the current card as %@ and advances review" : {},
     "Mastered" : {
       "localizations" : {
         "tr" : {
@@ -1890,9 +1634,7 @@
         }
       }
     },
-    "MASTERY" : {
-
-    },
+    "MASTERY" : {},
     "Medical" : {
       "localizations" : {
         "tr" : {
@@ -1913,18 +1655,10 @@
         }
       }
     },
-    "METADATA" : {
-
-    },
-    "min" : {
-
-    },
-    "Minutes" : {
-
-    },
-    "Mode" : {
-
-    },
+    "METADATA" : {},
+    "min" : {},
+    "Minutes" : {},
+    "Mode" : {},
     "Model" : {
       "localizations" : {
         "tr" : {
@@ -1945,9 +1679,7 @@
         }
       }
     },
-    "More actions" : {
-
-    },
+    "More actions" : {},
     "More modules" : {
       "localizations" : {
         "tr" : {
@@ -2028,12 +1760,8 @@
         }
       }
     },
-    "Next %@" : {
-
-    },
-    "Next Match (↩)" : {
-
-    },
+    "Next %@" : {},
+    "Next Match (↩)" : {},
     "Next Match (⌘G)" : {
       "localizations" : {
         "tr" : {
@@ -2108,9 +1836,7 @@
       "comment" : "Title of the empty state view when there are no notes that match the current filter.",
       "isCommentAutoGenerated" : true
     },
-    "No models found.\nIs the server running?" : {
-
-    },
+    "No models found.\nIs the server running?" : {},
     "No Notes" : {
       "localizations" : {
         "tr" : {
@@ -2125,12 +1851,8 @@
       "comment" : "Title of the empty state when there are no notes.",
       "isCommentAutoGenerated" : true
     },
-    "No Outline" : {
-
-    },
-    "No output" : {
-
-    },
+    "No Outline" : {},
+    "No output" : {},
     "No Recent Documents" : {
       "localizations" : {
         "tr" : {
@@ -2165,9 +1887,7 @@
         }
       }
     },
-    "No server right now? Continue anyway — you can set up a provider later in Settings → AI Provider." : {
-
-    },
+    "No server right now? Continue anyway — you can set up a provider later in Settings → AI Provider." : {},
     "No table of contents" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2199,9 +1919,7 @@
         }
       }
     },
-    "Not quite" : {
-
-    },
+    "Not quite" : {},
     "Note" : {
       "localizations" : {
         "tr" : {
@@ -2212,9 +1930,7 @@
         }
       }
     },
-    "NOTE" : {
-
-    },
+    "NOTE" : {},
     "Notes" : {
       "localizations" : {
         "tr" : {
@@ -2225,9 +1941,7 @@
         }
       }
     },
-    "NOTES" : {
-
-    },
+    "NOTES" : {},
     "Nothing is due right now. Keep reading or include all saved words in Review." : {
       "localizations" : {
         "tr" : {
@@ -2356,12 +2070,8 @@
         }
       }
     },
-    "Open Saved Words" : {
-
-    },
-    "Open the full review session" : {
-
-    },
+    "Open Saved Words" : {},
+    "Open the full review session" : {},
     "Open the Quick Lookup panel from any app." : {
       "localizations" : {
         "tr" : {
@@ -2420,12 +2130,8 @@
       "comment" : "Title of the intent to start vocabulary review.",
       "isCommentAutoGenerated" : true
     },
-    "Output may be incomplete — try 'Detailed' mode or increase max tokens in Settings." : {
-
-    },
-    "p.%lld" : {
-
-    },
+    "Output may be incomplete — try 'Detailed' mode or increase max tokens in Settings." : {},
+    "p.%lld" : {},
     "Page %@" : {
       "localizations" : {
         "tr" : {
@@ -2496,9 +2202,7 @@
         }
       }
     },
-    "Panel Widths" : {
-
-    },
+    "Panel Widths" : {},
     "PDF in your RELL library" : {
       "comment" : "Description of a document that is indexed by Spotlight.",
       "isCommentAutoGenerated" : true
@@ -2513,9 +2217,7 @@
         }
       }
     },
-    "Practice Again" : {
-
-    },
+    "Practice Again" : {},
     "Pre-fetch definitions for likely-unfamiliar words on the current page, so lookups are instant." : {
       "localizations" : {
         "tr" : {
@@ -2566,12 +2268,8 @@
         }
       }
     },
-    "Preview (first card)" : {
-
-    },
-    "Previous Match (⇧↩)" : {
-
-    },
+    "Preview (first card)" : {},
+    "Previous Match (⇧↩)" : {},
     "Previous Page" : {
       "localizations" : {
         "tr" : {
@@ -2602,12 +2300,8 @@
         }
       }
     },
-    "Pronounce" : {
-
-    },
-    "Pronounce %@" : {
-
-    },
+    "Pronounce" : {},
+    "Pronounce %@" : {},
     "Provider" : {
       "localizations" : {
         "tr" : {
@@ -2648,9 +2342,7 @@
         }
       }
     },
-    "Queue for Review" : {
-
-    },
+    "Queue for Review" : {},
     "Queued for review" : {
       "localizations" : {
         "tr" : {
@@ -2661,9 +2353,7 @@
         }
       }
     },
-    "Quick Export to Anki" : {
-
-    },
+    "Quick Export to Anki" : {},
     "Quick Lookup" : {
       "localizations" : {
         "tr" : {
@@ -2674,9 +2364,7 @@
         }
       }
     },
-    "Rate your recall below" : {
-
-    },
+    "Rate your recall below" : {},
     "Read a little every day" : {
       "localizations" : {
         "tr" : {
@@ -2708,9 +2396,7 @@
         }
       }
     },
-    "Reading %@" : {
-
-    },
+    "Reading %@" : {},
     "Reading Aids" : {
       "localizations" : {
         "tr" : {
@@ -2731,12 +2417,8 @@
         }
       }
     },
-    "Reading minutes for the last 7 days" : {
-
-    },
-    "Reading Note" : {
-
-    },
+    "Reading minutes for the last 7 days" : {},
+    "Reading Note" : {},
     "Ready" : {
       "localizations" : {
         "tr" : {
@@ -2757,15 +2439,9 @@
         }
       }
     },
-    "Recent terms" : {
-
-    },
-    "Recent: %@" : {
-
-    },
-    "Refresh (⌘R)" : {
-
-    },
+    "Recent terms" : {},
+    "Recent: %@" : {},
+    "Refresh (⌘R)" : {},
     "RELL translates and explains %@ content into %@." : {
       "localizations" : {
         "en" : {
@@ -2877,36 +2553,16 @@
         }
       }
     },
-    "Reopens the first-run setup: language pair, AI connection, and quick tour" : {
-
-    },
-    "Request Timeout" : {
-
-    },
-    "Reset All" : {
-
-    },
-    "Reset all prompt settings to defaults?" : {
-
-    },
-    "Reset All to Defaults" : {
-
-    },
-    "Reset to default" : {
-
-    },
-    "Reset to default (%@)" : {
-
-    },
-    "Reset to default (30s)" : {
-
-    },
-    "Reset to Defaults" : {
-
-    },
-    "Results will stay here while you switch between modules." : {
-
-    },
+    "Reopens the first-run setup: language pair, AI connection, and quick tour" : {},
+    "Request Timeout" : {},
+    "Reset All" : {},
+    "Reset all prompt settings to defaults?" : {},
+    "Reset All to Defaults" : {},
+    "Reset to default" : {},
+    "Reset to default (%@)" : {},
+    "Reset to default (30s)" : {},
+    "Reset to Defaults" : {},
+    "Results will stay here while you switch between modules." : {},
     "Retry" : {
       "localizations" : {
         "tr" : {
@@ -2927,9 +2583,7 @@
         }
       }
     },
-    "Reveal answer" : {
-
-    },
+    "Reveal answer" : {},
     "Review" : {
       "localizations" : {
         "tr" : {
@@ -2970,12 +2624,8 @@
         }
       }
     },
-    "Review Activity" : {
-
-    },
-    "Review all" : {
-
-    },
+    "Review Activity" : {},
+    "Review all" : {},
     "Review card front: %@, mastery level %@, status %@" : {
       "localizations" : {
         "en" : {
@@ -2986,24 +2636,12 @@
         }
       }
     },
-    "Review card: %@" : {
-
-    },
-    "Review Center" : {
-
-    },
-    "Review Complete" : {
-
-    },
-    "Review every saved word instead of the due-first queue." : {
-
-    },
-    "Review More" : {
-
-    },
-    "Review only words in a deck (tag)." : {
-
-    },
+    "Review card: %@" : {},
+    "Review Center" : {},
+    "Review Complete" : {},
+    "Review every saved word instead of the due-first queue." : {},
+    "Review More" : {},
+    "Review only words in a deck (tag)." : {},
     "Run All" : {
       "localizations" : {
         "tr" : {
@@ -3044,12 +2682,8 @@
         }
       }
     },
-    "Run this module to generate an explanation." : {
-
-    },
-    "Save" : {
-
-    },
+    "Run this module to generate an explanation." : {},
+    "Save" : {},
     "Save %@" : {
       "localizations" : {
         "tr" : {
@@ -3060,9 +2694,7 @@
         }
       }
     },
-    "Save failed: %@" : {
-
-    },
+    "Save failed: %@" : {},
     "Save to vocabulary (⌘S)" : {
       "localizations" : {
         "tr" : {
@@ -3073,9 +2705,7 @@
         }
       }
     },
-    "Save TSV" : {
-
-    },
+    "Save TSV" : {},
     "Save vocabulary from the reader to build your review queue." : {
       "comment" : "Message displayed when the user has no saved words and is prompted to save vocabulary from the reader.",
       "isCommentAutoGenerated" : true
@@ -3110,19 +2740,13 @@
         }
       }
     },
-    "Saved · %@" : {
-
-    },
+    "Saved · %@" : {},
     "Saved “%@” to your vocabulary." : {
       "comment" : "A confirmation message that is displayed in a dialog when a word is added to the vocabulary. The argument is the word that was added.",
       "isCommentAutoGenerated" : true
     },
-    "SAVED OUTPUTS" : {
-
-    },
-    "Saved!" : {
-
-    },
+    "SAVED OUTPUTS" : {},
+    "Saved!" : {},
     "Saves a word to your RELL vocabulary for later review." : {
       "comment" : "Description of the Add Word intent.",
       "isCommentAutoGenerated" : true
@@ -3137,9 +2761,7 @@
         }
       }
     },
-    "Search notes" : {
-
-    },
+    "Search notes" : {},
     "Search words, notes, sources…" : {
       "localizations" : {
         "tr" : {
@@ -3164,9 +2786,7 @@
       "comment" : "Message displayed when there are no notes for a PDF.",
       "isCommentAutoGenerated" : true
     },
-    "Select All" : {
-
-    },
+    "Select All" : {},
     "Select multiple words for bulk deck assignment or deletion" : {
       "localizations" : {
         "tr" : {
@@ -3207,9 +2827,7 @@
         }
       }
     },
-    "Selected text: %@" : {
-
-    },
+    "Selected text: %@" : {},
     "Sentence" : {
       "localizations" : {
         "tr" : {
@@ -3251,9 +2869,7 @@
         }
       }
     },
-    "Server URL" : {
-
-    },
+    "Server URL" : {},
     "Settings…" : {
       "localizations" : {
         "tr" : {
@@ -3264,9 +2880,7 @@
         }
       }
     },
-    "Short" : {
-
-    },
+    "Short" : {},
     "Show %lld more modules" : {
       "localizations" : {
         "tr" : {
@@ -3307,9 +2921,7 @@
         }
       }
     },
-    "Show more (%lld)" : {
-
-    },
+    "Show more (%lld)" : {},
     "Show Sidebar" : {
       "localizations" : {
         "tr" : {
@@ -3320,12 +2932,8 @@
         }
       }
     },
-    "Show the full library" : {
-
-    },
-    "Show the other saved modules for this word" : {
-
-    },
+    "Show the full library" : {},
+    "Show the other saved modules for this word" : {},
     "Show Welcome Tour Again" : {
       "localizations" : {
         "tr" : {
@@ -3336,12 +2944,8 @@
         }
       }
     },
-    "sk-..." : {
-
-    },
-    "Skip" : {
-
-    },
+    "sk-..." : {},
+    "Skip" : {},
     "Smaller Text" : {
       "localizations" : {
         "tr" : {
@@ -3362,18 +2966,10 @@
         }
       }
     },
-    "Sort" : {
-
-    },
-    "Sort the library" : {
-
-    },
-    "SOURCE" : {
-
-    },
-    "Source Context" : {
-
-    },
+    "Sort" : {},
+    "Sort the library" : {},
+    "SOURCE" : {},
+    "Source Context" : {},
     "Speak" : {
       "localizations" : {
         "tr" : {
@@ -3394,12 +2990,8 @@
         }
       }
     },
-    "Start Review" : {
-
-    },
-    "Start the current review queue" : {
-
-    },
+    "Start Review" : {},
+    "Start the current review queue" : {},
     "Start Vocabulary Review" : {
       "comment" : "Title of the intent to start the vocabulary review.",
       "isCommentAutoGenerated" : true
@@ -3424,12 +3016,8 @@
         }
       }
     },
-    "Stop" : {
-
-    },
-    "Streaming output in progress" : {
-
-    },
+    "Stop" : {},
+    "Streaming output in progress" : {},
     "Switch to %@ tab" : {
       "localizations" : {
         "tr" : {
@@ -3440,36 +3028,16 @@
         }
       }
     },
-    "Switch to Detailed" : {
-
-    },
-    "Switch to Short" : {
-
-    },
-    "System Prompt Preamble" : {
-
-    },
-    "Tags" : {
-
-    },
-    "TAGS / DECKS" : {
-
-    },
-    "Tags: " : {
-
-    },
-    "Tap to flip and see the definition" : {
-
-    },
-    "Tap to reveal" : {
-
-    },
-    "Tap to run %@ analysis" : {
-
-    },
-    "Tap to view details" : {
-
-    },
+    "Switch to Detailed" : {},
+    "Switch to Short" : {},
+    "System Prompt Preamble" : {},
+    "Tags" : {},
+    "TAGS / DECKS" : {},
+    "Tags: " : {},
+    "Tap to flip and see the definition" : {},
+    "Tap to reveal" : {},
+    "Tap to run %@ analysis" : {},
+    "Tap to view details" : {},
     "Technical" : {
       "localizations" : {
         "tr" : {
@@ -3480,12 +3048,8 @@
         }
       }
     },
-    "TERM" : {
-
-    },
-    "Test Connection" : {
-
-    },
+    "TERM" : {},
+    "Test Connection" : {},
     "The deck will be added to all %lld selected words." : {
       "localizations" : {
         "tr" : {
@@ -3506,9 +3070,7 @@
         }
       }
     },
-    "The response will appear here as soon as the model starts producing text." : {
-
-    },
+    "The response will appear here as soon as the model starts producing text." : {},
     "Theme" : {
       "localizations" : {
         "tr" : {
@@ -3519,9 +3081,7 @@
         }
       }
     },
-    "Thinking…" : {
-
-    },
+    "Thinking…" : {},
     "This Document" : {
       "localizations" : {
         "tr" : {
@@ -3532,12 +3092,8 @@
         }
       }
     },
-    "This PDF has no table of contents." : {
-
-    },
-    "This text is prepended to the built-in system prompt for every module. Leave empty to use the default. Use this to add domain-specific instructions (e.g. \"Always provide IPA pronunciation\")." : {
-
-    },
+    "This PDF has no table of contents." : {},
+    "This text is prepended to the built-in system prompt for every module. Leave empty to use the default. Use this to add domain-specific instructions (e.g. \"Always provide IPA pronunciation\")." : {},
     "Time for your daily goal" : {
       "localizations" : {
         "tr" : {
@@ -3548,12 +3104,8 @@
         }
       }
     },
-    "TODAY" : {
-
-    },
-    "Today's reading vs your daily goal — right-click to change the goal" : {
-
-    },
+    "TODAY" : {},
+    "Today's reading vs your daily goal — right-click to change the goal" : {},
     "Toggle Inspector" : {
       "localizations" : {
         "tr" : {
@@ -3584,9 +3136,7 @@
         }
       }
     },
-    "Translating…" : {
-
-    },
+    "Translating…" : {},
     "Try a different search or filter for %@." : {
       "comment" : "A message that can be displayed when there are no notes that match the current filter. The argument is the name of the PDF file.",
       "isCommentAutoGenerated" : true
@@ -3621,15 +3171,9 @@
         }
       }
     },
-    "TYPE THE MISSING WORD" : {
-
-    },
-    "TYPE THE WORD" : {
-
-    },
-    "Type the word…" : {
-
-    },
+    "TYPE THE MISSING WORD" : {},
+    "TYPE THE WORD" : {},
+    "Type the word…" : {},
     "Unknown" : {
       "localizations" : {
         "tr" : {
@@ -3670,9 +3214,7 @@
         }
       }
     },
-    "VOCABULARY GROWTH" : {
-
-    },
+    "VOCABULARY GROWTH" : {},
     "Vocabulary Review" : {
       "localizations" : {
         "tr" : {
@@ -3683,12 +3225,8 @@
         }
       }
     },
-    "Warning: output may be incomplete due to token limit" : {
-
-    },
-    "WHICH WORD FITS?" : {
-
-    },
+    "Warning: output may be incomplete due to token limit" : {},
+    "WHICH WORD FITS?" : {},
     "Word" : {
       "comment" : "The title of the parameter for the word to be added.",
       "isCommentAutoGenerated" : true,
@@ -3701,9 +3239,7 @@
         }
       }
     },
-    "Word is saved to vocabulary. Review status: %@" : {
-
-    },
+    "Word is saved to vocabulary. Review status: %@" : {},
     "Word saved!" : {
       "localizations" : {
         "tr" : {
@@ -3724,9 +3260,7 @@
         }
       }
     },
-    "Your review queue is clear. Include mastered words for extra practice." : {
-
-    },
+    "Your review queue is clear. Include mastered words for extra practice." : {},
     "Z → A" : {
       "localizations" : {
         "tr" : {
@@ -3953,6 +3487,96 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Konuşma hızı"
+          }
+        }
+      }
+    },
+    "Frequency" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıklık"
+          }
+        }
+      }
+    },
+    "Register" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üslup"
+          }
+        }
+      }
+    },
+    "Confusion" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karıştırılan"
+          }
+        }
+      }
+    },
+    "Caution" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dikkat"
+          }
+        }
+      }
+    },
+    "Cancel Estimation" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tahmini İptal Et"
+          }
+        }
+      }
+    },
+    "AI-estimated level" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapay zekâ tahmini seviye"
+          }
+        }
+      }
+    },
+    "CEFR level" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CEFR seviyesi"
+          }
+        }
+      }
+    },
+    "Estimating… %lld/%lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tahmin ediliyor… %lld/%lld"
+          }
+        }
+      }
+    },
+    "Estimate Missing Levels (%lld)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksik Seviyeleri Tahmin Et (%lld)"
           }
         }
       }

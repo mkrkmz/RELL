@@ -48,8 +48,8 @@ struct InspectorView: View {
     @AppStorage(LLMConfiguration.serverURLKey)    var llmServerURL: String = LLMConfiguration.defaultServerURL
     @AppStorage(LLMConfiguration.modelKey)        var llmModel: String     = LLMConfiguration.defaultModel
     @AppStorage(LLMConfiguration.timeoutKey)      var llmTimeout: Double   = LLMConfiguration.defaultTimeout
-    @AppStorage(LLMConfiguration.apiKeyKey)       var llmAPIKey: String    = ""
     @AppStorage(Language.nativeLanguageKey)    var nativeLanguageRaw: String = Language.defaultNative.rawValue
+    @AppStorage(Language.targetLanguageKey)    var targetLanguageRaw: String = Language.defaultTarget.rawValue
     @Environment(AnkiModulePreferences.self) var ankiPrefs
     @Environment(\.openSettings) private var openSettings
     @AppStorage("settingsSelectedTab") private var settingsSelectedTab = SettingsTab.general.rawValue
@@ -61,6 +61,10 @@ struct InspectorView: View {
 
     var nativeLanguage: Language {
         Language(rawValue: nativeLanguageRaw) ?? .turkish
+    }
+
+    var targetLanguage: Language {
+        Language(rawValue: targetLanguageRaw) ?? .english
     }
 
     var llmProvider: any LLMProvider {
@@ -196,6 +200,10 @@ struct InspectorView: View {
                 // valid under their own key; just reload for the new one.
                 refreshCache(term: trimmedSelection)
             }
+            .onChange(of: targetLanguageRaw) { _, _ in
+                // Target language is part of the cache key too.
+                refreshCache(term: trimmedSelection)
+            }
             .onChange(of: llmProviderTypeRaw) { _, _ in
                 // Provider is part of the cache key — no wipe needed.
                 circuitBreaker.reset()
@@ -213,7 +221,9 @@ struct InspectorView: View {
                 viewModel.clearCache()
                 refreshCache(term: trimmedSelection)
             }
-            .onChange(of: llmAPIKey) { _, _ in
+            .onReceive(NotificationCenter.default.publisher(for: .llmAPIKeyChanged)) { _ in
+                // Key lives in the Keychain now — settings announces changes
+                // since there's no @AppStorage value left to observe.
                 circuitBreaker.reset()
             }
             .onChange(of: llmTimeout) { _, _ in
@@ -340,7 +350,7 @@ struct InspectorView: View {
             term: term, mode: explainMode.rawValue,
             detail: explainDetail.rawValue, domain: domainPreference.rawValue,
             provider: llmProviderTypeRaw, model: llmModel,
-            native: nativeLanguageRaw
+            native: nativeLanguageRaw, target: targetLanguageRaw
         )
         let loaded = viewModel.loadFromCache(key: key)
         if !loaded, let activeModule, !activeModule.isEnabled(mode: explainMode) {
@@ -378,20 +388,25 @@ struct InspectorView: View {
 
         let client       = llmProvider
         let customPreamble = UserDefaults.standard.string(forKey: "customSystemPreamble") ?? ""
-        let systemPrompt = module.systemPrompt(customPreamble: customPreamble, nativeLanguage: nativeLanguage)
+        let systemPrompt = module.systemPrompt(
+            customPreamble: customPreamble,
+            nativeLanguage: nativeLanguage,
+            targetLanguage: targetLanguage
+        )
         let userPrompt   = module.userPrompt(
             term: trimmedSelection,
             mode: explainMode,
             detail: explainDetail,
             domain: domainPreference,
             context: contextSentence,
-            nativeLanguage: nativeLanguage
+            nativeLanguage: nativeLanguage,
+            targetLanguage: targetLanguage
         )
         let cacheKey = OutputCacheKey(
             term: trimmedSelection, mode: explainMode.rawValue,
             detail: explainDetail.rawValue, domain: domainPreference.rawValue,
             provider: llmProviderTypeRaw, model: llmModel,
-            native: nativeLanguageRaw
+            native: nativeLanguageRaw, target: targetLanguageRaw
         )
 
         let resolvedMaxTokens = module.recommendedMaxTokens(

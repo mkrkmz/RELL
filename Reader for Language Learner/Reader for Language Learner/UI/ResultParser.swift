@@ -13,10 +13,10 @@ import Foundation
 struct CollocationEntry: Identifiable, Hashable {
     let id = UUID()
     let number: Int
-    let collocation: String   // e.g. "presuppose the existence of"
-    let meaning: String       // native-language meaning
-    let exampleEN: String     // English example sentence
-    let translationTR: String // Native translation of example
+    let collocation: String       // e.g. "presuppose the existence of"
+    let meaning: String           // native-language meaning
+    let example: String           // target-language example sentence
+    let translationNative: String // native-language translation of the example
 }
 
 struct ParsedSection: Identifiable, Hashable {
@@ -82,12 +82,15 @@ enum ResultParser {
 
     // MARK: - Collocation Parser (markdown format)
 
-    /// Parses collocation output produced by the new markdown prompt format:
+    /// Parses collocation output produced by the markdown prompt format:
     /// ```
     /// 1. **collocation:** meaning
-    ///    - *Örnek Cümle:* "example"
-    ///    - *Türkçe Çeviri:* "translation"
+    ///    - *Example:* "example"
+    ///    - *Translation:* "translation"
     /// ```
+    /// Bullet matching also accepts the legacy Turkish labels
+    /// ("Örnek Cümle" / "Türkçe Çeviri") so cached pre-v1.23 outputs and
+    /// occasional model drift still parse.
     static func parseCollocationEntries(_ text: String) -> [CollocationEntry] {
         var entries: [CollocationEntry] = []
         let lines = text.components(separatedBy: "\n")
@@ -97,8 +100,8 @@ enum ResultParser {
             let line = lines[i].trimmingCharacters(in: .whitespacesAndNewlines)
 
             if let (number, collocation, meaning) = parseCollocationHeader(line) {
-                var exampleEN = ""
-                var translationTR = ""
+                var example = ""
+                var translationNative = ""
 
                 var j = i + 1
                 while j < lines.count {
@@ -109,9 +112,9 @@ enum ResultParser {
 
                     let lower = bullet.lowercased()
                     if lower.contains("örnek") || lower.contains("example") {
-                        exampleEN = extractBulletValue(bullet)
+                        example = extractBulletValue(bullet)
                     } else if lower.contains("çeviri") || lower.contains("translation") {
-                        translationTR = extractBulletValue(bullet)
+                        translationNative = extractBulletValue(bullet)
                     }
                     j += 1
                 }
@@ -120,8 +123,8 @@ enum ResultParser {
                     number: number,
                     collocation: collocation,
                     meaning: meaning,
-                    exampleEN: exampleEN,
-                    translationTR: translationTR
+                    example: example,
+                    translationNative: translationNative
                 ))
                 i = j
             } else {
@@ -161,7 +164,7 @@ enum ResultParser {
         return (number, rawCollocation, rawMeaning)
     }
 
-    /// Extracts the value from a bullet line like `- *Örnek Cümle:* "value here"`.
+    /// Extracts the value from a bullet line like `- *Example:* "value here"`.
     private static func extractBulletValue(_ line: String) -> String {
         var text = line.trimmingCharacters(in: .whitespaces)
         // Strip leading bullet/italic markers
