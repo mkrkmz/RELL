@@ -22,6 +22,18 @@ enum MasteryLevel: Int, Codable, CaseIterable {
         }
     }
 
+    /// `label` above feeds string-interpolation contexts (accessibility
+    /// labels, `.help`) where raw English is a pre-existing, lower-visibility
+    /// gap; visible UI text should use this instead — see CLAUDE.md's
+    /// `Text(String)` skips the catalog warning.
+    var localizedTitle: String {
+        switch self {
+        case .new:      return String(localized: "New")
+        case .learning: return String(localized: "Learning")
+        case .mastered: return String(localized: "Mastered")
+        }
+    }
+
     var icon: String {
         switch self {
         case .new:      return "sparkle"
@@ -129,6 +141,11 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     /// True when `cefrLevel` came from the LLM estimator rather than the
     /// user — auto values show an AI marker and manual assignment clears this.
     var cefrIsAuto: Bool
+    /// Language.rawValue for the word being learned. nil on words saved
+    /// before v1.24 — `SavedWordsStore` backfills those once from the
+    /// target language at store-load time, not on every read, so a later
+    /// target-language change doesn't silently relabel old words.
+    var language: String?
 
     init(
         id: UUID = UUID(),
@@ -150,7 +167,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         nextReviewAt: Date? = nil,
         easeFactor: Double = 2.5,
         cefrLevel: String? = nil,
-        cefrIsAuto: Bool = false
+        cefrIsAuto: Bool = false,
+        language: String? = nil
     ) {
         self.id = id
         self.term = term
@@ -172,6 +190,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.easeFactor = easeFactor
         self.cefrLevel = cefrLevel
         self.cefrIsAuto = cefrIsAuto
+        self.language = language
     }
 
     /// Best available text for the back of a review card.
@@ -211,6 +230,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         case easeFactor
         case cefrLevel
         case cefrIsAuto
+        case language
     }
 
     init(from decoder: Decoder) throws {
@@ -235,6 +255,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         easeFactor = try container.decodeIfPresent(Double.self, forKey: .easeFactor) ?? 2.5
         cefrLevel = try container.decodeIfPresent(String.self, forKey: .cefrLevel)
         cefrIsAuto = try container.decodeIfPresent(Bool.self, forKey: .cefrIsAuto) ?? false
+        language = try container.decodeIfPresent(String.self, forKey: .language)
     }
 
     var hasBeenReviewed: Bool {

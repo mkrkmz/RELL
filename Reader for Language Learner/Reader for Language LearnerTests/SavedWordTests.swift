@@ -55,6 +55,7 @@ final class SavedWordTests: XCTestCase {
         XCTAssertTrue(decoded.reviewHistory.isEmpty)
         XCTAssertEqual(decoded.easeFactor, 2.5, "Words persisted before the ease-factor migration should default to the neutral ease")
         XCTAssertNil(decoded.cefrLevel)
+        XCTAssertNil(decoded.language, "Pre-v1.24 words have no language key — SavedWordsStore backfills it at load time, not at decode time")
     }
 
     func testDefaultValues() {

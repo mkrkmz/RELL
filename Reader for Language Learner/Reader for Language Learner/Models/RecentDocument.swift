@@ -14,6 +14,10 @@ struct RecentDocument: Identifiable, Codable, Hashable {
     var lastOpenedAt: Date
     var lastPageIndex: Int?
     var pageCount: Int?
+    /// Pinned documents survive `RecentDocumentStore.trim()` regardless of age.
+    var isPinned: Bool
+    /// A single named collection this document belongs to, or nil.
+    var collectionID: UUID?
 
     init(
         id: UUID = UUID(),
@@ -21,7 +25,9 @@ struct RecentDocument: Identifiable, Codable, Hashable {
         filename: String,
         lastOpenedAt: Date = Date(),
         lastPageIndex: Int? = nil,
-        pageCount: Int? = nil
+        pageCount: Int? = nil,
+        isPinned: Bool = false,
+        collectionID: UUID? = nil
     ) {
         self.id = id
         self.path = path
@@ -29,6 +35,28 @@ struct RecentDocument: Identifiable, Codable, Hashable {
         self.lastOpenedAt = lastOpenedAt
         self.lastPageIndex = lastPageIndex
         self.pageCount = pageCount
+        self.isPinned = isPinned
+        self.collectionID = collectionID
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, path, filename, lastOpenedAt, lastPageIndex, pageCount, isPinned, collectionID
+    }
+
+    /// Custom decode: `isPinned`/`collectionID` were added after the first
+    /// persisted snapshots (v1.24) — a non-Optional property with no custom
+    /// decode would make every pre-v1.24 entry fail to decode and wipe the
+    /// whole library, since array decoding aborts on the first bad element.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        path = try container.decode(String.self, forKey: .path)
+        filename = try container.decode(String.self, forKey: .filename)
+        lastOpenedAt = try container.decode(Date.self, forKey: .lastOpenedAt)
+        lastPageIndex = try container.decodeIfPresent(Int.self, forKey: .lastPageIndex)
+        pageCount = try container.decodeIfPresent(Int.self, forKey: .pageCount)
+        isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false
+        collectionID = try container.decodeIfPresent(UUID.self, forKey: .collectionID)
     }
 
     var url: URL {
@@ -74,29 +102,61 @@ struct RecentDocument: Identifiable, Codable, Hashable {
     }
 }
 
+/// A named, single-membership group of library documents ("folder" semantics —
+/// a document belongs to at most one collection at a time).
+struct DocumentCollection: Identifiable, Codable, Hashable {
+    let id: UUID
+    var name: String
+    let createdAt: Date
+
+    init(id: UUID = UUID(), name: String, createdAt: Date = Date()) {
+        self.id = id
+        self.name = name
+        self.createdAt = createdAt
+    }
+}
+
 @MainActor
 @Observable
 final class RecentDocumentStore {
     private(set) var documents: [RecentDocument] = []
+    private(set) var collections: [DocumentCollection] = []
 
     private let fileURL: URL
+    private let collectionsFileURL: URL
     private let maxDocuments = 48
 
     init(fileURL customFileURL: URL? = nil) {
         if let customFileURL {
             self.fileURL = customFileURL
+            self.collectionsFileURL = Self.derivedCollectionsURL(for: customFileURL)
             self.documents = Self.load(from: customFileURL)
+            self.collections = Self.loadCollections(from: self.collectionsFileURL)
             return
         }
 
         guard let dir = FileManager.default.rellAppSupportDirectory() else {
             self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("recent_documents.json")
+            self.collectionsFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("library_collections.json")
             self.documents = []
+            self.collections = []
             return
         }
 
         self.fileURL = dir.appendingPathComponent("recent_documents.json")
+        self.collectionsFileURL = dir.appendingPathComponent("library_collections.json")
         self.documents = Self.load(from: fileURL)
+        self.collections = Self.loadCollections(from: collectionsFileURL)
+    }
+
+    /// Sibling path for a custom (typically test) documents file, so each
+    /// test instance gets its own collections file without a second param
+    /// at every call site — e.g. `<uuid>.json` → `<uuid>-collections.json`.
+    private static func derivedCollectionsURL(for documentsURL: URL) -> URL {
+        let base = documentsURL.deletingPathExtension().lastPathComponent
+        return documentsURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("\(base)-collections.json")
     }
 
     var recentDocuments: [RecentDocument] {
@@ -157,11 +217,67 @@ final class RecentDocumentStore {
         removed.forEach { SpotlightIndexer.removeDocument(path: $0.path) }
     }
 
-    private func trim() {
-        if documents.count > maxDocuments {
-            documents = Array(documents.prefix(maxDocuments))
-        }
+    // MARK: - Pin
+
+    func setPinned(_ pinned: Bool, id: UUID) {
+        guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
+        documents[index].isPinned = pinned
+        save()
     }
+
+    // MARK: - Collections
+
+    @discardableResult
+    func createCollection(name: String) -> DocumentCollection {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let collection = DocumentCollection(name: trimmed.isEmpty ? String(localized: "Untitled") : trimmed)
+        collections.append(collection)
+        saveCollections()
+        return collection
+    }
+
+    func renameCollection(id: UUID, to name: String) {
+        guard let index = collections.firstIndex(where: { $0.id == id }) else { return }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        collections[index].name = trimmed
+        saveCollections()
+    }
+
+    /// Deletes the collection; member documents fall back to "no collection"
+    /// rather than being removed from the library.
+    func deleteCollection(id: UUID) {
+        collections.removeAll { $0.id == id }
+        for index in documents.indices where documents[index].collectionID == id {
+            documents[index].collectionID = nil
+        }
+        saveCollections()
+        save()
+    }
+
+    /// Assigns a document to a collection, or removes it from one with `nil`.
+    func assign(id: UUID, to collectionID: UUID?) {
+        guard let index = documents.firstIndex(where: { $0.id == id }) else { return }
+        documents[index].collectionID = collectionID
+        save()
+    }
+
+    // MARK: - Trim
+
+    /// Keeps the library from growing without bound. Pinned documents are
+    /// exempt; among the rest, the most recently opened survive.
+    private func trim() {
+        guard documents.count > maxDocuments else { return }
+        let pinned = documents.filter { $0.isPinned }
+        let unpinned = documents
+            .filter { !$0.isPinned }
+            .sorted { $0.lastOpenedAt > $1.lastOpenedAt }
+        let keepCount = max(0, maxDocuments - pinned.count)
+        let keptIDs = Set(unpinned.prefix(keepCount).map(\.id))
+        documents.removeAll { !$0.isPinned && !keptIDs.contains($0.id) }
+    }
+
+    // MARK: - Persistence
 
     private func save() {
         do {
@@ -171,7 +287,19 @@ final class RecentDocumentStore {
         }
     }
 
+    private func saveCollections() {
+        do {
+            try RELLJSONStore.save(collections, to: collectionsFileURL, storeName: "DocumentCollectionStore")
+        } catch {
+            AppLogger.persistence.error("DocumentCollectionStore save failed at \(self.collectionsFileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     private static func load(from url: URL) -> [RecentDocument] {
         RELLJSONStore.load([RecentDocument].self, from: url, storeName: "RecentDocumentStore", defaultValue: [])
+    }
+
+    private static func loadCollections(from url: URL) -> [DocumentCollection] {
+        RELLJSONStore.load([DocumentCollection].self, from: url, storeName: "DocumentCollectionStore", defaultValue: [])
     }
 }

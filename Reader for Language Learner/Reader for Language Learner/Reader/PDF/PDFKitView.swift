@@ -584,7 +584,8 @@ struct PDFKitView: NSViewRepresentable {
                     pageNumber: pageNum,
                     mode: "word",
                     domain: "general",
-                    llmOutputs: [:]
+                    llmOutputs: [:],
+                    language: Language.storedTarget.rawValue
                 ))
                 self.toastCenter.show(String(localized: "Word saved!"))
             }

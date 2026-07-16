@@ -16,6 +16,12 @@ struct BulkAnkiExportView: View {
     @State private var selectedIDs: Set<UUID> = []
     @State private var selectAll = true
 
+    // Scope — narrows which words the checklist (and thus export) covers.
+    @State private var scopeDeck: String?
+    @State private var scopeCEFR: CEFRLevel?
+    @State private var scopeMastery: MasteryLevel?
+    @State private var scopeLanguage: Language?
+
     @AppStorage("bulkExportFormat") private var formatRaw = ExportFormat.ankiTSV.rawValue
 
     @State private var exportResult: ExportResult?
@@ -29,10 +35,30 @@ struct BulkAnkiExportView: View {
         case cancelled
     }
 
+    /// Words matching the current deck/CEFR/mastery/language scope. The
+    /// checklist and `selectedIDs` always operate on this subset, not the
+    /// whole store.
+    private var scopedWords: [SavedWord] {
+        store.words.filter { word in
+            (scopeDeck == nil || word.hasTag(scopeDeck!))
+                && (scopeCEFR == nil || word.cefrLevel == scopeCEFR!.rawValue)
+                && (scopeMastery == nil || word.masteryLevel == scopeMastery!)
+                && (scopeLanguage == nil || word.language == scopeLanguage!.rawValue)
+        }
+    }
+
     // Initialize selection to all words
     init(store: SavedWordsStore) {
         self.store = store
         _selectedIDs = State(initialValue: Set(store.words.map(\.id)))
+    }
+
+    /// Re-selects everything currently in scope. Called whenever a scope
+    /// filter changes, so the checklist never shows a stale selection from
+    /// outside the new scope.
+    private func applyScope() {
+        selectedIDs = Set(scopedWords.map(\.id))
+        selectAll = true
     }
 
     var body: some View {
@@ -45,7 +71,7 @@ struct BulkAnkiExportView: View {
                 Text("Bulk Export to Anki")
                     .font(.headline)
                 Spacer()
-                Text("\(selectedIDs.count) of \(store.words.count) selected")
+                Text("\(selectedIDs.count) of \(scopedWords.count) selected")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -55,13 +81,18 @@ struct BulkAnkiExportView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
+                    // Scope
+                    scopeSection
+
+                    Divider()
+
                     // Select All toggle
                     Toggle("Select All", isOn: $selectAll)
                         .toggleStyle(.checkbox)
                         .font(.subheadline.weight(.medium))
                         .onChange(of: selectAll) { _, newValue in
                             if newValue {
-                                selectedIDs = Set(store.words.map(\.id))
+                                selectedIDs = Set(scopedWords.map(\.id))
                             } else {
                                 selectedIDs.removeAll()
                             }
@@ -69,7 +100,7 @@ struct BulkAnkiExportView: View {
 
                     // Word checklist
                     VStack(spacing: 2) {
-                        ForEach(store.words) { word in
+                        ForEach(scopedWords) { word in
                             wordCheckRow(word)
                         }
                     }
@@ -167,6 +198,78 @@ struct BulkAnkiExportView: View {
         .frame(width: 420, height: 660)
     }
 
+    // MARK: - Scope
+
+    private var scopeSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Scope")
+                .font(.subheadline.weight(.medium))
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                scopeMenu(
+                    title: String(localized: "Deck"), systemImage: "tag",
+                    currentLabel: scopeDeck ?? String(localized: "All decks")
+                ) {
+                    Button(String(localized: "All decks")) { scopeDeck = nil; applyScope() }
+                    if !store.allTags.isEmpty {
+                        Divider()
+                        ForEach(store.allTags, id: \.self) { tag in
+                            Button(tag) { scopeDeck = tag; applyScope() }
+                        }
+                    }
+                }
+                scopeMenu(
+                    title: String(localized: "CEFR"), systemImage: "graduationcap",
+                    currentLabel: scopeCEFR?.rawValue ?? String(localized: "All levels")
+                ) {
+                    Button(String(localized: "All levels")) { scopeCEFR = nil; applyScope() }
+                    Divider()
+                    ForEach(CEFRLevel.allCases) { level in
+                        Button(level.rawValue) { scopeCEFR = level; applyScope() }
+                    }
+                }
+                scopeMenu(
+                    title: String(localized: "Mastery"), systemImage: "brain",
+                    currentLabel: scopeMastery?.localizedTitle ?? String(localized: "All")
+                ) {
+                    Button(String(localized: "All")) { scopeMastery = nil; applyScope() }
+                    Divider()
+                    ForEach(MasteryLevel.allCases, id: \.self) { level in
+                        Button(level.localizedTitle) { scopeMastery = level; applyScope() }
+                    }
+                }
+                scopeMenu(
+                    title: String(localized: "Language"), systemImage: "globe",
+                    currentLabel: scopeLanguage?.nativeName ?? String(localized: "All languages")
+                ) {
+                    Button(String(localized: "All languages")) { scopeLanguage = nil; applyScope() }
+                    Divider()
+                    ForEach(Language.allCases) { language in
+                        Button("\(language.flag) \(language.nativeName)") { scopeLanguage = language; applyScope() }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func scopeMenu<Content: View>(
+        title: String, systemImage: String, currentLabel: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        Menu {
+            content()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: systemImage)
+                Text(currentLabel)
+                    .lineLimit(1)
+            }
+            .font(.caption)
+        }
+        .menuStyle(.borderlessButton)
+        .help(title)
+    }
+
     // MARK: - Word Check Row
 
     private func wordCheckRow(_ word: SavedWord) -> some View {
@@ -191,12 +294,12 @@ struct BulkAnkiExportView: View {
         .onTapGesture {
             if isSelected {
                 selectedIDs.remove(word.id)
-                if selectedIDs.count != store.words.count {
+                if selectedIDs.count != scopedWords.count {
                     selectAll = false
                 }
             } else {
                 selectedIDs.insert(word.id)
-                if selectedIDs.count == store.words.count {
+                if selectedIDs.count == scopedWords.count {
                     selectAll = true
                 }
             }

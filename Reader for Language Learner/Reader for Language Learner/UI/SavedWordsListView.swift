@@ -60,6 +60,7 @@ struct SavedWordsListView: View {
     @State private var selectedFilter: SavedWordsFilter = .all
     @State private var selectedTag: String?
     @State private var selectedCEFR: CEFRLevel?
+    @State private var selectedLanguage: Language?
     @State private var selectedWord: SavedWord?
     @State private var showBulkExport = false
     @State private var showClearConfirm = false
@@ -101,6 +102,11 @@ struct SavedWordsListView: View {
         // CEFR level filter
         if let selectedCEFR {
             result = result.filter { $0.cefrLevel == selectedCEFR.rawValue }
+        }
+
+        // Language filter
+        if let selectedLanguage {
+            result = result.filter { $0.language == selectedLanguage.rawValue }
         }
 
         // Search
@@ -359,11 +365,44 @@ struct SavedWordsListView: View {
             .frame(maxWidth: 80)
             .help("Filter by CEFR level")
         }
+
+        if usedLanguages.count > 1 {
+            Menu {
+                Button {
+                    selectedLanguage = nil
+                } label: {
+                    Label("All languages", systemImage: selectedLanguage == nil ? "checkmark" : "")
+                }
+                Divider()
+                ForEach(usedLanguages) { language in
+                    Button {
+                        selectedLanguage = language
+                    } label: {
+                        Label("\(language.flag) \(language.nativeName)", systemImage: selectedLanguage == language ? "checkmark" : "")
+                    }
+                }
+            } label: {
+                HStack(spacing: 2) {
+                    Text(selectedLanguage?.flag ?? "🌐")
+                    Text(selectedLanguage?.shortCode ?? String(localized: "Language"))
+                        .lineLimit(1)
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .controlSize(.mini)
+            .frame(maxWidth: 88)
+            .help("Filter by language")
+        }
     }
 
     private var usedCEFRLevels: [CEFRLevel] {
         let present = Set(store.words.compactMap { $0.cefrLevel.flatMap(CEFRLevel.init) })
         return CEFRLevel.allCases.filter { present.contains($0) }
+    }
+
+    private var usedLanguages: [Language] {
+        let present = Set(store.words.compactMap { $0.language.flatMap(Language.init) })
+        return Language.allCases.filter { present.contains($0) }
     }
 
     private var countText: some View {
@@ -428,7 +467,7 @@ struct SavedWordsListView: View {
                                     Button {
                                         store.setMastery(level, for: word)
                                     } label: {
-                                        Label(level.label, systemImage: level.icon)
+                                        Label(level.localizedTitle, systemImage: level.icon)
                                     }
                                     .disabled(word.masteryLevel == level)
                                 }
@@ -609,6 +648,41 @@ struct SavedWordsListView: View {
             .disabled(multiSelection.isEmpty)
             .help("Assign or remove decks for the selected words")
 
+            Menu {
+                Menu("CEFR Level") {
+                    ForEach(CEFRLevel.allCases) { level in
+                        Button(level.rawValue) {
+                            store.setCEFR(level, forWordsWithIDs: multiSelection)
+                        }
+                    }
+                    Divider()
+                    Button("Clear Level") {
+                        store.setCEFR(nil, forWordsWithIDs: multiSelection)
+                    }
+                }
+                Menu("Mastery") {
+                    ForEach(MasteryLevel.allCases, id: \.self) { level in
+                        Button(level.localizedTitle) {
+                            store.setMastery(level, forWordsWithIDs: multiSelection)
+                        }
+                    }
+                }
+                Menu("Language") {
+                    ForEach(Language.allCases) { language in
+                        Button("\(language.flag) \(language.nativeName)") {
+                            store.setLanguage(language, forWordsWithIDs: multiSelection)
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(DS.Typography.caption)
+            }
+            .menuStyle(.borderlessButton)
+            .frame(width: 34)
+            .disabled(multiSelection.isEmpty)
+            .help("Assign CEFR level, mastery, or language to the selected words")
+
             Button(role: .destructive) {
                 showBulkDeleteConfirm = true
             } label: {
@@ -717,6 +791,12 @@ private struct SavedWordRow: View {
                         .background(cefr.badgeColor.opacity(0.12))
                         .clipShape(Capsule())
                         .help(word.cefrIsAuto ? "AI-estimated level" : "CEFR level")
+                    }
+
+                    if let language = word.language.flatMap(Language.init) {
+                        Text(language.flag)
+                            .font(DS.Typography.caption2)
+                            .help(language.nativeName)
                     }
 
                     Spacer()

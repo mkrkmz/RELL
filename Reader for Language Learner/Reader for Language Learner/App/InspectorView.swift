@@ -523,7 +523,8 @@ struct InspectorView: View {
                 pageNumber: pageNumber,
                 mode: explainMode.rawValue,
                 domain: domainPreference.rawValue,
-                llmOutputs: outputs
+                llmOutputs: outputs,
+                language: targetLanguage.rawValue
             ))
             showToastBriefly("Word saved!")
         }

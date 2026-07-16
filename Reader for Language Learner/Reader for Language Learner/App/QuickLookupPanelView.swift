@@ -99,7 +99,8 @@ final class QuickLookupPanelModel {
             pageNumber: nil,
             mode: ExplainMode.word.rawValue.lowercased(),
             domain: DomainPreference.general.rawValue.lowercased(),
-            llmOutputs: outputs
+            llmOutputs: outputs,
+            language: Language.storedTarget.rawValue
         ))
     }
 

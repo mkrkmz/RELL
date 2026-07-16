@@ -99,6 +99,69 @@ final class SavedWordsStoreTests: XCTestCase {
         XCTAssertNil(store.words.first?.cefrLevel)
     }
 
+    // MARK: - Language
+
+    /// Pre-v1.24 words persisted with no `language` key must be backfilled
+    /// from the current target language exactly once, at load time — not
+    /// re-derived on every read, so a later target-language change can't
+    /// silently relabel words that were already saved.
+    func testBackfillMissingLanguageStampsCurrentTargetOnce() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("json")
+        let legacyID = UUID()
+        let legacyJSON = """
+        [{"id":"\(legacyID.uuidString)","term":"orbit"}]
+        """
+        try Data(legacyJSON.utf8).write(to: fileURL)
+
+        let previousTarget = UserDefaults.standard.string(forKey: Language.targetLanguageKey)
+        UserDefaults.standard.set(Language.german.rawValue, forKey: Language.targetLanguageKey)
+        addTeardownBlock {
+            UserDefaults.standard.set(previousTarget, forKey: Language.targetLanguageKey)
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+
+        let store = SavedWordsStore(fileURL: fileURL)
+        Self.retainedStores.append(store)
+        XCTAssertEqual(store.words.first?.language, Language.german.rawValue)
+
+        // Persisted, not just filled in memory.
+        let reloaded = SavedWordsStore(fileURL: fileURL)
+        Self.retainedStores.append(reloaded)
+        XCTAssertEqual(reloaded.words.first?.language, Language.german.rawValue)
+    }
+
+    func testSetLanguageForWordsWithIDs() {
+        let store = makeStore()
+        let word = SavedWord(term: "orbit", language: Language.english.rawValue)
+        store.add(word)
+
+        store.setLanguage(.japanese, forWordsWithIDs: [word.id])
+        XCTAssertEqual(store.words.first?.language, Language.japanese.rawValue)
+    }
+
+    func testSetCEFRForWordsWithIDsClearsAutoFlag() {
+        let store = makeStore()
+        let word = SavedWord(term: "orbit")
+        store.add(word)
+        store.setAutoCEFRLevel(.b1, forWordID: word.id)
+        XCTAssertTrue(store.words.first?.cefrIsAuto ?? false)
+
+        store.setCEFR(.c1, forWordsWithIDs: [word.id])
+        XCTAssertEqual(store.words.first?.cefrLevel, "C1")
+        XCTAssertFalse(store.words.first?.cefrIsAuto ?? true)
+    }
+
+    func testSetMasteryForWordsWithIDs() {
+        let store = makeStore()
+        let word = SavedWord(term: "orbit")
+        store.add(word)
+
+        store.setMastery(.mastered, forWordsWithIDs: [word.id])
+        XCTAssertEqual(store.words.first?.masteryLevel, .mastered)
+    }
+
     func testReviewedTodayCountTracksReviewedWords() {
         let store = makeStore()
         let word = SavedWord(term: "orbit")

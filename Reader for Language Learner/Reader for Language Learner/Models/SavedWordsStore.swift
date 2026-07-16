@@ -52,6 +52,7 @@ final class SavedWordsStore {
         if let customFileURL {
             self.fileURL = customFileURL
             self.words = Self.load(from: customFileURL)
+            backfillMissingLanguage()
             return
         }
 
@@ -64,6 +65,19 @@ final class SavedWordsStore {
 
         self.fileURL = appSupport.appendingPathComponent("saved_words.json")
         self.words = Self.load(from: fileURL)
+        backfillMissingLanguage()
+    }
+
+    /// One-time migration for pre-v1.24 words, which have no `language`.
+    /// Filling it at load time (not read time) means a later target-language
+    /// change won't silently relabel words that were already saved.
+    private func backfillMissingLanguage() {
+        guard words.contains(where: { $0.language == nil }) else { return }
+        let target = Language.storedTarget.rawValue
+        for index in words.indices where words[index].language == nil {
+            words[index].language = target
+        }
+        save()
     }
 
     // MARK: - CRUD
@@ -241,6 +255,39 @@ final class SavedWordsStore {
         guard !changed.isEmpty else { return }
         save()
         changed.forEach { SpotlightIndexer.index($0) }
+    }
+
+    /// Manual bulk CEFR assignment — like the single-word version, always
+    /// wins over an auto estimate (`cefrIsAuto` clears on every affected word).
+    func setCEFR(_ level: CEFRLevel?, forWordsWithIDs ids: Set<UUID>) {
+        var changed = false
+        for index in words.indices where ids.contains(words[index].id) {
+            words[index].cefrLevel = level?.rawValue
+            words[index].cefrIsAuto = false
+            changed = true
+        }
+        guard changed else { return }
+        save()
+    }
+
+    func setMastery(_ level: MasteryLevel, forWordsWithIDs ids: Set<UUID>) {
+        var changed = false
+        for index in words.indices where ids.contains(words[index].id) {
+            words[index].masteryLevel = level
+            changed = true
+        }
+        guard changed else { return }
+        save()
+    }
+
+    func setLanguage(_ language: Language, forWordsWithIDs ids: Set<UUID>) {
+        var changed = false
+        for index in words.indices where ids.contains(words[index].id) {
+            words[index].language = language.rawValue
+            changed = true
+        }
+        guard changed else { return }
+        save()
     }
 
     func delete(ids: Set<UUID>) {

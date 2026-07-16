@@ -39,7 +39,8 @@ struct AddWordIntent: AppIntent {
             pageNumber: nil,
             mode: "word",
             domain: "general",
-            llmOutputs: [:]
+            llmOutputs: [:],
+            language: Language.storedTarget.rawValue
         ))
         return .result(dialog: "Saved “\(trimmed)” to your vocabulary.")
     }

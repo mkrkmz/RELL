@@ -249,7 +249,8 @@ struct EPUBReaderView: NSViewRepresentable {
                 pageNumber: manager.chapterIndex + 1,
                 mode: "word",
                 domain: "general",
-                llmOutputs: [:]
+                llmOutputs: [:],
+                language: Language.storedTarget.rawValue
             ))
             toastCenter.show(String(localized: "Word saved!"))
         }

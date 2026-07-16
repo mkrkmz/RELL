@@ -174,7 +174,8 @@ struct PDFNotesView: View {
             notes: note.note,
             llmOutputs: [:],
             masteryLevel: queueForReview ? .learning : .new,
-            nextReviewAt: queueForReview ? Date() : nil
+            nextReviewAt: queueForReview ? Date() : nil,
+            language: Language.storedTarget.rawValue
         )
         savedWordsStore.add(word)
         toastCenter.show(String(localized: "Word saved!"))
@@ -451,7 +452,8 @@ struct PDFNoteEditorSheet: View {
                 notes: note.note,
                 llmOutputs: [:],
                 masteryLevel: queueForReview ? .learning : .new,
-                nextReviewAt: queueForReview ? Date() : nil
+                nextReviewAt: queueForReview ? Date() : nil,
+                language: Language.storedTarget.rawValue
             )
         )
         toastCenter.show(String(localized: "Word saved!"))

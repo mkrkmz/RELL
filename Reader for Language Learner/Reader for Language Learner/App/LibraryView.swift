@@ -18,8 +18,14 @@ struct LibraryView: View {
     var statsProvider: ((RecentDocument) -> DocumentStats)? = nil
     let onBack: () -> Void
 
+    @Environment(RecentDocumentStore.self) private var recentDocumentStore
+
     @State private var searchText = ""
     @State private var statsDocument: RecentDocument?
+    @State private var activeFilter: LibraryFilter = .all
+    @State private var pendingCollectionAssignment: RecentDocument?
+    @State private var newCollectionName = ""
+    @State private var showingManageCollections = false
     @AppStorage("librarySortOrder") private var sortOrderRaw: String = LibrarySortOrder.lastOpened.rawValue
     @FocusState private var searchFocused: Bool
 
@@ -29,27 +35,40 @@ struct LibraryView: View {
 
     private var filteredDocuments: [RecentDocument] {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let matching = trimmed.isEmpty
+        var matching = trimmed.isEmpty
             ? documents
             : documents.filter { $0.filename.localizedCaseInsensitiveContains(trimmed) }
 
+        switch activeFilter {
+        case .all: break
+        case .pinned: matching = matching.filter(\.isPinned)
+        case .pdf: matching = matching.filter { !$0.isEPUB }
+        case .epub: matching = matching.filter(\.isEPUB)
+        case .collection(let id): matching = matching.filter { $0.collectionID == id }
+        }
+
+        let sorted: [RecentDocument]
         switch sortOrder {
         case .lastOpened:
-            return matching.sorted { $0.lastOpenedAt > $1.lastOpenedAt }
+            sorted = matching.sorted { $0.lastOpenedAt > $1.lastOpenedAt }
         case .name:
-            return matching.sorted {
+            sorted = matching.sorted {
                 $0.filename.localizedCaseInsensitiveCompare($1.filename) == .orderedAscending
             }
         case .progress:
-            return matching.sorted {
+            sorted = matching.sorted {
                 ($0.readingProgress ?? 0) > ($1.readingProgress ?? 0)
             }
         }
+        // Pinned documents float to the top of any sort order; Swift's sort
+        // is stable, so relative order within each group is preserved.
+        return sorted.sorted { $0.isPinned && !$1.isPinned }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.lg) {
             header
+            filterChips
 
             if filteredDocuments.isEmpty {
                 emptyResult
@@ -63,9 +82,14 @@ struct LibraryView: View {
                         LibraryCard(
                             document: document,
                             cover: cover(for: document),
+                            collections: recentDocumentStore.collections,
                             onOpen: onOpen.map { open in { open(document) } },
                             onRemove: onRemove.map { remove in { remove(document) } },
-                            onShowStats: statsProvider != nil ? { statsDocument = document } : nil
+                            onShowStats: statsProvider != nil ? { statsDocument = document } : nil,
+                            onTogglePin: { recentDocumentStore.setPinned(!document.isPinned, id: document.id) },
+                            onAssignToCollection: { recentDocumentStore.assign(id: document.id, to: $0) },
+                            onRequestNewCollection: { pendingCollectionAssignment = document },
+                            onManageCollections: { showingManageCollections = true }
                         )
                     }
                 }
@@ -80,6 +104,32 @@ struct LibraryView: View {
             if let stats = statsProvider?(document) {
                 DocumentStatsSheet(document: document, stats: stats)
             }
+        }
+        .sheet(isPresented: $showingManageCollections) {
+            ManageCollectionsSheet(store: recentDocumentStore)
+        }
+        .onChange(of: recentDocumentStore.collections) { _, collections in
+            // A deleted collection's chip disappears — if it was the active
+            // filter, fall back to All instead of showing a stuck empty grid.
+            if case .collection(let id) = activeFilter, !collections.contains(where: { $0.id == id }) {
+                activeFilter = .all
+            }
+        }
+        .alert(
+            "New Collection", isPresented: Binding(
+                get: { pendingCollectionAssignment != nil },
+                set: { if !$0 { pendingCollectionAssignment = nil } }
+            ), presenting: pendingCollectionAssignment
+        ) { document in
+            TextField("Name", text: $newCollectionName)
+            Button("Create") {
+                let collection = recentDocumentStore.createCollection(name: newCollectionName)
+                recentDocumentStore.assign(id: document.id, to: collection.id)
+                newCollectionName = ""
+            }
+            Button("Cancel", role: .cancel) { newCollectionName = "" }
+        } message: { _ in
+            Text("Name this collection.")
         }
     }
 
@@ -146,6 +196,54 @@ struct LibraryView: View {
             message: "No documents match \u{201C}\(searchText)\u{201D}."
         )
     }
+
+    // MARK: - Filter Chips
+
+    private var filterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: DS.Spacing.xs) {
+                filterChip(.all, title: String(localized: "All"), systemImage: nil)
+                filterChip(.pinned, title: String(localized: "Pinned"), systemImage: "pin.fill")
+                filterChip(.pdf, title: "PDF", systemImage: nil)
+                filterChip(.epub, title: "EPUB", systemImage: nil)
+                ForEach(recentDocumentStore.collections) { collection in
+                    filterChip(.collection(collection.id), title: collection.name, systemImage: "folder")
+                }
+            }
+        }
+    }
+
+    private func filterChip(_ filter: LibraryFilter, title: String, systemImage: String?) -> some View {
+        let isActive = activeFilter == filter
+        return Button {
+            activeFilter = filter
+        } label: {
+            HStack(spacing: DS.Spacing.xxs) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                        .font(DS.Typography.icon(10, weight: .medium))
+                }
+                Text(title)
+                    .font(DS.Typography.caption.weight(.medium))
+            }
+            .padding(.horizontal, DS.Spacing.sm)
+            .padding(.vertical, DS.Spacing.xxs)
+            .background(isActive ? DS.Color.accent : DS.Color.surfaceElevated)
+            .foregroundStyle(isActive ? .white : DS.Color.textSecondary)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Library grid filter — `.all` shows everything; the rest narrow by pin
+/// state, format, or a single collection membership.
+enum LibraryFilter: Hashable {
+    case all
+    case pinned
+    case pdf
+    case epub
+    case collection(UUID)
 }
 
 enum LibrarySortOrder: String, CaseIterable, Identifiable {
@@ -170,9 +268,14 @@ enum LibrarySortOrder: String, CaseIterable, Identifiable {
 private struct LibraryCard: View {
     let document: RecentDocument
     var cover: NSImage?
+    var collections: [DocumentCollection] = []
     var onOpen: (() -> Void)?
     var onRemove: (() -> Void)?
     var onShowStats: (() -> Void)?
+    var onTogglePin: (() -> Void)?
+    var onAssignToCollection: ((UUID?) -> Void)?
+    var onRequestNewCollection: (() -> Void)?
+    var onManageCollections: (() -> Void)?
 
     @State private var isHovered = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -215,7 +318,34 @@ private struct LibraryCard: View {
                     .disabled(!fileExists)
                 Divider()
             }
+            if let onTogglePin {
+                Button(document.isPinned ? "Unpin" : "Pin", systemImage: document.isPinned ? "pin.slash" : "pin", action: onTogglePin)
+            }
+            if let onAssignToCollection {
+                Menu("Add to Collection") {
+                    ForEach(collections) { collection in
+                        Button {
+                            onAssignToCollection(collection.id)
+                        } label: {
+                            Label(collection.name, systemImage: document.collectionID == collection.id ? "checkmark" : "")
+                        }
+                    }
+                    if !collections.isEmpty { Divider() }
+                    if let onRequestNewCollection {
+                        Button("New Collection…", action: onRequestNewCollection)
+                    }
+                }
+                if document.collectionID != nil {
+                    Button("Remove from Collection") {
+                        onAssignToCollection(nil)
+                    }
+                }
+                if let onManageCollections, !collections.isEmpty {
+                    Button("Manage Collections…", action: onManageCollections)
+                }
+            }
             if let onShowStats {
+                Divider()
                 Button("Document Stats…", action: onShowStats)
             }
             Button("Show in Finder") {
@@ -246,6 +376,16 @@ private struct LibraryCard: View {
         }
         .frame(maxWidth: .infinity)
         .aspectRatio(3 / 4, contentMode: .fit)
+        .overlay(alignment: .topTrailing) {
+            if document.isPinned {
+                Image(systemName: "pin.fill")
+                    .font(DS.Typography.icon(9, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(5)
+                    .background(.black.opacity(0.45), in: Circle())
+                    .padding(5)
+            }
+        }
         .overlay(alignment: .bottom) {
             if let progress = document.readingProgress {
                 GeometryReader { geo in
@@ -390,5 +530,87 @@ private struct DocumentStatsSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(DS.Color.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+    }
+}
+
+// MARK: - Manage Collections
+
+private struct ManageCollectionsSheet: View {
+    let store: RecentDocumentStore
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var renamingID: UUID?
+    @State private var renameText = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: DS.Spacing.sm) {
+                Image(systemName: "folder")
+                    .foregroundStyle(DS.Color.accent)
+                Text("Manage Collections")
+                    .font(DS.Typography.headline)
+                    .foregroundStyle(DS.Color.textPrimary)
+                Spacer()
+                Button("", systemImage: "xmark.circle.fill") { dismiss() }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+            .padding(DS.Spacing.lg)
+
+            Divider()
+
+            if store.collections.isEmpty {
+                DSEmptyState(
+                    icon: "folder",
+                    title: "No Collections",
+                    message: "Add a document to a collection to see it here."
+                )
+                .padding(DS.Spacing.lg)
+                Spacer(minLength: 0)
+            } else {
+                List {
+                    ForEach(store.collections) { collection in
+                        row(for: collection)
+                    }
+                }
+                .listStyle(.plain)
+            }
+        }
+        .frame(width: 340, height: 360)
+    }
+
+    @ViewBuilder
+    private func row(for collection: DocumentCollection) -> some View {
+        HStack(spacing: DS.Spacing.sm) {
+            if renamingID == collection.id {
+                TextField("Name", text: $renameText)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit {
+                        store.renameCollection(id: collection.id, to: renameText)
+                        renamingID = nil
+                    }
+            } else {
+                Text(collection.name)
+                    .font(DS.Typography.body)
+                    .foregroundStyle(DS.Color.textPrimary)
+                Spacer()
+                Button {
+                    renameText = collection.name
+                    renamingID = collection.id
+                } label: {
+                    Image(systemName: "pencil")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(DS.Color.textSecondary)
+                Button(role: .destructive) {
+                    store.deleteCollection(id: collection.id)
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(DS.Color.danger)
+            }
+        }
+        .padding(.vertical, DS.Spacing.xxs)
     }
 }

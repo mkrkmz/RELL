@@ -96,6 +96,33 @@ final class RecentDocumentStoreTests: XCTestCase {
         XCTAssertEqual(decoded.lastPageIndex, 2)
     }
 
+    /// Pre-v1.24 entries have neither `isPinned` nor `collectionID` — a
+    /// non-Optional `isPinned` without `decodeIfPresent` would fail this
+    /// decode and, at the array level, wipe the whole library on first load.
+    func testDecodeLegacyDocumentWithoutPinOrCollection() throws {
+        let legacyJSON = """
+        {"id":"\(UUID().uuidString)","path":"/tmp/a.pdf","filename":"a","lastOpenedAt":700000000,"lastPageIndex":2,"pageCount":10}
+        """
+        let decoded = try JSONDecoder().decode(RecentDocument.self, from: Data(legacyJSON.utf8))
+        XCTAssertFalse(decoded.isPinned)
+        XCTAssertNil(decoded.collectionID)
+    }
+
+    /// The actual failure mode is array-level: JSONDecoder aborts the whole
+    /// array on the first element that doesn't decode, which is exactly how
+    /// a whole library would silently empty out on first v1.24 launch.
+    func testDecodeLegacyDocumentsArraySurvivesMissingNewFields() throws {
+        let legacyArrayJSON = """
+        [
+          {"id":"\(UUID().uuidString)","path":"/tmp/a.pdf","filename":"a","lastOpenedAt":700000000,"lastPageIndex":2,"pageCount":10},
+          {"id":"\(UUID().uuidString)","path":"/tmp/b.epub","filename":"b","lastOpenedAt":700000100}
+        ]
+        """
+        let decoded = try JSONDecoder().decode([RecentDocument].self, from: Data(legacyArrayJSON.utf8))
+        XCTAssertEqual(decoded.count, 2)
+        XCTAssertTrue(decoded.allSatisfy { !$0.isPinned && $0.collectionID == nil })
+    }
+
     func testRemoveByIDDeletesOnlyThatDocument() throws {
         let store = makeStore()
         let keepURL = try makeTempPDF(named: "astro-keep")
@@ -122,6 +149,82 @@ final class RecentDocumentStoreTests: XCTestCase {
         XCTAssertTrue(store.recentDocuments.isEmpty)
     }
 
+    // MARK: - Pin
+
+    func testSetPinnedTogglesFlag() throws {
+        let store = makeStore()
+        store.registerOpen(url: try makeTempPDF(named: "astro-pin"))
+        let id = try XCTUnwrap(store.documents.first?.id)
+
+        store.setPinned(true, id: id)
+        XCTAssertTrue(store.documents.first?.isPinned ?? false)
+
+        store.setPinned(false, id: id)
+        XCTAssertFalse(store.documents.first?.isPinned ?? true)
+    }
+
+    /// A pinned document must survive `trim()` even though it's the oldest —
+    /// under a naive prefix-based trim it would be the first one dropped.
+    func testTrimExemptsPinnedDocuments() throws {
+        let store = makeStore()
+        let firstURL = try makeTempPDF(named: "pinned-oldest")
+        store.registerOpen(url: firstURL)
+        let firstID = try XCTUnwrap(store.documents.first(where: { $0.path == firstURL.path })?.id)
+        store.setPinned(true, id: firstID)
+
+        for i in 0..<50 {
+            store.registerOpen(url: try makeTempPDF(named: "filler-\(i)"))
+        }
+
+        XCTAssertLessThanOrEqual(store.documents.count, 48)
+        XCTAssertTrue(store.documents.contains { $0.id == firstID })
+    }
+
+    // MARK: - Collections
+
+    func testCreateAssignRenameAndDeleteCollection() throws {
+        let store = makeStore()
+        store.registerOpen(url: try makeTempPDF(named: "collected"))
+        let docID = try XCTUnwrap(store.documents.first?.id)
+
+        let collection = store.createCollection(name: "Sci-Fi")
+        XCTAssertEqual(store.collections.map(\.name), ["Sci-Fi"])
+
+        store.assign(id: docID, to: collection.id)
+        XCTAssertEqual(store.documents.first?.collectionID, collection.id)
+
+        store.renameCollection(id: collection.id, to: "Science Fiction")
+        XCTAssertEqual(store.collections.first?.name, "Science Fiction")
+
+        store.deleteCollection(id: collection.id)
+        XCTAssertTrue(store.collections.isEmpty)
+        XCTAssertNil(store.documents.first?.collectionID)
+    }
+
+    func testCollectionsPersistAcrossInstances() throws {
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("json")
+        let store1 = RecentDocumentStore(fileURL: fileURL)
+        Self.retainedStores.append(store1)
+        store1.createCollection(name: "Poetry")
+
+        let store2 = RecentDocumentStore(fileURL: fileURL)
+        Self.retainedStores.append(store2)
+        XCTAssertEqual(store2.collections.map(\.name), ["Poetry"])
+
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: fileURL)
+            try? FileManager.default.removeItem(at: RecentDocumentStoreTests.collectionsSiblingURL(for: fileURL))
+        }
+    }
+
+    private static func collectionsSiblingURL(for documentsURL: URL) -> URL {
+        documentsURL
+            .deletingLastPathComponent()
+            .appendingPathComponent(documentsURL.deletingPathExtension().lastPathComponent + "-collections.json")
+    }
+
     private func makeStore() -> RecentDocumentStore {
         let fileURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
@@ -130,6 +233,7 @@ final class RecentDocumentStoreTests: XCTestCase {
         Self.retainedStores.append(store)
         addTeardownBlock {
             try? FileManager.default.removeItem(at: fileURL)
+            try? FileManager.default.removeItem(at: RecentDocumentStoreTests.collectionsSiblingURL(for: fileURL))
         }
         return store
     }
