@@ -199,7 +199,7 @@ struct ReaderMenuCommands: Commands {
                     reader?.setPageTheme(theme)
                 } label: {
                     HStack {
-                        Label(theme.displayName, systemImage: theme.iconName)
+                        Label(theme.localizedTitle, systemImage: theme.iconName)
                         if reader?.pageTheme == theme { Spacer(); Image(systemName: "checkmark") }
                     }
                 }

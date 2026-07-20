@@ -107,6 +107,9 @@ final class QuickLookupPanelController: NSObject, NSWindowDelegate {
             )
             .environment(savedWordsStore)
             .environment(quickLookup)
+            // NSPanel lives outside the SwiftUI scene tree — the scene-root
+            // tint modifiers don't reach it, so it gets its own.
+            .rellAccentTint()
         )
         panel.contentView = host
         panel.setContentSize(host.fittingSize)

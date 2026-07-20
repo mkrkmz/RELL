@@ -139,7 +139,7 @@ struct EPUBReaderView: NSViewRepresentable {
     let documentURL: URL?
     var manager: EPUBViewManager
     var pageTheme: PageTheme
-    var fontSize: Double
+    var typography: EPUBTypography
     @Binding var selectedText: String
     @Binding var contextSentence: String?
     var savedWordsStore: SavedWordsStore
@@ -170,7 +170,7 @@ struct EPUBReaderView: NSViewRepresentable {
 
         manager.webView = webView
         manager.currentTheme = pageTheme
-        manager.currentFontSize = fontSize
+        manager.currentTypography = typography
 
         wireCallbacks(webView)
 
@@ -185,10 +185,10 @@ struct EPUBReaderView: NSViewRepresentable {
 
         if let documentURL, manager.loadedURL != documentURL {
             manager.currentTheme = pageTheme
-            manager.currentFontSize = fontSize
+            manager.currentTypography = typography
             manager.load(url: documentURL)
-        } else if manager.currentTheme != pageTheme || manager.currentFontSize != fontSize {
-            manager.applyAppearance(theme: pageTheme, fontSize: fontSize)
+        } else if manager.currentTheme != pageTheme || manager.currentTypography != typography {
+            manager.applyAppearance(theme: pageTheme, typography: typography)
         }
     }
 

@@ -44,10 +44,15 @@ enum DS {
         static var textDisabled:  SwiftUI.Color { SwiftUI.Color.primary.opacity(0.22) }
 
         // ── Accent ────────────────────────────────────────────────────────
-        static var accent:       SwiftUI.Color { .accentColor }
-        static var accentSubtle: SwiftUI.Color { .accentColor.opacity(0.10) }
-        static var accentMuted:  SwiftUI.Color { .accentColor.opacity(0.28) }
-        static var accentStrong: SwiftUI.Color { .accentColor.opacity(0.85) }
+        /// Resolves the user's stored accent choice; `.system` falls back to
+        /// `.accentColor` (the asset entry is intentionally empty, so that is
+        /// the macOS system accent). Static computed props re-read the store
+        /// on every body evaluation — the scene-root `AccentTintModifier`'s
+        /// @AppStorage observation is what triggers those re-evaluations.
+        static var accent:       SwiftUI.Color { AccentChoice.current.resolvedColor }
+        static var accentSubtle: SwiftUI.Color { accent.opacity(0.10) }
+        static var accentMuted:  SwiftUI.Color { accent.opacity(0.28) }
+        static var accentStrong: SwiftUI.Color { accent.opacity(0.85) }
 
         // ── Semantic ──────────────────────────────────────────────────────
         static var success: SwiftUI.Color { .green }

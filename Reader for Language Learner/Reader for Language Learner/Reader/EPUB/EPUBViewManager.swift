@@ -111,7 +111,7 @@ final class EPUBViewManager: NSObject {
 
     /// Appearance the next loaded chapter should adopt (set by the view).
     var currentTheme: PageTheme = .original
-    var currentFontSize: Double = 18
+    var currentTypography = EPUBTypography()
 
     /// Live selection state fed by the injected JS bridge — mirrors what
     /// PDFKit's selection notifications provide on the PDF side.
@@ -233,64 +233,59 @@ final class EPUBViewManager: NSObject {
 
     // MARK: Appearance
 
-    func applyAppearance(theme: PageTheme, fontSize: Double) {
+    func applyAppearance(theme: PageTheme, typography: EPUBTypography) {
         let themeChanged = currentTheme != theme
         currentTheme = theme
-        currentFontSize = fontSize
-        webView?.evaluateJavaScript(Self.appearanceScript(theme: theme, fontSize: fontSize))
+        currentTypography = typography
+        webView?.evaluateJavaScript(Self.appearanceScript(theme: theme, typography: typography))
         // Highlight ink is baked into each <mark>'s inline style at render
         // time, so a theme switch has to re-wrap the marks with the new ink.
         if themeChanged { refreshHighlights() }
     }
 
     /// Ink color for highlighted text, per page theme. Light themes get
-    /// dark "physical highlighter" ink; the dark theme keeps its own light
+    /// dark "physical highlighter" ink; dark surfaces keep their own light
     /// text — dark ink over a translucent mark on a dark page is unreadable.
     static func highlightInk(for theme: PageTheme) -> String {
-        theme == .dark ? "#e8e8e8" : "#1d1d1f"
+        theme.usesLightInk ? "#e8e8e8" : "#1d1d1f"
     }
 
-    /// CSS pushed into every chapter. Layout basics are ours; for sepia and
-    /// dark we must *override* publisher styling — most EPUBs set their own
+    /// CSS pushed into every chapter. Layout basics are ours; for tinted
+    /// themes we must *override* publisher styling — most EPUBs set their own
     /// `body { background:#fff; color:#000 }` (often on descendant elements
     /// too), so the theme only takes effect when we force it with
     /// `!important` on both the surface and the text-bearing descendants.
     /// `.original` stays hands-off so a book's own colors show through.
-    static func appearanceCSS(theme: PageTheme, fontSize: Double) -> String {
+    static func appearanceCSS(theme: PageTheme, typography: EPUBTypography) -> String {
+        // Font override cascades through the same text-bearing elements as
+        // the theme colors — publisher CSS often sets font-family on <p>
+        // directly, so body alone wouldn't win.
+        let fontRule = typography.fontFamilyCSS.map {
+            "body, \(Self.textSelector) { font-family: \($0) !important; }\n"
+        } ?? ""
+        let justifyRule = typography.justified
+            ? "body p { text-align: justify; }\n"
+            : ""
+        // Line height needs the descendant cascade too, or publisher
+        // paragraph rules keep their own tighter leading.
         let layout = """
         body {
-            font-size: \(Int(fontSize))px;
-            line-height: 1.6;
-            max-width: 42em;
+            font-size: \(Int(typography.fontSize))px;
+            line-height: \(String(format: "%.1f", typography.lineHeight));
+            max-width: \(typography.widthEm)em;
             margin: 0 auto;
             padding: 2.5em 2em 4em;
             -webkit-hyphens: auto;
         }
-        img, svg { max-width: 100%; height: auto; }
+        body p, body li, body blockquote {
+            line-height: \(String(format: "%.1f", typography.lineHeight)) !important;
+        }
+        \(fontRule)\(justifyRule)img, svg { max-width: 100%; height: auto; }
         """
 
-        guard theme != .original else {
+        guard let colors = theme.epubColors else {
             return layout + "\nhtml, body { background-color: #ffffff !important; }\n"
         }
-
-        let colors: (background: String, text: String, link: String) = theme == .sepia
-            ? ("#f4ecd8", "#5b4636", "#8a5a2b")
-            : ("#1e1e1e", "#d8d8d8", "#7db4e6")
-
-        // Force the surface, then cascade the text color down through every
-        // text-bearing element (publisher CSS often colors <p>/<span> directly)
-        // and strip element-level backgrounds (white callout boxes, etc.).
-        // Uses explicit `body <el>` selectors (specificity 0,0,2) rather than
-        // `:where()` (0,0,0) so we also win against the rare publisher rule
-        // that marks a text color `!important`.
-        let textElements = [
-            "p", "div", "span", "li", "ul", "ol", "dl", "dt", "dd",
-            "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "figure",
-            "figcaption", "td", "th", "section", "article", "header",
-            "footer", "em", "strong", "b", "i", "small", "sub", "sup",
-            "code", "pre",
-        ]
-        let textSelector = textElements.map { "body \($0)" }.joined(separator: ", ")
 
         return layout + """
 
@@ -308,8 +303,23 @@ final class EPUBViewManager: NSObject {
         """
     }
 
-    private static func appearanceScript(theme: PageTheme, fontSize: Double) -> String {
-        let css = appearanceCSS(theme: theme, fontSize: fontSize)
+    /// Explicit `body <el>` selectors (specificity 0,0,2) rather than
+    /// `:where()` (0,0,0) so we also win against the rare publisher rule
+    /// that marks a text color `!important`. Shared by the theme-color and
+    /// font-family cascades.
+    private static let textSelector: String = {
+        let textElements = [
+            "p", "div", "span", "li", "ul", "ol", "dl", "dt", "dd",
+            "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "figure",
+            "figcaption", "td", "th", "section", "article", "header",
+            "footer", "em", "strong", "b", "i", "small", "sub", "sup",
+            "code", "pre",
+        ]
+        return textElements.map { "body \($0)" }.joined(separator: ", ")
+    }()
+
+    private static func appearanceScript(theme: PageTheme, typography: EPUBTypography) -> String {
+        let css = appearanceCSS(theme: theme, typography: typography)
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "`", with: "\\`")
         return """
@@ -566,7 +576,7 @@ final class EPUBViewManager: NSObject {
             chapterIndex = index
         }
 
-        applyAppearance(theme: currentTheme, fontSize: currentFontSize)
+        applyAppearance(theme: currentTheme, typography: currentTypography)
         refreshHighlights()
 
         if let fragment = pendingFragment {

@@ -14,6 +14,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = ServicesProvider.shared
         NSUpdateDynamicServices()
+        // Process-wide light/dark override (nil = follow system) — covers
+        // every window incl. Settings, Review, MenuBarExtra, and the HUD
+        // panel, unlike the per-window .preferredColorScheme it replaced.
+        AppTheme.applyCurrent()
     }
 }
 
@@ -21,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 struct Reader_for_Language_LearnerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @AppStorage("menuBarExtraEnabled") private var menuBarExtraEnabled = true
+    @AppStorage("appTheme") private var appThemeRaw = AppTheme.system.rawValue
 
     // Document-independent stores live at App scope so every scene — main
     // window(s), menu bar extra, HUD panel — shares one instance of each.
@@ -87,8 +92,12 @@ struct Reader_for_Language_LearnerApp: App {
                 .environment(coverStore)
                 .environment(ankiPrefs)
                 .environment(cefrEstimator)
+                .rellAccentTint()
         }
         .defaultSize(width: 1200, height: 800)
+        .onChange(of: appThemeRaw) { _, _ in
+            AppTheme.applyCurrent()
+        }
         .commands {
             ReaderMenuCommands()
         }
@@ -97,6 +106,7 @@ struct Reader_for_Language_LearnerApp: App {
         Window("Vocabulary Review", id: "review") {
             QuizView(store: savedWordsStore)
                 .frame(minWidth: 460, minHeight: 560)
+                .rellAccentTint()
         }
         .defaultSize(width: 460, height: 620)
 
@@ -109,12 +119,14 @@ struct Reader_for_Language_LearnerApp: App {
             MenuBarQuickLookupView()
                 .environment(savedWordsStore)
                 .environment(quickLookup)
+                .rellAccentTint()
         }
         .menuBarExtraStyle(.window)
 
         // Native macOS Settings window — ⌘,
         Settings {
             SettingsView()
+                .rellAccentTint()
         }
     }
 }

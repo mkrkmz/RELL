@@ -50,6 +50,7 @@ struct ContentView: View {
     @State private var isDropTargeted = false
     @State private var showWorkspaceReview = false
     @State private var showStats = false
+    @State private var showReadingAppearance = false
 
     // Focus mode hides the side panels for distraction-free reading and
     // remembers their prior visibility so exiting restores the layout.
@@ -68,6 +69,10 @@ struct ContentView: View {
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
     @AppStorage("epubFontSize") private var epubFontSize: Double = 18
+    @AppStorage(EPUBTypography.lineHeightKey) private var epubLineHeight: Double = 1.6
+    @AppStorage(EPUBFontFamily.storageKey) private var epubFontFamilyRaw = EPUBFontFamily.publisher.rawValue
+    @AppStorage(EPUBContentWidth.storageKey) private var epubContentWidthRaw = EPUBContentWidth.medium.rawValue
+    @AppStorage(EPUBTypography.justifiedKey) private var epubJustified = false
     /// Off by default — background vocabulary pre-warming from visible page
     /// text. Every call site checks this before invoking the service.
     @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
@@ -98,6 +103,18 @@ struct ContentView: View {
 
     private var appTheme:  AppTheme  { AppTheme(rawValue: appThemeRaw) ?? .system }
     private var pageTheme: PageTheme { PageTheme(rawValue: pageThemeRaw) ?? .original }
+    /// Snapshot of the stored EPUB typography prefs; reading the @AppStorage
+    /// properties here (not UserDefaults directly) keeps the view observing
+    /// each key, so panel changes re-render the reader live.
+    private var epubTypography: EPUBTypography {
+        EPUBTypography(
+            fontSize: epubFontSize,
+            lineHeight: min(2.0, max(1.2, epubLineHeight)),
+            widthEm: (EPUBContentWidth(rawValue: epubContentWidthRaw) ?? .medium).em,
+            fontFamilyCSS: (EPUBFontFamily(rawValue: epubFontFamilyRaw) ?? .publisher).cssFontFamily,
+            justified: epubJustified
+        )
+    }
 
     // MARK: - Body
 
@@ -165,7 +182,6 @@ struct ContentView: View {
         }
         .focusedSceneValue(\.readerCommands, readerCommands)
         .frame(minWidth: DS.Layout.windowMin.width, minHeight: DS.Layout.windowMin.height)
-        .preferredColorScheme(appTheme.colorScheme)
         .onDrop(
             of: [.pdf, .epub],
             isTargeted: selectionState.documentURL != nil ? $isDropTargeted : nil,
@@ -417,7 +433,7 @@ struct ContentView: View {
                             documentURL: selectionState.documentURL,
                             manager: epubManager,
                             pageTheme: pageTheme,
-                            fontSize: epubFontSize,
+                            typography: epubTypography,
                             selectedText: Binding(
                                 get: { selectionState.selectedText },
                                 set: { selectionState.selectedText = $0 }
@@ -696,15 +712,25 @@ struct ContentView: View {
 
         ToolbarItemGroup(placement: .automatic) {
             if selectionState.documentURL != nil {
-                if isEPUBDocument {
-                    epubFontControls
-                } else {
+                if !isEPUBDocument {
                     zoomControls
                     Button { pdfViewManager.fitToWidth() } label: {
                         Label("Fit Width", systemImage: "arrow.left.and.right.text.vertical")
                     }
                     .help("Fit to Width (⌘0)")
                     .keyboardShortcut("0", modifiers: [.command])
+                }
+
+                // "Aa" — page theme for both formats, typography for EPUB.
+                // EPUB text-size stepping keeps its ⌘+/⌘− shortcuts through
+                // the View menu (ReaderCommands zoomIn/zoomOut), which was
+                // already the canonical path.
+                Button { showReadingAppearance.toggle() } label: {
+                    Label("Reading Appearance", systemImage: "textformat.size")
+                }
+                .help("Reading Appearance")
+                .popover(isPresented: $showReadingAppearance, arrowEdge: .bottom) {
+                    ReadingAppearanceView(isEPUB: isEPUBDocument)
                 }
             }
         }
@@ -715,7 +741,7 @@ struct ContentView: View {
                     ForEach(AppTheme.allCases) { theme in
                         Button { appThemeRaw = theme.rawValue } label: {
                             HStack {
-                                Label(theme.displayName, systemImage: theme.iconName)
+                                Label(theme.localizedTitle, systemImage: theme.iconName)
                                 if appTheme == theme { Spacer(); Image(systemName: "checkmark") }
                             }
                         }
@@ -725,7 +751,7 @@ struct ContentView: View {
                     ForEach(PageTheme.allCases) { theme in
                         Button { pageThemeRaw = theme.rawValue } label: {
                             HStack {
-                                Label(theme.displayName, systemImage: theme.iconName)
+                                Label(theme.localizedTitle, systemImage: theme.iconName)
                                 if pageTheme == theme { Spacer(); Image(systemName: "checkmark") }
                             }
                         }
@@ -767,45 +793,6 @@ struct ContentView: View {
             }
             .help("Toggle Inspector (⌘⌥I)")
         }
-    }
-
-    /// EPUB replaces optical zoom with text-size stepping (⌘+/− reused).
-    private var epubFontControls: some View {
-        HStack(spacing: 0) {
-            Button { epubFontSize = max(12, epubFontSize - 1) } label: {
-                Image(systemName: "textformat.size.smaller")
-                    .frame(width: 26, height: 22)
-                    .contentShape(Rectangle())
-            }
-            .help("Smaller Text (⌘-)")
-            .accessibilityLabel(Text("Smaller Text"))
-            .keyboardShortcut("-", modifiers: [.command])
-
-            Divider().frame(height: 16)
-
-            Text("\(Int(epubFontSize))")
-                .font(DS.Typography.mono)
-                .foregroundStyle(DS.Color.textSecondary)
-                .frame(width: 30)
-
-            Divider().frame(height: 16)
-
-            Button { epubFontSize = min(28, epubFontSize + 1) } label: {
-                Image(systemName: "textformat.size.larger")
-                    .frame(width: 26, height: 22)
-                    .contentShape(Rectangle())
-            }
-            .help("Larger Text (⌘+)")
-            .accessibilityLabel(Text("Larger Text"))
-            .keyboardShortcut("+", modifiers: [.command])
-        }
-        .buttonStyle(.borderless)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.separator, lineWidth: 0.5)
-        )
     }
 
     private var zoomControls: some View {

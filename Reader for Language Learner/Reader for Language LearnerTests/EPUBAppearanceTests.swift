@@ -15,7 +15,7 @@ import XCTest
 final class EPUBAppearanceTests: XCTestCase {
 
     func testDarkThemeForcesSurfaceAndTextWithImportant() {
-        let css = EPUBViewManager.appearanceCSS(theme: .dark, fontSize: 18)
+        let css = EPUBViewManager.appearanceCSS(theme: .dark, typography: EPUBTypography())
 
         XCTAssertTrue(css.contains("background-color: #1e1e1e !important"),
                       "dark theme must force the page background")
@@ -28,13 +28,13 @@ final class EPUBAppearanceTests: XCTestCase {
     }
 
     func testSepiaThemeForcesItsOwnPalette() {
-        let css = EPUBViewManager.appearanceCSS(theme: .sepia, fontSize: 18)
+        let css = EPUBViewManager.appearanceCSS(theme: .sepia, typography: EPUBTypography())
         XCTAssertTrue(css.contains("background-color: #f4ecd8 !important"))
         XCTAssertTrue(css.contains("color: #5b4636 !important"))
     }
 
     func testOriginalThemeStaysHandsOffAndDoesNotForceTextColor() {
-        let css = EPUBViewManager.appearanceCSS(theme: .original, fontSize: 18)
+        let css = EPUBViewManager.appearanceCSS(theme: .original, typography: EPUBTypography())
         // Original keeps a white surface but must NOT override the book's own
         // text colors — no forced inherit rule.
         XCTAssertTrue(css.contains("background-color: #ffffff !important"))
@@ -43,7 +43,7 @@ final class EPUBAppearanceTests: XCTestCase {
     }
 
     func testFontSizeIsReflectedInLayout() {
-        let css = EPUBViewManager.appearanceCSS(theme: .dark, fontSize: 22)
+        let css = EPUBViewManager.appearanceCSS(theme: .dark, typography: EPUBTypography(fontSize: 22))
         XCTAssertTrue(css.contains("font-size: 22px"))
     }
 
