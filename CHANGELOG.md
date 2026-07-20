@@ -4,6 +4,31 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.26.0] - 2026-07-20
+
+A visual consistency pass and a brand-new app icon. Second and final
+sprint of roadmap v7.5 (Theme & Visual).
+
+### Changed
+
+- **New app icon** — a clean open-book mark on a blue gradient, finally
+  legible at small sizes (the old icon embedded a wordmark that turned
+  to mush at 16px). Regenerable from `scripts/generate-appicon.swift`.
+- Learning-status colors (mastery, CEFR badges, review status) now
+  route through the design system's semantic palette, so they harmonize
+  with your chosen accent color instead of hardcoding blue/orange/green.
+- The saved-word star is one consistent gold everywhere; the streak
+  flame no longer switches hue between the dashboard and the stats
+  sheet; note/bookmark swipe actions follow your accent color.
+- Card chrome (borders, corners, shadows) is now drawn by one shared
+  component across the dashboard, stats, onboarding, quiz, and
+  inspector — the subtle border drift between screens is gone.
+- Three deliberate gradients add depth where it counts: the
+  continue-reading hero card, the daily-goal ring, and the vocabulary
+  growth chart's area fill. All follow your accent color.
+- The dashboard word card's flip now uses the same animation curve as
+  the review flashcard.
+
 ## [1.25.0] - 2026-07-20
 
 The app finally has its own sense of color, and reading got an appearance
