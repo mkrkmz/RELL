@@ -42,12 +42,7 @@ struct SentenceTranslationStrip: View {
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, DS.Spacing.sm)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
-        )
+        .dsCard(padding: nil, radius: DS.Radius.sm, stroke: .hairline)
         .task(id: sentence) { await load() }
         .accessibilityElement(children: .combine)
     }

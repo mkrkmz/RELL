@@ -188,7 +188,7 @@ extension InspectorView {
                     action: toggleSaveWord
                 )
                 .keyboardShortcut("d", modifiers: [.command])
-                .foregroundStyle(isCurrentlySaved ? .yellow : .primary)
+                .foregroundStyle(isCurrentlySaved ? DS.Color.star : DS.Color.textPrimary)
 
                 overflowMenu
             }

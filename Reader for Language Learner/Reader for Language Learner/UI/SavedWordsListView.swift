@@ -900,7 +900,7 @@ private struct SavedWordDetailSheet: View {
             // Header
             HStack(spacing: DS.Spacing.sm) {
                 Image(systemName: "star.fill")
-                    .foregroundStyle(.yellow)
+                    .foregroundStyle(DS.Color.star)
                 Text(word.term)
                     .font(DS.Typography.headline)
                     .foregroundStyle(DS.Color.textPrimary)

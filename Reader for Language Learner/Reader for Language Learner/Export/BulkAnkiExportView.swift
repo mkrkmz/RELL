@@ -172,7 +172,7 @@ struct BulkAnkiExportView: View {
                     case .success(let count):
                         Label("\(count) cards exported!", systemImage: "checkmark.circle.fill")
                             .font(.caption)
-                            .foregroundStyle(.green)
+                            .foregroundStyle(DS.Color.success)
                     case .cancelled:
                         Label("Cancelled", systemImage: "xmark.circle")
                             .font(.caption)

@@ -44,9 +44,9 @@ enum MasteryLevel: Int, Codable, CaseIterable {
 
     var color: SwiftUI.Color {
         switch self {
-        case .new:      return .blue
-        case .learning: return .orange
-        case .mastered: return .green
+        case .new:      return DS.Color.accent
+        case .learning: return DS.Color.warning
+        case .mastered: return DS.Color.success
         }
     }
 
@@ -69,9 +69,9 @@ enum CEFRLevel: String, CaseIterable, Codable, Identifiable {
     /// Badge tint for the saved-word row — green (beginner) through red (advanced).
     var badgeColor: SwiftUI.Color {
         switch self {
-        case .a1, .a2: return .green
-        case .b1, .b2: return .orange
-        case .c1, .c2: return .red
+        case .a1, .a2: return DS.Color.success
+        case .b1, .b2: return DS.Color.warning
+        case .c1, .c2: return DS.Color.danger
         }
     }
 }
@@ -102,10 +102,10 @@ enum ReviewStatus {
 
     var color: SwiftUI.Color {
         switch self {
-        case .new: return .blue
-        case .due: return .orange
-        case .scheduled: return .secondary
-        case .mastered: return .green
+        case .new: return DS.Color.accent
+        case .due: return DS.Color.warning
+        case .scheduled: return DS.Color.textSecondary
+        case .mastered: return DS.Color.success
         }
     }
 }

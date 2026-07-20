@@ -40,13 +40,8 @@ struct DashboardWordCard: View {
                 caughtUpRow
             }
         }
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.hairline, lineWidth: 1)
-        )
-        .animation(DS.Animation.standard, value: isFlipped)
+        .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
+        .animation(DS.Animation.cardFlip, value: isFlipped)
         .animation(DS.Animation.standard, value: currentWord?.id)
     }
 

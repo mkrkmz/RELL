@@ -291,7 +291,7 @@ struct QuickLookupPanelView: View {
     private func failureView(_ message: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.sm) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
+                .foregroundStyle(DS.Color.warning)
             Text(message)
                 .font(DS.Typography.caption)
                 .foregroundStyle(DS.Color.textSecondary)

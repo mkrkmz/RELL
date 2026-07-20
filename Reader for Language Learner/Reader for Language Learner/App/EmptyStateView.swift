@@ -224,17 +224,13 @@ private struct ContinueReadingHero: View {
             }
             .padding(DS.Spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
+            // First background sits closest to the content — the wash reads
+            // over the opaque surface behind it.
+            .background(DS.Gradient.accentWash)
             .background(DS.Color.surfaceElevated)
             .overlay(alignment: .bottom) {
                 if let progress = document.readingProgress {
-                    GeometryReader { geo in
-                        Rectangle()
-                            .fill(DS.Color.accent.opacity(0.8))
-                            .frame(width: geo.size.width * progress)
-                    }
-                    .frame(height: 3)
-                    .background(DS.Color.accent.opacity(0.1))
-                    .accessibilityLabel("\(Int(progress * 100)) percent read")
+                    DSProgressBar(value: progress)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
@@ -281,11 +277,8 @@ private struct ContinueReadingHero: View {
                 )
                 .transition(.opacity)
         } else {
-            Image(systemName: "book.pages")
-                .font(DS.Typography.icon(21, weight: .light))
-                .foregroundStyle(DS.Color.accent)
+            DSCoverPlaceholder(iconSize: 21)
                 .frame(width: DS.Layout.coverHero.width, height: DS.Layout.coverHero.height)
-                .background(DS.Color.accentSubtle)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
     }
@@ -379,12 +372,7 @@ private struct RecentDocumentList: View {
                     }
                 }
             }
-            .background(DS.Color.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.md)
-                    .strokeBorder(DS.Color.hairline, lineWidth: 1)
-            )
+            .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
         }
     }
 }
@@ -464,11 +452,8 @@ private struct RecentDocumentRow: View {
                 )
                 .transition(.opacity)
         } else {
-            Image(systemName: fileExists ? "doc.text" : "questionmark.folder")
-                .font(DS.Typography.icon(12, weight: .regular))
-                .foregroundStyle(DS.Color.textTertiary)
+            DSCoverPlaceholder(iconSize: 12, fileExists: fileExists)
                 .frame(width: DS.Layout.coverMini.width, height: DS.Layout.coverMini.height)
-                .background(DS.Color.surfaceInset.opacity(0.6))
                 .clipShape(RoundedRectangle(cornerRadius: 3))
         }
     }

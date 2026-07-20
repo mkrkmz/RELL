@@ -287,7 +287,7 @@ struct InspectorView: View {
     private var connectionWarningBanner: some View {
         HStack(spacing: DS.Spacing.sm) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
+                .foregroundStyle(DS.Color.warning)
             Text("LLM server unreachable")
                 .font(DS.Typography.caption)
             Spacer()
@@ -305,7 +305,7 @@ struct InspectorView: View {
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, DS.Spacing.sm)
-        .background(Color.orange.opacity(0.1))
+        .background(DS.Color.warningSubtle)
     }
 
     // MARK: - Helpers

@@ -562,12 +562,7 @@ struct QuizView: View {
         content
             .padding(DS.Spacing.lg)
             .frame(maxWidth: .infinity, minHeight: DS.Layout.cardFrontMinHeight)
-            .background(DS.Color.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.lg)
-                    .strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.8)
-            )
+            .dsCard(padding: nil, radius: DS.Radius.lg, stroke: .hairlineStrong)
             .dsShadow(DS.Shadow.card)
             .padding(.horizontal, DS.Spacing.md)
     }
@@ -745,7 +740,7 @@ struct QuizView: View {
             VStack(spacing: DS.Spacing.lg) {
                 Image(systemName: sessionAgain == 0 ? "star.fill" : "checkmark.circle.fill")
                     .font(DS.Typography.icon(46, weight: .light))
-                    .foregroundStyle(sessionAgain == 0 ? .yellow : DS.Color.success)
+                    .foregroundStyle(sessionAgain == 0 ? DS.Color.star : DS.Color.success)
 
                 VStack(spacing: DS.Spacing.xs) {
                     Text("Review Complete")

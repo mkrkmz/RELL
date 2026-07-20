@@ -298,7 +298,7 @@ struct PronunciationResultView: View {
                 ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                     HStack(spacing: DS.Spacing.sm) {
                         Image(systemName: "waveform")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(DS.Color.warning)
                         Text(line)
                             .font(.system(.body, design: .monospaced))
                             .foregroundStyle(DS.Color.textPrimary)
@@ -448,11 +448,6 @@ struct CollocationItemView: View {
         }
         .padding(DS.Spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
-        )
+        .dsCard(padding: nil, radius: DS.Radius.sm, stroke: .hairline)
     }
 }

@@ -368,10 +368,7 @@ private struct LibraryCard: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
             } else {
-                DS.Color.accentSubtle
-                Image(systemName: fileExists ? "book.pages" : "questionmark.folder")
-                    .font(DS.Typography.icon(24, weight: .light))
-                    .foregroundStyle(DS.Color.accent.opacity(0.7))
+                DSCoverPlaceholder(iconSize: 24, fileExists: fileExists)
             }
         }
         .frame(maxWidth: .infinity)
@@ -388,16 +385,10 @@ private struct LibraryCard: View {
         }
         .overlay(alignment: .bottom) {
             if let progress = document.readingProgress {
-                GeometryReader { geo in
-                    Rectangle()
-                        .fill(DS.Color.accent.opacity(0.85))
-                        .frame(width: geo.size.width * progress)
-                }
-                .frame(height: 3)
-                // DS-exempt: dims directly against the cover photo, which is
-                // full-color and theme-independent — a semantic surface
-                // token would fight the image instead of sitting under it.
-                .background(.black.opacity(0.18))
+                // DS-exempt track: dims directly against the cover photo,
+                // which is full-color and theme-independent — a semantic
+                // surface token would fight the image.
+                DSProgressBar(value: progress, track: .black.opacity(0.18))
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
@@ -486,16 +477,17 @@ private struct DocumentStatsSheet: View {
                                 .font(DS.Typography.caption.weight(.semibold))
                                 .foregroundStyle(DS.Color.accent)
                         }
-                        ProgressView(value: progress).tint(DS.Color.accent)
+                        DSProgressBar(value: progress, height: 5)
+                            .clipShape(Capsule())
                     }
                 }
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sm) {
                     statCell(icon: "clock", value: formattedTime, label: "Read", tint: DS.Color.accent)
-                    statCell(icon: "star", value: "\(stats.savedWords)", label: "Saved words", tint: .yellow)
+                    statCell(icon: "star", value: "\(stats.savedWords)", label: "Saved words", tint: DS.Color.star)
                     statCell(icon: "clock.badge.exclamationmark", value: "\(stats.dueWords)", label: "Due", tint: DS.Color.warning)
                     statCell(icon: "note.text", value: "\(stats.notes)", label: "Notes", tint: .purple)
-                    statCell(icon: "bookmark", value: "\(stats.bookmarks)", label: "Bookmarks", tint: .purple)
+                    statCell(icon: "bookmark", value: "\(stats.bookmarks)", label: "Bookmarks", tint: .teal)
                 }
             }
             .padding(DS.Spacing.lg)

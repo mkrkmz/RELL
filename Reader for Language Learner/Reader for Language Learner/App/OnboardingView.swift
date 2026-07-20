@@ -102,12 +102,7 @@ struct OnboardingView: View {
             .frame(width: 170)
         }
         .padding(DS.Spacing.lg)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.hairline, lineWidth: 1)
-        )
+        .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
     }
 
     // MARK: - Step 2: AI Server
@@ -147,12 +142,7 @@ struct OnboardingView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(DS.Spacing.xl)
-            .background(DS.Color.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.md)
-                    .strokeBorder(DS.Color.hairline, lineWidth: 1)
-            )
+            .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
 
             Text("No server right now? Continue anyway — you can set up a provider later in Settings → AI Provider.")
                 .font(DS.Typography.caption)
@@ -251,12 +241,7 @@ struct OnboardingView: View {
             Spacer(minLength: 0)
         }
         .padding(DS.Spacing.md)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.hairlineStrong, lineWidth: 1)
-        )
+        .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairlineStrong)
     }
 
     // MARK: - Shared

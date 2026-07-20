@@ -53,7 +53,7 @@ struct PDFBookmarksView: View {
                         Button { editingBookmark = bookmark } label: {
                             Label("Edit Note", systemImage: "pencil")
                         }
-                        .tint(.blue)
+                        .tint(DS.Color.accent)
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)

@@ -145,12 +145,7 @@ extension InspectorView {
         }
         .padding(.horizontal, DS.Spacing.sm)
         .padding(.vertical, DS.Spacing.xs)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.6)
-        )
+        .dsCard(padding: nil, radius: DS.Radius.sm, stroke: .hairlineStrong)
     }
 
     private var canSubmitFollowUp: Bool {

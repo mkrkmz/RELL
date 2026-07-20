@@ -58,6 +58,21 @@ enum DS {
         static var success: SwiftUI.Color { .green }
         static var warning: SwiftUI.Color { .orange }
         static var danger:  SwiftUI.Color { .red }
+        /// Soft warning wash for inline banners (LLM connection notice) —
+        /// the warning-family sibling of `accentSubtle`.
+        static var warningSubtle: SwiftUI.Color { warning.opacity(0.12) }
+        /// The saved-word star. One token instead of `.yellow` hand-picked
+        /// at every call site, so "saved" reads as one color everywhere.
+        static var star: SwiftUI.Color { .yellow }
+
+        // ── Identity palette extras ───────────────────────────────────────
+        // The module/domain rainbow mostly rides system colors; these two are
+        // the hues the system palette lacks. Defined here so no raw
+        // `Color(hue:)` literal lives outside the design system.
+        /// Warm bookish brown — etymology module, legal domain.
+        static var brown: SwiftUI.Color { SwiftUI.Color(hue: 0.08, saturation: 0.55, brightness: 0.52) }
+        /// Amber — usage-notes module; reads between `warning` and `star`.
+        static var amber: SwiftUI.Color { SwiftUI.Color(hue: 0.12, saturation: 0.80, brightness: 0.78) }
 
         // ── Structural ────────────────────────────────────────────────────
         static var separator: SwiftUI.Color {
@@ -190,6 +205,37 @@ enum DS {
         }
     }
 
+    // MARK: - Gradients
+
+    /// The app's only gradients — exactly three call sites (dashboard hero
+    /// wash, goal ring, stats chart fade). Anything else stays flat; a new
+    /// gradient is a design decision, not a garnish.
+    enum Gradient {
+        /// Subtle accent wash for a card face — barely-there, top-leading in.
+        static var accentWash: LinearGradient {
+            LinearGradient(
+                colors: [DS.Color.accent.opacity(0.14), DS.Color.accent.opacity(0.04)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+        }
+
+        /// Angular sweep for the daily-goal progress ring.
+        static var goalRing: AngularGradient {
+            AngularGradient(
+                colors: [DS.Color.accent.opacity(0.55), DS.Color.accent],
+                center: .center, startAngle: .degrees(-90), endAngle: .degrees(270)
+            )
+        }
+
+        /// Vertical fade for chart area fills — accent into clear.
+        static var chartFade: LinearGradient {
+            LinearGradient(
+                colors: [DS.Color.accent.opacity(0.22), DS.Color.accent.opacity(0.02)],
+                startPoint: .top, endPoint: .bottom
+            )
+        }
+    }
+
     // MARK: - Transitions
 
     /// A directional slide+fade, or a plain fade when Reduce Motion is on —
@@ -271,6 +317,41 @@ enum DS {
     }
 }
 
+// MARK: - Card Stroke
+
+extension DS {
+    /// Border options for `dsCard` — the two hairline steps plus none.
+    enum CardStroke {
+        case hairline
+        case hairlineStrong
+        case none
+
+        var color: SwiftUI.Color? {
+            switch self {
+            case .hairline: return DS.Color.hairline
+            case .hairlineStrong: return DS.Color.hairlineStrong
+            case .none: return nil
+            }
+        }
+
+        var lineWidth: CGFloat { 1 }
+    }
+}
+
+/// `shadow(color:radius:)` with no shadow still costs a render pass — skip
+/// the modifier entirely when the card has none.
+private struct OptionalShadowModifier: ViewModifier {
+    let style: DS.ShadowStyle?
+
+    func body(content: Content) -> some View {
+        if let style {
+            content.dsShadow(style)
+        } else {
+            content
+        }
+    }
+}
+
 // MARK: - View Extensions
 
 extension View {
@@ -284,11 +365,28 @@ extension View {
             .foregroundStyle(DS.Color.textTertiary)
     }
 
-    func dsCard(padding: CGFloat = DS.Spacing.md) -> some View {
+    /// The app's one card chrome: surface + rounded corner + hairline stroke
+    /// (+ optional shadow). Covers the variants the hand-rolled sites had
+    /// drifted into; genuinely bespoke chrome stays inline with a
+    /// `// DS-exempt:` note.
+    func dsCard(
+        padding: CGFloat? = DS.Spacing.md,
+        surface: SwiftUI.Color = DS.Color.surfaceElevated,
+        radius: CGFloat = DS.Radius.md,
+        stroke: DS.CardStroke = .hairline,
+        shadow: DS.ShadowStyle? = nil
+    ) -> some View {
         self
-            .padding(padding)
-            .background(DS.Color.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+            .padding(.all, padding ?? 0)
+            .background(surface)
+            .clipShape(RoundedRectangle(cornerRadius: radius))
+            .overlay {
+                if let strokeColor = stroke.color {
+                    RoundedRectangle(cornerRadius: radius)
+                        .strokeBorder(strokeColor, lineWidth: stroke.lineWidth)
+                }
+            }
+            .modifier(OptionalShadowModifier(style: shadow))
     }
 
     /// Standard inspector container: a `panel` surface with a rounded corner and
@@ -466,6 +564,55 @@ extension View {
             variant: variant,
             duration: duration
         ))
+    }
+}
+
+// MARK: - DSProgressBar
+
+/// The thin reading-progress bar — one drawing for the dashboard hero, the
+/// library card overlay, and the stats sheet, which had each invented their
+/// own track/fill opacities.
+struct DSProgressBar: View {
+    /// 0…1.
+    let value: Double
+    var height: CGFloat = 3
+    /// Track color; the default suits app surfaces. Over full-color cover
+    /// art pass a dimming track (see LibraryCard) so the bar stays legible.
+    var track: SwiftUI.Color = DS.Color.accentSubtle
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Rectangle().fill(track)
+                Rectangle()
+                    .fill(DS.Color.accentStrong)
+                    .frame(width: geo.size.width * min(1, max(0, value)))
+            }
+        }
+        .frame(height: height)
+        .accessibilityElement()
+        .accessibilityLabel(Text("Reading progress"))
+        .accessibilityValue(Text("\(Int(min(1, max(0, value)) * 100))%"))
+    }
+}
+
+// MARK: - DSCoverPlaceholder
+
+/// Placeholder for a document cover that hasn't rendered (or can't) — one
+/// look shared by the dashboard hero, recents rows, and the library grid.
+struct DSCoverPlaceholder: View {
+    /// Roughly the placeholder's shorter dimension; drives the glyph size.
+    var iconSize: CGFloat = 16
+    /// False = the document file is missing; shows the broken-file glyph.
+    var fileExists: Bool = true
+
+    var body: some View {
+        ZStack {
+            DS.Color.accentSubtle
+            Image(systemName: fileExists ? "book.pages" : "questionmark.folder")
+                .font(DS.Typography.icon(iconSize, weight: .light))
+                .foregroundStyle(DS.Color.accent.opacity(0.7))
+        }
     }
 }
 

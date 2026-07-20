@@ -71,12 +71,7 @@ struct DashboardActivityCard: View {
         }
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.vertical, DS.Spacing.md)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.hairline, lineWidth: 1)
-        )
+        .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
         .contextMenu {
             Section("Daily Goal") {
                 ForEach(Self.goalChoices, id: \.self) { minutes in
@@ -111,7 +106,9 @@ struct DashboardActivityCard: View {
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    goalReached ? DS.Color.success : DS.Color.accent,
+                    goalReached
+                        ? AnyShapeStyle(DS.Color.success)
+                        : AnyShapeStyle(DS.Gradient.goalRing),
                     style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))

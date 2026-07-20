@@ -55,7 +55,7 @@ enum DomainPreference: String, CaseIterable, Identifiable {
         switch self {
         case .general:   return .blue
         case .academic:  return .purple
-        case .legal:     return Color(hue: 0.08, saturation: 0.55, brightness: 0.52)
+        case .legal:     return DS.Color.brown
         case .business:  return .green
         case .medical:   return .red
         case .technical: return .orange
@@ -149,11 +149,11 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         case .collocations:    return .green
         case .examplesEN:      return .teal
         case .pronunciationEN: return .orange
-        case .etymologyEN:     return Color(hue: 0.08, saturation: 0.55, brightness: 0.52)
+        case .etymologyEN:     return DS.Color.brown
         case .mnemonicEN:      return .pink
         case .synonymsEN:      return .indigo
         case .wordFamilyEN:    return .cyan
-        case .usageNotesEN:    return Color(hue: 0.12, saturation: 0.80, brightness: 0.78)
+        case .usageNotesEN:    return DS.Color.amber
         }
     }
 

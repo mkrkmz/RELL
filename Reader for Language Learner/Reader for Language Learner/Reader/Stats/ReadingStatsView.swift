@@ -75,7 +75,7 @@ struct ReadingStatsView: View {
             if streak > 0 {
                 HStack(spacing: DS.Spacing.xs) {
                     Image(systemName: "flame.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(DS.Color.warning)
                         .font(DS.Typography.icon(11))
                     Text("\(streak) day streak")
                         .font(DS.Typography.caption2.weight(.semibold))
@@ -91,9 +91,7 @@ struct ReadingStatsView: View {
         }
         .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .dsShadow(DS.Shadow.subtle)
+        .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
     }
 
     // MARK: - 7-Day Chart
@@ -145,9 +143,7 @@ struct ReadingStatsView: View {
             .frame(height: 100)
         }
         .padding(DS.Spacing.md)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .dsShadow(DS.Shadow.subtle)
+        .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
     }
 
     // MARK: - Review Activity Heatmap
@@ -158,9 +154,7 @@ struct ReadingStatsView: View {
         if activity.contains(where: { $0.count > 0 }) {
             ReviewHeatmapView(activity: activity)
                 .padding(DS.Spacing.md)
-                .background(DS.Color.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-                .dsShadow(DS.Shadow.subtle)
+                .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
         }
     }
 
@@ -179,7 +173,7 @@ struct ReadingStatsView: View {
                         x: .value("Day", point.date),
                         y: .value("Words", point.total)
                     )
-                    .foregroundStyle(DS.Color.accent.opacity(0.16))
+                    .foregroundStyle(DS.Gradient.chartFade)
                     LineMark(
                         x: .value("Day", point.date),
                         y: .value("Words", point.total)
@@ -201,9 +195,7 @@ struct ReadingStatsView: View {
                 .frame(height: 110)
             }
             .padding(DS.Spacing.md)
-            .background(DS.Color.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-            .dsShadow(DS.Shadow.subtle)
+            .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
         }
     }
 
@@ -253,9 +245,7 @@ struct ReadingStatsView: View {
                 .frame(height: 92)
             }
             .padding(DS.Spacing.md)
-            .background(DS.Color.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-            .dsShadow(DS.Shadow.subtle)
+            .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
         }
     }
 
@@ -279,7 +269,7 @@ struct ReadingStatsView: View {
                     icon: "clock.badge.exclamationmark",
                     value: "\(savedWordsStore.pendingReviewCount)",
                     label: "Pending review",
-                    iconColor: .orange
+                    iconColor: DS.Color.warning
                 )
                 statCell(
                     icon: "checkmark.circle.fill",
@@ -297,7 +287,7 @@ struct ReadingStatsView: View {
                     icon: "brain",
                     value: "\(savedWordsStore.learningCount)",
                     label: "Learning now",
-                    iconColor: .orange
+                    iconColor: DS.Color.warning
                 )
             }
         }
@@ -318,7 +308,7 @@ struct ReadingStatsView: View {
                     icon: "star.fill",
                     value: "\(savedWordsStore.words.count)",
                     label: "Words saved",
-                    iconColor: .yellow
+                    iconColor: DS.Color.star
                 )
                 statCell(
                     icon: "doc.text.fill",
@@ -353,9 +343,7 @@ struct ReadingStatsView: View {
         }
         .padding(DS.Spacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .dsShadow(DS.Shadow.subtle)
+        .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
     }
 
     // MARK: - Formatters
