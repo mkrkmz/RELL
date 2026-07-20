@@ -4,6 +4,35 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.25.0] - 2026-07-20
+
+The app finally has its own sense of color, and reading got an appearance
+panel worthy of a reading app. First sprint of roadmap v7.5 (Theme & Visual).
+
+### Fixed
+
+- **The page-theme picker in Settings ▸ Appearance never did anything.**
+  It was writing to a preference key nothing else read. It now controls
+  the actual reading theme, and gained App Theme and Accent Color
+  controls alongside it.
+- Choosing Light or Dark app theme now applies to *every* window —
+  Settings, the Vocabulary Review window, the menu-bar Quick Lookup —
+  not just document windows.
+
+### Added
+
+- **Accent color picker**: choose among ten accent colors (or follow the
+  system) in Settings ▸ Appearance. The whole interface — buttons,
+  links, badges, selection rings, native controls — follows instantly.
+- **Three new page themes**: Paper (soft warm white), Gray (low-glare
+  mid-gray), and Night (a warmer, gentler dark) join Original, Sepia,
+  and Dark — for PDFs and EPUBs alike.
+- **A reading-appearance panel** behind a new "Aa" toolbar button: theme
+  swatches for both formats, plus EPUB typography — font family
+  (Charter, Georgia, Palatino, Baskerville, Helvetica Neue, San
+  Francisco, or the publisher's own), line height, column width, and
+  justified text. Everything applies live as you read.
+
 ## [1.24.0] - 2026-07-17
 
 Your library can now be organized into collections and pinned to the top,
