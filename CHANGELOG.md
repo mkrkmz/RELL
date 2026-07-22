@@ -4,6 +4,34 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.27.0] - 2026-07-22
+
+Engine parity and performance work, plus a first look at how well you're
+actually retaining what you review. Roadmap v7 Sprint 3, and the first
+slice of Sprint 4.
+
+### Added
+
+- **Two-up PDF view**: read facing pages side by side. Switch from the View
+  menu or the menu bar's Page Layout submenu — your place in the document
+  is preserved across the switch.
+- **EPUB saved-word highlighting**: words you've saved are now underlined
+  automatically as you read an EPUB, matching PDF's existing behavior.
+  Click one to look it up, same as any other selection.
+- **Review Accuracy** in Stats: a weekly accuracy chart with an overall
+  retention trend line, a lifetime accuracy tile, and — once you're
+  learning more than one language — a per-language word-count breakdown.
+
+### Changed
+
+- In-book EPUB search now scans the book chapter by chapter in the
+  background instead of blocking on the whole thing at once, so results
+  for a large book appear incrementally rather than all at the end.
+- PDF auto-highlighting (saved words, notes) is noticeably cheaper while
+  scrolling or zooming: the visible-page scan is debounced, page text is
+  cached instead of re-extracted, and saving one new word no longer
+  forces a full re-scan of every already-highlighted page.
+
 ## [1.26.0] - 2026-07-20
 
 A visual consistency pass and a brand-new app icon. Second and final
