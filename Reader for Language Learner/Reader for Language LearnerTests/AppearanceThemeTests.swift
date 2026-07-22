@@ -6,6 +6,7 @@
 //  EPUB typography, and the appearance CSS builder.
 //
 
+import PDFKit
 import XCTest
 @testable import Reader_for_Language_Learner
 
@@ -38,6 +39,13 @@ final class AppearanceThemeTests: XCTestCase {
         XCTAssertEqual(EPUBContentWidth.narrow.em, 36)
         XCTAssertEqual(EPUBContentWidth.medium.em, 42)
         XCTAssertEqual(EPUBContentWidth.wide.em, 52)
+    }
+
+    func testUnknownPDFLayoutModeFallsBackToSingle() {
+        XCTAssertNil(PDFLayoutMode(rawValue: "quad"))
+        XCTAssertEqual(PDFLayoutMode(rawValue: "quad") ?? .single, .single)
+        XCTAssertEqual(PDFLayoutMode.single.kitDisplayMode, .singlePageContinuous)
+        XCTAssertEqual(PDFLayoutMode.twoUp.kitDisplayMode, .twoUpContinuous)
     }
 
     // MARK: - Highlight ink
@@ -159,6 +167,9 @@ final class AppearanceThemeTests: XCTestCase {
         }
         for family in EPUBFontFamily.allCases {
             XCTAssertFalse(family.localizedTitle.isEmpty)
+        }
+        for mode in PDFLayoutMode.allCases {
+            XCTAssertFalse(mode.localizedTitle.isEmpty)
         }
     }
 }

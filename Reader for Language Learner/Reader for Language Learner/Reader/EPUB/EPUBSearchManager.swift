@@ -28,6 +28,14 @@ final class EPUBSearchManager {
     private(set) var isFindBarVisible = false
     private(set) var hasSearched = false
 
+    /// Bumped on every `runSearch` call; a chapter result only gets applied
+    /// if its generation still matches, so a stale detached task that's
+    /// already mid-scan when a newer search starts can't clobber it.
+    private var searchGeneration = 0
+    /// Exposed (not `private`) so tests can `await` it — otherwise there's
+    /// no way to observe completion of the detached background scan.
+    private(set) var currentSearchTask: Task<Void, Never>?
+
     var totalMatches: Int { results.reduce(0) { $0 + $1.matchCount } }
 
     func showFindBar() {
@@ -40,52 +48,73 @@ final class EPUBSearchManager {
     }
 
     func clear() {
+        currentSearchTask?.cancel()
+        searchGeneration += 1
         query = ""
         results = []
         hasSearched = false
     }
 
-    /// Case-insensitive scan across all chapters. Runs synchronously —
-    /// EPUB text bodies are small (a novel ≈ 1 MB of text).
+    /// Case-insensitive scan across all chapters, chapter-by-chapter on a
+    /// detached background task — a long book's full text shouldn't block
+    /// the main thread — publishing each chapter's result to `results` as
+    /// soon as it's found so the list fills in incrementally rather than
+    /// appearing all at once at the end. Starting a new search cancels
+    /// whatever scan is already in flight.
     func runSearch(in document: EPUBDocument) {
+        currentSearchTask?.cancel()
+
         let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard term.count >= 2 else {
+            searchGeneration += 1
             results = []
             hasSearched = false
             return
         }
 
-        var found: [EPUBSearchResult] = []
-        for index in 0..<document.chapterCount {
-            let text = document.plainText(at: index)
-            guard !text.isEmpty else { continue }
-
-            var count = 0
-            var firstRange: Range<String.Index>?
-            var searchStart = text.startIndex
-            while let range = text.range(
-                of: term, options: [.caseInsensitive, .diacriticInsensitive],
-                range: searchStart..<text.endIndex
-            ) {
-                if firstRange == nil { firstRange = range }
-                count += 1
-                searchStart = range.upperBound
-            }
-
-            guard count > 0, let firstRange else { continue }
-            found.append(EPUBSearchResult(
-                chapterIndex: index,
-                chapterTitle: document.chapterTitle(at: index),
-                matchCount: count,
-                snippet: Self.snippet(around: firstRange, in: text)
-            ))
-        }
-
-        results = found
+        searchGeneration += 1
+        let generation = searchGeneration
+        results = []
         hasSearched = true
+
+        currentSearchTask = Task.detached(priority: .userInitiated) { [weak self] in
+            for index in 0..<document.chapterCount {
+                if Task.isCancelled { return }
+                let text = document.plainText(at: index)
+                guard !text.isEmpty else { continue }
+
+                var count = 0
+                var firstRange: Range<String.Index>?
+                var searchStart = text.startIndex
+                while let range = text.range(
+                    of: term, options: [.caseInsensitive, .diacriticInsensitive],
+                    range: searchStart..<text.endIndex
+                ) {
+                    if firstRange == nil { firstRange = range }
+                    count += 1
+                    searchStart = range.upperBound
+                }
+
+                guard count > 0, let firstRange else { continue }
+                let result = EPUBSearchResult(
+                    chapterIndex: index,
+                    chapterTitle: document.chapterTitle(at: index),
+                    matchCount: count,
+                    snippet: Self.snippet(around: firstRange, in: text)
+                )
+
+                await MainActor.run {
+                    guard let self, self.searchGeneration == generation else { return }
+                    self.results.append(result)
+                }
+            }
+        }
     }
 
-    private static func snippet(around range: Range<String.Index>, in text: String) -> String {
+    /// `nonisolated` — pure string slicing, called from the detached scan
+    /// task; without this it would inherit the enclosing class's `@MainActor`
+    /// and force a hop back to the main thread for every match found.
+    private nonisolated static func snippet(around range: Range<String.Index>, in text: String) -> String {
         let radius = 40
         let start = text.index(range.lowerBound, offsetBy: -radius, limitedBy: text.startIndex)
             ?? text.startIndex

@@ -54,4 +54,18 @@ final class EPUBAppearanceTests: XCTestCase {
         XCTAssertEqual(EPUBViewManager.highlightInk(for: .original), "#1d1d1f")
         XCTAssertEqual(EPUBViewManager.highlightInk(for: .sepia), "#1d1d1f")
     }
+
+    // MARK: - Saved-word mark color
+
+    func testSavedWordMarkColorDiffersByThemeBrightness() {
+        for theme in PageTheme.allCases {
+            let color = EPUBViewManager.savedWordMarkColor(for: theme)
+            XCTAssertTrue(color.hasPrefix("rgba("), "\(theme.rawValue) must produce a valid rgba() color")
+            if theme.usesLightInk {
+                XCTAssertEqual(color, "rgba(150, 179, 255, 0.75)", "\(theme.rawValue) is a dark surface — needs the lighter mark tint")
+            } else {
+                XCTAssertEqual(color, "rgba(51, 92, 209, 0.65)", "\(theme.rawValue) is a light surface — needs the darker mark tint")
+            }
+        }
+    }
 }

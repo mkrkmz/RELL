@@ -3,7 +3,8 @@
 //  Reader for Language LearnerTests
 //
 //  Builds a tiny two-chapter EPUB via the same ZIPFixture helper
-//  EPUBDocumentTests uses, then exercises the synchronous in-book search.
+//  EPUBDocumentTests uses, then exercises the detached-task in-book search
+//  (chapter-by-chapter, cancellable, generation-guarded).
 //
 
 import XCTest
@@ -100,11 +101,12 @@ final class EPUBSearchManagerTests: XCTestCase {
         XCTAssertTrue(manager.results.isEmpty)
     }
 
-    func testSearchFindsMatchesInOneChapterWithCorrectCount() throws {
+    func testSearchFindsMatchesInOneChapterWithCorrectCount() async throws {
         let manager = makeManager()
         let document = try makeDocument()
         manager.query = "lighthouse"
         manager.runSearch(in: document)
+        await manager.currentSearchTask?.value
 
         XCTAssertTrue(manager.hasSearched)
         XCTAssertEqual(manager.results.count, 1)
@@ -114,11 +116,12 @@ final class EPUBSearchManagerTests: XCTestCase {
         XCTAssertEqual(manager.totalMatches, 2)
     }
 
-    func testSearchIsCaseInsensitiveAndCanSpanChapters() throws {
+    func testSearchIsCaseInsensitiveAndCanSpanChapters() async throws {
         let manager = makeManager()
         let document = try makeDocument()
         manager.query = "STORM"
         manager.runSearch(in: document)
+        await manager.currentSearchTask?.value
 
         // "storm" (lowercase) only appears in chapter 1's body text; nav
         // labels like chapter 2's "After the Storm" aren't part of any
@@ -127,22 +130,24 @@ final class EPUBSearchManagerTests: XCTestCase {
         XCTAssertEqual(manager.results.first?.matchCount, 1)
     }
 
-    func testSearchWithNoMatchesReturnsEmptyButMarksSearched() throws {
+    func testSearchWithNoMatchesReturnsEmptyButMarksSearched() async throws {
         let manager = makeManager()
         let document = try makeDocument()
         manager.query = "dragon"
         manager.runSearch(in: document)
+        await manager.currentSearchTask?.value
 
         XCTAssertTrue(manager.hasSearched)
         XCTAssertTrue(manager.results.isEmpty)
         XCTAssertEqual(manager.totalMatches, 0)
     }
 
-    func testClearResetsState() throws {
+    func testClearResetsState() async throws {
         let manager = makeManager()
         let document = try makeDocument()
         manager.query = "lighthouse"
         manager.runSearch(in: document)
+        await manager.currentSearchTask?.value
 
         manager.clear()
 
@@ -151,7 +156,7 @@ final class EPUBSearchManagerTests: XCTestCase {
         XCTAssertFalse(manager.hasSearched)
     }
 
-    func testShowAndCloseFindBarTogglesVisibilityAndClears() throws {
+    func testShowAndCloseFindBarTogglesVisibilityAndClears() async throws {
         let manager = makeManager()
         let document = try makeDocument()
         manager.showFindBar()
@@ -159,9 +164,44 @@ final class EPUBSearchManagerTests: XCTestCase {
 
         manager.query = "lighthouse"
         manager.runSearch(in: document)
+        await manager.currentSearchTask?.value
         manager.closeFindBar()
 
         XCTAssertFalse(manager.isFindBarVisible)
         XCTAssertTrue(manager.results.isEmpty)
+    }
+
+    // MARK: - Incremental / cancellation semantics
+
+    func testResultsArriveIncrementallyAsChaptersAreScanned() async throws {
+        let manager = makeManager()
+        let document = try makeDocument()
+        manager.query = "lighthouse"
+        manager.runSearch(in: document)
+
+        // hasSearched flips immediately — before any chapter has actually
+        // been scanned — so the find bar can show a live "searching" state
+        // instead of freezing until the whole book completes.
+        XCTAssertTrue(manager.hasSearched)
+
+        await manager.currentSearchTask?.value
+        XCTAssertEqual(manager.results.count, 1)
+    }
+
+    func testNewSearchSupersedesAndDiscardsStalePreviousResults() async throws {
+        let manager = makeManager()
+        let document = try makeDocument()
+
+        // Fire a search and immediately supersede it with another before
+        // awaiting — the generation counter must discard any chapter
+        // results the first search's task still appends after this point.
+        manager.query = "lighthouse"
+        manager.runSearch(in: document)
+        manager.query = "storm"
+        manager.runSearch(in: document)
+        await manager.currentSearchTask?.value
+
+        XCTAssertEqual(manager.results.count, 1)
+        XCTAssertEqual(manager.results.first?.matchCount, 1, "must reflect \"storm\", not the superseded \"lighthouse\" search")
     }
 }

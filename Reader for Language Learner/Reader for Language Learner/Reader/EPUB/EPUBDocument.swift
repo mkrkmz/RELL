@@ -9,6 +9,7 @@
 //
 
 import Foundation
+import os
 
 // MARK: - Errors
 
@@ -52,9 +53,39 @@ struct EPUBTOCEntry: Identifiable {
     let depth: Int
 }
 
+// MARK: - Plain-text cache
+
+/// Thread-safe memoized chapter plain-text, keyed by spine index. A class
+/// (not storage directly on the `EPUBDocument` struct) so every copy of the
+/// value type shares one cache — the underlying archive bytes are
+/// immutable, so a cached entry never needs to be invalidated, only filled
+/// in once per index across however many callers (search, TTS, page
+/// analysis) ask for it.
+private nonisolated final class EPUBPlainTextCache: Sendable {
+    private let state = OSAllocatedUnfairLock<[Int: String]>(initialState: [:])
+
+    /// Returns the cached text, computing and storing it on a miss.
+    /// `compute` may run more than once under rare concurrent first-access
+    /// races — harmless, since it's a pure function of `index` — but never
+    /// runs while holding the lock, so unrelated indices never block on it.
+    func text(at index: Int, compute: () -> String) -> String {
+        if let cached = state.withLock({ $0[index] }) {
+            return cached
+        }
+        let computed = compute()
+        state.withLock { $0[index] = computed }
+        return computed
+    }
+}
+
 // MARK: - Document
 
-struct EPUBDocument {
+/// `nonisolated` as a whole: this is pure immutable value data with no UI
+/// affinity, and its text-extraction methods are specifically meant to run
+/// off the main actor (see `EPUBSearchManager.runSearch`'s detached scan) —
+/// under the module's default-MainActor isolation they'd otherwise need
+/// `await` at every call site and actually hop back onto the main thread.
+nonisolated struct EPUBDocument: Sendable {
 
     let title: String
     let author: String?
@@ -66,6 +97,7 @@ struct EPUBDocument {
 
     private let archive: ZIPArchive
     private let manifestByPath: [String: EPUBManifestItem]
+    private let plainTextCache = EPUBPlainTextCache()
 
     var chapterCount: Int { spinePaths.count }
 
@@ -192,16 +224,21 @@ struct EPUBDocument {
         archive.contains(path)
     }
 
-    /// Chapter text with markup stripped — powers in-book search.
+    /// Chapter text with markup stripped — powers in-book search. Memoized
+    /// per index (see `EPUBPlainTextCache`) and safe to call concurrently
+    /// from a background scan while the reader itself keeps using the
+    /// document on the main actor.
     func plainText(at index: Int) -> String {
-        guard let data = try? chapterData(at: index) else { return "" }
-        if let xml = try? XMLDocument(data: data, options: [.documentTidyXML]),
-           let text = xml.rootElement()?.stringValue {
-            return text
+        plainTextCache.text(at: index) {
+            guard let data = try? chapterData(at: index) else { return "" }
+            if let xml = try? XMLDocument(data: data, options: [.documentTidyXML]),
+               let text = xml.rootElement()?.stringValue {
+                return text
+            }
+            // Malformed chapter: crude tag strip beats returning nothing.
+            return String(decoding: data, as: UTF8.self)
+                .replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
         }
-        // Malformed chapter: crude tag strip beats returning nothing.
-        return String(decoding: data, as: UTF8.self)
-            .replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
     }
 
     /// Best display title for a chapter: its TOC entry, else "Chapter N".

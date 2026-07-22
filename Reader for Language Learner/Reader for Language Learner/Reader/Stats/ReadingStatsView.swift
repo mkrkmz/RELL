@@ -24,8 +24,10 @@ struct ReadingStatsView: View {
                 todayCard
                 weeklyChart
                 reviewActivityCard
+                reviewAccuracyCard
                 vocabularyGrowthCard
                 masteryDistributionCard
+                languageBreakdownCard
                 learningGrid
                 totalsGrid
             }
@@ -158,6 +160,64 @@ struct ReadingStatsView: View {
         }
     }
 
+    // MARK: - Review Accuracy
+
+    /// Bars: this week's own accuracy (gaps on weeks with no reviews).
+    /// Line: running accuracy from the very first review through that
+    /// week — the "retention" trend, smoother and less noisy than any one
+    /// week's bar.
+    @ViewBuilder
+    private var reviewAccuracyCard: some View {
+        let weekly = savedWordsStore.weeklyReviewAccuracy(weeks: 12)
+        if weekly.contains(where: { $0.totalCount > 0 }) {
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text("REVIEW ACCURACY")
+                    .dsOverlineLabel()
+
+                Chart(weekly) { week in
+                    if let accuracy = week.accuracy {
+                        BarMark(
+                            x: .value("Week", week.weekStart, unit: .weekOfYear),
+                            y: .value("Accuracy", accuracy)
+                        )
+                        .foregroundStyle(DS.Color.accentMuted)
+                        .cornerRadius(DS.Radius.xs)
+                    }
+                    if let retention = week.cumulativeAccuracy {
+                        LineMark(
+                            x: .value("Week", week.weekStart, unit: .weekOfYear),
+                            y: .value("Retention", retention)
+                        )
+                        .foregroundStyle(DS.Color.accent)
+                        .interpolationMethod(.monotone)
+                        .lineStyle(StrokeStyle(lineWidth: 2))
+                    }
+                }
+                .chartYScale(domain: 0...1)
+                .chartYAxis {
+                    AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { val in
+                        AxisGridLine().foregroundStyle(DS.Color.hairlineStrong)
+                        AxisValueLabel {
+                            if let v = val.as(Double.self) {
+                                Text("\(Int((v * 100).rounded()))%")
+                                    .font(DS.Typography.caption2)
+                                    .foregroundStyle(DS.Color.textTertiary)
+                            }
+                        }
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                    }
+                }
+                .frame(height: 110)
+            }
+            .padding(DS.Spacing.md)
+            .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
+        }
+    }
+
     // MARK: - Vocabulary Growth
 
     @ViewBuilder
@@ -249,6 +309,39 @@ struct ReadingStatsView: View {
         }
     }
 
+    // MARK: - Language Breakdown
+
+    /// Only worth showing once there's actually something to break
+    /// down — a single-language library gets nothing new from this card.
+    @ViewBuilder
+    private var languageBreakdownCard: some View {
+        let breakdown = savedWordsStore.wordCountsByLanguage
+        if breakdown.count >= 2 {
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text("BY LANGUAGE")
+                    .dsOverlineLabel()
+
+                Chart(breakdown) { entry in
+                    BarMark(
+                        x: .value("Count", entry.count),
+                        y: .value("Language", "\(entry.language.flag) \(entry.language.nativeName)")
+                    )
+                    .foregroundStyle(DS.Color.accent)
+                    .cornerRadius(DS.Radius.xs)
+                    .annotation(position: .trailing) {
+                        Text("\(entry.count)")
+                            .font(DS.Typography.caption2)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                .chartXAxis(.hidden)
+                .frame(height: CGFloat(breakdown.count) * 28 + 8)
+            }
+            .padding(DS.Spacing.md)
+            .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
+        }
+    }
+
     private var masterySlices: [MasterySlice] {
         [
             MasterySlice(label: "New", count: savedWordsStore.newCount, color: DS.Color.accent),
@@ -320,6 +413,14 @@ struct ReadingStatsView: View {
                     value: "\(savedWordsStore.newCount)",
                     label: "New words"
                 )
+                if let accuracy = savedWordsStore.lifetimeReviewAccuracy {
+                    statCell(
+                        icon: "target",
+                        value: "\(Int((accuracy * 100).rounded()))%",
+                        label: "Lifetime accuracy",
+                        iconColor: DS.Color.success
+                    )
+                }
             }
         }
     }

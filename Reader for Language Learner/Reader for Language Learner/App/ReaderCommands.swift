@@ -21,6 +21,7 @@ struct ReaderCommands {
     var isCurrentPageBookmarked: Bool
     var isCurrentTermSaved: Bool
     var pageTheme: PageTheme
+    var pdfDisplayMode: PDFLayoutMode
     var speechState: SpeechManager.PlaybackState
 
     var openDocument: (URL) -> Void
@@ -44,6 +45,7 @@ struct ReaderCommands {
     var actualSize: () -> Void
     var fitToWidth: () -> Void
     var setPageTheme: (PageTheme) -> Void
+    var setPDFDisplayMode: (PDFLayoutMode) -> Void
 
     var readAloud: () -> Void
     var pauseSpeech: () -> Void
@@ -67,6 +69,7 @@ extension ReaderCommands: Equatable {
             && lhs.isCurrentPageBookmarked == rhs.isCurrentPageBookmarked
             && lhs.isCurrentTermSaved == rhs.isCurrentTermSaved
             && lhs.pageTheme == rhs.pageTheme
+            && lhs.pdfDisplayMode == rhs.pdfDisplayMode
             && lhs.speechState == rhs.speechState
     }
 }

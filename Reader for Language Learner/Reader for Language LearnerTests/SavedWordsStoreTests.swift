@@ -87,6 +87,112 @@ final class SavedWordsStoreTests: XCTestCase {
         )
     }
 
+    // MARK: - Review Events / Accuracy
+
+    func testApplyReviewAppendsRatedEventAlongsideLegacyHistory() {
+        let store = makeStore()
+        let now = Date()
+        let word = SavedWord(term: "orbit")
+        store.add(word)
+
+        let updated = store.applyReview(.good, to: word, reviewedAt: now)
+
+        XCTAssertEqual(updated?.reviewEvents.count, 1)
+        XCTAssertEqual(updated?.reviewEvents.first?.date, now)
+        XCTAssertEqual(updated?.reviewEvents.first?.rating, .good)
+        XCTAssertEqual(updated?.reviewHistory.count, 1, "legacy reviewHistory must keep being written too")
+    }
+
+    func testApplyReviewCapsReviewEventsAtFiveHundredPerWord() {
+        let store = makeStore()
+        let now = Date()
+        let existingEvents = (0..<500).map { offset in
+            ReviewEvent(date: now.addingTimeInterval(Double(offset)), rating: .good)
+        }
+        let word = SavedWord(term: "orbit", reviewEvents: existingEvents)
+        store.add(word)
+
+        let reviewedAt = now.addingTimeInterval(1000)
+        let updated = store.applyReview(.again, to: word, reviewedAt: reviewedAt)
+
+        XCTAssertEqual(updated?.reviewEvents.count, 500, "must stay capped at 500, dropping the oldest")
+        XCTAssertEqual(updated?.reviewEvents.last?.date, reviewedAt)
+        XCTAssertEqual(updated?.reviewEvents.first?.date, existingEvents[1].date, "oldest event must be the one dropped")
+    }
+
+    func testWeeklyReviewAccuracyBucketsByWeekAndTracksCumulativeRetention() {
+        let store = makeStore()
+        let calendar = Calendar.current
+        let now = Date()
+        guard let thisWeekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start,
+              let lastWeekStart = calendar.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart)
+        else { return XCTFail("Could not compute week boundaries") }
+
+        // Last week: 1 correct, 1 incorrect (50%). This week: 1 correct (100%).
+        let word = SavedWord(term: "orbit", reviewEvents: [
+            ReviewEvent(date: lastWeekStart.addingTimeInterval(60), rating: .good),
+            ReviewEvent(date: lastWeekStart.addingTimeInterval(120), rating: .again),
+            ReviewEvent(date: thisWeekStart.addingTimeInterval(60), rating: .good)
+        ])
+        store.add(word)
+
+        let weekly = store.weeklyReviewAccuracy(weeks: 2, endingAt: now)
+
+        XCTAssertEqual(weekly.count, 2)
+        XCTAssertEqual(weekly[0].correctCount, 1)
+        XCTAssertEqual(weekly[0].incorrectCount, 1)
+        XCTAssertEqual(weekly[0].accuracy, 0.5)
+        XCTAssertEqual(weekly[0].cumulativeAccuracy, 0.5)
+
+        XCTAssertEqual(weekly[1].correctCount, 1)
+        XCTAssertEqual(weekly[1].incorrectCount, 0)
+        XCTAssertEqual(weekly[1].accuracy, 1.0)
+        // Cumulative through this week: 2 correct out of 3 total.
+        XCTAssertEqual(weekly[1].cumulativeAccuracy ?? -1, 2.0 / 3.0, accuracy: 0.0001)
+    }
+
+    func testWeeklyReviewAccuracyLeavesGapForWeeksWithNoReviews() {
+        let store = makeStore()
+        let word = SavedWord(term: "orbit")
+        store.add(word)
+
+        let weekly = store.weeklyReviewAccuracy(weeks: 4)
+
+        XCTAssertTrue(weekly.allSatisfy { $0.accuracy == nil && $0.cumulativeAccuracy == nil })
+    }
+
+    func testLifetimeReviewAccuracyIsNilWithNoEventsAndComputedOtherwise() {
+        let store = makeStore()
+        let untouched = SavedWord(term: "untouched")
+        store.add(untouched)
+        XCTAssertNil(store.lifetimeReviewAccuracy)
+
+        _ = store.applyReview(.good, to: untouched)
+        guard let reviewed = store.words.first else { return XCTFail("expected word") }
+        _ = store.applyReview(.again, to: reviewed)
+
+        XCTAssertEqual(store.lifetimeReviewAccuracy, 0.5)
+        XCTAssertEqual(store.lifetimeReviewEventCount, 2)
+    }
+
+    // MARK: - Language Breakdown
+
+    func testWordCountsByLanguageGroupsAndSortsDescending() {
+        let store = makeStore()
+        store.add(SavedWord(term: "one", language: Language.english.rawValue))
+        store.add(SavedWord(term: "two", language: Language.english.rawValue))
+        store.add(SavedWord(term: "three", language: Language.japanese.rawValue))
+        store.add(SavedWord(term: "unlabeled"))   // language == nil, must be excluded
+
+        let breakdown = store.wordCountsByLanguage
+
+        XCTAssertEqual(breakdown.count, 2)
+        XCTAssertEqual(breakdown.first?.language, .english)
+        XCTAssertEqual(breakdown.first?.count, 2)
+        XCTAssertEqual(breakdown.last?.language, .japanese)
+        XCTAssertEqual(breakdown.last?.count, 1)
+    }
+
     func testSetCEFRLevelAssignsAndClears() {
         let store = makeStore()
         let word = SavedWord(term: "orbit")

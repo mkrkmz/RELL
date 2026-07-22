@@ -122,8 +122,16 @@ struct EPUBFindBarView: View {
 
     private func runSearch() {
         guard let document = epubManager.document else { return }
+        // The cross-chapter scan (`runSearch`) now streams results in from a
+        // background task, so its match count isn't known synchronously —
+        // but the in-page jump doesn't need it: WKWebView's own `find`
+        // looks directly at the currently-rendered chapter and is a no-op
+        // if nothing matches there. Same minimum-length gate `runSearch`
+        // itself applies, so a 1-character query doesn't trigger a
+        // highlight-everything pass.
         searchManager.runSearch(in: document)
-        if searchManager.totalMatches > 0 {
+        let term = searchManager.query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if term.count >= 2 {
             epubManager.findInPage(searchManager.query)
         }
     }

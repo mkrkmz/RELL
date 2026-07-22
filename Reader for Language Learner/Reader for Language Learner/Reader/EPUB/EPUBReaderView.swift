@@ -235,6 +235,12 @@ struct EPUBReaderView: NSViewRepresentable {
             return highlightStore.highlights(for: bookFilename, chapterPath: chapterPath)
         }
 
+        manager.savedWordTermsProvider = {
+            store.words
+                .map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+        }
+
         webView.selectionProvider = { [weak manager] in
             manager?.lastSelectionText ?? ""
         }
@@ -447,6 +453,148 @@ struct EPUBReaderView: NSViewRepresentable {
             };
 
             window.__rellComputeAnchor = rellComputeAnchor;
+
+            // ── Saved-word marks ────────────────────────────────────────
+            // Dotted underline, no background — stays visually distinct
+            // from a user highlight's colored fill. Click selects the
+            // word's text so the existing selectionchange listener below
+            // (selectionScript) picks it up exactly like a manual
+            // selection, feeding the same lookup path with no separate
+            // message channel.
+
+            var rellSavedWordClickBound = false;
+            function rellBindSavedWordClicks() {
+                if (rellSavedWordClickBound) { return; }
+                rellSavedWordClickBound = true;
+                document.body.addEventListener('click', function(event) {
+                    var target = event.target;
+                    var span = target && target.closest
+                        ? target.closest('span[data-rell-saved-word]') : null;
+                    if (!span) { return; }
+                    var range = document.createRange();
+                    range.selectNodeContents(span);
+                    var sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                });
+            }
+
+            function rellUnmarkSavedWords() {
+                var marks = document.querySelectorAll('span[data-rell-saved-word]');
+                marks.forEach(function(span) {
+                    var parent = span.parentNode;
+                    if (!parent) { return; }
+                    while (span.firstChild) { parent.insertBefore(span.firstChild, span); }
+                    parent.removeChild(span);
+                    parent.normalize();
+                });
+            }
+
+            // CJK scripts have no whitespace word segmentation, so a
+            // letter-boundary check would reject every real match (the
+            // character before/after is itself a letter). Terms in these
+            // scripts use a plain substring scan instead — everything else
+            // gets Unicode-aware whole-word matching.
+            var rellCJK = /[぀-ヿ㐀-鿿가-힯]/;
+
+            function rellSubstringRanges(term, text, cap) {
+                var lower = text.toLowerCase();
+                var needle = term.toLowerCase();
+                var ranges = [];
+                var idx = 0;
+                while (ranges.length < cap && (idx = lower.indexOf(needle, idx)) >= 0) {
+                    ranges.push({ start: idx, end: idx + needle.length });
+                    idx += needle.length;
+                }
+                return ranges;
+            }
+
+            function rellFindTermRanges(term, text, cap) {
+                if (rellCJK.test(term)) { return rellSubstringRanges(term, text, cap); }
+
+                var escaped = term.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+                var regex;
+                try {
+                    regex = new RegExp('(?<![\\\\p{L}\\\\p{N}])' + escaped + '(?![\\\\p{L}\\\\p{N}])', 'giu');
+                } catch (e) {
+                    // Defensive fallback for a term whose regex failed to compile.
+                    return rellSubstringRanges(term, text, cap);
+                }
+                var ranges = [];
+                var m;
+                while (ranges.length < cap && (m = regex.exec(text))) {
+                    ranges.push({ start: m.index, end: m.index + m[0].length });
+                    if (m[0].length === 0) { regex.lastIndex++; }
+                }
+                return ranges;
+            }
+
+            function rellAcceptableSavedWordNode(node) {
+                var p = node.parentElement;
+                while (p) {
+                    if (p.tagName === 'MARK' || (p.dataset && p.dataset.rellSavedWord)) {
+                        return false;
+                    }
+                    p = p.parentElement;
+                }
+                return true;
+            }
+
+            function rellMarkRangesInNode(node, ranges, color) {
+                var text = node.textContent;
+                var frag = document.createDocumentFragment();
+                var last = 0;
+                ranges.forEach(function(r) {
+                    if (r.start > last) {
+                        frag.appendChild(document.createTextNode(text.substring(last, r.start)));
+                    }
+                    var span = document.createElement('span');
+                    span.setAttribute('data-rell-saved-word', '1');
+                    span.style.textDecorationLine = 'underline';
+                    span.style.textDecorationStyle = 'dotted';
+                    span.style.textDecorationColor = color;
+                    span.style.textUnderlineOffset = '2px';
+                    span.style.cursor = 'pointer';
+                    span.textContent = text.substring(r.start, r.end);
+                    frag.appendChild(span);
+                    last = r.end;
+                });
+                if (last < text.length) {
+                    frag.appendChild(document.createTextNode(text.substring(last)));
+                }
+                node.parentNode.replaceChild(frag, node);
+            }
+
+            /// Underlines every occurrence of a saved word. Case-insensitive;
+            /// Unicode-aware letter/number boundaries give correct whole-word
+            /// matching for accented Latin, Cyrillic, and Arabic scripts,
+            /// while CJK terms use plain substring matching (no boundary
+            /// concept applies there — see `rellFindTermRanges`).
+            window.rellMarkSavedWords = function(terms, color) {
+                rellUnmarkSavedWords();
+                if (!terms || !terms.length) { return; }
+                rellBindSavedWordClicks();
+
+                // Bounds: at most 500 terms and 50 matches per term per
+                // chapter — a saved vocabulary can grow into the thousands,
+                // and a single common word could otherwise match hundreds
+                // of times in one chapter.
+                terms.slice(0, 500).forEach(function(term) {
+                    if (!term) { return; }
+                    var matched = 0;
+                    // Re-walk fresh for each term — the previous term's
+                    // wraps mutated the DOM, invalidating old node refs.
+                    var nodes = rellWalkTextNodes(document.body).filter(rellAcceptableSavedWordNode);
+                    for (var i = 0; i < nodes.length && matched < 50; i++) {
+                        var node = nodes[i];
+                        var ranges = rellFindTermRanges(term, node.textContent, 50 - matched);
+                        if (ranges.length) {
+                            rellMarkRangesInNode(node, ranges, color);
+                            matched += ranges.length;
+                        }
+                    }
+                });
+            };
         })();
         """,
         injectionTime: .atDocumentEnd,

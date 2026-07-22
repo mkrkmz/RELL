@@ -89,6 +89,10 @@ struct ReaderMenuCommands: Commands {
 
             Divider()
 
+            pdfLayoutModeMenu
+
+            Divider()
+
             pageThemeMenu
 
             Divider()
@@ -188,6 +192,25 @@ struct ReaderMenuCommands: Commands {
             }
         }
         .disabled(reader == nil)
+    }
+
+    /// PDF-only — EPUB is scroll-only and has no page-facing concept.
+    /// Mirrors the toolbar's own layout control, if any, so the choice is
+    /// also reachable from the menu bar with its current selection visible.
+    private var pdfLayoutModeMenu: some View {
+        Menu("Page Layout") {
+            ForEach(PDFLayoutMode.allCases) { mode in
+                Button {
+                    reader?.setPDFDisplayMode(mode)
+                } label: {
+                    HStack {
+                        Label(mode.localizedTitle, systemImage: mode.iconName)
+                        if reader?.pdfDisplayMode == mode { Spacer(); Image(systemName: "checkmark") }
+                    }
+                }
+            }
+        }
+        .disabled(reader?.hasDocument != true || reader?.isEPUBDocument == true)
     }
 
     /// Mirrors the toolbar's Theme menu (App/Page sections) so the choice is

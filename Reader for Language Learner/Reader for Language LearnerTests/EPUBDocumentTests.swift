@@ -148,6 +148,26 @@ final class EPUBDocumentTests: XCTestCase {
         XCTAssertFalse(text.contains("<"), "markup must be stripped")
     }
 
+    /// The cache backing `plainText(at:)` must return identical text on
+    /// repeat reads and never crash or corrupt under concurrent access from
+    /// multiple threads — this is exactly the access pattern the EPUB
+    /// search manager's detached scan produces.
+    func testPlainTextIsStableAndThreadSafeUnderConcurrentAccess() throws {
+        let doc = try makeDocument()
+        let first = doc.plainText(at: 0)
+        XCTAssertEqual(doc.plainText(at: 0), first)
+        XCTAssertEqual(doc.plainText(at: 1), doc.plainText(at: 1))
+
+        let expectation = XCTestExpectation(description: "concurrent plainText reads")
+        expectation.expectedFulfillmentCount = 100
+        DispatchQueue.concurrentPerform(iterations: 100) { i in
+            let text = doc.plainText(at: i % 2)
+            XCTAssertFalse(text.isEmpty)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 5)
+    }
+
     func testChapterTitleFallsBackWhenNotInTOC() throws {
         let doc = try makeDocument()
         XCTAssertEqual(doc.chapterTitle(at: 0), "Birinci Bölüm")   // from nav TOC

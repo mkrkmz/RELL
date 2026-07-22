@@ -7,7 +7,7 @@ import Foundation
 import os
 import SwiftUI
 
-enum ReviewRating: String, CaseIterable, Identifiable {
+enum ReviewRating: String, CaseIterable, Codable, Hashable, Identifiable {
     case again
     case good
     case easy
@@ -41,6 +41,32 @@ final class SavedWordsStore {
         let count: Int
 
         var id: Date { date }
+    }
+
+    /// One calendar week's review accuracy, plus the running ("lifetime so
+    /// far") accuracy through that week — the stats panel's bars and
+    /// retention trend line come from the same array.
+    struct WeeklyAccuracy: Identifiable, Equatable {
+        let weekStart: Date
+        let correctCount: Int
+        let incorrectCount: Int
+        /// Running accuracy across every review from the beginning through
+        /// the end of this week. `nil` before any review has ever happened.
+        let cumulativeAccuracy: Double?
+
+        var id: Date { weekStart }
+        var totalCount: Int { correctCount + incorrectCount }
+        /// `nil` for a week with no reviews at all — the chart should leave
+        /// a gap there rather than draw a false 0%.
+        var accuracy: Double? {
+            totalCount > 0 ? Double(correctCount) / Double(totalCount) : nil
+        }
+    }
+
+    struct LanguageWordCount: Identifiable, Equatable {
+        let language: Language
+        let count: Int
+        var id: String { language.rawValue }
     }
 
     private(set) var words: [SavedWord] = []
@@ -379,6 +405,79 @@ final class SavedWordsStore {
         }
     }
 
+    /// Weekly review accuracy for the last `weeks` calendar weeks (bucketed
+    /// by week-start), for the stats panel's "Review Accuracy" chart — bars
+    /// per week plus a cumulative retention trend line, computed in one
+    /// forward pass across the already-date-sorted events.
+    func weeklyReviewAccuracy(weeks: Int = 12, endingAt referenceDate: Date = Date()) -> [WeeklyAccuracy] {
+        let calendar = Calendar.current
+        guard let currentWeekStart = calendar.dateInterval(of: .weekOfYear, for: referenceDate)?.start else {
+            return []
+        }
+        let safeWeeks = max(weeks, 1)
+        let events = words.flatMap(\.reviewEvents).sorted { $0.date < $1.date }
+        let eventsByWeek = Dictionary(grouping: events) { event in
+            calendar.dateInterval(of: .weekOfYear, for: event.date)?.start ?? calendar.startOfDay(for: event.date)
+        }
+
+        var cumulativeCorrect = 0
+        var cumulativeTotal = 0
+        var eventIndex = events.startIndex
+
+        return (0..<safeWeeks).compactMap { offset -> WeeklyAccuracy? in
+            guard let weekStart = calendar.date(byAdding: .weekOfYear, value: -(safeWeeks - 1 - offset), to: currentWeekStart),
+                  let weekEnd = calendar.date(byAdding: .weekOfYear, value: 1, to: weekStart)
+            else { return nil }
+
+            // Roll the running totals forward to include every event
+            // through this week's end, in date order.
+            while eventIndex < events.endIndex, events[eventIndex].date < weekEnd {
+                if events[eventIndex].rating != .again { cumulativeCorrect += 1 }
+                cumulativeTotal += 1
+                eventIndex += 1
+            }
+
+            let weekEvents = eventsByWeek[weekStart] ?? []
+            let correct = weekEvents.filter { $0.rating != .again }.count
+            let incorrect = weekEvents.filter { $0.rating == .again }.count
+            let cumulativeAccuracy = cumulativeTotal > 0 ? Double(cumulativeCorrect) / Double(cumulativeTotal) : nil
+
+            return WeeklyAccuracy(
+                weekStart: weekStart,
+                correctCount: correct,
+                incorrectCount: incorrect,
+                cumulativeAccuracy: cumulativeAccuracy
+            )
+        }
+    }
+
+    /// All-time review accuracy across every recorded rated event. `nil`
+    /// before the user has ever answered a review card.
+    var lifetimeReviewAccuracy: Double? {
+        let events = words.flatMap(\.reviewEvents)
+        guard !events.isEmpty else { return nil }
+        let correct = events.filter { $0.rating != .again }.count
+        return Double(correct) / Double(events.count)
+    }
+
+    var lifetimeReviewEventCount: Int {
+        words.reduce(0) { $0 + $1.reviewEvents.count }
+    }
+
+    /// Saved-word counts grouped by target language, descending — the
+    /// language-breakdown card only renders once this has ≥2 entries
+    /// (nothing to break down for a single-language library). Words saved
+    /// before v1.24 (`language == nil`) are excluded rather than lumped
+    /// into an "unknown" bucket.
+    var wordCountsByLanguage: [LanguageWordCount] {
+        let grouped = Dictionary(grouping: words.compactMap { word in
+            word.language.flatMap(Language.init(rawValue:))
+        }, by: { $0 })
+        return grouped
+            .map { LanguageWordCount(language: $0.key, count: $0.value.count) }
+            .sorted { $0.count > $1.count }
+    }
+
     @discardableResult
     func applyReview(_ rating: ReviewRating, to word: SavedWord, reviewedAt: Date = Date()) -> SavedWord? {
         guard let index = words.firstIndex(where: { $0.id == word.id }) else { return nil }
@@ -390,6 +489,11 @@ final class SavedWordsStore {
         }
         updated.reviewHistory.append(reviewedAt)
         updated.lastReviewedAt = reviewedAt
+
+        updated.reviewEvents.append(ReviewEvent(date: reviewedAt, rating: rating))
+        if updated.reviewEvents.count > 500 {
+            updated.reviewEvents.removeFirst(updated.reviewEvents.count - 500)
+        }
 
         switch rating {
         case .again:

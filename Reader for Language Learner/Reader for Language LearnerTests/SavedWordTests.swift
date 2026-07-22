@@ -36,7 +36,21 @@ final class SavedWordTests: XCTestCase {
         XCTAssertEqual(decoded.incorrectCount, 0)
         XCTAssertNil(decoded.lastReviewedAt)
         XCTAssertTrue(decoded.reviewHistory.isEmpty)
+        XCTAssertTrue(decoded.reviewEvents.isEmpty)
         XCTAssertNil(decoded.nextReviewAt)
+    }
+
+    func testReviewEventsRoundTripThroughCodable() throws {
+        let events = [
+            ReviewEvent(date: Date(timeIntervalSince1970: 1000), rating: .good),
+            ReviewEvent(date: Date(timeIntervalSince1970: 2000), rating: .again)
+        ]
+        let word = SavedWord(term: "orbit", reviewEvents: events)
+
+        let data = try JSONEncoder().encode(word)
+        let decoded = try JSONDecoder().decode(SavedWord.self, from: data)
+
+        XCTAssertEqual(decoded.reviewEvents, events)
     }
 
     func testDecodeLegacyWordDefaultsReviewHistory() throws {
@@ -53,6 +67,7 @@ final class SavedWordTests: XCTestCase {
         XCTAssertEqual(decoded.id, id)
         XCTAssertEqual(decoded.term, "legacy")
         XCTAssertTrue(decoded.reviewHistory.isEmpty)
+        XCTAssertTrue(decoded.reviewEvents.isEmpty, "Pre-v1.27 words have no reviewEvents key — must default to empty, not throw")
         XCTAssertEqual(decoded.easeFactor, 2.5, "Words persisted before the ease-factor migration should default to the neutral ease")
         XCTAssertNil(decoded.cefrLevel)
         XCTAssertNil(decoded.language, "Pre-v1.24 words have no language key — SavedWordsStore backfills it at load time, not at decode time")
@@ -70,6 +85,7 @@ final class SavedWordTests: XCTestCase {
         XCTAssertEqual(word.reviewCount, 0)
         XCTAssertEqual(word.incorrectCount, 0)
         XCTAssertTrue(word.reviewHistory.isEmpty)
+        XCTAssertTrue(word.reviewEvents.isEmpty)
         XCTAssertTrue(word.isDue())
         XCTAssertEqual(word.reviewStatus, .new)
         XCTAssertEqual(word.easeFactor, 2.5)

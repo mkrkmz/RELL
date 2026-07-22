@@ -110,6 +110,15 @@ enum ReviewStatus {
     }
 }
 
+/// A single review answer, timestamped and rated — the source data for the
+/// stats panel's weekly-accuracy/retention chart. Additive alongside the
+/// legacy `reviewHistory` (dates only, no rating): both keep being written
+/// so nothing already reading `reviewHistory` needs to change.
+struct ReviewEvent: Codable, Equatable, Hashable {
+    let date: Date
+    let rating: ReviewRating
+}
+
 /// A single word or phrase saved by the user during reading.
 struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     let id: UUID
@@ -131,6 +140,12 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     var incorrectCount: Int
     var lastReviewedAt: Date?
     var reviewHistory: [Date]
+    /// Rated review events (date + Again/Good/Easy) — richer than
+    /// `reviewHistory`'s bare dates, feeding the stats panel's weekly
+    /// accuracy/retention chart. Capped at the most recent 500 per word
+    /// (see `SavedWordsStore.applyReview`); absent on words persisted
+    /// before this field existed.
+    var reviewEvents: [ReviewEvent]
     var nextReviewAt: Date?
     /// Per-word SRS ease multiplier (SM-2 style). 2.5 is the neutral default —
     /// `nextReviewAt` scheduling multiplies its base interval by `easeFactor / 2.5`,
@@ -164,6 +179,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         incorrectCount: Int = 0,
         lastReviewedAt: Date? = nil,
         reviewHistory: [Date] = [],
+        reviewEvents: [ReviewEvent] = [],
         nextReviewAt: Date? = nil,
         easeFactor: Double = 2.5,
         cefrLevel: String? = nil,
@@ -186,6 +202,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.incorrectCount = incorrectCount
         self.lastReviewedAt = lastReviewedAt
         self.reviewHistory = reviewHistory
+        self.reviewEvents = reviewEvents
         self.nextReviewAt = nextReviewAt
         self.easeFactor = easeFactor
         self.cefrLevel = cefrLevel
@@ -226,6 +243,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         case incorrectCount
         case lastReviewedAt
         case reviewHistory
+        case reviewEvents
         case nextReviewAt
         case easeFactor
         case cefrLevel
@@ -251,6 +269,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         incorrectCount = try container.decodeIfPresent(Int.self, forKey: .incorrectCount) ?? 0
         lastReviewedAt = try container.decodeIfPresent(Date.self, forKey: .lastReviewedAt)
         reviewHistory = try container.decodeIfPresent([Date].self, forKey: .reviewHistory) ?? []
+        reviewEvents = try container.decodeIfPresent([ReviewEvent].self, forKey: .reviewEvents) ?? []
         nextReviewAt = try container.decodeIfPresent(Date.self, forKey: .nextReviewAt)
         easeFactor = try container.decodeIfPresent(Double.self, forKey: .easeFactor) ?? 2.5
         cefrLevel = try container.decodeIfPresent(String.self, forKey: .cefrLevel)

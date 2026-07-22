@@ -64,6 +64,7 @@ struct ContentView: View {
 
     @AppStorage("appTheme")       private var appThemeRaw:    String = AppTheme.system.rawValue
     @AppStorage("pageTheme")      private var pageThemeRaw:   String = PageTheme.original.rawValue
+    @AppStorage("pdfDisplayMode") private var pdfDisplayModeRaw: String = PDFLayoutMode.single.rawValue
     @AppStorage("readingPositions") private var readingPositionsData: Data = Data()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
@@ -103,6 +104,7 @@ struct ContentView: View {
 
     private var appTheme:  AppTheme  { AppTheme(rawValue: appThemeRaw) ?? .system }
     private var pageTheme: PageTheme { PageTheme(rawValue: pageThemeRaw) ?? .original }
+    private var pdfDisplayMode: PDFLayoutMode { PDFLayoutMode(rawValue: pdfDisplayModeRaw) ?? .single }
     /// Snapshot of the stored EPUB typography prefs; reading the @AppStorage
     /// properties here (not UserDefaults directly) keeps the view observing
     /// each key, so panel changes re-render the reader live.
@@ -467,7 +469,8 @@ struct ContentView: View {
                         quickLookup: quickLookup,
                         toastCenter: toastCenter,
                         hoverEnabled: hoverDictionaryEnabled,
-                        pageTheme: pageTheme
+                        pageTheme: pageTheme,
+                        displayMode: pdfDisplayMode
                     )
                     .onReceive(NotificationCenter.default.publisher(for: .PDFViewPageChanged)) { notification in
                         guard let pdfView = notification.object as? PDFView,
@@ -1092,6 +1095,7 @@ struct ContentView: View {
             isCurrentPageBookmarked: isCurrentPageBookmarked,
             isCurrentTermSaved: isCurrentTermSaved,
             pageTheme: pageTheme,
+            pdfDisplayMode: pdfDisplayMode,
             speechState: speechManager.state,
             openDocument: { openDocument($0) },
             closeDocument: { closeDocument() },
@@ -1121,6 +1125,7 @@ struct ContentView: View {
             actualSize: { menuActualSize() },
             fitToWidth: { pdfViewManager.fitToWidth() },
             setPageTheme: { pageThemeRaw = $0.rawValue },
+            setPDFDisplayMode: { pdfDisplayModeRaw = $0.rawValue },
             readAloud: { readCurrentPageAloud() },
             pauseSpeech: { speechManager.pause() },
             resumeSpeech: { speechManager.resume() },

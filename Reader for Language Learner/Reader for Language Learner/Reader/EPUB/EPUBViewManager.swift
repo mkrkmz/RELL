@@ -127,6 +127,10 @@ final class EPUBViewManager: NSObject {
     /// set by the reader view, which owns the store reference.
     @ObservationIgnored var highlightsProvider: ((_ chapterPath: String) -> [EPUBHighlight])?
 
+    /// Supplies the current book's saved-word terms — set by the reader
+    /// view, which owns the store reference. Mirrors `highlightsProvider`.
+    @ObservationIgnored var savedWordTermsProvider: (() -> [String])?
+
     @ObservationIgnored private var pendingScrollFraction: Double?
     @ObservationIgnored private var pendingFragment: String?
     @ObservationIgnored private var lastPositionSave = Date.distantPast
@@ -146,6 +150,7 @@ final class EPUBViewManager: NSObject {
     @ObservationIgnored private var currentHoverTerm = ""
 
     @ObservationIgnored private var highlightsChangedObserver: NSObjectProtocol?
+    @ObservationIgnored private var savedWordAddedObserver: NSObjectProtocol?
 
     // MARK: Init
 
@@ -159,11 +164,25 @@ final class EPUBViewManager: NSObject {
         ) { [weak self] _ in
             Task { @MainActor in self?.refreshHighlights() }
         }
+        // A newly-saved word should pick up its underline mark without
+        // waiting for the next chapter turn. Removal isn't observed the
+        // same way — it settles at the next natural refresh (chapter
+        // navigation, theme change, or another save), matching PDF's own
+        // scroll-tick-driven word-count check rather than adding a
+        // dedicated "removed" broadcast for a much rarer interaction.
+        savedWordAddedObserver = NotificationCenter.default.addObserver(
+            forName: .savedWordAdded, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.refreshHighlights() }
+        }
     }
 
     deinit {
         if let highlightsChangedObserver {
             NotificationCenter.default.removeObserver(highlightsChangedObserver)
+        }
+        if let savedWordAddedObserver {
+            NotificationCenter.default.removeObserver(savedWordAddedObserver)
         }
     }
 
@@ -420,17 +439,41 @@ final class EPUBViewManager: NSObject {
 
     // MARK: Highlights
 
-    /// Re-renders this chapter's highlight marks from the current store
-    /// contents. Safe to call repeatedly — the JS side clears old marks
-    /// before re-wrapping.
+    /// Re-renders this chapter's highlight marks and saved-word underlines
+    /// from current store contents. Safe to call repeatedly — the JS side
+    /// clears old marks before re-wrapping. Saved-word marks are applied
+    /// *after* highlights: highlight anchors must resolve against a
+    /// pristine, unwrapped DOM (see `rellRenderHighlights`), and running
+    /// them second here keeps that guarantee regardless of call order.
     func refreshHighlights() {
         guard let webView, let document,
-              document.spinePaths.indices.contains(chapterIndex),
-              let highlightsProvider
+              document.spinePaths.indices.contains(chapterIndex)
         else { return }
-        let chapterPath = document.spinePaths[chapterIndex]
-        let entries = highlightsProvider(chapterPath)
-        webView.evaluateJavaScript(Self.renderHighlightsScript(for: entries, ink: Self.highlightInk(for: currentTheme)))
+
+        if let highlightsProvider {
+            let chapterPath = document.spinePaths[chapterIndex]
+            let entries = highlightsProvider(chapterPath)
+            webView.evaluateJavaScript(Self.renderHighlightsScript(for: entries, ink: Self.highlightInk(for: currentTheme)))
+        }
+
+        if let savedWordTermsProvider {
+            let terms = savedWordTermsProvider()
+            webView.evaluateJavaScript(Self.markSavedWordsScript(for: terms, color: Self.savedWordMarkColor(for: currentTheme)))
+        }
+    }
+
+    /// Dotted-underline tint for saved-word marks — visually distinct from
+    /// a user highlight's filled background, and readable against all six
+    /// page themes without one fixed color's contrast breaking on the dark
+    /// ones.
+    static func savedWordMarkColor(for theme: PageTheme) -> String {
+        theme.usesLightInk ? "rgba(150, 179, 255, 0.75)" : "rgba(51, 92, 209, 0.65)"
+    }
+
+    private static func markSavedWordsScript(for terms: [String], color: String) -> String {
+        let capped = Array(terms.prefix(500))
+        let json = (try? JSONEncoder().encode(capped)).flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
+        return "window.rellMarkSavedWords(\(json), '\(color)');"
     }
 
     private static func renderHighlightsScript(for highlights: [EPUBHighlight], ink: String) -> String {

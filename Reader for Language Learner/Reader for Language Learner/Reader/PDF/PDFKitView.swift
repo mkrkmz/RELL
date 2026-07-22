@@ -24,6 +24,7 @@ struct PDFKitView: NSViewRepresentable {
     var toastCenter: ToastCenter
     var hoverEnabled: Bool = true
     var pageTheme: PageTheme = .original
+    var displayMode: PDFLayoutMode = .single
 
     func makeCoordinator() -> Coordinator {
         Coordinator(selectedText: $selectedText,
@@ -40,13 +41,14 @@ struct PDFKitView: NSViewRepresentable {
     func makeNSView(context: Context) -> PDFView {
         let pdfView = RELLPDFView()
         pdfView.autoScales = true
-        pdfView.displayMode = .singlePageContinuous
+        pdfView.displayMode = displayMode.kitDisplayMode
         pdfView.displayDirection = .vertical
 
         // Publish the shared PDFView so the thumbnail sidebar can connect.
         pdfViewManager.attach(pdfView)
 
         context.coordinator.attach(to: pdfView)
+        context.coordinator.currentDisplayMode = displayMode
         context.coordinator.requestDocumentUpdate(using: documentURL)
         context.coordinator.applyTheme(pageTheme)
         return pdfView
@@ -64,6 +66,7 @@ struct PDFKitView: NSViewRepresentable {
         context.coordinator.setHoverEnabled(hoverEnabled)
         context.coordinator.requestDocumentUpdate(using: documentURL)
         context.coordinator.applyTheme(pageTheme)
+        context.coordinator.applyDisplayMode(displayMode)
         context.coordinator.refreshHighlights()
     }
 
@@ -91,8 +94,13 @@ struct PDFKitView: NSViewRepresentable {
         private var selectionDebounceWorkItem: DispatchWorkItem?
         private var documentUpdateWorkItem: DispatchWorkItem?
         private var themeWorkItem: DispatchWorkItem?
+        /// Coalesces the flood of `PDFViewVisiblePagesChanged` notifications
+        /// a scroll or zoom gesture fires — without this, every single tick
+        /// re-ran the highlight scan.
+        private var visiblePagesDebounceWorkItem: DispatchWorkItem?
         private var loadedDocumentURL: URL?
         private var currentTheme: PageTheme = .original
+        var currentDisplayMode: PDFLayoutMode = .single
         
         var selectedText: Binding<String>
         var contextSentence: Binding<String?>
@@ -119,9 +127,18 @@ struct PDFKitView: NSViewRepresentable {
         
         /// Cache of pages that have already been processed for the current set of saved words.
         private var processedPages = Set<PDFPage>()
-        
-        /// Track changes to saved words to trigger re-scan.
-        private var lastSavedWordsCount: Int = 0
+
+        /// `page.string` re-extracts a PDF page's full text on every call —
+        /// not free for a scanned or text-heavy page. Keyed by the `PDFPage`
+        /// object itself (stable per document instance; NSCache's default
+        /// identity-based key handling is exactly what's wanted here).
+        private let pageTextCache = NSCache<PDFPage, NSString>()
+
+        /// Saved-word terms as of the last full or additive scan — diffed
+        /// against the store's current terms on every refresh so a newly
+        /// saved word can be layered onto already-highlighted pages instead
+        /// of forcing a full teardown-and-rescan of every term.
+        private var knownSavedTerms: Set<String> = []
         private var lastNotesCount: Int = 0
         
         init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore, highlightStore: PDFHighlightStore, quickLookup: QuickLookupService, toastCenter: ToastCenter, hoverEnabled: Bool) {
@@ -197,8 +214,7 @@ struct PDFKitView: NSViewRepresentable {
                 queue: .main
             ) { [weak self] _ in
                 Task { @MainActor in
-                    self?.refreshHighlights()
-                    self?.closeHoverPopover()
+                    self?.scheduleVisiblePagesRefresh()
                 }
             }
 
@@ -239,7 +255,8 @@ struct PDFKitView: NSViewRepresentable {
             }
             searchManager.clearSearch()
             scheduleSelectionUpdate("")
-            
+            pageTextCache.removeAllObjects()
+
             // Re-apply theme just in case
             applyTheme(currentTheme)
             resetHighlightsCache()
@@ -270,7 +287,7 @@ struct PDFKitView: NSViewRepresentable {
             guard let pdfView = pdfView,
                   let selection = pdfView.currentSelection,
                   let page = selection.pages.first,
-                  let pageText = page.string,
+                  let pageText = cachedPageString(page),
                   let selectionString = selection.string else {
                 return nil
             }
@@ -329,16 +346,45 @@ struct PDFKitView: NSViewRepresentable {
         }
         
         // MARK: - Auto Highlighting
-        
+
+        /// Coalesces same-tick visible-page-change bursts (scroll/zoom fire
+        /// this notification repeatedly) into a single refresh ~120ms after
+        /// the last one, rather than re-scanning on every intermediate tick.
+        private func scheduleVisiblePagesRefresh() {
+            visiblePagesDebounceWorkItem?.cancel()
+            let workItem = DispatchWorkItem { [weak self] in
+                self?.refreshHighlights()
+                self?.closeHoverPopover()
+            }
+            visiblePagesDebounceWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: workItem)
+        }
+
         @MainActor func refreshHighlights(force: Bool = false) {
             guard let pdfView = pdfView else { return }
-            
+
             var effectiveForce = force
-            // If words count changed significantly, force refresh
-            if savedWordsStore.words.count != lastSavedWordsCount {
-                effectiveForce = true
-                lastSavedWordsCount = savedWordsStore.words.count
-                processedPages.removeAll()
+            // Additive fast path: only new terms were added since the last
+            // scan, so already-processed pages just get those terms' matches
+            // layered on top instead of a full teardown-and-rescan of every
+            // term. Any removal or edit falls back to the original
+            // clear-everything behavior below — diffing out a stale
+            // highlight isn't worth the bookkeeping deletion/rename is rare.
+            var additiveTerms: [String]?
+            let currentTerms = savedWordsStore.words
+                .map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            let currentTermSet = Set(currentTerms)
+            if currentTermSet != knownSavedTerms {
+                let added = currentTermSet.subtracting(knownSavedTerms)
+                let removed = knownSavedTerms.subtracting(currentTermSet)
+                if removed.isEmpty, !added.isEmpty {
+                    additiveTerms = Array(added)
+                } else {
+                    effectiveForce = true
+                    processedPages.removeAll()
+                }
+                knownSavedTerms = currentTermSet
             }
             if noteStore.notes.count != lastNotesCount {
                 effectiveForce = true
@@ -347,17 +393,27 @@ struct PDFKitView: NSViewRepresentable {
             }
 
             let visiblePages = pdfView.visiblePages
-            let savedTerms = savedWordsStore.words.map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            // Early exit: nothing to layer on and every visible page is
+            // already up to date — skip building the per-page term/note/
+            // highlight lookups below entirely.
+            guard effectiveForce || additiveTerms != nil
+                    || visiblePages.contains(where: { !processedPages.contains($0) })
+            else { return }
+
             let currentFilename = loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? ""
             let notesByPage = Dictionary(grouping: noteStore.notes(for: currentFilename), by: \.pageIndex)
             let highlightsByPage = Dictionary(grouping: highlightStore.highlights(for: currentFilename), by: \.pageIndex)
 
             for page in visiblePages {
                 let pageIndex = pdfView.document?.index(for: page) ?? -1
+                if let additiveTerms, processedPages.contains(page) {
+                    addHighlights(for: additiveTerms, on: page)
+                    continue
+                }
                 if effectiveForce || !processedPages.contains(page) {
                     processPage(
                         page,
-                        savedTerms: savedTerms,
+                        savedTerms: currentTerms,
                         notes: notesByPage[pageIndex] ?? [],
                         highlights: highlightsByPage[pageIndex] ?? []
                     )
@@ -365,12 +421,24 @@ struct PDFKitView: NSViewRepresentable {
                 }
             }
         }
-        
+
         @MainActor private func resetHighlightsCache() {
             processedPages.removeAll()
             refreshHighlights(force: true)
         }
-        
+
+        /// Returns `page.string`, computing and caching it on a miss —
+        /// re-extracting a page's full text on every hover/selection/scan is
+        /// the actual cost on text-heavy or scanned pages.
+        private func cachedPageString(_ page: PDFPage) -> String? {
+            if let cached = pageTextCache.object(forKey: page) {
+                return cached as String
+            }
+            guard let text = page.string else { return nil }
+            pageTextCache.setObject(text as NSString, forKey: page)
+            return text
+        }
+
         private func processPage(_ page: PDFPage, savedTerms: [String], notes: [PDFNote], highlights: [PDFHighlight]) {
             removeGeneratedHighlights(from: page)
 
@@ -386,29 +454,7 @@ struct PDFKitView: NSViewRepresentable {
                 }
             }
 
-            guard let text = page.string else { return }
-            let nsText = text as NSString
-            let fullRange = NSRange(location: 0, length: nsText.length)
-            
-            for term in savedTerms {
-                var searchRange = fullRange
-                while searchRange.location < nsText.length {
-                    let foundRange = nsText.range(of: term, options: .caseInsensitive, range: searchRange)
-                    if foundRange.location == NSNotFound { break }
-                    
-                    if let selection = page.selection(for: foundRange) {
-                        // Handle multi-line selections
-                        let lineSelections = selection.selectionsByLine()
-                        for lineSel in lineSelections {
-                            addHighlight(to: page, selection: lineSel)
-                        }
-                    }
-                    
-                    searchRange.location = foundRange.location + foundRange.length
-                    if searchRange.location >= nsText.length { break }
-                    searchRange.length = nsText.length - searchRange.location
-                }
-            }
+            addHighlights(for: savedTerms, on: page)
 
             for note in notes {
                 for rect in note.highlightRects {
@@ -416,6 +462,37 @@ struct PDFKitView: NSViewRepresentable {
                         to: page,
                         rect: CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
                     )
+                }
+            }
+        }
+
+        /// Scans `page`'s text for every occurrence of each term in `terms`
+        /// and adds a highlight annotation per match. Shared by `processPage`
+        /// (full pass, every saved term) and the additive top-up in
+        /// `refreshHighlights` (just the newly-added terms, on a page whose
+        /// existing highlights are left untouched).
+        private func addHighlights(for terms: [String], on page: PDFPage) {
+            guard let text = cachedPageString(page) else { return }
+            let nsText = text as NSString
+            let fullRange = NSRange(location: 0, length: nsText.length)
+
+            for term in terms {
+                var searchRange = fullRange
+                while searchRange.location < nsText.length {
+                    let foundRange = nsText.range(of: term, options: .caseInsensitive, range: searchRange)
+                    if foundRange.location == NSNotFound { break }
+
+                    if let selection = page.selection(for: foundRange) {
+                        // Handle multi-line selections
+                        let lineSelections = selection.selectionsByLine()
+                        for lineSel in lineSelections {
+                            addHighlight(to: page, selection: lineSel)
+                        }
+                    }
+
+                    searchRange.location = foundRange.location + foundRange.length
+                    if searchRange.location >= nsText.length { break }
+                    searchRange.length = nsText.length - searchRange.location
                 }
             }
         }
@@ -723,6 +800,25 @@ struct PDFKitView: NSViewRepresentable {
             pdfView.needsDisplay = true
         }
 
+        // MARK: - Display Mode
+
+        /// Switches single-page ↔ two-up. PDFKit's `displayMode` setter can
+        /// drop the current scroll position, so the visible page is
+        /// captured first and restored with `go(to:)` right after — the
+        /// user's place survives the layout change.
+        func applyDisplayMode(_ mode: PDFLayoutMode) {
+            guard currentDisplayMode != mode, let pdfView else {
+                currentDisplayMode = mode
+                return
+            }
+            let page = pdfView.currentPage
+            currentDisplayMode = mode
+            pdfView.displayMode = mode.kitDisplayMode
+            if let page {
+                pdfView.go(to: page)
+            }
+        }
+
         func detach() {
             if let selectionObserver {
                 NotificationCenter.default.removeObserver(selectionObserver)
@@ -748,7 +844,9 @@ struct PDFKitView: NSViewRepresentable {
             documentUpdateWorkItem = nil
             themeWorkItem?.cancel()
             themeWorkItem = nil
-            
+            visiblePagesDebounceWorkItem?.cancel()
+            visiblePagesDebounceWorkItem = nil
+
             overlayView?.removeFromSuperview()
             overlayView = nil
         }
