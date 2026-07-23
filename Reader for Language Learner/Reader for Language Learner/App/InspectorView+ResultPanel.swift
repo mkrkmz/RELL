@@ -107,33 +107,35 @@ extension InspectorView {
                         .padding(.horizontal, DS.Spacing.xxs)
                 }
 
-                HStack(spacing: DS.Spacing.xxs) {
-                    resultToolbarButton(systemImage: "arrow.clockwise") {
-                        Task { await runModule(module, forceRefresh: true) }
-                    }
-                    .help("Refresh (⌘R)")
-                    .keyboardShortcut("r", modifiers: [.command])
-                    .disabled(isLoading || !isModuleEnabled(module))
-
-                    resultToolbarButton(systemImage: "doc.on.doc") {
-                        copyToClipboard(renderedOutput, showFeedback: true)
-                    }
-                    .help("Copy result (⇧⌘C)")
-                    .keyboardShortcut("c", modifiers: [.command, .shift])
-                    .disabled(renderedOutput.isEmpty)
-
-                    if isLoading {
-                        resultToolbarButton(systemImage: "xmark.circle.fill") {
-                            viewModel.cancel(module: module)
-                            moduleElapsed[module] = nil
+                DSGlassGroup(spacing: DS.Spacing.xxs) {
+                    HStack(spacing: DS.Spacing.xxs) {
+                        resultToolbarButton(systemImage: "arrow.clockwise") {
+                            Task { await runModule(module, forceRefresh: true) }
                         }
-                        .foregroundStyle(DS.Color.danger.opacity(0.78))
-                        .help("Cancel")
-                    } else {
-                        resultToolbarButton(systemImage: "xmark.circle.fill") {
-                            activeModule = nil
+                        .help("Refresh (⌘R)")
+                        .keyboardShortcut("r", modifiers: [.command])
+                        .disabled(isLoading || !isModuleEnabled(module))
+
+                        resultToolbarButton(systemImage: "doc.on.doc") {
+                            copyToClipboard(renderedOutput, showFeedback: true)
                         }
-                        .help("Close (Esc)")
+                        .help("Copy result (⇧⌘C)")
+                        .keyboardShortcut("c", modifiers: [.command, .shift])
+                        .disabled(renderedOutput.isEmpty)
+
+                        if isLoading {
+                            resultToolbarButton(systemImage: "xmark.circle.fill") {
+                                viewModel.cancel(module: module)
+                                moduleElapsed[module] = nil
+                            }
+                            .foregroundStyle(DS.Color.danger.opacity(0.78))
+                            .help("Cancel")
+                        } else {
+                            resultToolbarButton(systemImage: "xmark.circle.fill") {
+                                activeModule = nil
+                            }
+                            .help("Close (Esc)")
+                        }
                     }
                 }
                 .controlSize(.small)
@@ -167,12 +169,7 @@ extension InspectorView {
             Image(systemName: systemImage)
                 .font(DS.Typography.icon(11, weight: .medium))
                 .frame(width: 26, height: 26)
-                .background(DS.Color.surfaceInset)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
-                )
+                .dsGlassInteractive(cornerRadius: DS.Radius.sm)
         }
         .buttonStyle(.plain)
     }

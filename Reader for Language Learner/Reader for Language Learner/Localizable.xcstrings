@@ -224,7 +224,14 @@
 
     },
     "%lld-day streak" : {
-
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld günlük seri"
+          }
+        }
+      }
     },
     "%lld-day streak · read today to keep it" : {
       "localizations" : {
@@ -259,7 +266,14 @@
       }
     },
     "1-day streak" : {
-
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 günlük seri"
+          }
+        }
+      }
     },
     "1-day streak · read today to keep it" : {
       "localizations" : {
@@ -4651,6 +4665,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uzaklaştır (⌘-)"
+          }
+        }
+      }
+    },
+    "Streak freezes — each automatically covers one missed day" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seri dondurmaları — her biri kaçırılan bir günü otomatik telafi eder"
           }
         }
       }

@@ -32,6 +32,20 @@ final class SpeechManager: NSObject {
     private var utteranceOffsets: [ObjectIdentifier: Int] = [:]
     private var totalCharacterCount = 0
 
+    // ── Queue state (enables mid-playback rate changes) ──────────────────
+    /// The sentence-split queue of the current read, kept so a rate change can
+    /// re-enqueue the remaining sentences at the new speed without losing the
+    /// place. Cleared by `stop()`.
+    private var sentences: [String] = []
+    /// Utterance → its index in `sentences`, so `didStart` can track where we
+    /// are for a mid-playback re-enqueue.
+    private var sentenceIndexByUtterance: [ObjectIdentifier: Int] = [:]
+    /// Index of the sentence currently being spoken — the resume point for a
+    /// rate change.
+    private var currentSentenceIndex = 0
+    private var currentLanguage: Language = .english
+    private var currentRate: Float = 0.5
+
     private override init() {
         super.init()
         synthesizer.delegate = self
@@ -55,22 +69,57 @@ final class SpeechManager: NSObject {
             capped = trimmed
         }
 
-        let voice = preferredVoice(for: language)
-        let clampedRate = max(0.35, min(0.65, rate))
-        let sentences = Self.sentenceSplit(capped)
+        currentLanguage = language
+        currentRate = max(0.35, min(0.65, rate))
+        sentences = Self.sentenceSplit(capped)
+        totalCharacterCount = capped.count
+        currentSentenceIndex = 0
 
-        var offset = 0
+        enqueue(fromIndex: 0)
+        progress = 0
+        state = .speaking
+    }
+
+    /// Queues `sentences[startIndex...]` at the current rate/voice, rebuilding
+    /// the offset bookkeeping so `progress` stays continuous across a rate
+    /// change (offsets are absolute over the whole text, not the sub-queue).
+    private func enqueue(fromIndex startIndex: Int) {
         utteranceOffsets.removeAll()
-        for sentence in sentences {
+        sentenceIndexByUtterance.removeAll()
+        guard startIndex < sentences.count else { return }
+
+        let voice = preferredVoice(for: currentLanguage)
+        var offset = sentences[0..<startIndex].reduce(0) { $0 + $1.count }
+        for index in startIndex..<sentences.count {
+            let sentence = sentences[index]
             let utterance = AVSpeechUtterance(string: sentence)
-            utterance.rate = clampedRate
+            utterance.rate = currentRate
             utterance.voice = voice
-            utteranceOffsets[ObjectIdentifier(utterance)] = offset
+            let id = ObjectIdentifier(utterance)
+            utteranceOffsets[id] = offset
+            sentenceIndexByUtterance[id] = index
             offset += sentence.count
             synthesizer.speak(utterance)
         }
-        totalCharacterCount = capped.count
-        progress = 0
+    }
+
+    /// Applies a new speaking rate. If a read is in progress, the remaining
+    /// sentences (from the one currently being spoken) are re-queued at the new
+    /// speed — the current sentence restarts, everything after it follows. A
+    /// no-op when idle beyond storing the rate for the next `speak`.
+    func setRate(_ rate: Float) {
+        let clamped = max(0.35, min(0.65, rate))
+        guard clamped != currentRate else { return }
+        currentRate = clamped
+
+        guard state != .idle, !sentences.isEmpty else { return }
+        let resumeIndex = currentSentenceIndex
+        // Cancel the in-flight queue then immediately re-queue: because a new
+        // utterance is enqueued synchronously, `synthesizer.isSpeaking` is true
+        // again by the time the async `didCancel` runs, so it skips the reset
+        // (same guard `didFinish` uses for queued utterances).
+        synthesizer.stopSpeaking(at: .immediate)
+        enqueue(fromIndex: resumeIndex)
         state = .speaking
     }
 
@@ -95,6 +144,9 @@ final class SpeechManager: NSObject {
     func stop() {
         synthesizer.stopSpeaking(at: .immediate)
         utteranceOffsets.removeAll()
+        sentenceIndexByUtterance.removeAll()
+        sentences.removeAll()
+        currentSentenceIndex = 0
         totalCharacterCount = 0
         state = .idle
         progress = nil
@@ -127,7 +179,13 @@ final class SpeechManager: NSObject {
 
 extension SpeechManager: AVSpeechSynthesizerDelegate {
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
-        Task { @MainActor in self.state = .speaking }
+        let id = ObjectIdentifier(utterance)
+        Task { @MainActor in
+            self.state = .speaking
+            if let index = self.sentenceIndexByUtterance[id] {
+                self.currentSentenceIndex = index
+            }
+        }
     }
 
     nonisolated func speechSynthesizer(
@@ -166,6 +224,10 @@ extension SpeechManager: AVSpeechSynthesizerDelegate {
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         Task { @MainActor in
+            // A mid-playback rate change cancels the queue and immediately
+            // re-enqueues, so the synthesizer is speaking again here — only a
+            // real stop (nothing queued) should reset state.
+            guard !synthesizer.isSpeaking else { return }
             self.state = .idle
             self.progress = nil
         }

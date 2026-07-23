@@ -544,13 +544,16 @@ struct QuizView: View {
     // MARK: - Rating Row
 
     private func ratingRow(for word: SavedWord) -> some View {
-        HStack(spacing: DS.Spacing.lg) {
-            actionButton(label: "Again", icon: "arrow.counterclockwise", color: DS.Color.danger,
-                         shortcut: "1", shortcutLabel: "1") { recordRating(.again, word: word) }
-            actionButton(label: "Good", icon: "checkmark.circle.fill", color: DS.Color.accent,
-                         shortcut: "2", shortcutLabel: "2") { recordRating(.good, word: word) }
-            actionButton(label: "Easy", icon: "checkmark.seal.fill", color: DS.Color.success,
-                         shortcut: "3", shortcutLabel: "3") { recordRating(.easy, word: word) }
+        // The card face stays flat (content); only this rating bar goes glass.
+        DSGlassGroup(spacing: DS.Spacing.lg) {
+            HStack(spacing: DS.Spacing.lg) {
+                actionButton(label: "Again", icon: "arrow.counterclockwise", color: DS.Color.danger,
+                             shortcut: "1", shortcutLabel: "1") { recordRating(.again, word: word) }
+                actionButton(label: "Good", icon: "checkmark.circle.fill", color: DS.Color.accent,
+                             shortcut: "2", shortcutLabel: "2") { recordRating(.good, word: word) }
+                actionButton(label: "Easy", icon: "checkmark.seal.fill", color: DS.Color.success,
+                             shortcut: "3", shortcutLabel: "3") { recordRating(.easy, word: word) }
+            }
         }
         .padding(.horizontal, DS.Spacing.xl)
         .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -724,13 +727,59 @@ struct QuizView: View {
             .foregroundStyle(color)
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.Spacing.md)
-            .background(color.opacity(0.10))
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+            // Neutral frosted chip; the colored icon + label carry the meaning
+            // (calmer than three saturated tinted chips). Fallback keeps the
+            // color wash on macOS 15.
+            .dsGlassInteractive(
+                cornerRadius: DS.Radius.md,
+                fallback: AnyShapeStyle(color.opacity(0.10)),
+                fallbackStroke: .none
+            )
         }
         .buttonStyle(.plain)
         .keyboardShortcut(shortcut, modifiers: [])
         .help("\(label) - mark this card and continue (\(shortcutLabel))")
         .accessibilityHint("Marks the current card as \(label) and advances review")
+    }
+
+    // MARK: - Review Streak Banner
+
+    /// Flame + current streak, plus a snowflake count when freezes are banked.
+    /// Earned freezes auto-bridge a single missed day (see ReviewStreak).
+    @ViewBuilder
+    private var reviewStreakBanner: some View {
+        let streak = store.reviewStreak()
+        if streak.current > 0 {
+            HStack(spacing: DS.Spacing.sm) {
+                Image(systemName: "flame.fill")
+                    .foregroundStyle(DS.Color.warning)
+                Text("\(streak.current)-day streak")
+                    .font(DS.Typography.subhead.weight(.semibold))
+                    .foregroundStyle(DS.Color.textPrimary)
+
+                if streak.freezesRemaining > 0 {
+                    Divider().frame(height: 12)
+                    HStack(spacing: 2) {
+                        Image(systemName: "snowflake")
+                            .foregroundStyle(DS.Color.accent)
+                        Text("\(streak.freezesRemaining)")
+                            .font(DS.Typography.caption.weight(.semibold))
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+                    .help("Streak freezes — each automatically covers one missed day")
+                }
+            }
+            .font(DS.Typography.caption)
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.vertical, DS.Spacing.sm)
+            .dsGlassCapsule(fallbackShadow: nil)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(
+                streak.freezesRemaining > 0
+                    ? "\(streak.current) day review streak, \(streak.freezesRemaining) freezes banked"
+                    : "\(streak.current) day review streak"
+            )
+        }
     }
 
     // MARK: - Result Screen
@@ -751,6 +800,8 @@ struct QuizView: View {
                         .foregroundStyle(DS.Color.textTertiary)
                         .multilineTextAlignment(.center)
                 }
+
+                reviewStreakBanner
 
                 HStack(spacing: DS.Spacing.lg) {
                     resultStat(value: "\(sessionGood)", label: "Good", color: DS.Color.accent)

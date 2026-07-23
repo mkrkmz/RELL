@@ -405,6 +405,125 @@ extension View {
     }
 }
 
+// MARK: - Liquid Glass (macOS 26+)
+
+// Liquid Glass is chrome, not content: these apply only to surfaces that float
+// *above* readable content — toasts, floating bars, HUDs, control clusters.
+// Reading surfaces (result bodies, PDF/EPUB text, list rows) stay flat.
+//
+// Every entry point is gated `#available(macOS 26.0, *)` in ONE place so call
+// sites never branch. The app's deployment target is macOS 15.0; on 15 these
+// fall back to the material/DS chrome the surface used before glass.
+
+extension DS {
+    /// Builds a `Glass` style. `tint` should carry *meaning* (a warning wash,
+    /// a call-to-action), never decoration. `interactive` only for surfaces
+    /// that actually respond to hover/press.
+    @available(macOS 26.0, *)
+    static func glass(interactive: Bool = false, tint: SwiftUI.Color? = nil) -> Glass {
+        var g: Glass = .regular
+        if let tint { g = g.tint(tint) }
+        if interactive { g = g.interactive() }
+        return g
+    }
+}
+
+extension View {
+    /// A floating pill surface — toasts, the speech playback bar. Glass on
+    /// macOS 26 (no shadow: glass brings its own depth), a material capsule
+    /// with a lift shadow on macOS 15.
+    @ViewBuilder
+    func dsGlassCapsule(
+        interactive: Bool = false,
+        tint: SwiftUI.Color? = nil,
+        fallback: AnyShapeStyle = AnyShapeStyle(.regularMaterial),
+        fallbackShadow: DS.ShadowStyle? = DS.Shadow.float
+    ) -> some View {
+        if #available(macOS 26.0, *) {
+            glassEffect(DS.glass(interactive: interactive, tint: tint), in: Capsule())
+        } else {
+            self
+                .background(fallback, in: Capsule())
+                .modifier(OptionalShadowModifier(style: fallbackShadow))
+        }
+    }
+
+    /// A floating rounded-rect panel — find bars, the Quick Lookup HUD. Pass a
+    /// `fallback` matching the surface's pre-glass look (`.regularMaterial` for
+    /// a blur, a `DS.Color` for a solid). `AnyShapeStyle` so both fit one param.
+    @ViewBuilder
+    func dsGlassCard(
+        radius: CGFloat = DS.Radius.lg,
+        interactive: Bool = false,
+        tint: SwiftUI.Color? = nil,
+        fallback: AnyShapeStyle = AnyShapeStyle(DS.Color.surface),
+        fallbackStroke: DS.CardStroke = .hairline,
+        fallbackShadow: DS.ShadowStyle? = nil
+    ) -> some View {
+        if #available(macOS 26.0, *) {
+            glassEffect(DS.glass(interactive: interactive, tint: tint), in: RoundedRectangle(cornerRadius: radius))
+        } else {
+            self
+                .background(fallback, in: RoundedRectangle(cornerRadius: radius))
+                .overlay {
+                    if let strokeColor = fallbackStroke.color {
+                        RoundedRectangle(cornerRadius: radius)
+                            .strokeBorder(strokeColor, lineWidth: 0.8)
+                    }
+                }
+                .modifier(OptionalShadowModifier(style: fallbackShadow))
+        }
+    }
+
+    /// An interactive glass chip for a single control (icon button, segment).
+    /// Fallback matches the app's existing inset-button chrome. Wrap groups of
+    /// these in `DSGlassGroup` so their glass samples a shared region.
+    @ViewBuilder
+    func dsGlassInteractive(
+        cornerRadius: CGFloat = DS.Radius.sm,
+        tint: SwiftUI.Color? = nil,
+        fallback: AnyShapeStyle = AnyShapeStyle(DS.Color.surfaceInset),
+        fallbackStroke: DS.CardStroke = .hairline
+    ) -> some View {
+        if #available(macOS 26.0, *) {
+            glassEffect(DS.glass(interactive: true, tint: tint), in: RoundedRectangle(cornerRadius: cornerRadius))
+        } else {
+            self
+                .background(fallback, in: RoundedRectangle(cornerRadius: cornerRadius))
+                .overlay {
+                    if let strokeColor = fallbackStroke.color {
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .strokeBorder(strokeColor, lineWidth: 0.5)
+                    }
+                }
+        }
+    }
+}
+
+/// Groups neighboring glass elements so they share one sampling region — glass
+/// cannot sample other glass, so ungrouped siblings render inconsistently.
+/// `spacing` should match the layout's own spacing. A no-op passthrough on
+/// macOS 15, where the children fall back to their own chrome.
+struct DSGlassGroup<Content: View>: View {
+    var spacing: CGFloat?
+    @ViewBuilder var content: () -> Content
+
+    init(spacing: CGFloat? = nil, @ViewBuilder content: @escaping () -> Content) {
+        self.spacing = spacing
+        self.content = content
+    }
+
+    var body: some View {
+        if #available(macOS 26.0, *) {
+            GlassEffectContainer(spacing: spacing) {
+                content()
+            }
+        } else {
+            content()
+        }
+    }
+}
+
 // MARK: - Section Header
 
 /// Overline section label with an optional trailing accessory (e.g. a "Run All"
@@ -517,8 +636,7 @@ struct DSToast: View {
         }
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.vertical, DS.Spacing.sm)
-        .background(.regularMaterial, in: Capsule())
-        .dsShadow(DS.Shadow.float)
+        .dsGlassCapsule()
     }
 }
 

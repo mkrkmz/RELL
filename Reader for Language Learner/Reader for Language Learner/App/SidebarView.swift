@@ -98,9 +98,13 @@ struct SidebarView: View {
     // MARK: - Icon Tab Bar
 
     private var tabBar: some View {
-        HStack(spacing: 0) {
-            ForEach(availableTabs) { tab in
-                tabBarButton(tab)
+        // Glass container so the selected-tab chip samples a shared region,
+        // matching the inspector's control language.
+        DSGlassGroup(spacing: 0) {
+            HStack(spacing: 0) {
+                ForEach(availableTabs) { tab in
+                    tabBarButton(tab)
+                }
             }
         }
         .padding(.horizontal, DS.Spacing.xs)
@@ -144,9 +148,20 @@ struct SidebarView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.Spacing.xs)
             .background {
+                // Selected tab = accent-tinted glass chip on macOS 26, the flat
+                // accentSubtle wash on macOS 15 (glass carries the accent, the
+                // glyph/label color signals selection on both paths).
                 if isSelected {
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .fill(DS.Color.accentSubtle)
+                    Color.clear
+                        .dsGlassInteractive(
+                            cornerRadius: DS.Radius.sm,
+                            // Neutral glass — the accent-colored icon/label signals
+                            // selection. An accent tint would match (and hide) the
+                            // accent-colored label. Fallback keeps the 15 wash.
+                            tint: nil,
+                            fallback: AnyShapeStyle(DS.Color.accentSubtle),
+                            fallbackStroke: .none
+                        )
                 }
             }
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.sm))

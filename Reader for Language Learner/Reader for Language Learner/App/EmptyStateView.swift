@@ -241,7 +241,9 @@ private struct ContinueReadingHero: View {
                         lineWidth: 1
                     )
             )
-            .dsShadow(isHovered ? DS.Shadow.card : DS.Shadow.subtle)
+            // Stronger hover lift (card → float) so the hero feels like it
+            // rises toward the pointer, matching the app's glass polish.
+            .dsShadow(isHovered ? DS.Shadow.float : DS.Shadow.subtle)
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
         }
         .buttonStyle(.plain)

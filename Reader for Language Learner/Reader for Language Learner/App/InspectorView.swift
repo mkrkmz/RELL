@@ -305,7 +305,15 @@ struct InspectorView: View {
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, DS.Spacing.sm)
-        .background(DS.Color.warningSubtle)
+        // A warning-tinted glass strip on macOS 26 (meaning-carrying tint, not
+        // decoration); the flat warningSubtle wash on macOS 15. radius 0 keeps
+        // it a full-width banner rather than a floating card.
+        .dsGlassCard(
+            radius: 0,
+            tint: DS.Color.warning,
+            fallback: AnyShapeStyle(DS.Color.warningSubtle),
+            fallbackStroke: .none
+        )
     }
 
     // MARK: - Helpers
@@ -320,12 +328,7 @@ struct InspectorView: View {
             Image(systemName: systemImage)
                 .font(DS.Typography.icon(12, weight: .medium))
                 .frame(width: 28, height: 28)
-                .background(DS.Color.surfaceInset)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
-                )
+                .dsGlassInteractive(cornerRadius: DS.Radius.sm)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

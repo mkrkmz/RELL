@@ -399,7 +399,7 @@ private struct LibraryCard: View {
                     lineWidth: isHovered ? 1.2 : 0.7
                 )
         )
-        .dsShadow(isHovered ? DS.Shadow.card : DS.Shadow.subtle)
+        .dsShadow(isHovered ? DS.Shadow.float : DS.Shadow.subtle)
         .scaleEffect(isHovered && !reduceMotion ? 1.02 : 1)
         .animation(DS.Animation.standard, value: cover)
     }

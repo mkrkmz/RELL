@@ -58,7 +58,6 @@ struct FindBarView: View {
         }
         .padding(.horizontal, DS.Spacing.sm + DS.Spacing.xs)
         .padding(.vertical, DS.Spacing.sm)
-        .background(DS.Color.surface)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+        .dsGlassCard(radius: DS.Radius.md)
     }
 }

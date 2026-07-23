@@ -42,7 +42,12 @@ struct SentenceTranslationStrip: View {
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, DS.Spacing.sm)
-        .dsCard(padding: nil, radius: DS.Radius.sm, stroke: .hairline)
+        // A floating bar over the reader — chrome, so it takes glass on macOS 26.
+        .dsGlassCard(
+            radius: DS.Radius.sm,
+            fallback: AnyShapeStyle(DS.Color.surfaceElevated),
+            fallbackStroke: .hairline
+        )
         .task(id: sentence) { await load() }
         .accessibilityElement(children: .combine)
     }

@@ -158,39 +158,43 @@ extension InspectorView {
     // MARK: - Action Bar (compact inline)
 
     var actionBar: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            // Left cluster: playback
-            actionGroup {
-                iconButton(
-                    systemImage: speechManager.isSpeaking ? "speaker.wave.2.fill" : "play.fill",
-                    help: speechManager.isSpeaking ? "Speaking selected text…" : "Speak selected text (⇧⌘S)",
-                    action: speakSelection
-                )
-                .keyboardShortcut("s", modifiers: [.command, .shift])
-                .disabled(!hasSelection)
+        // One glass container so the button chips sample a shared region
+        // (glass cannot sample other glass). Spacing matches the layout.
+        DSGlassGroup(spacing: DS.Spacing.xs) {
+            HStack(spacing: DS.Spacing.xs) {
+                // Left cluster: playback
+                actionGroup {
+                    iconButton(
+                        systemImage: speechManager.isSpeaking ? "speaker.wave.2.fill" : "play.fill",
+                        help: speechManager.isSpeaking ? "Speaking selected text…" : "Speak selected text (⇧⌘S)",
+                        action: speakSelection
+                    )
+                    .keyboardShortcut("s", modifiers: [.command, .shift])
+                    .disabled(!hasSelection)
 
-                iconButton(
-                    systemImage: "stop.fill",
-                    help: "Stop speaking (⇧⌘X)",
-                    action: speechManager.stop
-                )
-                .keyboardShortcut("x", modifiers: [.command, .shift])
-                .disabled(!speechManager.isSpeaking)
-            }
+                    iconButton(
+                        systemImage: "stop.fill",
+                        help: "Stop speaking (⇧⌘X)",
+                        action: speechManager.stop
+                    )
+                    .keyboardShortcut("x", modifiers: [.command, .shift])
+                    .disabled(!speechManager.isSpeaking)
+                }
 
-            Spacer(minLength: DS.Spacing.sm)
+                Spacer(minLength: DS.Spacing.sm)
 
-            // Right cluster: save + more
-            actionGroup {
-                iconButton(
-                    systemImage: isCurrentlySaved ? "star.fill" : "star",
-                    help: isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)",
-                    action: toggleSaveWord
-                )
-                .keyboardShortcut("d", modifiers: [.command])
-                .foregroundStyle(isCurrentlySaved ? DS.Color.star : DS.Color.textPrimary)
+                // Right cluster: save + more
+                actionGroup {
+                    iconButton(
+                        systemImage: isCurrentlySaved ? "star.fill" : "star",
+                        help: isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)",
+                        action: toggleSaveWord
+                    )
+                    .keyboardShortcut("d", modifiers: [.command])
+                    .foregroundStyle(isCurrentlySaved ? DS.Color.star : DS.Color.textPrimary)
 
-                overflowMenu
+                    overflowMenu
+                }
             }
         }
         .controlSize(.mini)
@@ -237,12 +241,7 @@ extension InspectorView {
             Image(systemName: "ellipsis.circle")
                 .font(DS.Typography.icon(12, weight: .medium))
                 .frame(width: 28, height: 28)
-                .background(DS.Color.surfaceInset)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.hairline, lineWidth: 0.5)
-                )
+                .dsGlassInteractive(cornerRadius: DS.Radius.sm)
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)

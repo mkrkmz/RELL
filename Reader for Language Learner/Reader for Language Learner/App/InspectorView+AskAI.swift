@@ -145,7 +145,14 @@ extension InspectorView {
         }
         .padding(.horizontal, DS.Spacing.sm)
         .padding(.vertical, DS.Spacing.xs)
-        .dsCard(padding: nil, radius: DS.Radius.sm, stroke: .hairlineStrong)
+        // The send arrow stays a plain accent glyph inside the capsule rather
+        // than a `.glass` button — glass-on-glass needs a shared container and
+        // would only add visual noise to a single control.
+        .dsGlassCard(
+            radius: DS.Radius.sm,
+            fallback: AnyShapeStyle(DS.Color.surfaceElevated),
+            fallbackStroke: .hairlineStrong
+        )
     }
 
     private var canSubmitFollowUp: Bool {

@@ -25,11 +25,9 @@ struct EPUBFindBarView: View {
                 resultsList
             }
         }
-        .background(DS.Color.surfaceElevated.opacity(0.94))
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
+        .dsGlassCard(
+            radius: DS.Radius.sm,
+            fallback: AnyShapeStyle(DS.Color.surfaceElevated.opacity(0.94))
         )
     }
 

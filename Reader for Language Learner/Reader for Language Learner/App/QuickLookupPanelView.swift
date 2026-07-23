@@ -324,17 +324,13 @@ private struct PanelChrome: ViewModifier {
     func body(content: Content) -> some View {
         switch style {
         case .hud:
-            // .popover material adapts to light/dark, so .primary text
-            // always contrasts (unlike the fixed-dark .hudWindow).
+            // A floating lookup HUD — exactly "chrome above content", so it
+            // takes Liquid Glass on macOS 26. The macOS 15 fallback keeps the
+            // adaptive material blur (.regularMaterial ≈ the old .popover
+            // NSVisualEffectView) so .primary text still contrasts in both
+            // light and dark.
             content
-                .background(
-                    VisualEffectView(material: .popover, blendingMode: .behindWindow)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.lg)
-                        .strokeBorder(DS.Color.hairline, lineWidth: 0.8)
-                )
+                .dsGlassCard(radius: DS.Radius.lg, fallback: AnyShapeStyle(.regularMaterial))
         case .menuBar:
             // The MenuBarExtra window supplies its own material and corners.
             content

@@ -49,6 +49,8 @@ struct SpeechPlaybackBar: View {
                 ForEach(Self.ratePresets, id: \.self) { rate in
                     Button {
                         speechRate = rate
+                        // Apply to the in-progress read too, not just the next one.
+                        manager.setRate(Float(rate))
                     } label: {
                         if abs(speechRate - rate) < 0.01 {
                             Label(Self.rateLabel(rate), systemImage: "checkmark")
@@ -68,8 +70,11 @@ struct SpeechPlaybackBar: View {
         }
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.vertical, DS.Spacing.sm)
-        .background(.regularMaterial, in: Capsule())
-        .dsShadow(DS.Shadow.float)
+        // One glass capsule for the whole bar; the play/pause/stop buttons stay
+        // plain (glass-on-glass needs a shared container — deferred to the
+        // inspector's grouped controls in Sprint 2). Glass drops the float
+        // shadow on macOS 26; the macOS 15 fallback keeps it.
+        .dsGlassCapsule()
         .accessibilityElement(children: .contain)
     }
 

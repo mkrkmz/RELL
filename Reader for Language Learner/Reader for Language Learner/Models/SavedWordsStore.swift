@@ -464,6 +464,12 @@ final class SavedWordsStore {
         words.reduce(0) { $0 + $1.reviewEvents.count }
     }
 
+    /// Review streak (current/longest) and banked auto-freezes, derived purely
+    /// from the recorded review dates — see `ReviewStreakCalculator`.
+    func reviewStreak(at referenceDate: Date = Date()) -> ReviewStreak {
+        ReviewStreakCalculator.compute(reviewDays: reviewEventDates(), today: referenceDate)
+    }
+
     /// Saved-word counts grouped by target language, descending — the
     /// language-breakdown card only renders once this has ≥2 entries
     /// (nothing to break down for a single-language library). Words saved
