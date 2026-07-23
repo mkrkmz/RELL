@@ -4,6 +4,35 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.28.0] - 2026-07-23
+
+A top-to-bottom Liquid Glass refresh for macOS 26, plus a couple of review
+and playback niceties. Roadmap v8 — three UI sprints and a features sprint.
+
+### Added
+
+- **Review streak**: finish a review session and the results screen now
+  shows your current streak — the run of consecutive days you've reviewed.
+  Keep it going and you earn *freezes* (one per week, up to two); a freeze
+  automatically covers a single missed day, so one busy day doesn't wipe
+  out weeks of progress.
+- **Change the speech rate mid-read**: pick Slow / Normal / Fast from the
+  playback bar while it's talking and it takes effect immediately, picking
+  up from the sentence being read instead of starting the passage over.
+
+### Changed
+
+- **Liquid Glass throughout** (macOS 26): the app adopts Apple's new Liquid
+  Glass material for its floating controls. The right-hand analysis panel —
+  its action buttons, module grid, and result tools — plus the sidebar
+  tabs, the find bars, the Quick Lookup popup, toasts, the speech bar, and
+  the review rating buttons now render as glass that floats above your
+  content, while the text you're actually reading stays clean and flat.
+  The active module and selected tab read through a tinted glyph rather
+  than a heavy fill, keeping the panel calm. On macOS 15 the app keeps its
+  previous appearance.
+- Dashboard and library cards lift a little higher on hover.
+
 ## [1.27.0] - 2026-07-22
 
 Engine parity and performance work, plus a first look at how well you're
