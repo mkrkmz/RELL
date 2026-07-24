@@ -4,6 +4,30 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.29.0] - 2026-07-24
+
+The core reading loop gets quicker to act on, and saving gets smoother under
+the hood. Roadmap v9 Sprint 1.
+
+### Added
+
+- **Selection action bar**: select any word or phrase and a small toolbar now
+  floats right next to it — one tap each to Save the word, Analyze it,
+  Highlight it, hear it read aloud, or Copy it, with no reach for the
+  right-click menu or trip across to the analysis panel. It works the same in
+  PDFs and EPUBs and stays pinned to your selection as you scroll.
+
+### Changed
+
+- **Smoother saving**: words, highlights, notes, and reading progress no
+  longer save on the main thread, so a fast review session or a bulk edit no
+  longer causes a brief stutter. Anything still pending is written safely when
+  you quit.
+
+### Fixed
+
+- The selected sidebar tab's icon could look blurry — it's now crisp.
+
 ## [1.28.0] - 2026-07-23
 
 A top-to-bottom Liquid Glass refresh for macOS 26, plus a couple of review
