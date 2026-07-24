@@ -147,23 +147,13 @@ struct SidebarView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.Spacing.xs)
-            .background {
-                // Selected tab = accent-tinted glass chip on macOS 26, the flat
-                // accentSubtle wash on macOS 15 (glass carries the accent, the
-                // glyph/label color signals selection on both paths).
-                if isSelected {
-                    Color.clear
-                        .dsGlassInteractive(
-                            cornerRadius: DS.Radius.sm,
-                            // Neutral glass — the accent-colored icon/label signals
-                            // selection. An accent tint would match (and hide) the
-                            // accent-colored label. Fallback keeps the 15 wash.
-                            tint: nil,
-                            fallback: AnyShapeStyle(DS.Color.accentSubtle),
-                            fallbackStroke: .none
-                        )
-                }
-            }
+            // Apply the selected-chip glass DIRECTLY to the content (not via a
+            // `.background { Color.clear.glassEffect }` layer behind it). Glass
+            // placed behind foreground siblings frosts them — that's what blurred
+            // the selected glyph. Applied directly, the icon/label become the
+            // glass's own content and stay crisp (same pattern as the inspector
+            // icon buttons). macOS 15 falls back to the flat accentSubtle wash.
+            .modifier(SelectedTabChipBackground(isSelected: isSelected))
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
         .buttonStyle(.plain)
@@ -267,6 +257,29 @@ struct SidebarView: View {
                 store: savedWordsStore,
                 currentDocumentName: currentDocumentName
             )
+        }
+    }
+}
+
+/// Selected-tab chip. Applies the glass DIRECTLY to the (padded) content so the
+/// icon/label sit on the glass and stay crisp — a `.background` glass layer
+/// behind them frosts the foreground glyph. macOS 15 falls back to a flat
+/// accentSubtle wash. A no-op when the tab isn't selected.
+private struct SelectedTabChipBackground: ViewModifier {
+    let isSelected: Bool
+
+    func body(content: Content) -> some View {
+        if isSelected {
+            content
+                .dsGlassCard(
+                    radius: DS.Radius.sm,
+                    interactive: false,
+                    tint: nil,
+                    fallback: AnyShapeStyle(DS.Color.accentSubtle),
+                    fallbackStroke: .none
+                )
+        } else {
+            content
         }
     }
 }

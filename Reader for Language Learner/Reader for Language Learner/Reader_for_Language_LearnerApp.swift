@@ -19,6 +19,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // panel, unlike the per-window .preferredColorScheme it replaced.
         AppTheme.applyCurrent()
     }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Debounced stores may hold an unwritten mutation — force it to disk
+        // before the process exits so nothing from the last half-second is lost.
+        MainActor.assumeIsolated {
+            PersistenceCoordinator.flushAll()
+        }
+    }
 }
 
 @main

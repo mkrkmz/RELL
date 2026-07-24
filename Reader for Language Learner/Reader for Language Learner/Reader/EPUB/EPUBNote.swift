@@ -34,22 +34,17 @@ final class EPUBNoteStore {
     private(set) var notes: [EPUBNote] = []
 
     private let fileURL: URL
+    private let writer: DebouncedFileWriter
 
     init(fileURL customFileURL: URL? = nil) {
-        if let customFileURL {
-            self.fileURL = customFileURL
-            self.notes = Self.load(from: customFileURL)
-            return
-        }
-
-        guard let dir = FileManager.default.rellAppSupportDirectory() else {
-            self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("epub_notes.json")
-            self.notes = []
-            return
-        }
-
-        self.fileURL = dir.appendingPathComponent("epub_notes.json")
-        self.notes = Self.load(from: fileURL)
+        let resolved = DebouncedFileWriter.forAppSupport(
+            filename: "epub_notes.json",
+            storeName: "EPUBNoteStore",
+            customFileURL: customFileURL
+        )
+        self.fileURL = resolved.url
+        self.writer = resolved.writer
+        self.notes = resolved.canLoad ? Self.load(from: resolved.url) : []
     }
 
     // MARK: Queries
@@ -90,11 +85,7 @@ final class EPUBNoteStore {
     // MARK: Persistence
 
     private func save() {
-        do {
-            try RELLJSONStore.save(notes, to: fileURL, storeName: "EPUBNoteStore")
-        } catch {
-            AppLogger.persistence.error("EPUBNoteStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        writer.schedule { [notes] in try JSONEncoder().encode(notes) }
     }
 
     private static func load(from url: URL) -> [EPUBNote] {

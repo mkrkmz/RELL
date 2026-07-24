@@ -145,6 +145,8 @@ final class EPUBViewManager: NSObject {
     @ObservationIgnored var hoverCachedLookup: ((String) -> String?)?
     @ObservationIgnored var hoverLookup: ((String) async throws -> String)?
     @ObservationIgnored private var hoverPopover: NSPopover?
+    /// Floating selection action bar hosted over the web view (U1).
+    @ObservationIgnored private var selectionBarHost: NSHostingView<SelectionActionBar>?
     @ObservationIgnored private let hoverModel = HoverLookupModel()
     @ObservationIgnored private var hoverTask: Task<Void, Never>?
     @ObservationIgnored private var currentHoverTerm = ""
@@ -226,6 +228,8 @@ final class EPUBViewManager: NSObject {
         scrollFraction = fraction
         pendingScrollFraction = fraction
         pendingFragment = fragment
+        // The selection (and its bar) doesn't survive a chapter swap.
+        hideSelectionBar()
         webView?.load(URLRequest(url: url))
     }
 
@@ -428,13 +432,105 @@ final class EPUBViewManager: NSObject {
         return (result as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 
-    func handleSelectionMessage(text: String, sentence: String?, anchor: EPUBSelectionAnchor?) {
+    func handleSelectionMessage(text: String, sentence: String?, anchor: EPUBSelectionAnchor?, rect: CGRect = CGRect(x: -1, y: -1, width: 0, height: 0)) {
         lastSelectionText = text
         lastSelectionSentence = sentence?.isEmpty == true ? nil : sentence
         lastSelectionAnchor = anchor
         onSelectionChange?(text, lastSelectionSentence)
         // A deliberate selection supersedes a passive hover.
         if !text.isEmpty { closeHoverPopover() }
+        updateSelectionBar(text: text, rect: rect)
+    }
+
+    // MARK: - Selection Action Bar (U1)
+
+    /// Shows the floating action bar above the current selection, or hides it
+    /// when the selection is empty / has no measurable rect.
+    private func updateSelectionBar(text: String, rect: CGRect) {
+        guard let webView,
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              rect.width > 0, rect.height > 0
+        else {
+            hideSelectionBar()
+            return
+        }
+
+        let host: NSHostingView<SelectionActionBar>
+        if let existing = selectionBarHost {
+            host = existing
+        } else {
+            host = NSHostingView(rootView: makeSelectionBar())
+            host.translatesAutoresizingMaskIntoConstraints = true
+            webView.addSubview(host)
+            selectionBarHost = host
+        }
+        host.rootView = makeSelectionBar()
+        positionSelectionBar(host, over: rect, in: webView)
+    }
+
+    /// Scroll-driven update: keep the existing bar pinned, or hide it once the
+    /// selection is gone / off-screen.
+    private func repositionSelectionBar(rect: CGRect) {
+        guard let webView, let host = selectionBarHost else { return }
+        guard rect.width > 0, rect.height > 0 else { hideSelectionBar(); return }
+        positionSelectionBar(host, over: rect, in: webView)
+    }
+
+    private func positionSelectionBar(_ host: NSHostingView<SelectionActionBar>, over rect: CGRect, in webView: WKWebView) {
+        let barSize = host.fittingSize
+        let bounds = webView.bounds
+        let gap: CGFloat = 8
+
+        var originX = rect.midX - barSize.width / 2
+        originX = min(max(originX, 4), max(4, bounds.width - barSize.width - 4))
+
+        // WKWebView is flipped (top-left origin, y grows down), so "above" the
+        // selection is a smaller y; drop below when there isn't room above.
+        var originY = rect.minY - gap - barSize.height
+        if originY < 4 {
+            originY = rect.maxY + gap
+        }
+        originY = min(originY, max(4, bounds.height - barSize.height - 4))
+
+        host.frame = CGRect(x: originX, y: originY, width: barSize.width, height: barSize.height)
+    }
+
+    private func hideSelectionBar() {
+        selectionBarHost?.removeFromSuperview()
+        selectionBarHost = nil
+    }
+
+    private func refreshSelectionBar() {
+        selectionBarHost?.rootView = makeSelectionBar()
+    }
+
+    private func makeSelectionBar() -> SelectionActionBar {
+        let term = lastSelectionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isSaved = savedWordTermsProvider?()
+            .contains { $0.caseInsensitiveCompare(term) == .orderedSame } ?? false
+        return SelectionActionBar(
+            onSave: { [weak self] in
+                (self?.webView as? RELLEPUBWebView)?.onContextSaveWord?()
+                self?.refreshSelectionBar()
+            },
+            onAnalyze: {
+                NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
+            },
+            onHighlight: { [weak self] in
+                (self?.webView as? RELLEPUBWebView)?.onContextHighlight?(.yellow)
+            },
+            onSpeak: { [weak self] in
+                (self?.webView as? RELLEPUBWebView)?.onContextSpeak?()
+            },
+            onCopy: { [weak self] in
+                guard let self else { return }
+                let text = self.lastSelectionText.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !text.isEmpty else { return }
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(text, forType: .string)
+            },
+            isSaved: isSaved
+        )
     }
 
     // MARK: Highlights
@@ -717,6 +813,17 @@ extension EPUBViewManager: WKScriptMessageHandler {
                 }
             case Self.selectionMessageName:
                 if let body = message.body as? [String: Any] {
+                    let rect = CGRect(
+                        x: (body["rectX"] as? Double) ?? -1,
+                        y: (body["rectY"] as? Double) ?? -1,
+                        width: (body["rectW"] as? Double) ?? 0,
+                        height: (body["rectH"] as? Double) ?? 0
+                    )
+                    // Scroll-driven reposition carries only a fresh rect.
+                    if (body["reposition"] as? Bool) == true {
+                        repositionSelectionBar(rect: rect)
+                        break
+                    }
                     let text = (body["text"] as? String) ?? ""
                     var anchor: EPUBSelectionAnchor?
                     if !text.isEmpty,
@@ -732,7 +839,8 @@ extension EPUBViewManager: WKScriptMessageHandler {
                     handleSelectionMessage(
                         text: text,
                         sentence: body["sentence"] as? String,
-                        anchor: anchor
+                        anchor: anchor,
+                        rect: rect
                     )
                 }
             case Self.hoverMessageName:

@@ -73,25 +73,24 @@ final class SavedWordsStore {
     var saveError: String? = nil
 
     private let fileURL: URL
+    private let writer: DebouncedFileWriter
 
+    /// - Parameter customFileURL: test-only override; when present the store
+    ///   writes through synchronously (debounce 0) so reload-from-disk
+    ///   assertions stay deterministic. The app path debounces off-main.
     init(fileURL customFileURL: URL? = nil) {
-        if let customFileURL {
-            self.fileURL = customFileURL
-            self.words = Self.load(from: customFileURL)
+        let resolved = DebouncedFileWriter.forAppSupport(
+            filename: "saved_words.json",
+            storeName: "SavedWordsStore",
+            customFileURL: customFileURL
+        )
+        self.fileURL = resolved.url
+        self.writer = resolved.writer
+        self.words = resolved.canLoad ? Self.load(from: resolved.url) : []
+        writer.onResult = { [weak self] error in self?.saveError = error }
+        if resolved.canLoad {
             backfillMissingLanguage()
-            return
         }
-
-        guard let appSupport = FileManager.default.rellAppSupportDirectory() else {
-            // Fallback to temp directory if Application Support unavailable
-            self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("saved_words.json")
-            self.words = []
-            return
-        }
-
-        self.fileURL = appSupport.appendingPathComponent("saved_words.json")
-        self.words = Self.load(from: fileURL)
-        backfillMissingLanguage()
     }
 
     /// One-time migration for pre-v1.24 words, which have no `language`.
@@ -565,14 +564,13 @@ final class SavedWordsStore {
 
     // MARK: - Persistence
 
+    /// Schedules a debounced off-main write of the whole vocabulary. Rapid
+    /// mutations (review sessions, bulk edits) coalesce into one write; the
+    /// pending value is flushed synchronously at termination via
+    /// `PersistenceCoordinator.flushAll()`. `saveError` is updated through the
+    /// writer's `onResult` callback.
     private func save() {
-        do {
-            try RELLJSONStore.save(words, to: fileURL, storeName: "SavedWordsStore")
-            saveError = nil
-        } catch {
-            saveError = error.localizedDescription
-            AppLogger.persistence.error("SavedWordsStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        writer.schedule { [words] in try JSONEncoder().encode(words) }
     }
 
     private static func load(from url: URL) -> [SavedWord] {

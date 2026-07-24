@@ -142,22 +142,17 @@ final class PDFNoteStore {
     var draftNote: PDFNote?
 
     private let fileURL: URL
+    private let writer: DebouncedFileWriter
 
     init(fileURL customFileURL: URL? = nil) {
-        if let customFileURL {
-            self.fileURL = customFileURL
-            self.notes = Self.load(from: customFileURL)
-            return
-        }
-
-        guard let dir = FileManager.default.rellAppSupportDirectory() else {
-            self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("pdf_notes.json")
-            self.notes = []
-            return
-        }
-
-        self.fileURL = dir.appendingPathComponent("pdf_notes.json")
-        self.notes = Self.load(from: fileURL)
+        let resolved = DebouncedFileWriter.forAppSupport(
+            filename: "pdf_notes.json",
+            storeName: "PDFNoteStore",
+            customFileURL: customFileURL
+        )
+        self.fileURL = resolved.url
+        self.writer = resolved.writer
+        self.notes = resolved.canLoad ? Self.load(from: resolved.url) : []
     }
 
     func notes(for filename: String) -> [PDFNote] {
@@ -245,11 +240,7 @@ final class PDFNoteStore {
     }
 
     private func save() {
-        do {
-            try RELLJSONStore.save(notes, to: fileURL, storeName: "PDFNoteStore")
-        } catch {
-            AppLogger.persistence.error("PDFNoteStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        writer.schedule { [notes] in try JSONEncoder().encode(notes) }
     }
 
     private static func load(from url: URL) -> [PDFNote] {

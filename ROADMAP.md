@@ -1,141 +1,184 @@
-# RELL Roadmap v8 — Liquid Glass + Yeni Ozellikler (4 sprint)
+# RELL Roadmap v9 — Core Loop + Learning Engine (5 sprint, v1.29 → v1.33)
 
-> **v8 roadmap tamamlandi (2026-07-23) — v1.28.0 olarak release edildi.** Sprint 1-3 (Liquid Glass) + Sprint 4 (TTS mid-playback rate, review streak). Highlight notlari zaten mevcuttu (roadmap bayat). Karaoke takibi ertelendi (en riskli kalem; ayri bir follow-up olarak yapilacak).
+Olusturulma: 2026-07-23 (v1.28.0 sonrasi). v8 roadmap tamamlandi (Liquid Glass,
+review streak, mid-read TTS hizi); v8'den ertelenen tek kalem (karaoke takibi)
+bu roadmap'te Sprint 4'e planli-risk olarak alindi.
 
+Odak: (1) cekirdek okuma dongusundeki surtunmeyi kaldirmak (secim aksiyon
+cubugu, zen modu), (2) ogrenme motorunu dunya standardina cekmek (FSRS, lemma
+eslestirme, bilinen-kelime kapsama), (3) olcekleme riski #1 olan senkron
+persistence'i erkenden cozmek — sonraki tum ozellikler yazma hacmini artiriyor.
 
-Olusturulma: 2026-07-22 (v1.27.0 sonrasi). v7 + v7.5 roadmap'leri tamamlandi.
+## Teknik cerceve (tum sprintler icin gecerli)
 
-Odak: 3 sprint UI/UX — uygulamayi macOS 26 Liquid Glass tasarim diline tasimak
-(oncelik: sag panel Inspector, su an hic glass API'si kullanmiyor) + 1 sprint
-backlog'dan yeni ozellikler.
+- **Sifir dis bagimlilik korunur.** FSRS elle yazilir (~200 satir saf
+  fonksiyon), lemma icin Apple `NaturalLanguage` (`NLTagger .lemma`),
+  .apkg (Could) icin sistem SQLite3.
+- **`ResultParser`'a gorunur prompt etiketleri degismez; modul raw value'lari
+  asla yeniden adlandirilmaz** (persistence anahtari).
+- Yeni `Codable` alanlar `decodeIfPresent` + default (ileri-guvenli JSON);
+  eski SRS alanlari FSRS gecisinde rollback icin korunur.
+- Yeni kullanici metinleri `Localizable.xcstrings`'e TR cevirisiyle
+  (`Text(String)` tuzagi — enum'larda `localizedTitle`).
+- Buyuk body'ler staged `baseContent`/`withX(_:)` deseni (CI tip-denetimi
+  tavani); glass yalnizca `dsGlass*` token'lari uzerinden, macOS 26 kapili,
+  macOS 15 Material fallback'li.
+- **Apple-Developer-kilitli kalemler planlanmaz** (widget, App Group, CloudKit,
+  notarization) — uyelik duyurulana kadar Won't. Ayrica bilinclice disarida:
+  sayfalanmis EPUB (v10 adayi; scrubber cogu degeri 1/5 maliyetle verir),
+  NotificationCenter mimari degisimi, AnkiConnect, embeddings/RAG,
+  frekans listeleri.
 
-## Teknik cerceve (tum UI sprintleri icin gecerli)
+---
 
-- **Deployment target macOS 15.0, test hedefleri 26.2.** Tum Liquid Glass
-  API'leri (`glassEffect`, `GlassEffectContainer`, `glassEffectID`,
-  `.buttonStyle(.glass)`) `if #available(macOS 26.0, *)` arkasinda; macOS 15
-  fallback'i mevcut Material/DS chrome'u olur. Kapilama call site'larda DEGIL,
-  DS koprü modifier'larinda tek yerde yapilir.
-- **Glass chrome icindir, icerik icin degil** (HIG): glass yalnizca icerigin
-  ustunde yuzen kontrol katmanina uygulanir (butonlar, bar'lar, HUD, toast).
-  Okunan metin yuzeyleri (sonuc paneli govdesi, PDF/EPUB icerigi, liste
-  satirlari) duz kalir — okunabilirlik her zaman kazanir.
-- **Glass glass'i ornekleyemez:** yan yana duran glass ogeleri tek
-  `GlassEffectContainer` altinda gruplanir; container `spacing` degeri
-  layout spacing ile ayni olmalidir.
-- `.interactive()` yalnizca gercekten tiklanabilir ogelerde; modifier sirasi:
-  tipografi → renk → padding/frame → `glassEffect` EN SON.
-- Buyuyen `body` zincirleri CI tip-denetimi zaman asimi riski tasir (v1.9.0) —
-  glass eklerken mevcut `baseContent` + `withX(_:)` asama deseni korunur.
+## Sprint 1 — v1.29.0 "Cekirdek dongu + temel" (Must)
+
+Amac: secim surtunmesini kaldirmak; persistence'i sonraki her sey icin guvenli
+hale getirmek.
+
+- [x] **Yuzen secim aksiyon cubugu (U1) — PDF**: secimin yaninda glass kapsul
+      (Save Word / Analyze / Highlight / Speak / Copy) — yeni
+      `UI/SelectionActionBar.swift` (`dsGlassCapsule`, notr glass + duz ikonlar).
+      PDF: `NSHostingView` alt-view, `pdfView.convert(selection.bounds)`'tan
+      konum, seciminin ustune (yer yoksa altina) + yatay clamp; scroll takibi
+      dahili `NSScrollView` contentView bounds observer'i ile; deselect/doc
+      degisiminde temiz kapanis. Aksiyonlar mevcut `contextSaveWord`/
+      `contextHighlight(.yellow)`/`contextSpeak`/`contextCopy` +
+      `.inspectorRunLastModule`. **CANLI DOGRULANDI** (ikinci instance, gercek
+      PDF: cubuk secimin ustunde dogru konumda, 5 ikon, glass render tamam)
+- [x] **U1 — EPUB**: JS `selectionchange` → `getBoundingClientRect` mesaja
+      eklendi + secim varken scroll'da rect'i yeniden postlayan rAF-throttle'li
+      dinleyici (`EPUBReaderView` selectionScript). `EPUBViewManager` mesaj
+      handler'i rect + `reposition` bayragini parse eder; ayni
+      `UI/SelectionActionBar.swift` WKWebView'a `NSHostingView` alt-view olarak
+      host edilir. WKWebView **flipped** (client rect dogrudan subview
+      koordinati — hover NSPopover ayni konvansiyonu kullanir), bar seciminin
+      ustune (yer yoksa altina). Aksiyonlar `(webView as? RELLEPUBWebView)`'in
+      mevcut `onContextSaveWord/Highlight(.yellow)/Speak` closure'larina +
+      `.inspectorRunLastModule`; Copy = `NSPasteboard`. `openChapter`'da gizlenir.
+      **CANLI DOGRULANDI** (Why We Sleep EPUB: cubuk secimin ustunde dogru
+      konumda, 5 ikon, deselect'te gizlenir). Not: acik EPUB zemininde glass
+      kapsul PDF koyu zeminine gore daha soluk — ileride opaklik rotusu olabilir
+- [x] **Async debounced persistence (T1)**: yeni `Models/DebouncedFileWriter.swift`
+      — encode closure main'de (1×/pencere), atomic `Data.write` off-main
+      (util queue); `flush()` senkron; `PersistenceCoordinator.flushAll()` +
+      `applicationWillTerminate` hook. 8 JSON store migrate edildi
+      (SavedWords + PDF/EPUB highlight/note, EPUB bookmark, ReadingSession,
+      RecentDocument×2). Test = writeThrough (debounce 0). PDFBookmark
+      (UserDefaults) kapsam disi. 7 writer birim testi + tum store testleri yesil
+- [x] **SRS regresyon agi (T2/1)**: yeni `SRSSchedulingTests.swift` — 16 test,
+      `applyReview` tam dal kapsamasi (again/good/easy × new/learning/mastered,
+      ease clamp 1.3/3.5, +10dk/+8s kesin, eksik-kelime nil) — FSRS'ten ONCE
+- [x] Risk azaltim uygulandi: PDF once ship'lendi + dogrulandi; EPUB takip
+- [x] Dogrulama: build + tum ilgili test paketleri yesil; PDF cubugu canli
+      dogrulandi; ikinci instance kill → termination flush temiz calisti
+      (`flushAll`); "Analyze" TR cevirisi (`Analiz Et`) katalogda
+
+## Sprint 2 — v1.30.0 "Zen okuma" (Must + Should)
+
+Amac: dunya standardinda immersive okuma modu + Mac-native gezinme hissi.
+
+- [ ] **Zen modu (U2)**: tam ekran + otomatik gizlenen chrome (hover/timer
+      reveal), PDF icin ortalanmis okuma sutunu, context strip gizli; tek
+      toggle + kisayol. `ContentView`'de yeni staged wrapper + ayri
+      `App/ZenModeOverlay.swift` dosyasi (tip-denetim tavanina dikkat);
+      `ReaderMenuCommands`'a kisayol
+- [ ] **Ilerleme scrubber'i + kalan sure (U3)**: PDF sayfa scrubber'i;
+      EPUB kitap-geneli konum modeli (spine metin-uzunlugu agirlikli,
+      `EPUBDocument`) + "bolumde X dk kaldi" tahmini; scrubber otomatik
+      gizlenen chrome icinde
+- [ ] **Trackpad jestleri (U4)**: PDF pinch-zoom (`allowsMagnification = true`
+      sinirli), EPUB magnification jesti → tipografi font boyutu; iki parmak
+      swipe sayfa/bolum gecisi
+- [ ] **Undo/redo (U5)**: highlight/not/bookmark store'larinda `UndoManager`
+      kaydi (⌘Z/⇧⌘Z)
+- [ ] **Konum-geri-yukleme (T5)**: 0.3s `Task.sleep` sezgiseli yerine
+      document-ready sinyalleri (PDFView document-load notification;
+      EPUB `didFinish` + JS ready ping)
+- [ ] Dogrulama: zen giris/cikis iki formatta; chrome reveal; scrubber
+      dogrulugu; trackpad pinch; her anotasyon turunde ⌘Z; yeniden acilista
+      konum flash-jump yok
+
+## Sprint 3 — v1.31.0 "Ogrenme motoru" (Must)
+
+Amac: amiral gemisi ogrenme yukseltmesi — FSRS + lemma + kapsama.
+
+- [ ] **FSRS zamanlayici (L1)**: yeni `Models/FSRSScheduler.swift` (saf
+      fonksiyonlar, FSRS-4.5 parametreleri); `SavedWord`'e opsiyonel
+      `stability`/`difficulty`/`fsrsState` (`decodeIfPresent`); `applyReview`
+      FSRS'e delege, lazy per-word migration (mevcut interval/ease'den
+      stability tohumlanir; eski alanlar rollback icin korunur); review
+      UI'larinda opsiyonel 4. "Hard" notu (`QuizView`, dashboard karti);
+      golden-vector + migration birim testleri
+- [ ] **Lemma-farkinda eslestirme (L2)**: yeni `Models/LemmaMatcher.swift`
+      (`NLTagger`, kelimenin `language` alanina gore); EPUB/PDF kayitli-kelime
+      vurgulamasi cekimleri yakalar ("ran"→"run"); kayit aninda duplicate
+      tespiti; lemma nil ise tam-eslesmeye dusulur; belge basina lemma cache
+      (mevcut `LRUCache`)
+- [ ] **Bilinen-kelime kapsama %'si (L3)**: yeni
+      `Models/LexicalProfileService.swift` — belge metnini arka planda
+      tokenize (PDF sayfa metni / EPUB spine metni), known/learning/unknown
+      % hesabi, belge basina cache; `LibraryView` rozeti + Stats'ta
+      kirilim karti ("bu kitap seviyeme uygun mu?")
+- [ ] Risk: FSRS migration dogrulugu (Sprint 1 test agi + korunan eski
+      alanlar); `NLTagger` lemma kalitesi dile gore degisken (nil → exact
+      fallback); dev PDF'lerde tokenizasyon maliyeti (background + cache)
+- [ ] Dogrulama: eski `saved_words.json` yuklenir ve makul zamanlar; cekimli
+      formlar vurgulanir; kapsama rozeti yeniden acilista stabil; bir kelimeyi
+      10x review et → interval buyumesi makul
+
+## Sprint 4 — v1.32.0 "Karaoke + aktif hatirlama" (Should; planli-risk sprinti)
+
+Amac: v8'den ertelenen risk kalemini onceden onaylanmis fallback'iyle ship'lemek.
+
+- [ ] **Karaoke TTS (L4)**: `SpeechManager.currentSentenceIndex`'ten
+      cumle-siniri callback'i; EPUB: JS-highlight + scroll-follow
+      (`EPUBViewManager`); PDF: `findString` + `setCurrentSelection`,
+      eslesme yoksa sessizce atla; `SpeechPlaybackBar`'da toggle.
+      **PDF karaoke ~2 gun timebox — asilirsa onceden kararli fallback:
+      yalniz-EPUB ship, PDF toggle gizli**
+- [ ] **Yazma + dinleme review modlari (L5) + QuizView bolunmesi (T3)**:
+      1047 satirlik `QuizView` → `FlashcardSessionView` /
+      `MatchingSessionView` / yeni `TypingSessionView`; type-the-answer
+      (kati/esnek diff) + duy-hatirla modu
+- [ ] **Servis testleri (T4)**: SpeechManager kuyruk/hiz-degisimi testleri
+      (karaoke dogrulugunu korur), LLMResilience/circuit-breaker testleri
+- [ ] **Cumle madenciligi (L6, sprint yesilse)**: secim cubuguna
+      "Save Sentence" → baglam karti (cumle + hedef kelime), review +
+      export'a dahil
+- [ ] Dogrulama: bolum/sayfa sinirinda karaoke; karaoke ortasinda hiz
+      degisimi (re-queue highlight index'ini korur); tema kontrasti;
+      typing diff esnekligi; bolunme sonrasi flashcard/matching regresyonu
+
+## Sprint 5 — v1.33.0 "Cila, erisilebilirlik, sertlestirme" (Should/Could + tampon)
+
+Amac: kalite tabani + borc odemesi; Sprint 4 tasmasi icin esnek tampon.
+
+- [ ] **Erisilebilirlik turu (U6)**: DS `micro`/`icon` fontlari sistem metin
+      boyutuyla olceklenir; renk-tek durum noktalarina SF Symbol/sekil
+      fazlaligi; anotasyon/kelime listelerinde VoiceOver etiket + rotor
+      (`DesignSystem`, `InspectorView+Grid`, `AnnotationsView`,
+      `SavedWordsListView`)
+- [ ] **Dosya bolme (T3)**: `SavedWordsListView` (1039) bolunmesi; dokunulan
+      yerlerde firsatci ContentView cikarimi
+- [ ] Could kalemleri (kapasite oldukca, sirayla): Quick Lookup HUD'a sistem
+      Dictionary Services; PDF karanlik modda gorsel korumasi (U7,
+      gorsel-yogun bolgelerde inversion atla/yumusat); .apkg export
+      (sistem SQLite3)
+- [ ] ROADMAP/CHANGELOG/ARCHITECTURE dokuman kapanisi
+- [ ] Dogrulama: buyuk-metin sistem ayari; Reduce Transparency / Increase
+      Contrast; VoiceOver ile review akisi turu; Sprint 1–4 amiral gemisi
+      ozelliklerinin tam regresyonu
 
 ---
 
-## Sprint 1 — DS Glass altyapisi + dusuk riskli yuzeyler
+## Siralama mantigi
 
-Amac: tek noktadan yonetilen, fallback'li glass token'lari kurmak ve bunlari
-zaten Material kullanan (en dusuk riskli) yuzeylerde kanitlamak.
-
-- [x] `UI/DesignSystem.swift`: `dsGlass(...)` modifier ailesi —
-      `dsGlassCard(radius:)` (rect), `dsGlassCapsule(interactive:)`,
-      `dsGlassInteractive(in:)`; her biri `#available(macOS 26.0, *)` ici
-      `glassEffect`, degilse mevcut `.background(material/DS surface)`.
-      Tint varyanti `DS.Color.accent` uzerinden (`.tint()` yalnizca anlam
-      tasiyan yerlerde)
-- [x] `DSGlassGroup` sarmalayici: macOS 26'da `GlassEffectContainer(spacing:)`,
-      15'te duz `Group` — grid/bar gibi coklu-oge call site'lari icin
-- [x] Pilot 1 — `DSToast` (`DesignSystem.swift`): `.regularMaterial` kapsul →
-      `dsGlassCapsule`; float golge glass'ta kalkar (glass kendi derinligini
-      getirir)
-- [x] Pilot 2 — `SpeechPlaybackBar`: ayni kapsul donusumu + play/pause
-      butonlari `.interactive()`
-- [x] Pilot 3 — `QuickLookupPanelView` HUD: `VisualEffectView(.popover)` →
-      glass panel (HUD tam olarak "icerigin ustunde yuzen chrome" tanimi)
-- [x] `FindBarView`: arama bari glass'a gecer (Safari benzeri yuzen bul-bar)
-- [x] Dogrulama: macOS 26'da acik/koyu tema ekran goruntuleri; "Reduce
-      Transparency" ve "Increase Contrast" erisilebilirlik ayarlarinda
-      bozulma yok; macOS 15 fallback'i derleme sonrasi gorsel kontrol
-
-## Sprint 2 — Inspector'in Liquid Glass'a tasinmasi (ana is)
-
-Amac: kullanicinin isaret ettigi sag panel. Ilke: kontrol katmani glass,
-sonuc icerigi duz ve okunur.
-
-- [x] `InspectorView.swift` `baseContent`: `VisualEffectView(.contentBackground)`
-      taban kalir (icerik zemini), ancak uzerindeki chrome katmanlari glass'a
-      gecer — inspector "cam panelin uzerinde kontroller" hissine kavusur
-- [x] `iconButton(systemImage:...)` (InspectorView.swift:313): duz
-      `surfaceInset` + hairline kutu → `dsGlassInteractive(in: .rect)`;
-      aksiyon bari (Kaydet/Seslendir/⋯) tek `DSGlassGroup` icinde
-- [x] `InspectorView+Header.swift` `controlStrip`: mod (Word/Sentence) ve
-      detay segmentleri glass'a gecer; secili segment `.prominent` +
-      `glassEffectID` ile morph (mevcut `moduleNamespace` kullanilir) —
-      macOS 15'te mevcut segmented gorunum kalir
-- [x] `InspectorView+Grid.swift` `moduleGrid`: 5 birincil modul butonu +
-      Run All tek `DSGlassGroup(spacing: DS.Spacing.sm)`; aktif modul
-      `.prominent`; "More modules" acilinca overflow butonlari ayni
-      container'a katilir (glass morph ile acilis)
-- [x] `InspectorView+ResultPanel.swift`: sonuc karti GOVDESI duz kalir
-      (`cardInset` okunabilirlik icin dogru), yalnizca kart ustundeki
-      arac ikonlari (kopyala/yenile vb.) glass'a gecer
-- [x] `InspectorView+AskAI.swift`: soru giris alani kapsul glass; gonder
-      butonu `.buttonStyle(.glass)` (26) / `.borderless` (15)
-- [x] `connectionWarningBanner`: `warningSubtle` duz serit →
-      `dsGlassCard` + `.tint(DS.Color.warning)` (anlam tasiyan tint ornegi)
-- [x] Dogrulama: streaming metin uzerinde kontrast; hover/focus halkalari;
-      ⌘1-0, ⇧⌘R dahil tum kisayollar; koyu temada glass kenar okunurlugu;
-      Reduce Motion'da morph'larin kapanmasi (`DS.Animation.respecting`)
-
-## Sprint 3 — Uygulama geneli parlatma + erisilebilirlik
-
-Amac: inspector disindaki yuzeyleri ayni dile getirmek ve genel UX cilasi.
-
-- [x] `SidebarView` + `AnnotationsView`/`WordsView` alt-segmentleri:
-      sekme bari inspector'daki segment stiliyle ayni glass diline gecer;
-      rozetler (due sayisi vb.) glass uzerinde okunur kalir
-- [x] `EmptyStateView` (dashboard) + `LibraryView`: kart hover'da hafif
-      kalkis (`Shadow.card` → `float`) + kapak ustu progress/pin chip'leri
-      glass; "continue reading" hero butonu `.glassProminent` (26) /
-      `.borderedProminent` (15)
-- [x] Sheet'ler (Stats, Anki Export, Onboarding): macOS 26'nin varsayilan
-      glass sheet arkaplanini kullan — varsa ozel `presentationBackground`
-      kaldirilir; toolbar'larda scroll edge effect ile cakisan ozel
-      koyulastirma varsa temizlenir
-- [x] `QuizView`: flashcard yuzeyi DUZ kalir (icerik), yalniz alt aksiyon
-      bari (Again/Good vb.) `DSGlassGroup`; kart cevirme animasyonu korunur
-- [x] Mikro-etkilesim turu: tum `iconButton` benzeri ogelerde tutarli hover
-      state; `SentenceTranslationStrip` ve `PageIndicatorView` glass kapsul
-- [x] Erisilebilirlik denetimi (sprintin kapanis isi): Increase Contrast /
-      Reduce Transparency / Reduce Motion uclusunde tum yeni yuzeyler;
-      VoiceOver etiketleri yeni chrome'da eksiksiz; klavye odak sirasi
-- [x] Dogrulama: 12 dilde uzun metinlerle (Arapca RTL dahil) glass yuzey
-      tasmasi yok; acik/koyu tema tam tur ekran goruntusu seti
-
-## Sprint 4 — Yeni ozellikler (v7-S4 kalanlari + highlight notlari)
-
-Amac: v7 Sprint 4'un v1.27.0'a yetismeyen onayli kalemlerini bitirmek + bir
-yeni ozellik. (Eski v4 backlog'undaki CSV/Quizlet export ve toplu islemler
-zaten shipped — bkz. `ExportFormat.csv/.quizletTSV` ve SavedWords bulk menu.)
-
-- [x] **Review streak + kazanilan auto-freeze**: 7 gunde 1 dondurma hakki
-      kazanilir (max 2 birikir), kacan gun otomatik harcanir;
-      `review_streak.json` persistence; Stats/Dashboard'da streak + freeze
-      gostergesi
-- [x] **TTS hiz degisimi calarken**: `SpeechPlaybackBar` hiz menusu secimi
-      mevcut okumayi kesmeden uygulansin — `currentSentenceIndex`'ten
-      itibaren kuyruk yeni hizla yeniden kurulur (`SpeechManager`)
-- [ ] (ERTELENDİ) **Cumle-cumle karaoke takibi**: seslendirme sirasinda okunan cumle
-      belgede vurgulanir — PDF: `findString` + `setCurrentSelection`,
-      eslesme yoksa sessizce atla; PDF eslesmesi guvenilmez cikarsa
-      onceden kararlastirilan fallback: yalniz EPUB'da takip
-- [x] **Highlight'lara not**: PDF + EPUB highlight'ina kisa not alani —
-      `PDFHighlight`/`EPUBHighlight` modellerine opsiyonel `note` (Codable
-      `decodeIfPresent` migration), `HighlightsView` satirinda goster/duzenle,
-      sag-tik "Add Note to Highlight"
-- [x] Dogrulama: streak freeze gun atlama senaryolari (birim test, tarih
-      enjeksiyonu); hiz degisimi kuyruk ortasinda; karaoke vurgusu sayfa
-      donusunde; highlight notu JSON gecisi eski veriyi bozmaz
-
----
+T1 persistence FSRS/kapsamadan once (yazma hacmi artmadan cozulur). Secim
+cubugu zen'den once (zen chrome'u gizler; secim-yerel aksiyonlar once var
+olmali). FSRS yeni review modlarindan once (modlar nihai notlama modeline
+kurulur). Karaoke ortada — SpeechManager testleri var olduktan ve arkada iki
+shipped release tampon olustuktan sonra.
 
 ## Genel dogrulama (her sprint sonu)
 
@@ -144,5 +187,5 @@ zaten shipped — bkz. `ExportFormat.csv/.quizletTSV` ve SavedWords bulk menu.)
   (`Text(String)` tuzagina dikkat — enum'larda `localizedTitle`)
 - DS denetimi: ham `.font(.system(size:...))` / ham material yok; istisnalar
   `// DS-exempt:` yorumlu
-- macOS 15 fallback yolu derleniyor ve gorsel olarak makul (glass yok,
-  mevcut chrome)
+- macOS 15 fallback yolu derleniyor ve gorsel olarak makul
+- JSON gecisleri: eski veri dosyalari kayipsiz yukleniyor (`decodeIfPresent`)

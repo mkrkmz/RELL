@@ -124,29 +124,30 @@ final class RecentDocumentStore {
 
     private let fileURL: URL
     private let collectionsFileURL: URL
+    private let writer: DebouncedFileWriter
+    private let collectionsWriter: DebouncedFileWriter
     private let maxDocuments = 48
 
     init(fileURL customFileURL: URL? = nil) {
-        if let customFileURL {
-            self.fileURL = customFileURL
-            self.collectionsFileURL = Self.derivedCollectionsURL(for: customFileURL)
-            self.documents = Self.load(from: customFileURL)
-            self.collections = Self.loadCollections(from: self.collectionsFileURL)
-            return
-        }
-
-        guard let dir = FileManager.default.rellAppSupportDirectory() else {
-            self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("recent_documents.json")
-            self.collectionsFileURL = FileManager.default.temporaryDirectory.appendingPathComponent("library_collections.json")
-            self.documents = []
-            self.collections = []
-            return
-        }
-
-        self.fileURL = dir.appendingPathComponent("recent_documents.json")
-        self.collectionsFileURL = dir.appendingPathComponent("library_collections.json")
-        self.documents = Self.load(from: fileURL)
-        self.collections = Self.loadCollections(from: collectionsFileURL)
+        let docs = DebouncedFileWriter.forAppSupport(
+            filename: "recent_documents.json",
+            storeName: "RecentDocumentStore",
+            customFileURL: customFileURL
+        )
+        // In the test (custom-URL) path each instance gets its own sibling
+        // collections file; the app path resolves the shared one.
+        let collectionsCustom = customFileURL.map(Self.derivedCollectionsURL(for:))
+        let cols = DebouncedFileWriter.forAppSupport(
+            filename: "library_collections.json",
+            storeName: "DocumentCollectionStore",
+            customFileURL: collectionsCustom
+        )
+        self.fileURL = docs.url
+        self.writer = docs.writer
+        self.collectionsFileURL = cols.url
+        self.collectionsWriter = cols.writer
+        self.documents = docs.canLoad ? Self.load(from: docs.url) : []
+        self.collections = cols.canLoad ? Self.loadCollections(from: cols.url) : []
     }
 
     /// Sibling path for a custom (typically test) documents file, so each
@@ -280,19 +281,11 @@ final class RecentDocumentStore {
     // MARK: - Persistence
 
     private func save() {
-        do {
-            try RELLJSONStore.save(documents, to: fileURL, storeName: "RecentDocumentStore")
-        } catch {
-            AppLogger.persistence.error("RecentDocumentStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        writer.schedule { [documents] in try JSONEncoder().encode(documents) }
     }
 
     private func saveCollections() {
-        do {
-            try RELLJSONStore.save(collections, to: collectionsFileURL, storeName: "DocumentCollectionStore")
-        } catch {
-            AppLogger.persistence.error("DocumentCollectionStore save failed at \(self.collectionsFileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        collectionsWriter.schedule { [collections] in try JSONEncoder().encode(collections) }
     }
 
     private static func load(from url: URL) -> [RecentDocument] {

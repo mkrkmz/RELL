@@ -91,6 +91,10 @@ struct PDFKitView: NSViewRepresentable {
         private var overlayView: PassthroughOverlayView?
         private var selectionObserver: NSObjectProtocol?
         private var visiblePagesObserver: NSObjectProtocol?
+        /// Floating action bar hosted above the live text selection (U1).
+        private var selectionBarHost: NSHostingView<SelectionActionBar>?
+        /// Repositions the bar as the document scrolls under a held selection.
+        private var scrollBoundsObserver: NSObjectProtocol?
         private var selectionDebounceWorkItem: DispatchWorkItem?
         private var documentUpdateWorkItem: DispatchWorkItem?
         private var themeWorkItem: DispatchWorkItem?
@@ -215,6 +219,21 @@ struct PDFKitView: NSViewRepresentable {
             ) { [weak self] _ in
                 Task { @MainActor in
                     self?.scheduleVisiblePagesRefresh()
+                    self?.updateSelectionBar()
+                }
+            }
+
+            // Keep the selection action bar pinned above its selection while the
+            // document scrolls under a held selection. PDFView scrolls an
+            // internal NSScrollView; its contentView bounds change on every tick.
+            if let clipView = pdfView.subviews.compactMap({ $0 as? NSScrollView }).first?.contentView {
+                clipView.postsBoundsChangedNotifications = true
+                scrollBoundsObserver = NotificationCenter.default.addObserver(
+                    forName: NSView.boundsDidChangeNotification,
+                    object: clipView,
+                    queue: .main
+                ) { [weak self] _ in
+                    Task { @MainActor in self?.updateSelectionBar() }
                 }
             }
 
@@ -277,10 +296,96 @@ struct PDFKitView: NSViewRepresentable {
                     if self.contextSentence.wrappedValue != context {
                         self.contextSentence.wrappedValue = context
                     }
+                    self.updateSelectionBar()
                 }
             }
             selectionDebounceWorkItem = workItem
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.08, execute: workItem)
+        }
+
+        // MARK: - Selection Action Bar (U1)
+
+        /// Shows the floating action bar above the current selection, or hides
+        /// it when there is nothing selected / it scrolled out of view.
+        @MainActor func updateSelectionBar() {
+            guard let pdfView,
+                  let selection = pdfView.currentSelection,
+                  let raw = selection.string?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !raw.isEmpty,
+                  let page = selection.pages.first
+            else {
+                hideSelectionBar()
+                return
+            }
+
+            let viewRect = pdfView.convert(selection.bounds(for: page), from: page)
+            guard viewRect.width > 0, viewRect.height > 0,
+                  pdfView.visibleRect.intersects(viewRect)
+            else {
+                hideSelectionBar()
+                return
+            }
+
+            let filename = loadedDocumentURL?.deletingPathExtension().lastPathComponent
+            let pageNumber = pdfView.currentPage
+                .flatMap { pdfView.document?.index(for: $0) }
+                .map { $0 + 1 }
+
+            let host: NSHostingView<SelectionActionBar>
+            if let existing = selectionBarHost {
+                host = existing
+            } else {
+                host = NSHostingView(rootView: makeSelectionBar(term: raw, filename: filename, pageNumber: pageNumber))
+                host.translatesAutoresizingMaskIntoConstraints = true
+                pdfView.addSubview(host)
+                selectionBarHost = host
+            }
+            host.rootView = makeSelectionBar(term: raw, filename: filename, pageNumber: pageNumber)
+
+            let barSize = host.fittingSize
+            let visible = pdfView.visibleRect
+            let gap: CGFloat = 8
+
+            // PDFView is not flipped: larger y is visually higher, so place the
+            // bar just above the selection's top edge, flipping below it when
+            // there isn't room, and clamp horizontally into the viewport.
+            var originX = viewRect.midX - barSize.width / 2
+            originX = min(max(originX, visible.minX + 4), visible.maxX - barSize.width - 4)
+
+            var originY = viewRect.maxY + gap
+            if originY + barSize.height > visible.maxY {
+                originY = viewRect.minY - gap - barSize.height
+            }
+            originY = max(originY, visible.minY + 4)
+
+            host.frame = CGRect(origin: CGPoint(x: originX, y: originY), size: barSize)
+        }
+
+        @MainActor private func hideSelectionBar() {
+            selectionBarHost?.removeFromSuperview()
+            selectionBarHost = nil
+        }
+
+        @MainActor private func makeSelectionBar(term: String, filename: String?, pageNumber: Int?) -> SelectionActionBar {
+            let isSaved = savedWordsStore.isSaved(term: term, pdfFilename: filename, pageNumber: pageNumber)
+            return SelectionActionBar(
+                onSave: { [weak self] in
+                    self?.contextSaveWord()
+                    // Reflect the saved state on the bar without waiting for a
+                    // reselection.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        self?.updateSelectionBar()
+                    }
+                },
+                onAnalyze: {
+                    // ContentView listens too and unhides the Inspector first.
+                    NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
+                },
+                onHighlight: { [weak self] in self?.contextHighlight(.yellow) },
+                onSpeak: { [weak self] in self?.contextSpeak() },
+                onCopy: { [weak self] in self?.contextCopy() },
+                isSaved: isSaved
+            )
         }
         
         private func extractContext() -> String? {
@@ -832,6 +937,11 @@ struct PDFKitView: NSViewRepresentable {
                 NotificationCenter.default.removeObserver(highlightsObserver)
                 self.highlightsObserver = nil
             }
+            if let scrollBoundsObserver {
+                NotificationCenter.default.removeObserver(scrollBoundsObserver)
+                self.scrollBoundsObserver = nil
+            }
+            hideSelectionBar()
             hoverWorkItem?.cancel()
             hoverWorkItem = nil
             hoverTask?.cancel()

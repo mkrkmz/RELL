@@ -40,26 +40,21 @@ final class EPUBBookmarkStore {
     private(set) var bookmarks: [EPUBBookmark] = []
 
     private let fileURL: URL
+    private let writer: DebouncedFileWriter
 
     /// Two positions within this fraction of a chapter count as "the same
     /// place" for toggle semantics — roughly one viewport of a long chapter.
     static let toggleTolerance = 0.02
 
     init(fileURL customFileURL: URL? = nil) {
-        if let customFileURL {
-            self.fileURL = customFileURL
-            self.bookmarks = Self.load(from: customFileURL)
-            return
-        }
-
-        guard let dir = FileManager.default.rellAppSupportDirectory() else {
-            self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("epub_bookmarks.json")
-            self.bookmarks = []
-            return
-        }
-
-        self.fileURL = dir.appendingPathComponent("epub_bookmarks.json")
-        self.bookmarks = Self.load(from: fileURL)
+        let resolved = DebouncedFileWriter.forAppSupport(
+            filename: "epub_bookmarks.json",
+            storeName: "EPUBBookmarkStore",
+            customFileURL: customFileURL
+        )
+        self.fileURL = resolved.url
+        self.writer = resolved.writer
+        self.bookmarks = resolved.canLoad ? Self.load(from: resolved.url) : []
     }
 
     // MARK: Queries
@@ -131,11 +126,7 @@ final class EPUBBookmarkStore {
     // MARK: Persistence
 
     private func save() {
-        do {
-            try RELLJSONStore.save(bookmarks, to: fileURL, storeName: "EPUBBookmarkStore")
-        } catch {
-            AppLogger.persistence.error("EPUBBookmarkStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        writer.schedule { [bookmarks] in try JSONEncoder().encode(bookmarks) }
     }
 
     private static func load(from url: URL) -> [EPUBBookmark] {

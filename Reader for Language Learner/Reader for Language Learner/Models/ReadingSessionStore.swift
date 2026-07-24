@@ -18,23 +18,19 @@ final class ReadingSessionStore {
     private(set) var activeSession: ReadingSession?
 
     private let fileURL: URL
+    private let writer: DebouncedFileWriter
 
     // MARK: - Init
 
     init(fileURL customFileURL: URL? = nil) {
-        if let customFileURL {
-            self.fileURL = customFileURL
-            self.sessions = Self.load(from: customFileURL)
-            return
-        }
-
-        guard let dir = FileManager.default.rellAppSupportDirectory() else {
-            self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("reading_sessions.json")
-            self.sessions = []
-            return
-        }
-        self.fileURL = dir.appendingPathComponent("reading_sessions.json")
-        self.sessions = Self.load(from: fileURL)
+        let resolved = DebouncedFileWriter.forAppSupport(
+            filename: "reading_sessions.json",
+            storeName: "ReadingSessionStore",
+            customFileURL: customFileURL
+        )
+        self.fileURL = resolved.url
+        self.writer = resolved.writer
+        self.sessions = resolved.canLoad ? Self.load(from: resolved.url) : []
     }
 
     // MARK: - Session Lifecycle
@@ -174,11 +170,7 @@ final class ReadingSessionStore {
     // MARK: - Persistence
 
     private func save() {
-        do {
-            try RELLJSONStore.save(sessions, to: fileURL, storeName: "ReadingSessionStore")
-        } catch {
-            AppLogger.persistence.error("ReadingSessionStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        writer.schedule { [sessions] in try JSONEncoder().encode(sessions) }
     }
 
     private static func load(from url: URL) -> [ReadingSession] {

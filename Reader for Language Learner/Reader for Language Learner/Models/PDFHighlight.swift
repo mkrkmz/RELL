@@ -108,22 +108,17 @@ final class PDFHighlightStore {
     private(set) var highlights: [PDFHighlight] = []
 
     private let fileURL: URL
+    private let writer: DebouncedFileWriter
 
     init(fileURL customFileURL: URL? = nil) {
-        if let customFileURL {
-            self.fileURL = customFileURL
-            self.highlights = Self.load(from: customFileURL)
-            return
-        }
-
-        guard let dir = FileManager.default.rellAppSupportDirectory() else {
-            self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("pdf_highlights.json")
-            self.highlights = []
-            return
-        }
-
-        self.fileURL = dir.appendingPathComponent("pdf_highlights.json")
-        self.highlights = Self.load(from: fileURL)
+        let resolved = DebouncedFileWriter.forAppSupport(
+            filename: "pdf_highlights.json",
+            storeName: "PDFHighlightStore",
+            customFileURL: customFileURL
+        )
+        self.fileURL = resolved.url
+        self.writer = resolved.writer
+        self.highlights = resolved.canLoad ? Self.load(from: resolved.url) : []
     }
 
     // MARK: Queries
@@ -180,11 +175,7 @@ final class PDFHighlightStore {
     // MARK: Persistence
 
     private func save() {
-        do {
-            try RELLJSONStore.save(highlights, to: fileURL, storeName: "PDFHighlightStore")
-        } catch {
-            AppLogger.persistence.error("PDFHighlightStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        writer.schedule { [highlights] in try JSONEncoder().encode(highlights) }
     }
 
     private static func load(from url: URL) -> [PDFHighlight] {

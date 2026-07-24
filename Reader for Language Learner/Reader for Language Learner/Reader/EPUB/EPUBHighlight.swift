@@ -75,22 +75,17 @@ final class EPUBHighlightStore {
     private(set) var highlights: [EPUBHighlight] = []
 
     private let fileURL: URL
+    private let writer: DebouncedFileWriter
 
     init(fileURL customFileURL: URL? = nil) {
-        if let customFileURL {
-            self.fileURL = customFileURL
-            self.highlights = Self.load(from: customFileURL)
-            return
-        }
-
-        guard let dir = FileManager.default.rellAppSupportDirectory() else {
-            self.fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("epub_highlights.json")
-            self.highlights = []
-            return
-        }
-
-        self.fileURL = dir.appendingPathComponent("epub_highlights.json")
-        self.highlights = Self.load(from: fileURL)
+        let resolved = DebouncedFileWriter.forAppSupport(
+            filename: "epub_highlights.json",
+            storeName: "EPUBHighlightStore",
+            customFileURL: customFileURL
+        )
+        self.fileURL = resolved.url
+        self.writer = resolved.writer
+        self.highlights = resolved.canLoad ? Self.load(from: resolved.url) : []
     }
 
     // MARK: Queries
@@ -153,11 +148,7 @@ final class EPUBHighlightStore {
     // MARK: Persistence
 
     private func save() {
-        do {
-            try RELLJSONStore.save(highlights, to: fileURL, storeName: "EPUBHighlightStore")
-        } catch {
-            AppLogger.persistence.error("EPUBHighlightStore save failed at \(self.fileURL.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-        }
+        writer.schedule { [highlights] in try JSONEncoder().encode(highlights) }
     }
 
     private static func load(from url: URL) -> [EPUBHighlight] {
