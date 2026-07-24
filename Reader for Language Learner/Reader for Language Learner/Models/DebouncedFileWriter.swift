@@ -65,7 +65,11 @@ final class DebouncedFileWriter: Flushable {
     /// main actor and called there; successive schedules replace it, so a burst
     /// collapses to the newest snapshot.
     private var pendingEncode: (() throws -> Data)?
-    private var debounceTask: Task<Void, Never>?
+    /// Debounce timer. A cancellable GCD work item, deliberately NOT a Swift
+    /// `Task`: a detached `Task { @MainActor … }` here congested the main-actor
+    /// cooperative pool on core-constrained CI runners and hung the test host.
+    /// Pure GCD keeps scheduling deterministic and off the concurrency runtime.
+    private var pendingWorkItem: DispatchWorkItem?
 
     /// Called on the main actor after each write with the failure message, or
     /// `nil` on success — lets a store surface `saveError` without polling.
@@ -87,14 +91,16 @@ final class DebouncedFileWriter: Flushable {
     func schedule(_ encode: @escaping () throws -> Data) {
         pendingEncode = encode
         guard debounce > 0 else { flush(); return }
-        guard debounceTask == nil else { return }
-        debounceTask = Task { @MainActor [weak self] in
-            let interval = self?.debounce ?? 0.5
-            try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
-            guard let self, !Task.isCancelled else { return }
-            self.debounceTask = nil
-            self.writePendingAsync()
+        guard pendingWorkItem == nil else { return }
+        let item = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.pendingWorkItem = nil
+                self.writePendingAsync()
+            }
         }
+        pendingWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + debounce, execute: item)
     }
 
     private func writePendingAsync() {
@@ -112,15 +118,24 @@ final class DebouncedFileWriter: Flushable {
         let name = storeName
         ioQueue.async { [weak self] in
             let error = Self.writeData(data, to: url, storeName: name)
-            Task { @MainActor in self?.onResult?(error) }
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self?.onResult?(error) }
+            }
         }
     }
 
     /// Writes any pending value synchronously (blocking until the bytes are on
     /// disk). Called at termination and, in write-through mode, on every save.
+    ///
+    /// The write runs DIRECTLY on the calling thread — never via `ioQueue.sync`.
+    /// Blocking the main actor's thread on a Dispatch queue deadlocks under the
+    /// Swift-concurrency runtime on core-constrained CI runners (the whole
+    /// write-through test suite hung there). The debounced path stays off-main
+    /// via `ioQueue.async`; `pendingEncode` is consumed on the main actor, so a
+    /// direct flush and an in-flight async write can never double-write.
     func flush() {
-        debounceTask?.cancel()
-        debounceTask = nil
+        pendingWorkItem?.cancel()
+        pendingWorkItem = nil
         guard let encode = pendingEncode else { return }
         pendingEncode = nil
         let data: Data
@@ -131,7 +146,7 @@ final class DebouncedFileWriter: Flushable {
             onResult?(error.localizedDescription)
             return
         }
-        let error = ioQueue.sync { Self.writeData(data, to: fileURL, storeName: storeName) }
+        let error = Self.writeData(data, to: fileURL, storeName: storeName)
         onResult?(error)
     }
 
