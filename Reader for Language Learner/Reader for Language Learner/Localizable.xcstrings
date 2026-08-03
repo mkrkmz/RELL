@@ -1419,6 +1419,16 @@
         }
       }
     },
+    "Enter Zen Mode" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zen Moduna Gir"
+          }
+        }
+      }
+    },
     "Error" : {
 
     },
@@ -1448,6 +1458,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Odak Modundan Çık"
+          }
+        }
+      }
+    },
+    "Exit Zen Mode" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zen Modundan Çık"
           }
         }
       }

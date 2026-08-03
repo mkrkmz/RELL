@@ -136,10 +136,11 @@ struct PDFNote: Identifiable, Codable, Hashable {
 
 @MainActor
 @Observable
-final class PDFNoteStore {
+final class PDFNoteStore: UndoableStore {
 
     private(set) var notes: [PDFNote] = []
     var draftNote: PDFNote?
+    @ObservationIgnored weak var undoManager: UndoManager?
 
     private let fileURL: URL
     private let writer: DebouncedFileWriter
@@ -224,19 +225,30 @@ final class PDFNoteStore {
     func add(_ note: PDFNote) {
         notes.insert(note, at: 0)
         save()
+        registerUndo("Add Note") { $0.remove(id: note.id) }
     }
 
     func update(_ note: PDFNote) {
         guard let index = notes.firstIndex(where: { $0.id == note.id }) else { return }
+        let previous = notes[index]
         var updated = note
         updated.updatedAt = Date()
         notes[index] = updated
         save()
+        registerUndo("Edit Note") { $0.update(previous) }
     }
 
     func remove(id: UUID) {
-        notes.removeAll { $0.id == id }
+        guard let index = notes.firstIndex(where: { $0.id == id }) else { return }
+        let removed = notes.remove(at: index)
         save()
+        registerUndo("Delete Note") { $0.reinsert(removed, at: index) }
+    }
+
+    private func reinsert(_ note: PDFNote, at index: Int) {
+        notes.insert(note, at: min(index, notes.count))
+        save()
+        registerUndo("Delete Note") { $0.remove(id: note.id) }
     }
 
     private func save() {

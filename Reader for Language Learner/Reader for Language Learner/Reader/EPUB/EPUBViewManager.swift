@@ -106,6 +106,37 @@ final class EPUBViewManager: NSObject {
     var canGoToPreviousChapter: Bool { document != nil && chapterIndex > 0 }
     var canGoToNextChapter: Bool { document != nil && chapterIndex < chapterCount - 1 }
 
+    /// Per-chapter content weights (character counts), computed once per book
+    /// and memoized — the basis for content-weighted book progress (U3).
+    @ObservationIgnored private var chapterWeightCache: [Int]?
+
+    private func chapterWeights() -> [Int] {
+        if let chapterWeightCache { return chapterWeightCache }
+        guard let document else { return [] }
+        let weights = (0..<document.chapterCount).map { max(1, document.plainText(at: $0).count) }
+        chapterWeightCache = weights
+        return weights
+    }
+
+    /// Fraction (0…1) through the entire book, weighted by chapter length —
+    /// far more honest than "chapter N of M" for uneven chapters.
+    var bookProgress: Double {
+        ReadingProgressMath.bookProgress(
+            weights: chapterWeights(),
+            chapterIndex: chapterIndex,
+            scrollFraction: scrollFraction
+        )
+    }
+
+    /// Estimated minutes of reading left in the book.
+    var minutesRemaining: Int {
+        ReadingProgressMath.minutesRemaining(
+            weights: chapterWeights(),
+            chapterIndex: chapterIndex,
+            scrollFraction: scrollFraction
+        )
+    }
+
     let schemeHandler = EPUBSchemeHandler()
     weak var webView: WKWebView?
 
@@ -197,6 +228,7 @@ final class EPUBViewManager: NSObject {
             document = parsed
             schemeHandler.document = parsed
             loadedURL = url
+            chapterWeightCache = nil   // recompute weights for the new book
 
             let saved = Self.savedPosition(for: positionKey(url))
             openChapter(at: min(saved.chapter, parsed.chapterCount - 1), scrollTo: saved.fraction)

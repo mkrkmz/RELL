@@ -165,7 +165,10 @@ struct EPUBReaderView: NSViewRepresentable {
 
         let webView = RELLEPUBWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = manager
-        webView.allowsMagnification = false
+        // Trackpad pinch-to-zoom (U4). The reading-appearance panel's font-size
+        // control remains the primary way to size text; pinch is a quick,
+        // expected gesture on top of it.
+        webView.allowsMagnification = true
         webView.setValue(false, forKey: "drawsBackground")   // theme CSS paints it
 
         manager.webView = webView

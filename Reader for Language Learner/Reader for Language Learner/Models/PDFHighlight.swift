@@ -103,9 +103,10 @@ struct PDFHighlight: Identifiable, Codable, Hashable {
 
 @MainActor
 @Observable
-final class PDFHighlightStore {
+final class PDFHighlightStore: UndoableStore {
 
     private(set) var highlights: [PDFHighlight] = []
+    @ObservationIgnored weak var undoManager: UndoManager?
 
     private let fileURL: URL
     private let writer: DebouncedFileWriter
@@ -143,19 +144,35 @@ final class PDFHighlightStore {
     func add(_ highlight: PDFHighlight) {
         highlights.insert(highlight, at: 0)
         save()
+        registerUndo("Add Highlight") { $0.remove(id: highlight.id) }
         notifyChange()
     }
 
     func remove(id: UUID) {
-        highlights.removeAll { $0.id == id }
+        guard let index = highlights.firstIndex(where: { $0.id == id }) else { return }
+        let removed = highlights.remove(at: index)
         save()
+        registerUndo("Remove Highlight") { $0.reinsert(removed, at: index) }
+        notifyChange()
+    }
+
+    /// Undo path for a removal — restores the highlight at its prior index and
+    /// registers the removal as the redo.
+    private func reinsert(_ highlight: PDFHighlight, at index: Int) {
+        highlights.insert(highlight, at: min(index, highlights.count))
+        save()
+        registerUndo("Remove Highlight") { $0.remove(id: highlight.id) }
         notifyChange()
     }
 
     func updateColor(id: UUID, color: HighlightColor) {
         guard let index = highlights.firstIndex(where: { $0.id == id }) else { return }
+        let previous = highlights[index].colorRaw
         highlights[index].colorRaw = color.rawValue
         save()
+        if let previousColor = HighlightColor(rawValue: previous) {
+            registerUndo("Change Highlight Color") { $0.updateColor(id: id, color: previousColor) }
+        }
         notifyChange()
     }
 

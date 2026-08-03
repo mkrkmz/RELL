@@ -29,9 +29,10 @@ struct EPUBNote: Identifiable, Codable, Hashable {
 
 @MainActor
 @Observable
-final class EPUBNoteStore {
+final class EPUBNoteStore: UndoableStore {
 
     private(set) var notes: [EPUBNote] = []
+    @ObservationIgnored weak var undoManager: UndoManager?
 
     private let fileURL: URL
     private let writer: DebouncedFileWriter
@@ -69,17 +70,28 @@ final class EPUBNoteStore {
     func add(_ note: EPUBNote) {
         notes.insert(note, at: 0)
         save()
+        registerUndo("Add Note") { $0.remove(id: note.id) }
     }
 
     func remove(id: UUID) {
-        notes.removeAll { $0.id == id }
+        guard let index = notes.firstIndex(where: { $0.id == id }) else { return }
+        let removed = notes.remove(at: index)
         save()
+        registerUndo("Delete Note") { $0.reinsert(removed, at: index) }
+    }
+
+    private func reinsert(_ note: EPUBNote, at index: Int) {
+        notes.insert(note, at: min(index, notes.count))
+        save()
+        registerUndo("Delete Note") { $0.remove(id: note.id) }
     }
 
     func updateText(id: UUID, text: String) {
         guard let index = notes.firstIndex(where: { $0.id == id }) else { return }
+        let previous = notes[index].text
         notes[index].text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         save()
+        registerUndo("Edit Note") { $0.updateText(id: id, text: previous) }
     }
 
     // MARK: Persistence

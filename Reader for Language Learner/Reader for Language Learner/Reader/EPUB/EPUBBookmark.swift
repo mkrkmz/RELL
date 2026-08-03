@@ -35,9 +35,10 @@ struct EPUBBookmark: Identifiable, Codable, Hashable {
 
 @MainActor
 @Observable
-final class EPUBBookmarkStore {
+final class EPUBBookmarkStore: UndoableStore {
 
     private(set) var bookmarks: [EPUBBookmark] = []
+    @ObservationIgnored weak var undoManager: UndoManager?
 
     private let fileURL: URL
     private let writer: DebouncedFileWriter
@@ -93,11 +94,20 @@ final class EPUBBookmarkStore {
     func add(_ bookmark: EPUBBookmark) {
         bookmarks.insert(bookmark, at: 0)
         save()
+        registerUndo("Add Bookmark") { $0.remove(id: bookmark.id) }
     }
 
     func remove(id: UUID) {
-        bookmarks.removeAll { $0.id == id }
+        guard let index = bookmarks.firstIndex(where: { $0.id == id }) else { return }
+        let removed = bookmarks.remove(at: index)
         save()
+        registerUndo("Remove Bookmark") { $0.reinsert(removed, at: index) }
+    }
+
+    private func reinsert(_ bookmark: EPUBBookmark, at index: Int) {
+        bookmarks.insert(bookmark, at: min(index, bookmarks.count))
+        save()
+        registerUndo("Remove Bookmark") { $0.remove(id: bookmark.id) }
     }
 
     /// Removes the bookmark near this position if one exists; otherwise adds

@@ -69,6 +69,12 @@ struct ReaderMenuCommands: Commands {
             .keyboardShortcut("d", modifiers: [.command, .shift])
             .disabled(reader?.hasDocument != true)
 
+            Button(reader?.zenMode == true ? "Exit Zen Mode" : "Enter Zen Mode") {
+                reader?.toggleZenMode()
+            }
+            .keyboardShortcut("f", modifiers: [.command, .control])
+            .disabled(reader?.hasDocument != true)
+
             Divider()
 
             Button("Zoom In") { reader?.zoomIn() }

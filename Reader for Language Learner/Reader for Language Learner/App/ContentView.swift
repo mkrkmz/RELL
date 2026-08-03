@@ -44,6 +44,7 @@ struct ContentView: View {
     @Environment(RecentDocumentStore.self) private var recentDocumentStore
     @Environment(DocumentCoverStore.self)  private var coverStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.undoManager) private var undoManager
 
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showInspector = true
@@ -58,9 +59,19 @@ struct ContentView: View {
     @State private var preFocusSidebar = true
     @State private var preFocusInspector = true
 
+    // Zen mode goes further than focus: full-screen, the window toolbar and
+    // context strip also hide (revealed on hover), for immersive reading.
+    @State private var zenMode = false
+    @State private var preZenSidebar = true
+    @State private var preZenInspector = true
+
     /// Column widths are managed (and persisted) by NavigationSplitView /
     /// .inspector themselves; only visibility is app state.
     private var showSidebar: Bool { columnVisibility != .detailOnly }
+
+    /// The in-reader chrome (context strip, translation strip) hides in both
+    /// focus and zen modes.
+    private var chromeHidden: Bool { focusMode || zenMode }
 
     @AppStorage("appTheme")       private var appThemeRaw:    String = AppTheme.system.rawValue
     @AppStorage("pageTheme")      private var pageThemeRaw:   String = PageTheme.original.rawValue
@@ -387,6 +398,15 @@ struct ContentView: View {
             )
         } detail: {
             pdfColumn
+                .overlay(alignment: .top) {
+                    if zenMode {
+                        ZenModeBar(
+                            title: windowTitle,
+                            subtitle: "",
+                            onExit: { toggleZenMode() }
+                        )
+                    }
+                }
                 .inspector(isPresented: $showInspector) {
                     InspectorView(
                         selectedText: selectionState.selectedText,
@@ -403,10 +423,21 @@ struct ContentView: View {
                     )
                 }
                 .toolbar { toolbarContent }
+                .toolbar(zenMode ? .hidden : .automatic, for: .windowToolbar)
                 .navigationTitle(windowTitle)
                 .onExitCommand { closeFindBar() }
         }
         .navigationSplitViewStyle(.balanced)
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { _ in
+            // If the user left full-screen by the green button or ⌃⌘F, drop
+            // zen chrome too so the two never disagree.
+            exitZenChrome()
+        }
+        // Hand this window's undo manager to the annotation stores so add/
+        // remove/edit are undoable (⌘Z). The stores are shared, so the focused
+        // window's manager wins — correct for the common single-window case.
+        .onAppear { wireUndoManagers() }
+        .onChange(of: undoManager) { _, _ in wireUndoManagers() }
     }
 
     // ── Reader column (PDF or EPUB) ───────────────────────────────────
@@ -426,7 +457,7 @@ struct ContentView: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
-                    if !focusMode {
+                    if !chromeHidden {
                         readerContextStrip
                     }
 
@@ -496,7 +527,7 @@ struct ContentView: View {
                     }
                     }
 
-                    if sentenceTranslationEnabled, !focusMode, let sentence = translatableSentence {
+                    if sentenceTranslationEnabled, !chromeHidden, let sentence = translatableSentence {
                         SentenceTranslationStrip(
                             sentence: sentence,
                             service: quickLookup,
@@ -586,8 +617,12 @@ struct ContentView: View {
         if isEPUBDocument {
             guard epubManager.chapterCount > 0 else { return String(localized: "Opening book…") }
             let chapter = String(localized: "Chapter \(epubManager.chapterIndex + 1) / \(epubManager.chapterCount)")
-            let percent = Int((epubManager.scrollFraction * 100).rounded())
-            return "\(chapter) · \(percent)%"
+            // Book-wide, content-weighted progress + time left (U3) — more
+            // honest than the in-chapter scroll percentage this used to show.
+            let percent = Int((epubManager.bookProgress * 100).rounded())
+            let minutes = epubManager.minutesRemaining
+            let tail = minutes > 0 ? String(localized: "\(percent)% · \(minutes) min left") : "\(percent)%"
+            return "\(chapter) · \(tail)"
         }
         guard pdfViewManager.pageCount > 0 else { return String(localized: "Ready") }
         if let currentPageNumber {
@@ -991,6 +1026,59 @@ struct ContentView: View {
         }
     }
 
+    /// Zen mode: immersive full-screen reading with the panels, toolbar, and
+    /// context strip hidden. Remembers the panel layout so exiting restores it,
+    /// and drives the window in/out of macOS full-screen to match.
+    private func toggleZenMode() {
+        let entering = !zenMode
+        if entering {
+            preZenSidebar = showSidebar
+            preZenInspector = showInspector
+        }
+        withAnimation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion)) {
+            zenMode = entering
+            if entering {
+                focusMode = false
+                columnVisibility = .detailOnly
+                showInspector = false
+            } else {
+                columnVisibility = preZenSidebar ? .all : .detailOnly
+                showInspector = preZenInspector
+            }
+        }
+        setWindowFullScreen(entering)
+    }
+
+    /// Restores the panels when the user leaves full-screen by other means
+    /// (green button, ⌃⌘F) — keeps `zenMode` honest without re-toggling the
+    /// window, which is already exiting full-screen.
+    private func exitZenChrome() {
+        guard zenMode else { return }
+        withAnimation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion)) {
+            zenMode = false
+            columnVisibility = preZenSidebar ? .all : .detailOnly
+            showInspector = preZenInspector
+        }
+    }
+
+    private func setWindowFullScreen(_ full: Bool) {
+        guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return }
+        if window.styleMask.contains(.fullScreen) != full {
+            window.toggleFullScreen(nil)
+        }
+    }
+
+    /// Points the annotation stores at this window's undo manager so their
+    /// mutations register undo/redo.
+    private func wireUndoManagers() {
+        highlightStore.undoManager = undoManager
+        noteStore.undoManager = undoManager
+        bookmarkStore.undoManager = undoManager
+        epubHighlightStore.undoManager = undoManager
+        epubNoteStore.undoManager = undoManager
+        epubBookmarkStore.undoManager = undoManager
+    }
+
     private var isCurrentPageBookmarked: Bool {
         guard let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent
         else { return false }
@@ -1084,6 +1172,7 @@ struct ContentView: View {
             isSidebarVisible: showSidebar,
             isInspectorVisible: showInspector,
             focusMode: focusMode,
+            zenMode: zenMode,
             canGoToPreviousPage: isEPUBDocument
                 ? epubManager.canGoToPreviousChapter
                 : pdfViewManager.canGoToPreviousPage,
@@ -1102,6 +1191,7 @@ struct ContentView: View {
             toggleSidebar: { toggleSidebar() },
             toggleInspector: { toggleInspector() },
             toggleFocusMode: { toggleFocusMode() },
+            toggleZenMode: { toggleZenMode() },
             goToPreviousPage: {
                 if isEPUBDocument { epubManager.previousChapter() }
                 else { pdfViewManager.goToPreviousPage() }
@@ -1221,16 +1311,20 @@ struct ContentView: View {
             if let observer { NotificationCenter.default.removeObserver(observer) }
         }
 
-        if let pdfView = pdfViewManager.pdfView {
-            observer = NotificationCenter.default.addObserver(
-                forName: Notification.Name.PDFViewDocumentChanged,
-                object: pdfView,
-                queue: .main
-            ) { _ in attempt() }
-        }
+        // Register the document-load observer unconditionally. Passing a nil
+        // `object` (when this window's PDFView hasn't been created yet — the
+        // first-open case) observes any PDFView's load, and `attempt()` still
+        // gates on *this* window's `pdfViewManager.pdfView`, so restore fires on
+        // the real signal even on first open instead of relying on the timeout.
+        observer = NotificationCenter.default.addObserver(
+            forName: Notification.Name.PDFViewDocumentChanged,
+            object: pdfViewManager.pdfView,
+            queue: .main
+        ) { _ in attempt() }
 
+        // Safety net only — the observer above is the primary path now.
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(0.3))
+            try? await Task.sleep(for: .seconds(0.5))
             if let observer { NotificationCenter.default.removeObserver(observer) }
             attempt()
         }

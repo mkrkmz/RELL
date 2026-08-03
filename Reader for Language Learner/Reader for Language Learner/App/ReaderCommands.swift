@@ -14,6 +14,7 @@ struct ReaderCommands {
     var isSidebarVisible: Bool
     var isInspectorVisible: Bool
     var focusMode: Bool
+    var zenMode: Bool
     var canGoToPreviousPage: Bool
     var canGoToNextPage: Bool
     var recentDocuments: [RecentDocument]
@@ -29,6 +30,7 @@ struct ReaderCommands {
     var toggleSidebar: () -> Void
     var toggleInspector: () -> Void
     var toggleFocusMode: () -> Void
+    var toggleZenMode: () -> Void
     var goToPreviousPage: () -> Void
     var goToNextPage: () -> Void
     var runModule: (ModuleType) -> Void
@@ -62,6 +64,7 @@ extension ReaderCommands: Equatable {
             && lhs.isSidebarVisible == rhs.isSidebarVisible
             && lhs.isInspectorVisible == rhs.isInspectorVisible
             && lhs.focusMode == rhs.focusMode
+            && lhs.zenMode == rhs.zenMode
             && lhs.canGoToPreviousPage == rhs.canGoToPreviousPage
             && lhs.canGoToNextPage == rhs.canGoToNextPage
             && lhs.recentDocuments == rhs.recentDocuments

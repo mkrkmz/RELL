@@ -41,6 +41,11 @@ struct PDFKitView: NSViewRepresentable {
     func makeNSView(context: Context) -> PDFView {
         let pdfView = RELLPDFView()
         pdfView.autoScales = true
+        // Bounds enable native trackpad pinch-to-zoom (U4) without letting the
+        // page shrink to nothing or blow up past legibility. Button zoom and
+        // Fit Width still work within the same range.
+        pdfView.minScaleFactor = 0.25
+        pdfView.maxScaleFactor = 6.0
         pdfView.displayMode = displayMode.kitDisplayMode
         pdfView.displayDirection = .vertical
 

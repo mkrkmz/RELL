@@ -22,9 +22,10 @@ struct PDFBookmark: Identifiable, Codable, Hashable {
 // MARK: - Store
 
 @Observable
-final class PDFBookmarkStore {
+final class PDFBookmarkStore: UndoableStore {
 
     private(set) var bookmarks: [PDFBookmark] = []
+    @ObservationIgnored weak var undoManager: UndoManager?
 
     private let udKey = "rell_pdf_bookmarks_v1"
 
@@ -50,16 +51,29 @@ final class PDFBookmarkStore {
         else { return }
         bookmarks.insert(bookmark, at: 0)
         save()
+        registerUndo("Add Bookmark") { $0.remove(id: bookmark.id) }
     }
 
     func remove(id: UUID) {
-        bookmarks.removeAll { $0.id == id }
+        guard let index = bookmarks.firstIndex(where: { $0.id == id }) else { return }
+        let removed = bookmarks.remove(at: index)
         save()
+        registerUndo("Remove Bookmark") { $0.reinsert(removed, at: index) }
     }
 
     func remove(filename: String, pageIndex: Int) {
-        bookmarks.removeAll { $0.pdfFilename == filename && $0.pageIndex == pageIndex }
+        guard let index = bookmarks.firstIndex(where: {
+            $0.pdfFilename == filename && $0.pageIndex == pageIndex
+        }) else { return }
+        let removed = bookmarks.remove(at: index)
         save()
+        registerUndo("Remove Bookmark") { $0.reinsert(removed, at: index) }
+    }
+
+    private func reinsert(_ bookmark: PDFBookmark, at index: Int) {
+        bookmarks.insert(bookmark, at: min(index, bookmarks.count))
+        save()
+        registerUndo("Remove Bookmark") { $0.remove(id: bookmark.id) }
     }
 
     /// Adds the bookmark if the page is not yet bookmarked; removes it if it is.
