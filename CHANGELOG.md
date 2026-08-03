@@ -4,6 +4,33 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.31.0] - 2026-08-03
+
+The learning engine gets a serious upgrade. Roadmap v9 Sprint 3.
+
+### Added
+
+- **Smarter review scheduling (FSRS)**: reviews are now scheduled by FSRS, the
+  modern algorithm behind current Anki, instead of the older fixed-interval
+  approach. Each word carries its own memory model, so intervals adapt to how
+  well *you* actually remember *that* word — words you find easy stretch out
+  quickly, ones you keep forgetting come back sooner. Your existing vocabulary
+  carries over: each word is seeded from the schedule it already had.
+- **A "Hard" button** in review, alongside Again / Good / Easy. Use it when you
+  got there but it was a struggle — the schedule takes that seriously.
+- **Inflected words are recognized**: save "run" and the reader now understands
+  "ran" and "running" are the same word, so saving a word you already have no
+  longer creates a duplicate. Works across all twelve study languages.
+- **Known-words coverage**: the reader shows what percentage of the passage
+  you're on you already know, colored green / amber / red so you can tell at a
+  glance whether a book is comfortable reading or a slog.
+
+### Changed
+
+- **Mastery now reflects memory, not counting**: a word reads as "mastered"
+  once you can reliably recall it weeks later, rather than after a fixed number
+  of correct answers. Forgetting one drops it back to learning.
+
 ## [1.30.0] - 2026-08-03
 
 Immersive reading and a few Mac-native touches. Roadmap v9 Sprint 2.
