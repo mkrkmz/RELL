@@ -4,6 +4,32 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.30.0] - 2026-08-03
+
+Immersive reading and a few Mac-native touches. Roadmap v9 Sprint 2.
+
+### Added
+
+- **Zen mode**: a full-screen, distraction-free reading mode that hides the
+  toolbar and both side panels so nothing but the page is on screen. Turn it
+  on from View ▸ Enter Zen Mode or ⌃⌘F; slide the pointer to the top edge to
+  reveal a slim bar with the title and the way out.
+- **Pinch to zoom**: zoom PDFs and EPUBs with a trackpad pinch, the way you'd
+  expect on a Mac. The reading-appearance panel is still there for precise
+  EPUB text sizing.
+- **Undo and redo for annotations**: added, removed, or recolored a highlight,
+  note, or bookmark by mistake? ⌘Z takes it back and ⇧⌘Z brings it forward.
+- **Time left in the book** (EPUB): the reader now shows how far you are
+  through the whole book along with an estimate of the minutes remaining.
+
+### Changed
+
+- **EPUB progress is now book-wide**: the percentage reflects your place in the
+  entire book, weighted by how long each chapter actually is, instead of just
+  how far you've scrolled in the current chapter.
+- Reopening a document restores your last page more reliably — it now waits for
+  the document's own load signal instead of a fixed delay.
+
 ## [1.29.0] - 2026-07-24
 
 The core reading loop gets quicker to act on, and saving gets smoother under
