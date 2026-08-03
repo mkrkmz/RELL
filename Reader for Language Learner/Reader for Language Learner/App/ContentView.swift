@@ -61,6 +61,9 @@ struct ContentView: View {
 
     // Zen mode goes further than focus: full-screen, the window toolbar and
     // context strip also hide (revealed on hover), for immersive reading.
+    /// Per-window coverage profiler for the passage on screen (L3).
+    @State private var lexicalProfileService = LexicalProfileService()
+
     @State private var zenMode = false
     @State private var preZenSidebar = true
     @State private var preZenInspector = true
@@ -438,6 +441,11 @@ struct ContentView: View {
         // window's manager wins — correct for the common single-window case.
         .onAppear { wireUndoManagers() }
         .onChange(of: undoManager) { _, _ in wireUndoManagers() }
+        // Coverage of the passage on screen (L3) — recompute as the reader
+        // moves through the document or opens a different one.
+        .onChange(of: epubManager.chapterIndex) { _, _ in refreshLexicalProfile() }
+        .onChange(of: currentPageNumber) { _, _ in refreshLexicalProfile() }
+        .onChange(of: selectionState.documentURL) { _, _ in refreshLexicalProfile() }
     }
 
     // ── Reader column (PDF or EPUB) ───────────────────────────────────
@@ -593,6 +601,16 @@ struct ContentView: View {
                         label: "due",
                         tint: currentDueWordCount > 0 ? DS.Color.warning : DS.Color.success
                     )
+                    if let profile = lexicalProfileService.current, profile.totalTokens > 0 {
+                        // How much of what's on screen the reader already knows
+                        // — comprehensible-input coverage (L3).
+                        readerContextMetricChip(
+                            icon: "percent",
+                            value: "\(Int((profile.knownShare * 100).rounded()))",
+                            label: "known",
+                            tint: coverageTint(for: profile.difficulty)
+                        )
+                    }
                     readerContextChip(
                         icon: selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             ? "cursorarrow.click"
@@ -611,6 +629,46 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: DS.Radius.sm)
                 .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
         )
+    }
+
+    private func coverageTint(for difficulty: LexicalProfile.Difficulty) -> SwiftUI.Color {
+        switch difficulty {
+        case .comfortable: return DS.Color.success
+        case .challenging: return DS.Color.warning
+        case .demanding:   return DS.Color.danger
+        }
+    }
+
+    /// Profiles the passage on screen against the reader's vocabulary. Cheap to
+    /// call repeatedly — the service caches by passage and computes off-main.
+    private func refreshLexicalProfile() {
+        guard let filename = currentDocumentName else { return }
+        let language = Language.storedTarget
+
+        if isEPUBDocument {
+            let chapter = epubManager.chapterIndex
+            guard epubManager.chapterCount > 0 else { return }
+            Task {
+                let text = await epubManager.currentChapterPlainText()
+                lexicalProfileService.profile(
+                    text: text,
+                    cacheKey: "\(filename)#c\(chapter)",
+                    language: language,
+                    savedWordsStore: savedWordsStore
+                )
+            }
+        } else {
+            guard let page = pdfViewManager.pdfView?.currentPage,
+                  let text = page.string,
+                  let index = currentPageNumber
+            else { return }
+            lexicalProfileService.profile(
+                text: text,
+                cacheKey: "\(filename)#p\(index)",
+                language: language,
+                savedWordsStore: savedWordsStore
+            )
+        }
     }
 
     private var pageStatusText: String {

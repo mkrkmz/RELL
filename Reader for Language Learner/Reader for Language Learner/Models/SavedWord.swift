@@ -117,6 +117,21 @@ enum ReviewStatus {
 struct ReviewEvent: Codable, Equatable, Hashable {
     let date: Date
     let rating: ReviewRating
+
+    init(date: Date, rating: ReviewRating) {
+        self.date = date
+        self.rating = rating
+    }
+
+    /// Decodes defensively: an unrecognized rating (a grade added by a newer
+    /// build, e.g. `hard` in v1.31) falls back to `.good` instead of throwing,
+    /// which would otherwise fail the whole vocabulary file's decode.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        date = try container.decode(Date.self, forKey: .date)
+        let raw = try container.decode(String.self, forKey: .rating)
+        rating = ReviewRating(rawValue: raw) ?? .good
+    }
 }
 
 /// A single word or phrase saved by the user during reading.
@@ -147,10 +162,15 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     /// before this field existed.
     var reviewEvents: [ReviewEvent]
     var nextReviewAt: Date?
-    /// Per-word SRS ease multiplier (SM-2 style). 2.5 is the neutral default —
-    /// `nextReviewAt` scheduling multiplies its base interval by `easeFactor / 2.5`,
-    /// so untouched words keep today's fixed intervals exactly.
+    /// Legacy SM-2 ease multiplier (1.3…3.5, 2.5 neutral). FSRS took over
+    /// scheduling in v1.31; this keeps being written so an older build can
+    /// still read the library, and it seeds the FSRS migration.
     var easeFactor: Double
+    /// FSRS memory stability in days — how long recall holds up. nil on words
+    /// that predate FSRS; `SavedWordsStore` seeds those on first review.
+    var stability: Double?
+    /// FSRS difficulty, 1 (easiest) … 10 (hardest). nil before migration.
+    var difficulty: Double?
     /// CEFRLevel.rawValue. nil = unrated.
     var cefrLevel: String?
     /// True when `cefrLevel` came from the LLM estimator rather than the
@@ -182,6 +202,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         reviewEvents: [ReviewEvent] = [],
         nextReviewAt: Date? = nil,
         easeFactor: Double = 2.5,
+        stability: Double? = nil,
+        difficulty: Double? = nil,
         cefrLevel: String? = nil,
         cefrIsAuto: Bool = false,
         language: String? = nil
@@ -205,6 +227,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.reviewEvents = reviewEvents
         self.nextReviewAt = nextReviewAt
         self.easeFactor = easeFactor
+        self.stability = stability
+        self.difficulty = difficulty
         self.cefrLevel = cefrLevel
         self.cefrIsAuto = cefrIsAuto
         self.language = language
@@ -246,6 +270,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         case reviewEvents
         case nextReviewAt
         case easeFactor
+        case stability
+        case difficulty
         case cefrLevel
         case cefrIsAuto
         case language
@@ -272,6 +298,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         reviewEvents = try container.decodeIfPresent([ReviewEvent].self, forKey: .reviewEvents) ?? []
         nextReviewAt = try container.decodeIfPresent(Date.self, forKey: .nextReviewAt)
         easeFactor = try container.decodeIfPresent(Double.self, forKey: .easeFactor) ?? 2.5
+        stability = try container.decodeIfPresent(Double.self, forKey: .stability)
+        difficulty = try container.decodeIfPresent(Double.self, forKey: .difficulty)
         cefrLevel = try container.decodeIfPresent(String.self, forKey: .cefrLevel)
         cefrIsAuto = try container.decodeIfPresent(Bool.self, forKey: .cefrIsAuto) ?? false
         language = try container.decodeIfPresent(String.self, forKey: .language)
@@ -279,6 +307,12 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
 
     var hasBeenReviewed: Bool {
         reviewCount > 0 || lastReviewedAt != nil
+    }
+
+    /// The word's FSRS memory state, or nil if it hasn't been migrated yet.
+    var fsrsState: FSRSState? {
+        guard let stability, let difficulty else { return nil }
+        return FSRSState(stability: stability, difficulty: difficulty)
     }
 
     func hasTag(_ tag: String) -> Bool {

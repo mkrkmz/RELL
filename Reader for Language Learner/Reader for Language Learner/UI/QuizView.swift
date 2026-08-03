@@ -549,10 +549,12 @@ struct QuizView: View {
             HStack(spacing: DS.Spacing.lg) {
                 actionButton(label: "Again", icon: "arrow.counterclockwise", color: DS.Color.danger,
                              shortcut: "1", shortcutLabel: "1") { recordRating(.again, word: word) }
+                actionButton(label: "Hard", icon: "tortoise.fill", color: DS.Color.warning,
+                             shortcut: "2", shortcutLabel: "2") { recordRating(.hard, word: word) }
                 actionButton(label: "Good", icon: "checkmark.circle.fill", color: DS.Color.accent,
-                             shortcut: "2", shortcutLabel: "2") { recordRating(.good, word: word) }
+                             shortcut: "3", shortcutLabel: "3") { recordRating(.good, word: word) }
                 actionButton(label: "Easy", icon: "checkmark.seal.fill", color: DS.Color.success,
-                             shortcut: "3", shortcutLabel: "3") { recordRating(.easy, word: word) }
+                             shortcut: "4", shortcutLabel: "4") { recordRating(.easy, word: word) }
             }
         }
         .padding(.horizontal, DS.Spacing.xl)
@@ -1001,6 +1003,9 @@ struct QuizView: View {
     private func recordRating(_ rating: ReviewRating, word: SavedWord) {
         switch rating {
         case .again: sessionAgain += 1
+        // Hard is a successful recall, so it tallies with Good — matching how
+        // the accuracy stats elsewhere treat anything that isn't `again`.
+        case .hard:  sessionGood += 1
         case .good:  sessionGood += 1
         case .easy:  sessionEasy += 1
         }

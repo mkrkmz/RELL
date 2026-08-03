@@ -9,6 +9,8 @@ import SwiftUI
 
 enum ReviewRating: String, CaseIterable, Codable, Hashable, Identifiable {
     case again
+    /// Recalled, but with effort. FSRS schedules it shorter than `good`.
+    case hard
     case good
     case easy
 
@@ -17,16 +19,38 @@ enum ReviewRating: String, CaseIterable, Codable, Hashable, Identifiable {
     var label: String {
         switch self {
         case .again: return "Again"
+        case .hard: return "Hard"
         case .good: return "Good"
         case .easy: return "Easy"
+        }
+    }
+
+    /// Visible UI text goes through this — see CLAUDE.md's `Text(String)` note.
+    var localizedTitle: String {
+        switch self {
+        case .again: return String(localized: "Again")
+        case .hard: return String(localized: "Hard")
+        case .good: return String(localized: "Good")
+        case .easy: return String(localized: "Easy")
         }
     }
 
     var icon: String {
         switch self {
         case .again: return "arrow.counterclockwise"
+        case .hard: return "tortoise"
         case .good: return "checkmark.circle"
         case .easy: return "checkmark.seal"
+        }
+    }
+
+    /// FSRS's four-button scale.
+    var fsrsGrade: FSRSGrade {
+        switch self {
+        case .again: return .again
+        case .hard: return .hard
+        case .good: return .good
+        case .easy: return .easy
         }
     }
 }
@@ -150,6 +174,55 @@ final class SavedWordsStore {
         words.removeAll()
         save()
         removed.forEach { SpotlightIndexer.removeWord(id: $0.id) }
+    }
+
+    /// An already-saved word that is the same dictionary word as `term`, even
+    /// in a different inflection ("ran" finding a saved "run"). Exact matches
+    /// win; lemma matching only runs when nothing matches outright, so this
+    /// can add hits but never change an exact one.
+    ///
+    /// Scoped to the word's own study language so an English "die" isn't
+    /// conflated with the German article.
+    func lemmaMatchedWord(for term: String, language: Language? = nil) -> SavedWord? {
+        let needle = term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !needle.isEmpty else { return nil }
+
+        if let exact = words.first(where: { $0.term.lowercased() == needle }) {
+            return exact
+        }
+
+        let studyLanguage = language ?? Language.storedTarget
+        let key = LemmaMatcher.matchKey(for: term, language: studyLanguage)
+        // A term with no lemma of its own can't match anything but exactly.
+        guard key != needle else { return nil }
+
+        return words.first { word in
+            guard word.language == nil || word.language == studyLanguage.rawValue else { return false }
+            return LemmaMatcher.matchKey(for: word.term, language: studyLanguage) == key
+        }
+    }
+
+    /// Lemma match keys of the reader's vocabulary, split by whether the word
+    /// is mastered or still being learned — the input to a document's coverage
+    /// profile (`LexicalProfileBuilder`). Scoped to one study language so a
+    /// multi-language library doesn't inflate an English book's coverage with
+    /// German words.
+    func lemmaKeySets(for language: Language) -> (mastered: Set<String>, learning: Set<String>) {
+        var mastered: Set<String> = []
+        var learning: Set<String> = []
+        for word in words {
+            guard word.language == nil || word.language == language.rawValue else { continue }
+            let key = LemmaMatcher.matchKey(for: word.term, language: language)
+            guard !key.isEmpty else { continue }
+            if word.masteryLevel == .mastered {
+                mastered.insert(key)
+            } else {
+                learning.insert(key)
+            }
+        }
+        // A word can't be both; mastered wins.
+        learning.subtract(mastered)
+        return (mastered, learning)
     }
 
     func isSaved(term: String, pdfFilename: String?, pageNumber: Int?) -> Bool {
@@ -487,6 +560,11 @@ final class SavedWordsStore {
     func applyReview(_ rating: ReviewRating, to word: SavedWord, reviewedAt: Date = Date()) -> SavedWord? {
         guard let index = words.firstIndex(where: { $0.id == word.id }) else { return nil }
 
+        // Snapshot the stored word before any mutation — FSRS needs the prior
+        // memory state and review date, and the caller's copy may be stale.
+        let previous = words[index]
+        let previousReviewDate = previous.lastReviewedAt
+
         var updated = words[index]
         updated.reviewCount += 1
         if updated.reviewHistory.isEmpty, let lastReviewedAt = updated.lastReviewedAt {
@@ -500,41 +578,58 @@ final class SavedWordsStore {
             updated.reviewEvents.removeFirst(updated.reviewEvents.count - 500)
         }
 
-        switch rating {
-        case .again:
+        if rating == .again {
             updated.incorrectCount += 1
-            if updated.masteryLevel == .mastered {
-                updated.masteryLevel = .learning
-            }
-            updated.easeFactor = max(1.3, updated.easeFactor - 0.2)
+        }
+
+        // Legacy ease is still maintained so an older build can read the file
+        // and so the FSRS seed stays meaningful — but it no longer schedules.
+        switch rating {
+        case .again: updated.easeFactor = max(1.3, updated.easeFactor - 0.2)
+        case .hard:  updated.easeFactor = max(1.3, updated.easeFactor - 0.05)
+        case .good:  break
+        case .easy:  updated.easeFactor = min(3.5, updated.easeFactor + 0.15)
+        }
+
+        // ── FSRS scheduling ──────────────────────────────────────────────
+        let elapsedDays = previousReviewDate.map {
+            max(0, reviewedAt.timeIntervalSince($0) / 86_400)
+        } ?? 0
+
+        let priorState = previous.fsrsState ?? FSRSScheduler.seedState(
+            easeFactor: previous.easeFactor,
+            previousIntervalDays: previousIntervalDays(for: previous),
+            isMastered: previous.masteryLevel == .mastered,
+            hasBeenReviewed: previous.hasBeenReviewed
+        )
+
+        // A word's very first graded review starts a fresh memory state;
+        // anything else evolves the state it already had.
+        let newState: FSRSState = previous.hasBeenReviewed
+            ? FSRSScheduler.nextState(priorState, grade: rating.fsrsGrade, elapsedDays: elapsedDays)
+            : FSRSScheduler.initialState(grade: rating.fsrsGrade)
+
+        updated.stability = newState.stability
+        updated.difficulty = newState.difficulty
+
+        if rating == .again {
+            // Relearning step: bring it back within the session rather than
+            // waiting out the (sub-day) interval a lapse implies.
             updated.nextReviewAt = Calendar.current.date(byAdding: .minute, value: 10, to: reviewedAt) ?? reviewedAt
-        case .good:
-            switch updated.masteryLevel {
-            case .new:
-                updated.masteryLevel = .learning
-                updated.nextReviewAt = Calendar.current.date(byAdding: .hour, value: 8, to: reviewedAt) ?? reviewedAt
-            case .learning:
-                if updated.reviewCount >= 3 {
-                    updated.masteryLevel = .mastered
-                    updated.nextReviewAt = scheduledDate(byAdding: 3, to: reviewedAt, ease: updated.easeFactor)
-                } else {
-                    updated.nextReviewAt = scheduledDate(byAdding: 1, to: reviewedAt, ease: updated.easeFactor)
-                }
-            case .mastered:
-                updated.nextReviewAt = scheduledDate(byAdding: 7, to: reviewedAt, ease: updated.easeFactor)
-            }
-        case .easy:
-            updated.easeFactor = min(3.5, updated.easeFactor + 0.15)
-            switch updated.masteryLevel {
-            case .new:
-                updated.masteryLevel = .learning
-                updated.nextReviewAt = scheduledDate(byAdding: 1, to: reviewedAt, ease: updated.easeFactor)
-            case .learning:
-                updated.masteryLevel = .mastered
-                updated.nextReviewAt = scheduledDate(byAdding: 7, to: reviewedAt, ease: updated.easeFactor)
-            case .mastered:
-                updated.nextReviewAt = scheduledDate(byAdding: 14, to: reviewedAt, ease: updated.easeFactor)
-            }
+        } else {
+            let days = max(1, Int(FSRSScheduler.interval(stability: newState.stability).rounded()))
+            updated.nextReviewAt = Calendar.current.date(byAdding: .day, value: days, to: reviewedAt) ?? reviewedAt
+        }
+
+        // Mastery is now a read-out of memory strength rather than a counter:
+        // a lapse always drops back to learning, and durable stability earns
+        // "mastered". `new` stays reserved for never-reviewed words.
+        if rating == .again {
+            updated.masteryLevel = .learning
+        } else if newState.stability >= FSRSScheduler.masteredStabilityThreshold {
+            updated.masteryLevel = .mastered
+        } else {
+            updated.masteryLevel = .learning
         }
 
         words[index] = updated
@@ -542,12 +637,12 @@ final class SavedWordsStore {
         return updated
     }
 
-    /// Scales a base day interval by the word's ease factor relative to the
-    /// 2.5 neutral default, so words with the default ease keep today's
-    /// fixed schedule exactly while consistently-easy/hard words drift.
-    private func scheduledDate(byAdding baseDays: Int, to date: Date, ease: Double) -> Date {
-        let scaledDays = max(1, Int((Double(baseDays) * ease / 2.5).rounded()))
-        return Calendar.current.date(byAdding: .day, value: scaledDays, to: date) ?? date
+    /// The interval the previous engine had settled on for this word, in days —
+    /// used to seed FSRS stability so a migrated library keeps its momentum.
+    private func previousIntervalDays(for word: SavedWord) -> Double? {
+        guard let next = word.nextReviewAt, let last = word.lastReviewedAt else { return nil }
+        let days = next.timeIntervalSince(last) / 86_400
+        return days > 0 ? days : nil
     }
 
     private func reviewEventDates() -> [Date] {

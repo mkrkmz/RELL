@@ -2,12 +2,13 @@
 //  SRSSchedulingTests.swift
 //  Reader for Language LearnerTests
 //
-//  Full branch coverage of the SM-2-lite scheduler in
-//  `SavedWordsStore.applyReview` — a deliberate regression net pinned BEFORE
-//  the FSRS migration (Roadmap v9 Sprint 3) rewrites the scheduling math.
-//  Every rating × mastery transition, both ease clamps, and the exact
-//  short-interval durations are asserted here so any behavioural change in a
-//  later refactor shows up as a failing test rather than a silent drift.
+//  Scheduling behaviour of `SavedWordsStore.applyReview`.
+//
+//  Originally (v1.29) this pinned the hand-rolled SM-2-lite intervals as a
+//  regression net for the FSRS migration. FSRS landed in v1.31, so the exact
+//  interval expectations were *intentionally* rewritten here; the bookkeeping
+//  and mastery invariants that must survive any scheduler are unchanged, and
+//  the pure model itself is covered by `FSRSSchedulerTests`.
 //
 
 import XCTest
@@ -17,163 +18,197 @@ import XCTest
 final class SRSSchedulingTests: XCTestCase {
     private static var retainedStores: [SavedWordsStore] = []
 
-    // MARK: - Rating × mastery matrix
+    // MARK: - FSRS-driven intervals
 
-    func testGoodOnNewPromotesToLearningEightHoursOut() {
+    /// A first "good" schedules the initial good stability (~3.7 days).
+    func testGoodOnNewWordSchedulesInitialGoodStability() {
         let store = makeStore()
         let now = Date()
-        let word = SavedWord(term: "orbit")   // .new, reviewCount 0
+        let word = SavedWord(term: "orbit")
         store.add(word)
 
         let updated = store.applyReview(.good, to: word, reviewedAt: now)
 
-        XCTAssertEqual(updated?.masteryLevel, .learning)
-        let expected = Calendar.current.date(byAdding: .hour, value: 8, to: now)
-        XCTAssertEqual(updated?.nextReviewAt, expected, "good/new schedules exactly +8h")
+        assertDayInterval(updated?.nextReviewAt, days: 4, from: now)
+        XCTAssertEqual(updated?.stability ?? 0, FSRSScheduler.defaultWeights[2], accuracy: 0.0001)
     }
 
-    func testGoodOnLearningBelowThresholdStaysLearningOneDayOut() {
+    func testEasyOnNewWordSchedulesMuchFurtherOut() {
         let store = makeStore()
         let now = Date()
-        // reviewCount 1 → increments to 2, still < 3, stays learning.
-        let word = SavedWord(term: "orbit", masteryLevel: .learning, reviewCount: 1)
+        let word = SavedWord(term: "orbit")
         store.add(word)
 
-        let updated = store.applyReview(.good, to: word, reviewedAt: now)
+        let updated = store.applyReview(.easy, to: word, reviewedAt: now)
 
-        XCTAssertEqual(updated?.masteryLevel, .learning)
-        XCTAssertEqual(updated?.reviewCount, 2)
-        assertDayInterval(updated?.nextReviewAt, base: 1, from: now)
+        assertDayInterval(updated?.nextReviewAt, days: 14, from: now)
     }
 
-    func testGoodOnLearningAtThresholdPromotesToMasteredThreeDaysOut() {
+    func testHardOnNewWordSchedulesSoonest() {
         let store = makeStore()
         let now = Date()
-        // reviewCount 2 → increments to 3, hits the >= 3 promotion.
-        let word = SavedWord(term: "orbit", masteryLevel: .learning, reviewCount: 2)
+        let word = SavedWord(term: "orbit")
         store.add(word)
 
-        let updated = store.applyReview(.good, to: word, reviewedAt: now)
+        let updated = store.applyReview(.hard, to: word, reviewedAt: now)
 
-        XCTAssertEqual(updated?.masteryLevel, .mastered)
-        assertDayInterval(updated?.nextReviewAt, base: 3, from: now)
+        assertDayInterval(updated?.nextReviewAt, days: 1, from: now)
     }
 
-    func testGoodOnMasteredSchedulesSevenDaysOut() {
+    /// A lapse still returns the word within the session rather than waiting
+    /// out the sub-day interval a collapsed stability would imply.
+    func testAgainReschedulesTenMinutesOut() {
         let store = makeStore()
         let now = Date()
-        let word = SavedWord(term: "orbit", masteryLevel: .mastered, reviewCount: 4)
-        store.add(word)
-
-        let updated = store.applyReview(.good, to: word, reviewedAt: now)
-
-        XCTAssertEqual(updated?.masteryLevel, .mastered)
-        assertDayInterval(updated?.nextReviewAt, base: 7, from: now)
-    }
-
-    func testAgainOnNewStaysNewAndReschedulesTenMinutesOut() {
-        let store = makeStore()
-        let now = Date()
-        let word = SavedWord(term: "orbit")   // .new
+        let word = SavedWord(term: "orbit")
         store.add(word)
 
         let updated = store.applyReview(.again, to: word, reviewedAt: now)
 
-        XCTAssertEqual(updated?.masteryLevel, .new, "again only demotes a mastered word")
-        XCTAssertEqual(updated?.incorrectCount, 1)
         let expected = Calendar.current.date(byAdding: .minute, value: 10, to: now)
-        XCTAssertEqual(updated?.nextReviewAt, expected, "again schedules exactly +10min")
-    }
-
-    func testAgainOnMasteredDemotesToLearning() {
-        let store = makeStore()
-        let word = SavedWord(term: "orbit", masteryLevel: .mastered, reviewCount: 5)
-        store.add(word)
-
-        let updated = store.applyReview(.again, to: word)
-
-        XCTAssertEqual(updated?.masteryLevel, .learning, "a lapse on a mastered word demotes it")
+        XCTAssertEqual(updated?.nextReviewAt, expected)
         XCTAssertEqual(updated?.incorrectCount, 1)
     }
 
-    func testEasyOnNewPromotesToLearningOneDayOut() {
-        let store = makeStore()
+    func testGradesOrderTheNextIntervals() {
         let now = Date()
-        let word = SavedWord(term: "orbit")   // .new, ease 2.5
-        store.add(word)
-
-        let updated = store.applyReview(.easy, to: word, reviewedAt: now)
-
-        XCTAssertEqual(updated?.masteryLevel, .learning)
-        XCTAssertEqual(updated?.easeFactor ?? 0, 2.65, accuracy: 0.0001)
-        // base 1 × (2.65/2.5) = 1.06 → rounds to 1 day.
-        assertDayInterval(updated?.nextReviewAt, base: 1, from: now, easeScaled: 2.65)
+        func interval(for rating: ReviewRating) -> TimeInterval {
+            let store = makeStore()
+            let word = SavedWord(term: "orbit")
+            store.add(word)
+            let updated = store.applyReview(rating, to: word, reviewedAt: now)
+            return updated?.nextReviewAt?.timeIntervalSince(now) ?? 0
+        }
+        XCTAssertLessThan(interval(for: .again), interval(for: .hard))
+        XCTAssertLessThan(interval(for: .hard), interval(for: .good))
+        XCTAssertLessThan(interval(for: .good), interval(for: .easy))
     }
 
-    func testEasyOnLearningPromotesToMasteredSevenDaysOut() {
+    func testRepeatedSuccessfulReviewsLengthenTheInterval() {
         let store = makeStore()
-        let now = Date()
-        let word = SavedWord(term: "orbit", masteryLevel: .learning, reviewCount: 1)
+        let start = Date()
+        let word = SavedWord(term: "orbit")
         store.add(word)
 
-        let updated = store.applyReview(.easy, to: word, reviewedAt: now)
-
-        XCTAssertEqual(updated?.masteryLevel, .mastered)
-        assertDayInterval(updated?.nextReviewAt, base: 7, from: now, easeScaled: 2.65)
+        var reviewedAt = start
+        var previousGap: TimeInterval = 0
+        for step in 0..<4 {
+            guard let current = store.words.first else { return XCTFail("word missing") }
+            guard let updated = store.applyReview(.good, to: current, reviewedAt: reviewedAt),
+                  let next = updated.nextReviewAt
+            else { return XCTFail("expected a scheduled date") }
+            let gap = next.timeIntervalSince(reviewedAt)
+            if step > 0 {
+                XCTAssertGreaterThan(gap, previousGap, "each successful review should space it out further")
+            }
+            previousGap = gap
+            reviewedAt = next   // review exactly when due
+        }
     }
 
-    func testEasyOnMasteredSchedulesFourteenDaysOut() {
+    // MARK: - Mastery is a read-out of memory strength
+
+    func testMasteryBecomesLearningOnFirstReview() {
         let store = makeStore()
-        let now = Date()
-        let word = SavedWord(term: "orbit", masteryLevel: .mastered, reviewCount: 6)
-        store.add(word)
-
-        let updated = store.applyReview(.easy, to: word, reviewedAt: now)
-
-        XCTAssertEqual(updated?.masteryLevel, .mastered)
-        assertDayInterval(updated?.nextReviewAt, base: 14, from: now, easeScaled: 2.65)
-    }
-
-    // MARK: - Ease-factor clamps
-
-    func testEaseFactorFloorsAtOnePointThree() {
-        let store = makeStore()
-        // Ease already near the floor; another "again" must clamp, not undershoot.
-        let word = SavedWord(term: "orbit", masteryLevel: .learning, reviewCount: 1, easeFactor: 1.4)
-        store.add(word)
-
-        let updated = store.applyReview(.again, to: word)
-
-        XCTAssertEqual(updated?.easeFactor ?? 0, 1.3, accuracy: 0.0001, "1.4 - 0.2 clamps to the 1.3 floor")
-    }
-
-    func testEaseFactorCeilingsAtThreePointFive() {
-        let store = makeStore()
-        let word = SavedWord(term: "orbit", masteryLevel: .mastered, reviewCount: 4, easeFactor: 3.45)
-        store.add(word)
-
-        let updated = store.applyReview(.easy, to: word)
-
-        XCTAssertEqual(updated?.easeFactor ?? 0, 3.5, accuracy: 0.0001, "3.45 + 0.15 clamps to the 3.5 ceiling")
-    }
-
-    func testGoodDoesNotChangeEaseFactor() {
-        let store = makeStore()
-        let word = SavedWord(term: "orbit", masteryLevel: .learning, reviewCount: 1, easeFactor: 2.5)
+        let word = SavedWord(term: "orbit")
         store.add(word)
 
         let updated = store.applyReview(.good, to: word)
 
-        XCTAssertEqual(updated?.easeFactor ?? 0, 2.5, accuracy: 0.0001, "good is ease-neutral")
+        XCTAssertEqual(updated?.masteryLevel, .learning)
     }
 
-    // MARK: - Bookkeeping invariants
+    func testDurableStabilityEarnsMastered() {
+        let store = makeStore()
+        let now = Date()
+        // A word already remembered for ~25 days: another success keeps it
+        // above the mastery threshold.
+        let word = SavedWord(
+            term: "orbit",
+            masteryLevel: .learning,
+            reviewCount: 5,
+            lastReviewedAt: now.addingTimeInterval(-25 * 86_400),
+            stability: 25,
+            difficulty: 5
+        )
+        store.add(word)
+
+        let updated = store.applyReview(.good, to: word, reviewedAt: now)
+
+        XCTAssertEqual(updated?.masteryLevel, .mastered)
+        XCTAssertGreaterThanOrEqual(updated?.stability ?? 0, FSRSScheduler.masteredStabilityThreshold)
+    }
+
+    func testLapseDemotesMasteredWordToLearning() {
+        let store = makeStore()
+        let now = Date()
+        let word = SavedWord(
+            term: "orbit",
+            masteryLevel: .mastered,
+            reviewCount: 6,
+            lastReviewedAt: now.addingTimeInterval(-30 * 86_400),
+            stability: 40,
+            difficulty: 5
+        )
+        store.add(word)
+
+        let updated = store.applyReview(.again, to: word, reviewedAt: now)
+
+        XCTAssertEqual(updated?.masteryLevel, .learning)
+        XCTAssertLessThanOrEqual(updated?.stability ?? .infinity, 40, "a lapse must not extend stability")
+    }
+
+    // MARK: - Migration from the legacy SM-2 fields
+
+    /// A pre-FSRS word carries its old schedule into a seeded memory state
+    /// instead of restarting as if it were new.
+    func testLegacyWordSeedsStabilityFromItsOldInterval() {
+        let store = makeStore()
+        let now = Date()
+        let word = SavedWord(
+            term: "orbit",
+            masteryLevel: .mastered,
+            reviewCount: 4,
+            lastReviewedAt: now.addingTimeInterval(-14 * 86_400),
+            nextReviewAt: now,           // a 14-day interval had been set
+            easeFactor: 2.5
+        )
+        store.add(word)
+        XCTAssertNil(store.words.first?.stability, "precondition: not yet migrated")
+
+        let updated = store.applyReview(.good, to: word, reviewedAt: now)
+
+        XCTAssertNotNil(updated?.stability)
+        XCTAssertNotNil(updated?.difficulty)
+        // Seeded at the old 14-day interval, then grown by a successful review.
+        XCTAssertGreaterThan(updated?.stability ?? 0, 14)
+    }
+
+    func testLegacyEaseMapsOntoDifficultyOnMigration() {
+        let store = makeStore()
+        let now = Date()
+        let easyWord = SavedWord(term: "easy", reviewCount: 3,
+                                 lastReviewedAt: now.addingTimeInterval(-86_400), easeFactor: 3.2)
+        let hardWord = SavedWord(term: "hard", reviewCount: 3,
+                                 lastReviewedAt: now.addingTimeInterval(-86_400), easeFactor: 1.5)
+        store.add(easyWord)
+        store.add(hardWord)
+
+        let easyUpdated = store.applyReview(.good, to: easyWord, reviewedAt: now)
+        let hardUpdated = store.applyReview(.good, to: hardWord, reviewedAt: now)
+
+        XCTAssertLessThan(
+            easyUpdated?.difficulty ?? 10,
+            hardUpdated?.difficulty ?? 0,
+            "the word the old engine found easy should migrate to a lower difficulty"
+        )
+    }
+
+    // MARK: - Bookkeeping invariants (scheduler-independent)
 
     func testApplyReviewReturnsNilForWordNotInStore() {
         let store = makeStore()
-        let stray = SavedWord(term: "never-added")
-
-        XCTAssertNil(store.applyReview(.good, to: stray))
+        XCTAssertNil(store.applyReview(.good, to: SavedWord(term: "never-added")))
     }
 
     func testApplyReviewAlwaysIncrementsReviewCountAndWritesBothHistories() {
@@ -191,10 +226,6 @@ final class SRSSchedulingTests: XCTestCase {
         XCTAssertEqual(updated?.lastReviewedAt, now)
     }
 
-    /// A word reviewed once through the legacy path (only `lastReviewedAt`,
-    /// empty `reviewHistory`) must have that prior date folded into
-    /// `reviewHistory` before the new date is appended, so its activity count
-    /// doesn't silently lose the earlier review.
     func testApplyReviewFoldsLegacyLastReviewedIntoHistory() {
         let store = makeStore()
         let earlier = Date().addingTimeInterval(-3600)
@@ -207,25 +238,44 @@ final class SRSSchedulingTests: XCTestCase {
         XCTAssertEqual(updated?.reviewHistory, [earlier, now])
     }
 
+    /// Ease is no longer the scheduler, but it keeps being maintained so an
+    /// older build can still read the file and the FSRS seed stays meaningful.
+    func testLegacyEaseFactorIsStillMaintained() {
+        let store = makeStore()
+        let word = SavedWord(term: "orbit", masteryLevel: .learning, reviewCount: 1)
+        store.add(word)
+
+        XCTAssertEqual(store.applyReview(.again, to: word)?.easeFactor ?? 0, 2.3, accuracy: 0.0001)
+
+        guard let afterLapse = store.words.first else { return XCTFail("word missing") }
+        XCTAssertEqual(store.applyReview(.easy, to: afterLapse)?.easeFactor ?? 0, 2.45, accuracy: 0.0001)
+    }
+
+    func testEaseFactorClampsAtBothEnds() {
+        let store = makeStore()
+        let floorWord = SavedWord(term: "floor", masteryLevel: .learning, reviewCount: 1, easeFactor: 1.4)
+        let ceilWord  = SavedWord(term: "ceil",  masteryLevel: .learning, reviewCount: 1, easeFactor: 3.45)
+        store.add(floorWord)
+        store.add(ceilWord)
+
+        XCTAssertEqual(store.applyReview(.again, to: floorWord)?.easeFactor ?? 0, 1.3, accuracy: 0.0001)
+        XCTAssertEqual(store.applyReview(.easy, to: ceilWord)?.easeFactor ?? 0, 3.5, accuracy: 0.0001)
+    }
+
     // MARK: - Helpers
 
-    /// Asserts `date` equals `reviewedAt + scheduledDate(base, ease)` where the
-    /// scheduler scales the base-day interval by `easeScaled / 2.5` and rounds,
-    /// with a floor of 1 day. Compared at day granularity to stay DST-robust.
     private func assertDayInterval(
         _ date: Date?,
-        base: Int,
+        days: Int,
         from reviewedAt: Date,
-        easeScaled: Double = 2.5,
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        let scaledDays = max(1, Int((Double(base) * easeScaled / 2.5).rounded()))
-        let expected = Calendar.current.date(byAdding: .day, value: scaledDays, to: reviewedAt)
+        let expected = Calendar.current.date(byAdding: .day, value: days, to: reviewedAt)
         XCTAssertEqual(
             date.map { Calendar.current.startOfDay(for: $0) },
             expected.map { Calendar.current.startOfDay(for: $0) },
-            "expected +\(scaledDays)d",
+            "expected +\(days)d",
             file: file,
             line: line
         )

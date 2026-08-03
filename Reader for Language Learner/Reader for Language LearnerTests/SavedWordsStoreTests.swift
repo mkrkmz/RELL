@@ -54,25 +54,20 @@ final class SavedWordsStoreTests: XCTestCase {
         XCTAssertEqual(updated?.easeFactor, 2.3)
     }
 
-    func testApplyEasyRaisesEaseAndExtendsInterval() {
+    /// Ease is legacy bookkeeping since FSRS took over scheduling in v1.31 —
+    /// it's still maintained, but the interval now comes from the memory model
+    /// (see `SRSSchedulingTests` / `FSRSSchedulerTests`).
+    func testApplyEasyRaisesEaseFactor() {
         let store = makeStore()
-        let now = Date()
         let word = SavedWord(term: "orbit", masteryLevel: .mastered, reviewCount: 4)
         store.add(word)
 
-        let updated = store.applyReview(.easy, to: word, reviewedAt: now)
+        let updated = store.applyReview(.easy, to: word)
 
-        XCTAssertEqual(updated?.easeFactor, 2.65)
-        // Base mastered interval is 14 days; ease 2.65/2.5 rounds the scaled
-        // interval to 15 days.
-        let expected = Calendar.current.date(byAdding: .day, value: 15, to: now)
-        XCTAssertEqual(
-            updated?.nextReviewAt.map { Calendar.current.startOfDay(for: $0) },
-            expected.map { Calendar.current.startOfDay(for: $0) }
-        )
+        XCTAssertEqual(updated?.easeFactor ?? 0, 2.65, accuracy: 0.0001)
     }
 
-    func testDefaultEaseFactorPreservesFixedIntervals() {
+    func testSuccessfulReviewSchedulesAFutureDate() {
         let store = makeStore()
         let now = Date()
         let word = SavedWord(term: "orbit", masteryLevel: .mastered, reviewCount: 4)
@@ -80,11 +75,8 @@ final class SavedWordsStoreTests: XCTestCase {
 
         let updated = store.applyReview(.good, to: word, reviewedAt: now)
 
-        let expected = Calendar.current.date(byAdding: .day, value: 7, to: now)
-        XCTAssertEqual(
-            updated?.nextReviewAt.map { Calendar.current.startOfDay(for: $0) },
-            expected.map { Calendar.current.startOfDay(for: $0) }
-        )
+        guard let next = updated?.nextReviewAt else { return XCTFail("expected a scheduled date") }
+        XCTAssertGreaterThan(next, now, "a successful review always schedules forward")
     }
 
     // MARK: - Review Events / Accuracy
