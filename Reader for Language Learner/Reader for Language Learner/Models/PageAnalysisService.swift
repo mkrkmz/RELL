@@ -30,8 +30,10 @@ final class PageAnalysisService {
         currentTask = Task(priority: .background) { [weak quickLookup] in
             for term in candidates {
                 guard !Task.isCancelled, let quickLookup else { return }
-                guard quickLookup.cachedDefinition(for: term, savedWordsStore: nil) == nil else { continue }
-                _ = try? await quickLookup.definition(for: term)
+                // Warm whichever language the hover dictionary is set to, so the
+                // pre-analysis actually lands in the cache the popover reads.
+                guard quickLookup.cachedHoverDefinition(for: term, savedWordsStore: nil) == nil else { continue }
+                _ = try? await quickLookup.hoverDefinition(for: term)
             }
         }
     }

@@ -20,6 +20,35 @@ final class QuickLookupService {
     @ObservationIgnored private var translationCache = LRUCache<String, String>(capacity: 40)
     @ObservationIgnored private let gate = AsyncLimiter(limit: 1)
 
+    // MARK: - Hover dictionary (respects the user's language preference)
+
+    /// Instant hover answer from a saved word or cache, in whichever language
+    /// the reader chose. Returns nil when a fresh `hoverDefinition` is needed.
+    func cachedHoverDefinition(for term: String, savedWordsStore: SavedWordsStore?) -> String? {
+        switch HoverDictionaryLanguage.stored {
+        case .target:
+            return cachedDefinition(for: term, savedWordsStore: savedWordsStore)
+        case .native:
+            // Prefer a saved word's own native meaning before asking the model.
+            let normalized = normalize(term)
+            if !normalized.isEmpty,
+               let saved = savedWordsStore?.words.first(where: { normalize($0.term) == normalized }),
+               let meaning = saved.llmOutputs[ModuleType.meaningTR.rawValue],
+               !meaning.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return meaning
+            }
+            return cachedNativeMeaning(for: term)
+        }
+    }
+
+    /// Fetches the hover answer in the reader's chosen language.
+    func hoverDefinition(for term: String) async throws -> String {
+        switch HoverDictionaryLanguage.stored {
+        case .target: return try await definition(for: term)
+        case .native: return try await nativeMeaning(for: term)
+        }
+    }
+
     // MARK: - Definitions (hover)
 
     /// Instant definition from a saved word or the in-memory cache, if present.

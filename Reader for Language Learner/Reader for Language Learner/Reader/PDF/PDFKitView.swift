@@ -688,7 +688,7 @@ struct PDFKitView: NSViewRepresentable {
             let viewRect = pdfView.convert(selection.bounds(for: page), from: page)
 
             hoverModel.term = raw
-            if let cached = quickLookup.cachedDefinition(for: raw, savedWordsStore: savedWordsStore) {
+            if let cached = quickLookup.cachedHoverDefinition(for: raw, savedWordsStore: savedWordsStore) {
                 hoverModel.phase = .loaded(cached)
             } else {
                 hoverModel.phase = .loading
@@ -708,7 +708,7 @@ struct PDFKitView: NSViewRepresentable {
             hoverTask = Task { @MainActor [weak self] in
                 guard let self else { return }
                 do {
-                    let definition = try await self.quickLookup.definition(for: term)
+                    let definition = try await self.quickLookup.hoverDefinition(for: term)
                     guard !Task.isCancelled,
                           self.currentHoverTerm.lowercased() == term.lowercased() else { return }
                     self.hoverModel.phase = .loaded(definition)

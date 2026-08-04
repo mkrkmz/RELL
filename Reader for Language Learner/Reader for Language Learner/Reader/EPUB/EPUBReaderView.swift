@@ -213,10 +213,10 @@ struct EPUBReaderView: NSViewRepresentable {
         let quickLookup = self.quickLookup
         let savedWords = self.savedWordsStore
         manager.hoverCachedLookup = { term in
-            quickLookup.cachedDefinition(for: term, savedWordsStore: savedWords)
+            quickLookup.cachedHoverDefinition(for: term, savedWordsStore: savedWords)
         }
         manager.hoverLookup = { term in
-            try await quickLookup.definition(for: term)
+            try await quickLookup.hoverDefinition(for: term)
         }
 
         manager.onSelectionChange = { text, sentence in

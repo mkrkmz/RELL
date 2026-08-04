@@ -41,6 +41,21 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(DS.Color.textTertiary)
                     }
                 }
+
+                Picker(selection: $hoverDictionaryLanguageRaw) {
+                    ForEach(HoverDictionaryLanguage.allCases) { choice in
+                        Text(choice.localizedTitle(target: target, native: native))
+                            .tag(choice.rawValue)
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Answer In")
+                        Text("Stay immersed in the language you're studying, or get the meaning in your own.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                .disabled(!hoverDictionaryEnabled)
                 Toggle(isOn: $sentenceTranslationEnabled) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Sentence Translation")
@@ -151,6 +166,8 @@ struct GeneralSettingsView: View {
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
+    @AppStorage(HoverDictionaryLanguage.storageKey)
+    private var hoverDictionaryLanguageRaw = HoverDictionaryLanguage.default.rawValue
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
     @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
     @AppStorage("speechRate") private var speechRate: Double = 0.5
