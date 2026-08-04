@@ -4,6 +4,16 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.34.0] - 2026-08-04
+
+### Added
+
+- **Choose what language the hover dictionary answers in.** It used to always
+  explain a word in the language you're studying. Now Settings ▸ General ▸
+  Reading Aids lets you pick: stay immersed in your study language, or get the
+  meaning straight in your own. The menu names your actual languages, and the
+  existing behaviour stays the default.
+
 ## [1.33.0] - 2026-08-04
 
 Accessibility polish, closing out roadmap v9.
