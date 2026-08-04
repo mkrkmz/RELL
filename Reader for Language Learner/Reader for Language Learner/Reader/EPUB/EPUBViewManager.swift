@@ -331,13 +331,19 @@ final class EPUBViewManager: NSObject {
             : ""
         // Line height needs the descendant cascade too, or publisher
         // paragraph rules keep their own tighter leading.
+        // The reading column has to win outright. Calibre-produced books put a
+        // class on <body> (`.calibre1 { margin: 0 5pt; padding-left: 0;
+        // font-size: 1em }`), and a class selector beats our bare `body` rule —
+        // which left those books pinned to the left edge at the wrong size, an
+        // ugly surprise in zen mode especially. `!important` on the column
+        // geometry is the same defence the theme colors below already use.
         let layout = """
         body {
-            font-size: \(Int(typography.fontSize))px;
-            line-height: \(String(format: "%.1f", typography.lineHeight));
-            max-width: \(typography.widthEm)em;
-            margin: 0 auto;
-            padding: 2.5em 2em 4em;
+            font-size: \(Int(typography.fontSize))px !important;
+            line-height: \(String(format: "%.1f", typography.lineHeight)) !important;
+            max-width: \(typography.widthEm)em !important;
+            margin: 0 auto !important;
+            padding: 2.5em 2em 4em !important;
             -webkit-hyphens: auto;
         }
         body p, body li, body blockquote {

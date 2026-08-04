@@ -47,6 +47,20 @@ final class EPUBAppearanceTests: XCTestCase {
         XCTAssertTrue(css.contains("font-size: 22px"))
     }
 
+    /// Calibre-produced books put a class on `<body>` (`.calibre1 {
+    /// margin: 0 5pt; padding-left: 0; font-size: 1em }`), and a class selector
+    /// outranks a bare `body` rule — those books rendered pinned to the left
+    /// edge at the wrong size. The reading column must be declared `!important`
+    /// or publisher CSS silently wins.
+    func testReadingColumnGeometryOutranksPublisherCSS() {
+        let css = EPUBViewManager.appearanceCSS(theme: .original, typography: EPUBTypography(fontSize: 20))
+
+        XCTAssertTrue(css.contains("margin: 0 auto !important"), "the column must stay centered")
+        XCTAssertTrue(css.contains("padding: 2.5em 2em 4em !important"), "side padding must survive")
+        XCTAssertTrue(css.contains("font-size: 20px !important"), "the reader's font size must survive")
+        XCTAssertTrue(css.contains("em !important"), "max-width must survive")
+    }
+
     func testHighlightInkIsLightOnDarkThemeAndDarkElsewhere() {
         // Dark ink over a translucent mark on a dark page is unreadable —
         // the regression this guards against (marks hardcoded #1d1d1f).
