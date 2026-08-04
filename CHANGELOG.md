@@ -4,6 +4,20 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.34.1] - 2026-08-04
+
+### Fixed
+
+- **Opening a PDF could quit the app.** Restoring your last page ran a moment
+  too early, while the thumbnail sidebar was still catching up to the new
+  document, and the mismatch crashed the app. Your place is still restored —
+  just at a safe moment, and only in the document it belongs to.
+- **Books split by Calibre showed only chapter headings.** In these books each
+  chapter's title lives in a separate file from its text, so every entry in the
+  Contents list opened a page containing nothing but "CHAPTER 1". The title and
+  its text are now shown together, the way the book was meant to read. Books
+  that aren't split are untouched.
+
 ## [1.34.0] - 2026-08-04
 
 ### Added
