@@ -4,6 +4,20 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.33.0] - 2026-08-04
+
+Accessibility polish, closing out roadmap v9.
+
+### Fixed
+
+- **Module status is no longer color-only**: a module that failed now shows a
+  distinct exclamation marker instead of a dot that differed from the
+  "has results" dot only by color — which was invisible if you don't
+  distinguish red from the module's own accent.
+- VoiceOver reads a saved word's mastery level in your own language, and the
+  reader's status chips are announced as one item instead of an unlabeled icon
+  followed by its text.
+
 ## [1.32.0] - 2026-08-04
 
 Follow along while the book reads itself to you. Roadmap v9 Sprint 4.

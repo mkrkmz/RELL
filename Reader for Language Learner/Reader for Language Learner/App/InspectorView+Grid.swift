@@ -148,7 +148,7 @@ extension InspectorView {
                     if hasOutput && !isLoading {
                         statusDot(module.accentColor)
                     } else if hasError {
-                        statusDot(DS.Color.danger)
+                        statusMark(DS.Color.danger)
                     }
                 }
 
@@ -203,7 +203,7 @@ extension InspectorView {
         )
     }
 
-    /// Small corner status dot for a module button (has-output / error).
+    /// Small corner dot marking a module that has produced output.
     private func statusDot(_ color: Color) -> some View {
         Circle()
             .fill(color)
@@ -212,5 +212,22 @@ extension InspectorView {
                 Circle().strokeBorder(DS.Color.surface, lineWidth: 1)
             )
             .offset(x: 3, y: -1)
+    }
+
+    /// Failure marker. Deliberately a different *shape* from `statusDot`, not
+    /// just a different color: has-output and error were previously two dots
+    /// telling apart only by hue, which is invisible to a colorblind reader
+    /// (WCAG 1.4.1). The glyph carries the meaning on its own.
+    private func statusMark(_ color: Color) -> some View {
+        Image(systemName: "exclamationmark.circle.fill")
+            .font(DS.Typography.icon(8, weight: .bold))
+            .foregroundStyle(color)
+            .background(
+                Circle()
+                    .fill(DS.Color.surface)
+                    .frame(width: 9, height: 9)
+            )
+            .offset(x: 4, y: -2)
+            .accessibilityHidden(true)   // the button's own value already says "Error"
     }
 }

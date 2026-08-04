@@ -1,5 +1,20 @@
 # RELL Roadmap v9 — Core Loop + Learning Engine (5 sprint, v1.29 → v1.33)
 
+> **v9 TAMAMLANDI (2026-08-04).** Bes sprintin besi de release edildi:
+> v1.29.0 (secim aksiyon cubugu + async persistence + SRS test agi),
+> v1.30.0 (zen modu, pinch-zoom, annotation undo/redo, kitap-geneli ilerleme),
+> v1.31.0 (FSRS-4.5 + Hard notu, lemma eslestirme, bilinen-kelime kapsama),
+> v1.32.0 (karaoke — v8'den ertelenen planli-risk kalemi, EPUB'da canli
+> dogrulandi + PDF best-effort), v1.33.0 (erisilebilirlik gecisi).
+>
+> **Bilincli ertelenenler (v10 adaylari):** L5 yazarak/dinleyerek tekrar
+> modlari + QuizView (1052 satir) bolunmesi; T3 SavedWordsListView bolunmesi;
+> PDF sayfa-scrubber slider'i; EPUB pinch→font + swipe sayfa cevirme;
+> lemma-farkinda metin-ici vurgulama; kisiye ozel FSRS agirlik optimizasyonu;
+> Could kalemleri (sistem Dictionary lookup, PDF koyu-tema figur korumasi,
+> .apkg export). Apple Developer'a bagli kalemler (widget, App Group, CloudKit,
+> notarization) hala uyelik bekliyor.
+
 Olusturulma: 2026-07-23 (v1.28.0 sonrasi). v8 roadmap tamamlandi (Liquid Glass,
 review streak, mid-read TTS hizi); v8'den ertelenen tek kalem (karaoke takibi)
 bu roadmap'te Sprint 4'e planli-risk olarak alindi.

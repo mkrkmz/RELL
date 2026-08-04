@@ -761,6 +761,9 @@ struct ContentView: View {
             Image(systemName: icon)
                 .font(DS.Typography.icon(10, weight: .semibold))
                 .foregroundStyle(tint)
+                // The adjacent text already names the metric; the glyph would
+                // otherwise be announced as a second, meaningless element.
+                .accessibilityHidden(true)
             Text("\(value) \(label)")
                 .lineLimit(1)
         }
@@ -770,6 +773,7 @@ struct ContentView: View {
         .padding(.vertical, 3)
         .background(tint.opacity(0.08))
         .clipShape(Capsule())
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Toolbar

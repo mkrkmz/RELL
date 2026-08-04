@@ -875,7 +875,9 @@ private struct SavedWordRow: View {
         .onHover { isHovered = $0 }
         .animation(DS.Animation.fast, value: isHovered)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(word.term), \(word.masteryLevel.label)")
+        // `localizedTitle`, not `label`: VoiceOver should speak the mastery
+        // level in the user's language like the rest of the row.
+        .accessibilityLabel("\(word.term), \(word.masteryLevel.localizedTitle)")
         .accessibilityHint("Tap to view details")
         .accessibilityValue(word.pdfFilename.map { "from \($0)" } ?? "")
     }
