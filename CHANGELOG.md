@@ -4,6 +4,16 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.34.2] - 2026-08-04
+
+### Fixed
+
+- **Some EPUBs opened jammed against the left edge**, at the publisher's text
+  size rather than yours — most noticeably in Zen mode, where the text sat in
+  the left third of the screen. Books produced by Calibre style their own body
+  text in a way that was quietly overriding the reading column. Your column
+  width, margins and font size now win.
+
 ## [1.34.1] - 2026-08-04
 
 ### Fixed
