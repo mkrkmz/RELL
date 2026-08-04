@@ -1382,19 +1382,37 @@ struct ContentView: View {
             guard !didRestore,
                   let pdfView = pdfViewManager.pdfView,
                   let doc = pdfView.document,
+                  // Only restore into the document this position belongs to.
+                  // The observer below can fire for another window's load, and
+                  // page 14 of one book is not page 14 of another.
+                  doc.documentURL?.deletingPathExtension().lastPathComponent == filename,
                   index < doc.pageCount,
-                  let page = doc.page(at: index)
+                  doc.page(at: index) != nil
             else { return }
             didRestore = true
-            pdfView.go(to: page)
             if let observer { NotificationCenter.default.removeObserver(observer) }
+
+            // Navigate on the NEXT runloop pass, never inline in the
+            // document-changed notification. PDFKit's own observers — the
+            // thumbnail view's collection view among them — are still catching
+            // up to the new document at this point, and navigating first made
+            // the thumbnail view select an index against the *previous*
+            // document's item count ("indexPath (0,14) out of bounds", crash).
+            DispatchQueue.main.async {
+                guard let pdfView = pdfViewManager.pdfView,
+                      let doc = pdfView.document,
+                      index < doc.pageCount,
+                      let page = doc.page(at: index)
+                else { return }
+                pdfView.go(to: page)
+            }
         }
 
         // Register the document-load observer unconditionally. Passing a nil
         // `object` (when this window's PDFView hasn't been created yet — the
-        // first-open case) observes any PDFView's load, and `attempt()` still
-        // gates on *this* window's `pdfViewManager.pdfView`, so restore fires on
-        // the real signal even on first open instead of relying on the timeout.
+        // first-open case) observes any PDFView's load; `attempt()` gates on
+        // this window's PDFView *and* on the document actually being the one
+        // we saved a position for.
         observer = NotificationCenter.default.addObserver(
             forName: Notification.Name.PDFViewDocumentChanged,
             object: pdfViewManager.pdfView,

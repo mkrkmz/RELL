@@ -252,10 +252,13 @@ final class EPUBViewManager: NSObject {
     // MARK: Navigation
 
     func openChapter(at index: Int, scrollTo fraction: Double = 0, fragment: String? = nil) {
-        guard let document,
-              document.spinePaths.indices.contains(index),
-              let url = EPUBScheme.url(forArchivePath: document.spinePaths[index])
-        else { return }
+        guard let document, document.spinePaths.indices.contains(index) else { return }
+        // A split book's heading-only spine item is folded into the chapter
+        // that follows it (the prose), so land there instead of on a page
+        // showing nothing but "CHAPTER 1". Every entry point — the table of
+        // contents, next/previous, restore — goes through here.
+        let index = document.readableChapterIndex(for: index)
+        guard let url = EPUBScheme.url(forArchivePath: document.spinePaths[index]) else { return }
         chapterIndex = index
         scrollFraction = fraction
         pendingScrollFraction = fraction
@@ -271,8 +274,13 @@ final class EPUBViewManager: NSObject {
     }
 
     func previousChapter() {
-        guard canGoToPreviousChapter else { return }
-        openChapter(at: chapterIndex - 1)
+        guard canGoToPreviousChapter, let document else { return }
+        // Step over the heading stub that belongs to the current chapter —
+        // `openChapter` would otherwise fold it straight back to where we are.
+        var target = chapterIndex - 1
+        if target > 0, document.isHeadingStub(at: target) { target -= 1 }
+        guard target >= 0 else { return }
+        openChapter(at: target)
     }
 
     func open(tocEntry: EPUBTOCEntry) {

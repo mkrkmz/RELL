@@ -212,12 +212,115 @@ nonisolated struct EPUBDocument: Sendable {
 
     /// Raw resource bytes + MIME type (manifest first, extension fallback) —
     /// feeds the custom URL scheme handler in the reader view.
+    ///
+    /// Chapters get one extra step: a book split by a tool like Calibre can put
+    /// a chapter's heading in its own spine item and the prose in the next one
+    /// (see `isHeadingStub`). Serving those as separate chapters makes the book
+    /// look broken — every table-of-contents entry opens a page containing
+    /// nothing but "CHAPTER 1". So when a chapter directly follows such a stub,
+    /// the stub's heading is folded into the top of it and the reader navigates
+    /// straight here.
     func resource(at path: String) throws -> (data: Data, mimeType: String) {
         let data = try archive.data(at: path)
-        if let declared = manifestByPath[path]?.mediaType, !declared.isEmpty {
-            return (data, declared)
+        let mimeType = manifestByPath[path]?.mediaType.isEmpty == false
+            ? manifestByPath[path]!.mediaType
+            : Self.mimeType(forExtension: (path as NSString).pathExtension)
+
+        guard let index = chapterIndex(forPath: path),
+              let headingHTML = precedingStubHeadingHTML(for: index),
+              let merged = Self.injectHeading(headingHTML, into: data)
+        else {
+            return (data, mimeType)
         }
-        return (data, Self.mimeType(forExtension: (path as NSString).pathExtension))
+        return (merged, mimeType)
+    }
+
+    // MARK: Split-chapter stubs
+
+    /// Characters of text below which a spine item is treated as a heading
+    /// stub rather than a chapter of its own. Real chapters run into the
+    /// thousands; the stubs these books produce are a heading and a rule.
+    static let headingStubTextLimit = 120
+
+    /// True when this spine item is just a chapter heading whose prose lives in
+    /// the following item — the shape a split book leaves behind.
+    ///
+    /// The test is deliberately strict: the page's entire visible text must be
+    /// one heading element, and the next item must actually carry prose. Front
+    /// matter (a title page, a dedication, a part divider) is short too, and
+    /// folding *those* into the next chapter would reshuffle a perfectly normal
+    /// book. The last spine item is never a stub — there's nothing to introduce.
+    func isHeadingStub(at index: Int) -> Bool {
+        guard spinePaths.indices.contains(index), index + 1 < spinePaths.count else { return false }
+        guard headingStubBodyHTML(at: index) != nil else { return false }
+        return plainText(at: index + 1)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .count > Self.headingStubTextLimit
+    }
+
+    /// The stub's body markup when this spine item is nothing but a heading,
+    /// else nil. Works off the body's own markup rather than `plainText`, which
+    /// also picks up `<title>` from the document head.
+    private func headingStubBodyHTML(at index: Int) -> String? {
+        guard let data = try? chapterData(at: index),
+              let html = String(data: data, encoding: .utf8),
+              let body = Self.bodyInnerHTML(of: html),
+              let headingText = Self.firstHeadingText(in: body)
+        else { return nil }
+
+        let bodyText = Self.visibleText(in: body)
+        guard !bodyText.isEmpty, bodyText.count <= Self.headingStubTextLimit else { return nil }
+        // The heading has to BE the whole page, not merely appear on it.
+        return bodyText == Self.visibleText(in: headingText) ? body : nil
+    }
+
+    /// Text of the first `<h1>`–`<h6>` in some markup, or nil if there is none.
+    static func firstHeadingText(in html: String) -> String? {
+        guard let range = html.range(
+            of: "<h[1-6][^>]*>.*?</h[1-6]>",
+            options: [.regularExpression, .caseInsensitive]
+        ) else { return nil }
+        return String(html[range])
+    }
+
+    /// Markup stripped, whitespace collapsed — for comparing what a page shows.
+    static func visibleText(in html: String) -> String {
+        html.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// The chapter index a reader should actually land on for `index`: the next
+    /// item when `index` is a heading stub, otherwise `index` itself.
+    func readableChapterIndex(for index: Int) -> Int {
+        isHeadingStub(at: index) ? index + 1 : index
+    }
+
+    /// Inner `<body>` markup of the heading stub preceding `index`, if any.
+    private func precedingStubHeadingHTML(for index: Int) -> String? {
+        let previous = index - 1
+        guard previous >= 0, isHeadingStub(at: previous) else { return nil }
+        return headingStubBodyHTML(at: previous)
+    }
+
+    /// Extracts what's between `<body …>` and `</body>`.
+    static func bodyInnerHTML(of html: String) -> String? {
+        guard let openRange = html.range(of: "<body[^>]*>", options: [.regularExpression, .caseInsensitive]),
+              let closeRange = html.range(of: "</body>", options: [.caseInsensitive, .backwards]),
+              openRange.upperBound <= closeRange.lowerBound
+        else { return nil }
+        let inner = String(html[openRange.upperBound..<closeRange.lowerBound])
+        return inner.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : inner
+    }
+
+    /// Inserts `headingHTML` just inside the chapter's `<body>`.
+    static func injectHeading(_ headingHTML: String, into chapterData: Data) -> Data? {
+        guard let html = String(data: chapterData, encoding: .utf8),
+              let openRange = html.range(of: "<body[^>]*>", options: [.regularExpression, .caseInsensitive])
+        else { return nil }
+        var merged = html
+        merged.insert(contentsOf: headingHTML, at: openRange.upperBound)
+        return merged.data(using: .utf8)
     }
 
     func containsResource(at path: String) -> Bool {
