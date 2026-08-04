@@ -4,6 +4,19 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.32.0] - 2026-08-04
+
+Follow along while the book reads itself to you. Roadmap v9 Sprint 4.
+
+### Added
+
+- **Karaoke reading**: when a page or chapter is read aloud, the sentence being
+  spoken is now highlighted in the text and scrolls into view as the voice
+  moves through it — so you can follow along by eye and ear at once. Toggle it
+  from the playback bar. Works fully in EPUBs; in PDFs it's best-effort, since
+  PDF text and the spoken text don't always line up, and it simply stays quiet
+  when it can't find the line rather than highlighting the wrong one.
+
 ## [1.31.0] - 2026-08-03
 
 The learning engine gets a serious upgrade. Roadmap v9 Sprint 3.
