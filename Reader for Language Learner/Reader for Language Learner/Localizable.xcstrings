@@ -4241,6 +4241,26 @@
     "Stop" : {
 
     },
+    "Stop following the spoken sentence" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okunan cümleyi izlemeyi bırak"
+          }
+        }
+      }
+    },
+    "Follow the spoken sentence" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okunan cümleyi izle"
+          }
+        }
+      }
+    },
     "Stop speaking" : {
       "localizations" : {
         "tr" : {

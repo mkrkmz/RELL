@@ -43,6 +43,11 @@ final class SpeechManager: NSObject {
     /// Index of the sentence currently being spoken — the resume point for a
     /// rate change.
     private var currentSentenceIndex = 0
+
+    /// The sentence being spoken right now, or nil when idle. Published so the
+    /// reader can follow along and highlight it in the document (karaoke).
+    /// A rate change re-enqueues the same sentence, so this stays put.
+    private(set) var spokenSentence: String?
     private var currentLanguage: Language = .english
     private var currentRate: Float = 0.5
 
@@ -150,6 +155,7 @@ final class SpeechManager: NSObject {
         totalCharacterCount = 0
         state = .idle
         progress = nil
+        spokenSentence = nil
     }
 
     private func preferredVoice(for language: Language) -> AVSpeechSynthesisVoice? {
@@ -184,6 +190,9 @@ extension SpeechManager: AVSpeechSynthesizerDelegate {
             self.state = .speaking
             if let index = self.sentenceIndexByUtterance[id] {
                 self.currentSentenceIndex = index
+                if self.sentences.indices.contains(index) {
+                    self.spokenSentence = self.sentences[index]
+                }
             }
         }
     }
@@ -219,6 +228,7 @@ extension SpeechManager: AVSpeechSynthesizerDelegate {
             guard !synthesizer.isSpeaking else { return }
             self.state = .idle
             self.progress = nil
+            self.spokenSentence = nil
         }
     }
 
@@ -230,6 +240,7 @@ extension SpeechManager: AVSpeechSynthesizerDelegate {
             guard !synthesizer.isSpeaking else { return }
             self.state = .idle
             self.progress = nil
+            self.spokenSentence = nil
         }
     }
 }

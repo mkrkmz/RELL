@@ -38,6 +38,71 @@ final class SpeechManagerTests: XCTestCase {
         XCTAssertEqual(sentences, ["First one.", "Second one."])
     }
 
+    // MARK: - Spoken-sentence tracking (karaoke, L4)
+
+    func testSpokenSentenceIsNilWhenIdle() {
+        manager.stop()
+        XCTAssertNil(manager.spokenSentence)
+    }
+
+    func testStopClearsSpokenSentence() {
+        manager.stop()
+        XCTAssertNil(manager.spokenSentence, "stopping must clear the karaoke highlight source")
+    }
+
+    /// A rate change cancels and re-enqueues, so `didStart` fires for
+    /// utterances the manager may not have bookkeeping for. That must never
+    /// publish a bogus sentence for the reader to highlight.
+    func testDidStartWithUnknownUtteranceLeavesSpokenSentenceNil() async {
+        manager.stop()
+
+        let stray = AVSpeechUtterance(string: "not from the queue")
+        manager.speechSynthesizer(AVSpeechSynthesizer(), didStart: stray)
+        try? await Task.sleep(for: .milliseconds(50))
+
+        XCTAssertNil(manager.spokenSentence)
+        XCTAssertEqual(manager.state, .speaking, "state still tracks playback")
+    }
+
+    func testDidFinishClearsSpokenSentenceWhenNothingIsQueued() async {
+        manager.stop()
+        let idleSynth = AVSpeechSynthesizer()
+
+        manager.speechSynthesizer(idleSynth, didFinish: AVSpeechUtterance(string: "done"))
+        try? await Task.sleep(for: .milliseconds(50))
+
+        XCTAssertNil(manager.spokenSentence)
+        XCTAssertEqual(manager.state, .idle)
+    }
+
+    func testDidCancelClearsSpokenSentenceWhenNothingIsQueued() async {
+        manager.stop()
+        let idleSynth = AVSpeechSynthesizer()
+
+        manager.speechSynthesizer(idleSynth, didCancel: AVSpeechUtterance(string: "cancelled"))
+        try? await Task.sleep(for: .milliseconds(50))
+
+        XCTAssertNil(manager.spokenSentence)
+    }
+
+    /// The sentences fed to karaoke come from this split, so a passage the
+    /// reader hears as one line must be one highlightable unit.
+    func testSentenceSplitProducesUnitsSuitableForKaraoke() {
+        let sentences = SpeechManager.sentenceSplit("The cat sat. The dog ran.")
+        XCTAssertEqual(sentences.count, 2)
+        XCTAssertTrue(sentences.allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty })
+    }
+
+    // MARK: - Karaoke highlight styling
+
+    func testKaraokeBackgroundAdaptsToPageTheme() {
+        let onLightInk = EPUBViewManager.karaokeBackground(for: .dark)
+        let onDarkInk = EPUBViewManager.karaokeBackground(for: .original)
+        XCTAssertFalse(onLightInk.isEmpty)
+        XCTAssertFalse(onDarkInk.isEmpty)
+        XCTAssertNotEqual(onLightInk, onDarkInk, "the wash must differ between light- and dark-ink themes")
+    }
+
     // MARK: - Delegate-driven state transitions
 
     func testDidStartSetsSpeakingState() async {

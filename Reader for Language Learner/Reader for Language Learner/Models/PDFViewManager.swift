@@ -79,6 +79,35 @@ final class PDFViewManager {
         pdfView?.goToNextPage(nil)
     }
 
+    // MARK: Karaoke (spoken-sentence tracking)
+
+    /// Best-effort highlight of the sentence being read aloud, by selecting it
+    /// on the current page. PDF text extraction often disagrees with the
+    /// tokenizer over hyphenation and line breaks, so a miss is expected and
+    /// deliberately silent: the previous selection is cleared and nothing else
+    /// happens. Passing nil just clears.
+    ///
+    /// Scoped to the current page — this follows a page being read aloud, so
+    /// searching the whole document would be both slow and wrong.
+    func highlightSpokenSentence(_ sentence: String?) {
+        guard let pdfView, let document = pdfView.document else { return }
+        guard let sentence,
+              case let trimmed = sentence.trimmingCharacters(in: .whitespacesAndNewlines),
+              trimmed.count >= 2
+        else {
+            pdfView.setCurrentSelection(nil, animate: false)
+            return
+        }
+
+        guard let page = pdfView.currentPage else { return }
+        let selections = document.findString(trimmed, withOptions: [.caseInsensitive])
+        guard let match = selections.first(where: { $0.pages.contains(page) }) else {
+            pdfView.setCurrentSelection(nil, animate: false)
+            return
+        }
+        pdfView.setCurrentSelection(match, animate: false)
+    }
+
     func zoomIn() {
         pdfView?.zoomIn(nil)
         updateZoomLabel()

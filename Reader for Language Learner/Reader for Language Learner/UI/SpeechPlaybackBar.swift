@@ -14,6 +14,8 @@ struct SpeechPlaybackBar: View {
     var manager: SpeechManager
 
     @AppStorage("speechRate") private var speechRate: Double = 0.5
+    /// Karaoke: highlight the sentence being read aloud in the document (L4).
+    @AppStorage("karaokeEnabled") private var karaokeEnabled = true
 
     private static let ratePresets: [Double] = [0.4, 0.5, 0.6]
 
@@ -44,6 +46,18 @@ struct SpeechPlaybackBar: View {
             .buttonStyle(.plain)
             .help("Stop speaking")
             .accessibilityLabel("Stop speaking")
+
+            Button {
+                karaokeEnabled.toggle()
+            } label: {
+                Image(systemName: karaokeEnabled ? "text.line.first.and.arrowtriangle.forward" : "text.alignleft")
+                    .font(DS.Typography.icon(13, weight: .medium))
+                    .foregroundStyle(karaokeEnabled ? DS.Color.accent : DS.Color.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .help(karaokeEnabled ? "Stop following the spoken sentence" : "Follow the spoken sentence")
+            .accessibilityLabel("Follow the spoken sentence")
+            .accessibilityValue(karaokeEnabled ? "On" : "Off")
 
             Menu {
                 ForEach(Self.ratePresets, id: \.self) { rate in

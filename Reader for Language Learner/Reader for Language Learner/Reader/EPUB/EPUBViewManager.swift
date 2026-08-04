@@ -635,6 +635,33 @@ final class EPUBViewManager: NSObject {
         }
     }
 
+    // MARK: Karaoke (spoken-sentence tracking)
+
+    /// Highlights the sentence being read aloud and keeps it in view. Passing
+    /// nil clears the highlight. Misses are silent — a sentence the tokenizer
+    /// produced but that doesn't appear verbatim in the DOM simply isn't
+    /// highlighted, and playback continues undisturbed.
+    func highlightSpokenSentence(_ sentence: String?) {
+        guard let webView else { return }
+        guard let sentence, !sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            webView.evaluateJavaScript("window.rellKaraoke && window.rellKaraoke('');")
+            return
+        }
+        let encoded = (try? JSONEncoder().encode(sentence))
+            .flatMap { String(data: $0, encoding: .utf8) } ?? "\"\""
+        let background = Self.karaokeBackground(for: currentTheme)
+        webView.evaluateJavaScript(
+            "window.rellKaraoke && window.rellKaraoke(\(encoded), '\(background)');"
+        )
+    }
+
+    /// Warm wash that stays legible on all six page themes — lighter on dark
+    /// ink, deeper on light ink, so the spoken line reads as lit rather than
+    /// blacked out.
+    static func karaokeBackground(for theme: PageTheme) -> String {
+        theme.usesLightInk ? "rgba(255, 214, 102, 0.32)" : "rgba(255, 205, 90, 0.55)"
+    }
+
     private func scrollToHighlight(_ id: UUID) {
         webView?.evaluateJavaScript(
             "document.querySelector('mark[data-rell-highlight-id=\"\(id.uuidString)\"]')" +

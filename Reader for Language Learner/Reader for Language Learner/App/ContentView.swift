@@ -83,6 +83,8 @@ struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+    /// Karaoke: highlight the sentence being read aloud (L4).
+    @AppStorage("karaokeEnabled") private var karaokeEnabled = true
     @AppStorage("epubFontSize") private var epubFontSize: Double = 18
     @AppStorage(EPUBTypography.lineHeightKey) private var epubLineHeight: Double = 1.6
     @AppStorage(EPUBFontFamily.storageKey) private var epubFontFamilyRaw = EPUBFontFamily.publisher.rawValue
@@ -443,6 +445,21 @@ struct ContentView: View {
         .onChange(of: undoManager) { _, _ in wireUndoManagers() }
         // Coverage of the passage on screen (L3) — recompute as the reader
         // moves through the document or opens a different one.
+        // Karaoke (L4): follow the sentence being read aloud in the document.
+        .onChange(of: speechManager.spokenSentence) { _, sentence in
+            guard karaokeEnabled else { return }
+            if isEPUBDocument {
+                epubManager.highlightSpokenSentence(sentence)
+            } else {
+                pdfViewManager.highlightSpokenSentence(sentence)
+            }
+        }
+        .onChange(of: karaokeEnabled) { _, enabled in
+            if !enabled {
+                epubManager.highlightSpokenSentence(nil)
+                pdfViewManager.highlightSpokenSentence(nil)
+            }
+        }
         .onChange(of: epubManager.chapterIndex) { _, _ in refreshLexicalProfile() }
         .onChange(of: currentPageNumber) { _, _ in refreshLexicalProfile() }
         .onChange(of: selectionState.documentURL) { _, _ in refreshLexicalProfile() }
