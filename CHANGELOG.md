@@ -4,6 +4,30 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.35.0] - 2026-08-05
+
+New ways to review. Roadmap v10 Sprint 1.
+
+### Added
+
+- **Listening mode**: hear a word and type what you heard. Each word is spoken
+  in the language you saved it from, so a library with more than one study
+  language pronounces every card properly. If macOS has no voice for your
+  vocabulary the mode stays hidden — a word read in the wrong accent teaches
+  the wrong thing.
+- **Typed answers are graded for you**: in Type and Listen modes the check
+  decides right or wrong and you just press Next, instead of rating an answer
+  the app already marked ✓ or ✗. You can switch this off in the review setup if
+  you'd rather keep rating every card yourself — that's still the only way to
+  reach Hard and Easy.
+- **The results screen shows how much you actually got right**, for the modes
+  that can tell.
+
+### Changed
+
+- The review mode control is now a menu rather than a row of segments — four
+  modes had outgrown the row.
+
 ## [1.34.2] - 2026-08-04
 
 ### Fixed
