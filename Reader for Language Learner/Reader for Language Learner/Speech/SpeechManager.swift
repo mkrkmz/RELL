@@ -159,10 +159,25 @@ final class SpeechManager: NSObject {
     }
 
     private func preferredVoice(for language: Language) -> AVSpeechSynthesisVoice? {
+        Self.voice(for: language)
+    }
+
+    /// The installed voice for a language, or nil when the system has none.
+    ///
+    /// Callers that *depend* on hearing the right language — the listening
+    /// review mode — must check this first: when it returns nil, AVSpeech falls
+    /// back to the system default voice and reads a German word in English,
+    /// which is worse than not offering the feature at all.
+    static func voice(for language: Language) -> AVSpeechSynthesisVoice? {
         let code = language.speechCode
         if let exact = AVSpeechSynthesisVoice(language: code) { return exact }
         let prefix = code.prefix(2) + "-"
         return AVSpeechSynthesisVoice.speechVoices().first { $0.language.hasPrefix(prefix) }
+    }
+
+    /// Whether this language can actually be spoken on this machine.
+    static func hasVoice(for language: Language) -> Bool {
+        voice(for: language) != nil
     }
 
     /// Splits on sentence boundaries via `enumerateSubstrings`; falls back to
