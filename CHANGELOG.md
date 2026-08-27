@@ -4,6 +4,34 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.36.0] - 2026-08-27
+
+Your vocabulary now follows the shapes words actually take, and a book can
+tell you how much of it you already know. Roadmap v10 Sprint 2.
+
+### Added
+
+- **A saved word is underlined in every form it takes.** Save "run" and the
+  book's "ran" and "running" are marked too — which is the whole point in the
+  languages this app is for, where the form on the page is rarely the form in
+  the dictionary. German, Turkish, Russian and the rest get the same treatment.
+  The pass runs in the background, so the page never waits for it.
+- **How much of a book you already know.** Opening a book measures its words
+  against your vocabulary once, and the number shows on the library card's
+  cover, in Document Stats, and in the stats panel. It's recalculated when it
+  would actually change — a new study language, or words saved or deleted.
+
+### Fixed
+
+- **A saved word no longer lights up inside longer words in PDFs.** Saving
+  "run" had been underlining the middle of "brunt" and every "running" on the
+  page. EPUBs have matched whole words since v1.15; both readers now agree,
+  including in Japanese, Chinese and Korean, where there are no word breaks to
+  match on and the old behaviour was the correct one.
+- **Books only underline the language you're studying.** A library with German
+  and English words was marking both in every book. Switching study language
+  now also redraws what's on screen instead of waiting for the next page.
+
 ## [1.35.0] - 2026-08-05
 
 New ways to review. Roadmap v10 Sprint 1.
