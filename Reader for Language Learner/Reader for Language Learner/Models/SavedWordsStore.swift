@@ -202,6 +202,20 @@ final class SavedWordsStore {
         }
     }
 
+    /// Trimmed, non-empty terms scoped to one study language — the input to
+    /// both readers' saved-word underlining. Without the scope a
+    /// multi-language library underlines its German words in an English book,
+    /// which is the same mistake `lemmaKeySets(for:)` already avoids for
+    /// coverage. Words with no recorded language are pre-v1.24 rows that the
+    /// loader backfills, and are kept rather than silently dropped.
+    func terms(for language: Language) -> [String] {
+        words.compactMap { word in
+            guard word.language == nil || word.language == language.rawValue else { return nil }
+            let trimmed = word.term.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+    }
+
     /// Lemma match keys of the reader's vocabulary, split by whether the word
     /// is mastered or still being learned — the input to a document's coverage
     /// profile (`LexicalProfileBuilder`). Scoped to one study language so a

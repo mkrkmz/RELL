@@ -552,6 +552,9 @@ final class EPUBViewManager: NSObject {
 
     private func makeSelectionBar() -> SelectionActionBar {
         let term = lastSelectionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Terms are scoped to the study language, so the bookmark reads
+        // "have I saved this *as a word I'm studying*" — a homograph saved
+        // under another language still offers Save.
         let isSaved = savedWordTermsProvider?()
             .contains { $0.caseInsensitiveCompare(term) == .orderedSame } ?? false
         return SelectionActionBar(

@@ -86,11 +86,11 @@ uzerinde tamamlamak.
 Amac: lemma-farkinda metin-ici vurgulama + kitap-bazli kapsama. O kod zaten
 aciliyor, iki canli vurgulama hatasi da burada kapatilir.
 
-- [ ] **HATA: PDF kelime-siniri**: `PDFKitView.addHighlights` substring
+- [x] **HATA: PDF kelime-siniri**: `PDFKitView.addHighlights` substring
       esliyor — "run" kaydedince "brunt" vurgulaniyor; EPUB JS
       (`rellFindTermRanges`) Unicode kelime-siniri kullaniyor, iki okuyucu
       ayrisiyor. PDF'e ayni kural (CJK substring istisnasi korunur)
-- [ ] **HATA: dil filtresi**: iki okuyucu da TUM dillerin kelimelerini
+- [x] **HATA: dil filtresi**: iki okuyucu da TUM dillerin kelimelerini
       vurguluyor (Almanca kelimeler Ingilizce kitapta). Terim kaynagi belge/
       kelime diline filtrelenir — `SavedWordsStore.lemmaKeySets(for:)` bunu
       zaten dogru yapiyor, vurgulama yollari kullanmiyor

@@ -93,6 +93,9 @@ struct ContentView: View {
     /// Off by default — background vocabulary pre-warming from visible page
     /// text. Every call site checks this before invoking the service.
     @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
+    // Observed so switching study language re-renders the saved-word
+    // underlines, which are scoped to it (see `SavedWordsStore.terms(for:)`).
+    @AppStorage(Language.targetLanguageKey) private var targetLanguageRaw = Language.defaultTarget.rawValue
     @AppStorage(LLMConfiguration.providerTypeKey) private var llmProviderTypeRaw: String = LLMConfiguration.defaultProviderType.rawValue
     @AppStorage(LLMConfiguration.serverURLKey)    private var llmServerURL: String = LLMConfiguration.defaultServerURL
     @AppStorage(LLMConfiguration.modelKey)        private var llmModel: String = LLMConfiguration.defaultModel
@@ -317,6 +320,15 @@ struct ContentView: View {
                 if pageAnalysisEnabled, let text = epubManager.document?.plainText(at: chapter) {
                     pageAnalysisService.analyze(text: text, savedWordsStore: savedWordsStore, quickLookup: quickLookup)
                 }
+            }
+            .onChange(of: targetLanguageRaw) { _, _ in
+                // The PDF reader re-scans on its own once this re-renders
+                // `PDFKitView` (its term set changed); the EPUB DOM has to be
+                // told, and the coverage chip's key sets moved too.
+                epubManager.refreshHighlights()
+                // Profiles are cached per passage, not per language.
+                lexicalProfileService.invalidate()
+                refreshLexicalProfile()
             }
             .onChange(of: llmProviderTypeRaw) { _, _ in llmHealth.scheduleCheck() }
             .onChange(of: llmServerURL)       { _, _ in llmHealth.scheduleCheck() }

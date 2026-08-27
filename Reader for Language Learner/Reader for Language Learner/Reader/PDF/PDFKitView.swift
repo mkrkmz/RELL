@@ -481,9 +481,9 @@ struct PDFKitView: NSViewRepresentable {
             // clear-everything behavior below — diffing out a stale
             // highlight isn't worth the bookkeeping deletion/rename is rare.
             var additiveTerms: [String]?
-            let currentTerms = savedWordsStore.words
-                .map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
+            // Scoped to the study language: a library with German and
+            // English words underlined both in every book before v1.36.
+            let currentTerms = savedWordsStore.terms(for: Language.storedTarget)
             let currentTermSet = Set(currentTerms)
             if currentTermSet != knownSavedTerms {
                 let added = currentTermSet.subtracting(knownSavedTerms)
@@ -584,25 +584,16 @@ struct PDFKitView: NSViewRepresentable {
         private func addHighlights(for terms: [String], on page: PDFPage) {
             guard let text = cachedPageString(page) else { return }
             let nsText = text as NSString
-            let fullRange = NSRange(location: 0, length: nsText.length)
 
             for term in terms {
-                var searchRange = fullRange
-                while searchRange.location < nsText.length {
-                    let foundRange = nsText.range(of: term, options: .caseInsensitive, range: searchRange)
-                    if foundRange.location == NSNotFound { break }
-
-                    if let selection = page.selection(for: foundRange) {
-                        // Handle multi-line selections
-                        let lineSelections = selection.selectionsByLine()
-                        for lineSel in lineSelections {
-                            addHighlight(to: page, selection: lineSel)
-                        }
+                // Whole-word, the same rule the EPUB reader applies in JS —
+                // a plain substring scan underlined "brunt" for a saved "run".
+                for foundRange in TermMatcher.ranges(of: term, in: nsText) {
+                    guard let selection = page.selection(for: foundRange) else { continue }
+                    // Handle multi-line selections
+                    for lineSel in selection.selectionsByLine() {
+                        addHighlight(to: page, selection: lineSel)
                     }
-
-                    searchRange.location = foundRange.location + foundRange.length
-                    if searchRange.location >= nsText.length { break }
-                    searchRange.length = nsText.length - searchRange.location
                 }
             }
         }

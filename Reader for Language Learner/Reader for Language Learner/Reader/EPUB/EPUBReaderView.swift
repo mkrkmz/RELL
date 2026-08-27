@@ -239,10 +239,11 @@ struct EPUBReaderView: NSViewRepresentable {
             return highlightStore.highlights(for: bookFilename, chapterPath: chapterPath)
         }
 
+        // Scoped to the study language — an English book shouldn't underline
+        // the German words in the same library, and the 500-term chapter cap
+        // now spends its budget on terms that can actually appear.
         manager.savedWordTermsProvider = {
-            store.words
-                .map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
+            store.terms(for: Language.storedTarget)
         }
 
         webView.selectionProvider = { [weak manager] in

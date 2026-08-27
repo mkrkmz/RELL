@@ -230,6 +230,28 @@ final class SavedWordsStoreTests: XCTestCase {
         XCTAssertEqual(reloaded.words.first?.language, Language.german.rawValue)
     }
 
+    // MARK: - Highlight terms
+
+    /// Both readers underline saved words; before v1.36 they underlined every
+    /// language's words in every book.
+    func testTermsAreScopedToStudyLanguage() {
+        let store = makeStore()
+        store.add(SavedWord(term: "orbit", language: Language.english.rawValue))
+        store.add(SavedWord(term: "Wirkung", language: Language.german.rawValue))
+
+        XCTAssertEqual(store.terms(for: .english), ["orbit"])
+        XCTAssertEqual(store.terms(for: .german), ["Wirkung"])
+        XCTAssertTrue(store.terms(for: .japanese).isEmpty)
+    }
+
+    func testTermsTrimsAndDropsBlanks() {
+        let store = makeStore()
+        store.add(SavedWord(term: "  orbit  ", language: Language.english.rawValue))
+        store.add(SavedWord(term: "   ", language: Language.english.rawValue))
+
+        XCTAssertEqual(store.terms(for: .english), ["orbit"])
+    }
+
     func testSetLanguageForWordsWithIDs() {
         let store = makeStore()
         let word = SavedWord(term: "orbit", language: Language.english.rawValue)
