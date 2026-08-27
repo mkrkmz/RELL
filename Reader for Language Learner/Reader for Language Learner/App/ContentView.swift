@@ -63,6 +63,8 @@ struct ContentView: View {
     // context strip also hide (revealed on hover), for immersive reading.
     /// Per-window coverage profiler for the passage on screen (L3).
     @State private var lexicalProfileService = LexicalProfileService()
+    /// Whole-book coverage, computed on open when the stored one is stale (L-V2).
+    @State private var bookCoverageService = BookCoverageService()
 
     @State private var zenMode = false
     @State private var preZenSidebar = true
@@ -258,6 +260,7 @@ struct ContentView: View {
                 if newURL?.pathExtension.lowercased() != "epub", epubManager.document != nil {
                     epubManager.close()
                 }
+                refreshBookCoverage()
             }
             .onChange(of: documentURL) { _, newValue in
                 // Window value changed from outside (restoration, openWindow) —
@@ -299,6 +302,9 @@ struct ContentView: View {
                 await llmHealth.check()
             }
             .onChange(of: epubManager.loadedURL) { _, url in
+                // The spine is parsed by now, so the book-wide pass can read
+                // chapter text straight off the open document.
+                refreshBookCoverage()
                 // Dashboard cover: pull the book's declared cover image once.
                 guard let url,
                       let document = epubManager.document,
@@ -329,6 +335,7 @@ struct ContentView: View {
                 // Profiles are cached per passage, not per language.
                 lexicalProfileService.invalidate()
                 refreshLexicalProfile()
+                refreshBookCoverage()
             }
             .onChange(of: llmProviderTypeRaw) { _, _ in llmHealth.scheduleCheck() }
             .onChange(of: llmServerURL)       { _, _ in llmHealth.scheduleCheck() }
@@ -372,7 +379,8 @@ struct ContentView: View {
                 NavigationStack {
                     ReadingStatsView(
                         sessionStore: sessionStore,
-                        savedWordsStore: savedWordsStore
+                        savedWordsStore: savedWordsStore,
+                        recentDocumentStore: recentDocumentStore
                     )
                     .navigationTitle("Stats")
                     .toolbar {
@@ -637,7 +645,7 @@ struct ContentView: View {
                             icon: "percent",
                             value: "\(Int((profile.knownShare * 100).rounded()))",
                             label: "known",
-                            tint: coverageTint(for: profile.difficulty)
+                            tint: DS.Color.coverageTint(for: profile.difficulty)
                         )
                     }
                     readerContextChip(
@@ -660,12 +668,25 @@ struct ContentView: View {
         )
     }
 
-    private func coverageTint(for difficulty: LexicalProfile.Difficulty) -> SwiftUI.Color {
-        switch difficulty {
-        case .comfortable: return DS.Color.success
-        case .challenging: return DS.Color.warning
-        case .demanding:   return DS.Color.danger
-        }
+    /// Profiles the whole open book against the reader's vocabulary, unless
+    /// the stored snapshot still holds. Safe to call on every open: the
+    /// service returns immediately when nothing has changed.
+    private func refreshBookCoverage() {
+        guard let url = selectionState.documentURL else { return }
+        let isEPUB = url.pathExtension.lowercased() == "epub"
+        // An EPUB opens in two steps; wait for the archive this URL belongs to.
+        if isEPUB, epubManager.loadedURL != url { return }
+
+        bookCoverageService.refreshIfNeeded(
+            url: url,
+            epubDocument: isEPUB ? epubManager.document : nil,
+            existing: recentDocumentStore.documents.first { $0.path == url.path }?.coverage,
+            language: Language.storedTarget,
+            savedWordsStore: savedWordsStore,
+            onComputed: { coverage in
+                recentDocumentStore.setCoverage(coverage, for: url)
+            }
+        )
     }
 
     /// Profiles the passage on screen against the reader's vocabulary. Cheap to

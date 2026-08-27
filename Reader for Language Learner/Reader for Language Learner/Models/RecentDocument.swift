@@ -18,6 +18,9 @@ struct RecentDocument: Identifiable, Codable, Hashable {
     var isPinned: Bool
     /// A single named collection this document belongs to, or nil.
     var collectionID: UUID?
+    /// Whole-book vocabulary coverage, computed lazily when the book is
+    /// opened and only while it's stale (L-V2). Absent until the first pass.
+    var coverage: BookCoverage?
 
     init(
         id: UUID = UUID(),
@@ -27,7 +30,8 @@ struct RecentDocument: Identifiable, Codable, Hashable {
         lastPageIndex: Int? = nil,
         pageCount: Int? = nil,
         isPinned: Bool = false,
-        collectionID: UUID? = nil
+        collectionID: UUID? = nil,
+        coverage: BookCoverage? = nil
     ) {
         self.id = id
         self.path = path
@@ -37,10 +41,11 @@ struct RecentDocument: Identifiable, Codable, Hashable {
         self.pageCount = pageCount
         self.isPinned = isPinned
         self.collectionID = collectionID
+        self.coverage = coverage
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, path, filename, lastOpenedAt, lastPageIndex, pageCount, isPinned, collectionID
+        case id, path, filename, lastOpenedAt, lastPageIndex, pageCount, isPinned, collectionID, coverage
     }
 
     /// Custom decode: `isPinned`/`collectionID` were added after the first
@@ -57,6 +62,7 @@ struct RecentDocument: Identifiable, Codable, Hashable {
         pageCount = try container.decodeIfPresent(Int.self, forKey: .pageCount)
         isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false
         collectionID = try container.decodeIfPresent(UUID.self, forKey: .collectionID)
+        coverage = try container.decodeIfPresent(BookCoverage.self, forKey: .coverage)
     }
 
     var url: URL {
@@ -191,6 +197,14 @@ final class RecentDocumentStore {
             documents[index].pageCount = pageCount
         }
         documents[index].lastOpenedAt = Date()
+        save()
+    }
+
+    /// Records a freshly computed whole-book coverage snapshot. No-op for a
+    /// document that has since left the library.
+    func setCoverage(_ coverage: BookCoverage, for url: URL) {
+        guard let index = documents.firstIndex(where: { $0.path == url.path }) else { return }
+        documents[index].coverage = coverage
         save()
     }
 

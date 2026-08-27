@@ -383,6 +383,23 @@ private struct LibraryCard: View {
                     .padding(5)
             }
         }
+        .overlay(alignment: .topLeading) {
+            // How much of this book you already know — the number that
+            // decides whether it's worth starting (L-V2).
+            if let coverage = document.coverage?.profile, coverage.totalTokens > 0 {
+                Text("\(Int(coverage.knownShare * 100))%")
+                    .font(DS.Typography.caption2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        DS.Color.coverageTint(for: coverage.difficulty).opacity(0.85),
+                        in: Capsule()
+                    )
+                    .padding(5)
+                    .help("You know \(percentText(coverage)) of this book's words")
+            }
+        }
         .overlay(alignment: .bottom) {
             if let progress = document.readingProgress {
                 // DS-exempt track: dims directly against the cover photo,
@@ -406,6 +423,11 @@ private struct LibraryCard: View {
 
     private var displayTitle: String {
         document.displayTitle
+    }
+
+    /// Pre-formatted so the sentence around it stays a one-argument string.
+    private func percentText(_ profile: LexicalProfile) -> String {
+        "\(Int(profile.knownShare * 100))%"
     }
 
     private var subtitleText: String {
@@ -435,6 +457,9 @@ struct DocumentStats {
     var bookmarks: Int
     var progress: Double?
     var pageLabel: String
+    /// Whole-book vocabulary coverage, once the book has been opened at least
+    /// once with words saved (L-V2).
+    var coverage: LexicalProfile?
 }
 
 private struct DocumentStatsSheet: View {
@@ -488,6 +513,14 @@ private struct DocumentStatsSheet: View {
                     statCell(icon: "clock.badge.exclamationmark", value: "\(stats.dueWords)", label: "Due", tint: DS.Color.warning)
                     statCell(icon: "note.text", value: "\(stats.notes)", label: "Notes", tint: .purple)
                     statCell(icon: "bookmark", value: "\(stats.bookmarks)", label: "Bookmarks", tint: .teal)
+                    if let coverage = stats.coverage {
+                        statCell(
+                            icon: "text.book.closed",
+                            value: "\(Int(coverage.knownShare * 100))%",
+                            label: "Words you know",
+                            tint: DS.Color.coverageTint(for: coverage.difficulty)
+                        )
+                    }
                 }
             }
             .padding(DS.Spacing.lg)

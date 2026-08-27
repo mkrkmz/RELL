@@ -17,7 +17,7 @@
 import Foundation
 
 /// Coverage of one document by the reader's saved vocabulary.
-struct LexicalProfile: Equatable, Codable {
+struct LexicalProfile: Equatable, Hashable, Codable {
     /// Running words counted (tokens, not distinct words).
     var totalTokens: Int
     /// Tokens whose dictionary form the reader has mastered.
@@ -60,6 +60,37 @@ struct LexicalProfile: Equatable, Codable {
     }
 
     static let empty = LexicalProfile(totalTokens: 0, masteredTokens: 0, learningTokens: 0)
+
+    /// Two passages' counts added up — a whole book's profile is its pages
+    /// summed, which lets the pass run page by page (and stay cancellable)
+    /// instead of tokenizing a megabyte of text in one call.
+    func adding(_ other: LexicalProfile) -> LexicalProfile {
+        LexicalProfile(
+            totalTokens: totalTokens + other.totalTokens,
+            masteredTokens: masteredTokens + other.masteredTokens,
+            learningTokens: learningTokens + other.learningTokens
+        )
+    }
+}
+
+/// A whole-book coverage snapshot, persisted with the library entry
+/// (Roadmap v10 Sprint 2, L-V2).
+///
+/// The profile is only true of the vocabulary it was computed against, so it
+/// carries enough to know when it has gone stale: the study language, and a
+/// fingerprint of the saved words. Both are checked when the book is opened,
+/// which is the only moment the (~1s, off-main) pass is worth running.
+struct BookCoverage: Equatable, Hashable, Codable {
+    var profile: LexicalProfile
+    /// `Language.rawValue` the profile was computed for.
+    var language: String
+    /// `SavedWordsStore.vocabularyFingerprint(for:)` at computation time.
+    var vocabularyFingerprint: String
+    var computedAt: Date
+
+    func isFresh(language: Language, fingerprint: String) -> Bool {
+        self.language == language.rawValue && vocabularyFingerprint == fingerprint
+    }
 }
 
 enum LexicalProfileBuilder {

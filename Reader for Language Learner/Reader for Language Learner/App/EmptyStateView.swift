@@ -151,7 +151,8 @@ struct EmptyStateView: View {
             notes: noteStore?.count(for: document.filename) ?? 0,
             bookmarks: bookmarkStore?.bookmarks(for: document.filename).count ?? 0,
             progress: document.readingProgress,
-            pageLabel: document.pageLabel
+            pageLabel: document.pageLabel,
+            coverage: document.coverage?.profile
         )
     }
 

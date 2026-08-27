@@ -821,6 +821,16 @@
         }
       }
     },
+    "BOOK COVERAGE" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KİTAP KAPSAMI"
+          }
+        }
+      }
+    },
     "BY LANGUAGE" : {
       "localizations" : {
         "tr" : {
@@ -4842,6 +4852,16 @@
         }
       }
     },
+    "Words you know" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildiğin kelimeler"
+          }
+        }
+      }
+    },
     "Words" : {
       "localizations" : {
         "tr" : {
@@ -4858,6 +4878,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sarı"
+          }
+        }
+      }
+    },
+    "You know %@ of this book's words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitabın kelimelerinin %@ kadarını biliyorsun"
           }
         }
       }

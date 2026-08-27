@@ -14,6 +14,7 @@ import SwiftUI
 struct ReadingStatsView: View {
     var sessionStore: ReadingSessionStore
     var savedWordsStore: SavedWordsStore
+    var recentDocumentStore: RecentDocumentStore
 
     // Ticks each second to keep the live timer fresh (no Combine needed)
     @State private var tick = Date()
@@ -28,6 +29,7 @@ struct ReadingStatsView: View {
                 vocabularyGrowthCard
                 masteryDistributionCard
                 languageBreakdownCard
+                bookCoverageCard
                 learningGrid
                 totalsGrid
             }
@@ -342,6 +344,69 @@ struct ReadingStatsView: View {
         }
     }
 
+    // MARK: - Book Coverage
+
+    /// How much of each book you already know (L-V2). Only books that have
+    /// been opened since the coverage pass existed have a number, so an empty
+    /// list means "nothing profiled yet" rather than "nothing known".
+    @ViewBuilder
+    private var bookCoverageCard: some View {
+        let books = coveredBooks
+        if !books.isEmpty {
+            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+                Text("BOOK COVERAGE")
+                    .dsOverlineLabel()
+
+                ForEach(books) { book in
+                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                        HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.sm) {
+                            Text(book.title)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(DS.Color.textSecondary)
+                                .lineLimit(1)
+                            Spacer(minLength: DS.Spacing.sm)
+                            Text("\(Int(book.profile.knownShare * 100))%")
+                                .font(DS.Typography.caption.weight(.semibold))
+                                .foregroundStyle(DS.Color.coverageTint(for: book.profile.difficulty))
+                        }
+                        DSProgressBar(
+                            value: book.profile.knownShare,
+                            height: 4,
+                            tint: DS.Color.coverageTint(for: book.profile.difficulty)
+                        )
+                        .clipShape(Capsule())
+                        // The bar reads out as "Reading progress"; this row
+                        // carries its own label below.
+                        .accessibilityHidden(true)
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(Text(verbatim: book.title))
+                    .accessibilityValue(
+                        Text("You know \(percentText(book.profile)) of this book's words")
+                    )
+                }
+            }
+            .padding(DS.Spacing.md)
+            .dsCard(padding: nil, stroke: .none, shadow: DS.Shadow.subtle)
+        }
+    }
+
+    /// Pre-formatted so the sentence around it stays a one-argument string.
+    private func percentText(_ profile: LexicalProfile) -> String {
+        "\(Int(profile.knownShare * 100))%"
+    }
+
+    /// The six most recently opened books that have a coverage snapshot.
+    private var coveredBooks: [CoveredBook] {
+        recentDocumentStore.recentDocuments
+            .compactMap { document in
+                guard let profile = document.coverage?.profile, profile.totalTokens > 0 else { return nil }
+                return CoveredBook(id: document.id, title: document.displayTitle, profile: profile)
+            }
+            .prefix(6)
+            .map { $0 }
+    }
+
     private var masterySlices: [MasterySlice] {
         [
             MasterySlice(label: "New", count: savedWordsStore.newCount, color: DS.Color.accent),
@@ -462,6 +527,12 @@ struct ReadingStatsView: View {
 }
 
 // MARK: - Chart Models
+
+private struct CoveredBook: Identifiable {
+    let id: UUID
+    let title: String
+    let profile: LexicalProfile
+}
 
 private struct VocabPoint: Identifiable {
     let date: Date

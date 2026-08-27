@@ -149,6 +149,11 @@ struct PDFKitView: NSViewRepresentable {
         /// of forcing a full teardown-and-rescan of every term.
         private var knownSavedTerms: Set<String> = []
         private var lastNotesCount: Int = 0
+
+        /// Inflected shapes of saved words, per page. The pass runs off-main
+        /// and lands later, so a page's literal matches are drawn first and
+        /// the inflections join them on the callback's refresh.
+        private let inflectedTerms = InflectedTermService()
         
         init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore, highlightStore: PDFHighlightStore, quickLookup: QuickLookupService, toastCenter: ToastCenter, hoverEnabled: Bool) {
             self.selectedText = selectedText
@@ -511,19 +516,29 @@ struct PDFKitView: NSViewRepresentable {
             else { return }
 
             let currentFilename = loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? ""
+            // Memoized in the store; computed here once rather than per page.
+            let lemmaKeys = savedWordsStore.lemmaKeys(for: Language.storedTarget)
             let notesByPage = Dictionary(grouping: noteStore.notes(for: currentFilename), by: \.pageIndex)
             let highlightsByPage = Dictionary(grouping: highlightStore.highlights(for: currentFilename), by: \.pageIndex)
 
             for page in visiblePages {
                 let pageIndex = pdfView.document?.index(for: page) ?? -1
                 if let additiveTerms, processedPages.contains(page) {
-                    addHighlights(for: additiveTerms, on: page)
+                    // Only the new terms' inflections, or the page's existing
+                    // highlights would be laid down a second time.
+                    let addedKeys = Set(additiveTerms.map {
+                        LemmaMatcher.matchKey(for: $0, language: Language.storedTarget)
+                    })
+                    addHighlights(
+                        for: additiveTerms + inflectedForms(on: page, pageIndex: pageIndex, keys: addedKeys),
+                        on: page
+                    )
                     continue
                 }
                 if effectiveForce || !processedPages.contains(page) {
                     processPage(
                         page,
-                        savedTerms: currentTerms,
+                        savedTerms: currentTerms + inflectedForms(on: page, pageIndex: pageIndex, keys: lemmaKeys),
                         notes: notesByPage[pageIndex] ?? [],
                         highlights: highlightsByPage[pageIndex] ?? []
                     )
@@ -547,6 +562,20 @@ struct PDFKitView: NSViewRepresentable {
             guard let text = page.string else { return nil }
             pageTextCache.setObject(text as NSString, forKey: page)
             return text
+        }
+
+        /// Surface forms of saved vocabulary occurring on this page — "ran"
+        /// and "running" for a saved "run". Empty until the page's off-main
+        /// pass lands, which then forces a refresh that picks it up.
+        private func inflectedForms(on page: PDFPage, pageIndex: Int, keys: Set<String>) -> [String] {
+            let document = loadedDocumentURL?.lastPathComponent ?? ""
+            return inflectedTerms.surfaceForms(
+                passageKey: "\(document)#p\(pageIndex)",
+                keys: keys,
+                language: Language.storedTarget,
+                text: cachedPageString(page),
+                onReady: { [weak self] in self?.refreshHighlights(force: true) }
+            )
         }
 
         private func processPage(_ page: PDFPage, savedTerms: [String], notes: [PDFNote], highlights: [PDFHighlight]) {

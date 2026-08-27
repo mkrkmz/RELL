@@ -245,6 +245,9 @@ struct EPUBReaderView: NSViewRepresentable {
         manager.savedWordTermsProvider = {
             store.terms(for: Language.storedTarget)
         }
+        manager.savedWordKeysProvider = {
+            store.lemmaKeys(for: Language.storedTarget)
+        }
 
         webView.selectionProvider = { [weak manager] in
             manager?.lastSelectionText ?? ""

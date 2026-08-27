@@ -94,7 +94,7 @@ aciliyor, iki canli vurgulama hatasi da burada kapatilir.
       vurguluyor (Almanca kelimeler Ingilizce kitapta). Terim kaynagi belge/
       kelime diline filtrelenir — `SavedWordsStore.lemmaKeySets(for:)` bunu
       zaten dogru yapiyor, vurgulama yollari kullanmiyor
-- [ ] **Lemma-farkinda vurgulama (L-V1)**: `LemmaMatcher`'a
+- [x] **Lemma-farkinda vurgulama (L-V1)**: `LemmaMatcher`'a
       `surfaceForms(in:matchingKeys:language:)` (mevcut `enumerateTags` dongusu
       surface+lemma'yi zaten yan yana hesapliyor, surface'i emit etmiyor).
       Boru hatti: sayfa/bolum metni **main-disinda** lemmatize (detached-task +
@@ -102,11 +102,11 @@ aciliyor, iki canli vurgulama hatasi da burada kapatilir.
       → sayfada gercekten gecen **yuzey formlari** mevcut `[String]` API'lerine
       ver. Sayfa-basina cache. Yan fayda: terim listesi kisalir, EPUB 500-terim
       cap'i rahatlar
-- [ ] **Kapsama yuzeyleri (L-V2)**: kitap-geneli `LexicalProfile` (Codable)
+- [x] **Kapsama yuzeyleri (L-V2)**: kitap-geneli `LexicalProfile` (Codable)
       kitap acilisinda lazy + main-disi hesap, `RecentDocument`'e opsiyonel alan
       (decodeIfPresent). Yuzeyler: `DocumentStats` + statCell, `LibraryCard`
       kapak overlay'i, `ReadingStatsView`'a bir kart
-- [ ] Dogrulama: "run" kaydet → "ran"/"running" iki formatta vurgulu, "brunt"
+- [x] Dogrulama: "run" kaydet → "ran"/"running" iki formatta vurgulu, "brunt"
       degil; Almanca kelime Ingilizce kitapta vurgulanmiyor; kapsama yeniden
       acista stabil; buyuk PDF scroll perf'i bozulmamis
 

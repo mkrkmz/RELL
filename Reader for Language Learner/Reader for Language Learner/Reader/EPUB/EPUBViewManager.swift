@@ -162,6 +162,14 @@ final class EPUBViewManager: NSObject {
     /// view, which owns the store reference. Mirrors `highlightsProvider`.
     @ObservationIgnored var savedWordTermsProvider: (() -> [String])?
 
+    /// Supplies the lemma match keys of the same vocabulary, for the
+    /// inflection-aware pass over the chapter (L-V1).
+    @ObservationIgnored var savedWordKeysProvider: (() -> Set<String>)?
+
+    /// Inflected shapes of saved words, per chapter — computed off-main, so
+    /// the first render shows literal matches and the callback re-marks.
+    @ObservationIgnored private let inflectedTerms = InflectedTermService()
+
     @ObservationIgnored private var pendingScrollFraction: Double?
     @ObservationIgnored private var pendingFragment: String?
     @ObservationIgnored private var lastPositionSave = Date.distantPast
@@ -603,7 +611,11 @@ final class EPUBViewManager: NSObject {
 
         if let savedWordTermsProvider {
             let terms = savedWordTermsProvider()
-            webView.evaluateJavaScript(Self.markSavedWordsScript(for: terms, color: Self.savedWordMarkColor(for: currentTheme)))
+            // Inflections first: they're known to occur in this chapter, so
+            // they get the 500-term budget ahead of vocabulary that may not
+            // appear here at all.
+            let marked = Self.dedupedTerms(inflectedChapterForms() + terms)
+            webView.evaluateJavaScript(Self.markSavedWordsScript(for: marked, color: Self.savedWordMarkColor(for: currentTheme)))
         }
     }
 
@@ -613,6 +625,29 @@ final class EPUBViewManager: NSObject {
     /// ones.
     static func savedWordMarkColor(for theme: PageTheme) -> String {
         theme.usesLightInk ? "rgba(150, 179, 255, 0.75)" : "rgba(51, 92, 209, 0.65)"
+    }
+
+    /// Surface forms of saved vocabulary occurring in the open chapter —
+    /// "ran" and "running" for a saved "run". Empty until the chapter's
+    /// off-main pass lands, which re-marks with them included.
+    private func inflectedChapterForms() -> [String] {
+        guard let keys = savedWordKeysProvider?(), !keys.isEmpty,
+              let document, document.spinePaths.indices.contains(chapterIndex)
+        else { return [] }
+        let book = loadedURL?.lastPathComponent ?? ""
+        return inflectedTerms.surfaceForms(
+            passageKey: "\(book)#c\(chapterIndex)",
+            keys: keys,
+            language: Language.storedTarget,
+            text: document.plainText(at: chapterIndex),
+            onReady: { [weak self] in self?.refreshHighlights() }
+        )
+    }
+
+    /// Case-insensitive dedupe, first occurrence wins.
+    private static func dedupedTerms(_ terms: [String]) -> [String] {
+        var seen: Set<String> = []
+        return terms.filter { seen.insert($0.lowercased()).inserted }
     }
 
     private static func markSavedWordsScript(for terms: [String], color: String) -> String {

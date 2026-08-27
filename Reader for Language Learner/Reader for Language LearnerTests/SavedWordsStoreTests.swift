@@ -252,6 +252,74 @@ final class SavedWordsStoreTests: XCTestCase {
         XCTAssertEqual(store.terms(for: .english), ["orbit"])
     }
 
+    /// Lemmatizing a lone word has no sentence to go on and can miss (German
+    /// "Haus" reduces to "Hau"), so the literal form is kept as a key too —
+    /// otherwise the page's correctly-lemmatized "Häuser" would never match.
+    func testLemmaKeysKeepBothLemmaAndLiteralForm() {
+        let store = makeStore()
+        store.add(SavedWord(term: "Haus", language: Language.german.rawValue))
+
+        XCTAssertTrue(store.lemmaKeys(for: .german).contains("haus"))
+    }
+
+    func testLemmaKeysAreScopedToStudyLanguage() {
+        let store = makeStore()
+        store.add(SavedWord(term: "orbit", language: Language.english.rawValue))
+        store.add(SavedWord(term: "Wirkung", language: Language.german.rawValue))
+
+        XCTAssertTrue(store.lemmaKeys(for: .english).contains("orbit"))
+        XCTAssertFalse(store.lemmaKeys(for: .english).contains("wirkung"))
+    }
+
+    /// Memoized behind a fingerprint of the vocabulary — saving a word has to
+    /// produce new keys rather than a stale cache hit.
+    func testLemmaKeysFollowVocabularyChanges() {
+        let store = makeStore()
+        store.add(SavedWord(term: "orbit", language: Language.english.rawValue))
+        XCTAssertEqual(store.lemmaKeys(for: .english).contains("comet"), false)
+
+        store.add(SavedWord(term: "comet", language: Language.english.rawValue))
+        XCTAssertTrue(store.lemmaKeys(for: .english).contains("comet"))
+    }
+
+    // MARK: - Vocabulary fingerprint
+
+    /// Persisted coverage snapshots compare against this across launches, so
+    /// it can't be `hashValue` (per-process seed) and it can't depend on the
+    /// order words happen to sit in the store.
+    func testFingerprintIgnoresWordOrder() {
+        let a = makeStore()
+        a.add(SavedWord(term: "orbit", language: Language.english.rawValue))
+        a.add(SavedWord(term: "comet", language: Language.english.rawValue))
+
+        let b = makeStore()
+        b.add(SavedWord(term: "comet", language: Language.english.rawValue))
+        b.add(SavedWord(term: "orbit", language: Language.english.rawValue))
+
+        XCTAssertEqual(a.vocabularyFingerprint(for: .english), b.vocabularyFingerprint(for: .english))
+    }
+
+    func testFingerprintChangesWhenAWordIsAdded() {
+        let store = makeStore()
+        store.add(SavedWord(term: "orbit", language: Language.english.rawValue))
+        let before = store.vocabularyFingerprint(for: .english)
+
+        store.add(SavedWord(term: "comet", language: Language.english.rawValue))
+
+        XCTAssertNotEqual(before, store.vocabularyFingerprint(for: .english))
+    }
+
+    func testFingerprintIsScopedToStudyLanguage() {
+        let store = makeStore()
+        store.add(SavedWord(term: "orbit", language: Language.english.rawValue))
+        store.add(SavedWord(term: "Wirkung", language: Language.german.rawValue))
+
+        XCTAssertNotEqual(
+            store.vocabularyFingerprint(for: .english),
+            store.vocabularyFingerprint(for: .german)
+        )
+    }
+
     func testSetLanguageForWordsWithIDs() {
         let store = makeStore()
         let word = SavedWord(term: "orbit", language: Language.english.rawValue)

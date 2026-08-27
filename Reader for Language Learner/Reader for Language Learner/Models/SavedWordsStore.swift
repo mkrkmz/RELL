@@ -216,6 +216,66 @@ final class SavedWordsStore {
         }
     }
 
+    /// Fingerprint of the vocabulary in one study language, stable across
+    /// launches — `hashValue` is seeded per process, so it can't tell a
+    /// persisted snapshot (`BookCoverage`) whether the words it was computed
+    /// from are still the words on disk. FNV-1a over the sorted terms.
+    func vocabularyFingerprint(for language: Language) -> String {
+        let terms = words
+            .filter { $0.language == nil || $0.language == language.rawValue }
+            .map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .sorted()
+
+        var hash: UInt64 = 0xcbf29ce484222325
+        for byte in terms.joined(separator: "\u{0}").utf8 {
+            hash ^= UInt64(byte)
+            hash = hash &* 0x100000001b3
+        }
+        return "\(terms.count)-\(String(hash, radix: 16))"
+    }
+
+    /// Memoized result of `lemmaKeys(for:)`. One tagger pass per saved word is
+    /// far too much to repeat on every highlight refresh (which runs on each
+    /// scroll and view update), and the vocabulary changes rarely — the
+    /// fingerprint is cheap enough to check every time.
+    @ObservationIgnored private var lemmaKeyCache: (fingerprint: Int, language: String, keys: Set<String>)?
+
+    /// Lemma match keys of every saved word in one study language, mastery
+    /// ignored — highlighting underlines what you saved whether or not you
+    /// have it down yet. `lemmaKeySets(for:)` is the same pass split by
+    /// mastery, which is what coverage needs and highlighting doesn't.
+    func lemmaKeys(for language: Language) -> Set<String> {
+        let terms = words.compactMap { word -> String? in
+            guard word.language == nil || word.language == language.rawValue else { return nil }
+            return word.term
+        }
+
+        var hasher = Hasher()
+        for term in terms { hasher.combine(term) }
+        let fingerprint = hasher.finalize()
+
+        if let cached = lemmaKeyCache,
+           cached.fingerprint == fingerprint,
+           cached.language == language.rawValue {
+            return cached.keys
+        }
+
+        var keys: Set<String> = []
+        for term in terms {
+            // Both the lemma and the literal form. A term is lemmatized with
+            // no sentence around it, which the tagger sometimes gets wrong
+            // (German "Haus" reduces to "Hau"), while the same word inside a
+            // page reduces correctly — keeping the literal form as a key lets
+            // the two meet. Additive: it can only widen what matches.
+            let literal = term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if !literal.isEmpty { keys.insert(literal) }
+            let key = LemmaMatcher.matchKey(for: term, language: language)
+            if !key.isEmpty { keys.insert(key) }
+        }
+        lemmaKeyCache = (fingerprint, language.rawValue, keys)
+        return keys
+    }
+
     /// Lemma match keys of the reader's vocabulary, split by whether the word
     /// is mastered or still being learned — the input to a document's coverage
     /// profile (`LexicalProfileBuilder`). Scoped to one study language so a

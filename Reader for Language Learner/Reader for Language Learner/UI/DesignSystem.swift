@@ -58,6 +58,17 @@ enum DS {
         static var success: SwiftUI.Color { .green }
         static var warning: SwiftUI.Color { .orange }
         static var danger:  SwiftUI.Color { .red }
+        /// Reading difficulty, on the comprehensible-input scale: comfortable
+        /// reads green, demanding reads red. One mapping for every coverage
+        /// surface — the reader chip, the library card, the stats panel.
+        static func coverageTint(for difficulty: LexicalProfile.Difficulty) -> SwiftUI.Color {
+            switch difficulty {
+            case .comfortable: return success
+            case .challenging: return warning
+            case .demanding:   return danger
+            }
+        }
+
         /// Soft warning wash for inline banners (LLM connection notice) —
         /// the warning-family sibling of `accentSubtle`.
         static var warningSubtle: SwiftUI.Color { warning.opacity(0.12) }
@@ -697,13 +708,16 @@ struct DSProgressBar: View {
     /// Track color; the default suits app surfaces. Over full-color cover
     /// art pass a dimming track (see LibraryCard) so the bar stays legible.
     var track: SwiftUI.Color = DS.Color.accentSubtle
+    /// Fill color. Reading progress keeps the accent; a bar that carries a
+    /// verdict (vocabulary coverage) passes its own semantic tint.
+    var tint: SwiftUI.Color = DS.Color.accentStrong
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Rectangle().fill(track)
                 Rectangle()
-                    .fill(DS.Color.accentStrong)
+                    .fill(tint)
                     .frame(width: geo.size.width * min(1, max(0, value)))
             }
         }

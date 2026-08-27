@@ -79,6 +79,53 @@ enum LemmaMatcher {
         return matchKey(for: lhs, language: language) == matchKey(for: rhs, language: language)
     }
 
+    /// The surface forms in `text` whose match key is one of `keys` — the
+    /// shapes a saved word actually takes on this page ("ran", "running" for a
+    /// saved "run"). Distinct, in order of first appearance, in the casing the
+    /// text uses.
+    ///
+    /// This is the tagging loop `matchKeys(in:language:)` already runs; that
+    /// one throws the surface away and keeps the key, and highlighting needs
+    /// the opposite. Words the tagger has no lemma for fall back to the
+    /// surface as their own key, so an untagged language degrades to exact
+    /// matching rather than to nothing.
+    ///
+    /// Pure and `nonisolated`-safe — a chapter-sized pass belongs off the main
+    /// actor (see `InflectedTermService`).
+    static func surfaceForms(
+        in text: String,
+        matchingKeys keys: Set<String>,
+        language: Language?
+    ) -> [String] {
+        guard !text.isEmpty, !keys.isEmpty else { return [] }
+
+        let tagger = NLTagger(tagSchemes: [.lemma])
+        tagger.string = text
+        if let nl = nlLanguage(for: language) {
+            tagger.setLanguage(nl, range: text.startIndex..<text.endIndex)
+        }
+
+        var seen: Set<String> = []
+        var forms: [String] = []
+        tagger.enumerateTags(
+            in: text.startIndex..<text.endIndex,
+            unit: .word,
+            scheme: .lemma,
+            options: [.omitPunctuation, .omitWhitespace, .omitOther]
+        ) { tag, range in
+            let surface = String(text[range])
+            let folded = surface.lowercased()
+            guard !folded.isEmpty, !seen.contains(folded) else { return true }
+            let lemma = tag?.rawValue.lowercased()
+            let key = lemma?.isEmpty == false ? lemma! : folded
+            guard keys.contains(key) else { return true }
+            seen.insert(folded)
+            forms.append(surface)
+            return true
+        }
+        return forms
+    }
+
     /// Lemmatizes every word in a body of text, returning the distinct match
     /// keys it contains. Used to profile a document against saved vocabulary
     /// (`LexicalProfileService`) without re-tagging per lookup.
