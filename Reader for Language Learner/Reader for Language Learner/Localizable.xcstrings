@@ -48,6 +48,26 @@
         }
       }
     },
+    "%@ — native" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ — ana dil"
+          }
+        }
+      }
+    },
+    "%@ — studying" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ — öğrenilen"
+          }
+        }
+      }
+    },
     "%@ · %@" : {
       "localizations" : {
         "en" : {
@@ -569,46 +589,6 @@
     "Analyzing…" : {
 
     },
-    "Answer In" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yanıt Dili"
-          }
-        }
-      }
-    },
-    "Stay immersed in the language you're studying, or get the meaning in your own." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öğrendiğin dilde kal ya da anlamı kendi dilinde gör."
-          }
-        }
-      }
-    },
-    "%@ — studying" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ — öğrenilen"
-          }
-        }
-      }
-    },
-    "%@ — native" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ — ana dil"
-          }
-        }
-      }
-    },
     "Anki" : {
 
     },
@@ -628,6 +608,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İşaretler"
+          }
+        }
+      }
+    },
+    "Answer In" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yanıt Dili"
           }
         }
       }
@@ -1769,9 +1759,6 @@
         }
       }
     },
-    "Flashcard reveal, pick the word for a definition, or type the missing word." : {
-
-    },
     "Focus Mode" : {
       "localizations" : {
         "tr" : {
@@ -2167,26 +2154,6 @@
     "Library · 1 document" : {
 
     },
-    "LISTEN AND TYPE THE WORD" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DİNLE VE KELİMEYİ YAZ"
-          }
-        }
-      }
-    },
-    "Listen" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dinle"
-          }
-        }
-      }
-    },
     "Light" : {
       "localizations" : {
         "tr" : {
@@ -2203,6 +2170,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Satır Aralığı"
+          }
+        }
+      }
+    },
+    "Listen" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dinle"
+          }
+        }
+      }
+    },
+    "LISTEN AND TYPE THE WORD" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DİNLE VE KELİMEYİ YAZ"
           }
         }
       }
@@ -2451,9 +2438,6 @@
     "Minutes" : {
 
     },
-    "Mode" : {
-
-    },
     "Model" : {
       "localizations" : {
         "tr" : {
@@ -2527,16 +2511,6 @@
         }
       }
     },
-    "Next" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sonraki"
-          }
-        }
-      }
-    },
     "New" : {
       "localizations" : {
         "tr" : {
@@ -2603,6 +2577,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "En Yeni"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki"
           }
         }
       }
@@ -3763,6 +3747,16 @@
         }
       }
     },
+    "Reveal a flashcard, pick the word for a definition, type the missing word, or type what you hear." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartı çevir, tanıma uyan kelimeyi seç, eksik kelimeyi yaz ya da duyduğunu yaz."
+          }
+        }
+      }
+    },
     "Reveal answer" : {
 
     },
@@ -3849,6 +3843,16 @@
     },
     "Review only words in a deck (tag)." : {
 
+    },
+    "Right or wrong is decided by the check. Turn off to rate every card yourself." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doğru/yanlış kontrolle belirlenir. Kapatırsan her kartı kendin notlarsın."
+          }
+        }
+      }
     },
     "Run All" : {
       "localizations" : {
@@ -4372,6 +4376,16 @@
         }
       }
     },
+    "Stay immersed in the language you're studying, or get the meaning in your own." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öğrendiğin dilde kal ya da anlamı kendi dilinde gör."
+          }
+        }
+      }
+    },
     "Stop" : {
 
     },
@@ -4447,16 +4461,6 @@
     "System Prompt Preamble" : {
 
     },
-    "Tap to hear it again" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tekrar dinlemek için dokun"
-          }
-        }
-      }
-    },
     "Tags" : {
 
     },
@@ -4468,6 +4472,16 @@
     },
     "Tap to flip and see the definition" : {
 
+    },
+    "Tap to hear it again" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar dinlemek için dokun"
+          }
+        }
+      }
     },
     "Tap to reveal" : {
 
@@ -4655,6 +4669,9 @@
     "TYPE THE WORD" : {
 
     },
+    "Type the word…" : {
+
+    },
     "Type what you hear…" : {
       "localizations" : {
         "tr" : {
@@ -4664,29 +4681,6 @@
           }
         }
       }
-    },
-    "Reveal a flashcard, pick the word for a definition, type the missing word, or type what you hear." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kartı çevir, tanıma uyan kelimeyi seç, eksik kelimeyi yaz ya da duyduğunu yaz."
-          }
-        }
-      }
-    },
-    "Right or wrong is decided by the check. Turn off to rate every card yourself." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Doğru/yanlış kontrolle belirlenir. Kapatırsan her kartı kendin notlarsın."
-          }
-        }
-      }
-    },
-    "Type the word…" : {
-
     },
     "Typography" : {
       "localizations" : {
