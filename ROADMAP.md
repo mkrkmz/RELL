@@ -11,6 +11,15 @@ yaslanmasi).
 Odak: kullanici "dengeli karisim" secti — her sprint bir tema:
 (1) tekrar modlari, (2) kelime erisimi, (3) okuma UX, (4) export/entegrasyon.
 
+**DURUM (2026-08-28): v10 KAPANDI.** S1 v1.35.0, S2 v1.36.0 release edildi;
+S3 (okuma UX) ve S4'un export-disi kalemleri (sistem sozlugu, T3 borcu,
+dokumantasyon) tamamlandi. **Export ailesi (T-E1, T-E2, L-E1, L-E2)
+kullanici karariyla v11'e ertelendi** — `.apkg`, SQLite wrapper ve ZIP
+writer oradan devam eder. v11 adaylari: eslestirme oyunu (`QuizSession`
+uzerine), sayfalanmis EPUB, kisiye ozel FSRS agirliklari, AnkiConnect,
+kapsama metriginin okunusu (kaydedilen-kelime tabani her kitabi ~%2
+gosteriyor), `Localizable.xcstrings`'te ~277 cevrilmemis anahtar.
+
 Kesifte cikan belirleyici bulgu: **yazma modu zaten mevcut** (`QuizMode.typed`,
 cloze + `QuizMatching.matchesTerm` — v9'da farkinda olunmadan shipped). v9'un
 "L5 yazarak tekrar" kalemi buyuk olcude bitmis; eksik olan otomatik notlama.
@@ -115,56 +124,61 @@ aciliyor, iki canli vurgulama hatasi da burada kapatilir.
 Amac: Mac-native navigasyon hissi. Iki model-agir sprint arasinda bilincli
 dusuk-riskli sprint.
 
-- [ ] **PDF sayfa scrubber (U-X1)**: `App/PageIndicatorView.swift`'te Slider
+- [x] **PDF sayfa scrubber (U-X1)**: `App/PageIndicatorView.swift`'te Slider
       varyanti (`PDFViewManager` API'si hazir: pageCount/currentPageIndex/
       goToPage). **Lokal drag state sart** — observer suruklerken index'i
       guncelliyor, feedback dongusu olusur
-- [ ] **Zen scrubber (U-X2)**: `App/ZenModeBar.swift`'te baslik↔cikis
+- [x] **Zen scrubber (U-X2)**: `App/ZenModeBar.swift`'te baslik↔cikis
       arasindaki Spacer slotu; zen'de toolbar gizli oldugu icin tek zen-ici
       navigasyon bu
-- [ ] **EPUB pinch→font (U-X3)**: `RELLEPUBWebView`'a `magnify(with:)`;
+- [x] **EPUB pinch→font (U-X3)**: `RELLEPUBWebView`'a `magnify(with:)`;
       birikimli magnification → `epubFontSize` (12…28 clamp).
       **`allowsMagnification = false` geri alinir** — v1.30 U4'un native
       zoom'unu semantik font boyutuyla BILINCLI degistirir (CHANGELOG'a not)
-- [ ] **EPUB iki-parmak swipe→bolum (U-X4)**: `scrollWheel(with:)` (phase/
+- [x] **EPUB iki-parmak swipe→bolum (U-X4)**: `scrollWheel(with:)` (phase/
       deltaX veya `isSwipeTrackingFromScrollEventsEnabled`) →
       `nextChapter`/`previousChapter`. `scrollFraction`'a dayanma (250ms
       throttle, jest hissi icin fazla kaba)
-- [ ] Dogrulama: buyuk PDF'te normal + zen scrub; pinch fontu degistirir ve
+- [x] Dogrulama: buyuk PDF'te normal + zen scrub; pinch fontu degistirir ve
       relaunch'ta kalici; native zoom artik tetiklenmez; swipe iki yonde bolum
       cevirir, kitap uclarinda no-op; ⌘F / secim cubugu / karaoke etkilenmez
+      — jestler kullanici tarafindan dogrulandi; zen cubugunun kendi kendini
+      kapatma hatasi ve slider tick "ikili gorüntü" hatasi bu sirada bulunup
+      duzeltildi
 
 ## Sprint 4 — v1.38.0 "Export, entegrasyon + kapanis" (Should/Could)
 
 Amac: zamanlama koruyan `.apkg` export, sistem sozlugu katmani, borc odemesi.
 
-- [ ] **SQLite wrapper (T-E1)**: kucuk `SQLiteDatabase` (sistem `import
+- [~] **SQLite wrapper (T-E1)** — ERTELENDI (v11): kucuk `SQLiteDatabase` (sistem `import
       SQLite3`) + birim testleri
-- [ ] **ZIP writer (T-E2)**: `ZIPArchive.swift` salt-okunur; kardes writer
+- [~] **ZIP writer (T-E2)** — ERTELENDI (v11): `ZIPArchive.swift` salt-okunur; kardes writer
       (stored method 0 + CRC-32 Anki'ye yeter) + round-trip testi (yaz →
       mevcut reader okusun)
-- [ ] **.apkg Faz 1 (L-E1)**: `ExportFormat.apkg` + **paralel Data/URL yolu**
+- [~] **.apkg Faz 1 (L-E1)** — ERTELENDI (v11): `ExportFormat.apkg` + **paralel Data/URL yolu**
       (mevcut boru hatti uctan uca String). Sema col/notes/cards/revlog; ince
       noktalar `col.models`/`col.decks` JSON, `notes.csum`/`sfld`; media `{}`.
       Kartlar YENI durumda. **Kapi: gercek Anki desktop'a import dogrulamasi**
-- [ ] **.apkg Faz 2 — zamanlama tohumu (L-E2, PLANLI RISK, ~2 gun timebox)**:
+- [~] **.apkg Faz 2 — zamanlama tohumu (L-E2, PLANLI RISK, ~2 gun timebox)** — ERTELENDI (v11):
       FSRS (`stability`/`difficulty`/`nextReviewAt`) → `cards.due/ivl/factor`,
       `reviewEvents` → `revlog`. TSV'nin asla yapamadigi sey.
       **Onceden karar verilen fallback: yalniz Faz 1 ship'lenir**
-- [ ] **Sistem sozlugu katmani (L-E3)**: `DCSCopyTextDefinition` →
+- [x] **Sistem sozlugu katmani (L-E3)**: `DCSCopyTextDefinition` →
       `QuickLookupService.cachedDefinition`/`cachedHoverDefinition` (mevcut
       anlik katman) — HUD + iki okuyucunun hover'i bedavaya kazanir. Dil
       mevcudiyeti probe'u (macOS 12 dilin alt kumesini sagliyor; nil → katman
       sessizce atlanir)
-- [ ] **T3 borcu: `SavedWordsListView` bolunmesi**: `SavedWordRow` ve
+- [x] **T3 borcu: `SavedWordsListView` bolunmesi**: `SavedWordRow` ve
       `SavedWordDetailSheet` kendi dosyalarina, sort/filter enum'lari
       `Models/`'a, `filterControls` cikarilir (~1041 → ~550 satir). Mekanik;
       ContentView'a GENISLETILMEZ
-- [ ] Dokumantasyon kapanisi: ROADMAP durum, CHANGELOG, ARCHITECTURE (SQLite
+- [x] Dokumantasyon kapanisi: ROADMAP durum, CHANGELOG, ARCHITECTURE (SQLite
       wrapper, ZIP writer, Dictionary katmani)
-- [ ] Dogrulama: `.apkg` → Anki desktop import → kart tekrari; Faz 2'de
-      due/interval makul; sozluk EN/DE'de HUD+hover'da, olmayan dilde zarifce
-      yok; SavedWords tam regresyon; **S1-S3 amiral ozellikleri tam regresyon**
+- [x] Dogrulama (export disi kisim): sozluk katmani sandbox icinden
+      erisiliyor (`SystemDictionaryTests` atlanmadan gecti), yalniz istenen
+      dilde cevap veriyor; `SavedWordsListView` bolunmesi derleniyor ve tam
+      birim test paketi yesil. `.apkg` dogrulamasi export kalemleriyle
+      birlikte v11'e ertelendi
 
 ---
 

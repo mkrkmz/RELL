@@ -4,6 +4,36 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.37.0] - 2026-08-28
+
+Getting around a book, and an answer that arrives before you've finished
+hovering. Roadmap v10 Sprints 3 and 4.
+
+### Added
+
+- **Drag through a document.** A slider next to the page number moves you
+  through a PDF as fast as you can drag it — and it's there in Zen mode too,
+  where it's the only navigation on screen.
+- **Pinch to size the text in an EPUB.** The gesture now changes the reading
+  font rather than magnifying the page: text stays sharp, the column keeps its
+  measure, and the size sticks the way it does when you set it in the
+  appearance panel.
+- **Two-finger swipe turns the chapter** in an EPUB, either direction.
+- **Instant definitions from your Mac's own dictionaries.** If your
+  dictionaries cover the word, the answer appears immediately, offline, with no
+  model involved. It's only used when the entry is written in the language you
+  asked to be answered in, so it never quietly overrides that choice.
+
+### Fixed
+
+- **The Zen mode bar could not be reached.** It waited for the pointer in a
+  6-point strip at the very top of the screen — exactly where macOS summons the
+  menu bar, which takes those pixels. It now watches for the pointer
+  approaching the top and stays put once you're on it, so its controls can
+  actually be clicked.
+- **The page slider appeared to be drawn twice**, a faint second track
+  ghosting the real one. Those were tick marks, one per page.
+
 ## [1.36.0] - 2026-08-27
 
 Your vocabulary now follows the shapes words actually take, and a book can

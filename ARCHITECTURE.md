@@ -213,6 +213,41 @@ var activeTasks: [ModuleType: Task<Void, Never>]
 - Kelime degistiginde tum aktif task'lar iptal edilir
 - 90ms debounce ile gereksiz istekler onlenir
 
+## Kelime Eslestirme ve Kapsama
+
+Kaydedilen kelimeleri metinde bulmanin uc katmani var; ucu de saf ve
+test edilebilir:
+
+- **`TermMatcher`** — birebir gecen formu bulur. Unicode kelime siniri
+  (harf/isaret/rakam iki uca dayanamaz); bosluga dayali bolunmesi olmayan
+  scriptlerde (kana, CJK, Hangul) duz substring'e duser. Iki okuyucu da
+  ayni kurali kullanir; EPUB tarafinda ayni kural JS'te `rellFindTermRanges`
+  olarak yasar
+- **`LemmaMatcher.surfaceForms(in:matchingKeys:language:)`** — pasaji bir kez
+  lemmatize edip kayitli kelimelerin o sayfada aldigi **cekim formlarini**
+  dondurur. `InflectedTermService` bunu main-disinda calistirir, pasaj basina
+  cache'ler ve cache anahtarina kelime hazinesini de katar
+- **`SavedWordsStore.lemmaKeys(for:)`** — anahtar kumesi; hem lemma hem
+  literal formu tutar (tek basina lemmatize edilen terim yanlis cikabiliyor:
+  Almanca "Haus" → "Hau"). Kelime hazinesi parmak izi ile memoize edilir
+
+Kapsama iki olcekte hesaplanir: sayfa/bolum icin `LexicalProfileService`,
+kitap geneli icin `BookCoverageService` (acilista, yalniz `BookCoverage`
+bayatsa; sayfa sayfa toplanir, `RecentDocument`'e yazilir).
+
+## Sozluk Katmanlari
+
+Anlik cevap sirasi (`QuickLookupService`): kayitli kelime → LLM cache →
+**sistem sozlugu** → (hicbiri yoksa) model cagrisi.
+
+`SystemDictionary` macOS'un kendi sozluklerini `DCSCopyTextDefinition` ile
+sorar. Kritik kisit: hangi sozluklerin etkin oldugu kullanicinin isi ve
+iki dilli sozlukler her iki yonde de cevap verebiliyor. Anlik katman model
+cagrisini tamamen bastirdigi icin, bir kayit **yalnizca gercekten istenen
+dilde yazilmissa** kullanilir (`NLLanguageRecognizer`, 0.65 guven esigi,
+bas kelime + telaffuz kirpilarak). Eslesmezse katman sessizce atlanir ve
+"Yanit Dili" ayari cignenmemis olur.
+
 ## Tasarim Sistemi (DS)
 
 Merkezi `DS` enum'u tum gorsel tokenlari icerir:
