@@ -428,7 +428,10 @@ struct ContentView: View {
                         ZenModeBar(
                             title: windowTitle,
                             subtitle: "",
-                            onExit: { toggleZenMode() }
+                            onExit: { toggleZenMode() },
+                            currentPageIndex: isEPUBDocument ? nil : pdfViewManager.currentPageIndex,
+                            pageCount: isEPUBDocument ? 0 : pdfViewManager.pageCount,
+                            onNavigate: isEPUBDocument ? nil : { pdfViewManager.goToPage(index: $0) }
                         )
                     }
                 }
@@ -524,7 +527,8 @@ struct ContentView: View {
                             quickLookup: quickLookup,
                             epubHighlightStore: epubHighlightStore,
                             toastCenter: toastCenter,
-                            hoverEnabled: hoverDictionaryEnabled
+                            hoverEnabled: hoverDictionaryEnabled,
+                            onFontSizeChange: { epubFontSize = $0 }
                         )
                     } else {
                     PDFKitView(
@@ -827,11 +831,23 @@ struct ContentView: View {
 
         ToolbarItem(placement: .navigation) {
             if selectionState.documentURL != nil, !isEPUBDocument {
-                PageIndicatorView(
-                    currentPageIndex: pdfViewManager.currentPageIndex,
-                    pageCount: pdfViewManager.pageCount
-                ) { index in
-                    pdfViewManager.goToPage(index: index)
+                HStack(spacing: DS.Spacing.sm) {
+                    PageIndicatorView(
+                        currentPageIndex: pdfViewManager.currentPageIndex,
+                        pageCount: pdfViewManager.pageCount
+                    ) { index in
+                        pdfViewManager.goToPage(index: index)
+                    }
+
+                    if pdfViewManager.pageCount > 1 {
+                        PageScrubberView(
+                            currentPageIndex: pdfViewManager.currentPageIndex,
+                            pageCount: pdfViewManager.pageCount
+                        ) { index in
+                            pdfViewManager.goToPage(index: index)
+                        }
+                        .frame(width: 130)
+                    }
                 }
             }
         }
@@ -1081,18 +1097,18 @@ struct ContentView: View {
     /// Menu-bar mirror of the toolbar's zoom/font-size controls — EPUB has
     /// no optical zoom, so "zoom" steps its reader font size instead.
     private func menuZoomIn() {
-        if isEPUBDocument { epubFontSize = min(28, epubFontSize + 1) }
+        if isEPUBDocument { epubFontSize = min(EPUBTypography.maxFontSize, epubFontSize + 1) }
         else { pdfViewManager.zoomIn() }
     }
 
     private func menuZoomOut() {
-        if isEPUBDocument { epubFontSize = max(12, epubFontSize - 1) }
+        if isEPUBDocument { epubFontSize = max(EPUBTypography.minFontSize, epubFontSize - 1) }
         else { pdfViewManager.zoomOut() }
     }
 
     /// "Actual Size" — 100% for PDF, the default reader font size for EPUB.
     private func menuActualSize() {
-        if isEPUBDocument { epubFontSize = 18 }
+        if isEPUBDocument { epubFontSize = EPUBTypography.defaultFontSize }
         else { pdfViewManager.actualSize() }
     }
 

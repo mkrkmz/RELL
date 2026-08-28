@@ -122,7 +122,7 @@ struct ReadingAppearanceView: View {
                 HStack(spacing: DS.Spacing.sm) {
                     Stepper(
                         value: $epubFontSize,
-                        in: 12...28, step: 1
+                        in: EPUBTypography.minFontSize...EPUBTypography.maxFontSize, step: 1
                     ) {
                         Text("\(Int(epubFontSize)) pt")
                             .font(DS.Typography.mono)
@@ -172,7 +172,7 @@ struct ReadingAppearanceView: View {
             HStack {
                 Spacer()
                 Button("Reset Typography") {
-                    epubFontSize = 18
+                    epubFontSize = EPUBTypography.defaultFontSize
                     epubLineHeight = 1.6
                     epubFontFamilyRaw = EPUBFontFamily.publisher.rawValue
                     epubContentWidthRaw = EPUBContentWidth.medium.rawValue

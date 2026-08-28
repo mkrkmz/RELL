@@ -98,7 +98,64 @@ struct PageIndicatorView: View {
     }
 }
 
+/// Drag-to-move-through-the-document companion to `PageIndicatorView`
+/// (Roadmap v10 Sprint 3, U-X1). Lives in the toolbar next to the page
+/// number, and in the zen bar, where it's the only navigation on screen.
+///
+/// The slider owns its value while the drag is in progress. Reading straight
+/// from `currentPageIndex` would fight the drag: navigating updates the
+/// observer, which would push the knob back under the pointer.
+struct PageScrubberView: View {
+    let currentPageIndex: Int?   // 0-based
+    let pageCount: Int
+    let onNavigate: (Int) -> Void  // caller receives 0-based index
+
+    /// Non-nil only while dragging.
+    @State private var dragIndex: Double?
+
+    private var lastIndex: Double { Double(max(0, pageCount - 1)) }
+    private var value: Double {
+        dragIndex ?? Double(min(max(0, currentPageIndex ?? 0), Int(lastIndex)))
+    }
+
+    var body: some View {
+        // Deliberately continuous. A `step:` slider draws AppKit tick marks
+        // under its track, and at a book's page count they read as a second,
+        // dotted track ghosting the real one. Rounding here gives whole-page
+        // navigation without the ticks.
+        Slider(
+            value: Binding(
+                get: { value },
+                set: { newValue in
+                    dragIndex = newValue
+                    // Scrub live: the page turns under the knob, which is the
+                    // whole point of dragging rather than typing a number.
+                    onNavigate(Int(newValue.rounded()))
+                }
+            ),
+            in: 0...lastIndex,
+            onEditingChanged: { editing in
+                if editing {
+                    dragIndex = value
+                } else {
+                    if let dragIndex { onNavigate(Int(dragIndex.rounded())) }
+                    dragIndex = nil
+                }
+            }
+        )
+        .controlSize(.small)
+        .labelsHidden()
+        .help("Drag to move through the document")
+        .accessibilityLabel("Page")
+        .accessibilityValue("\(Int(value) + 1) of \(pageCount)")
+    }
+}
+
 #Preview {
-    PageIndicatorView(currentPageIndex: 10, pageCount: 28) { _ in }
-        .padding()
+    VStack {
+        PageIndicatorView(currentPageIndex: 10, pageCount: 28) { _ in }
+        PageScrubberView(currentPageIndex: 10, pageCount: 28) { _ in }
+            .frame(width: 160)
+    }
+    .padding()
 }

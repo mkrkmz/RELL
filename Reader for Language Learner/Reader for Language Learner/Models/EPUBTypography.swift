@@ -95,7 +95,14 @@ enum EPUBContentWidth: String, CaseIterable, Identifiable {
 
 /// The complete typography snapshot handed to `appearanceCSS`.
 struct EPUBTypography: Equatable {
-    var fontSize: Double = 18
+    /// Reading font size bounds, shared by everything that can move it: the
+    /// appearance panel's stepper, the zoom menu items, and the pinch gesture
+    /// (U-X3).
+    static let defaultFontSize: Double = 18
+    static let minFontSize: Double = 12
+    static let maxFontSize: Double = 28
+
+    var fontSize: Double = EPUBTypography.defaultFontSize
     var lineHeight: Double = 1.6
     var widthEm: Int = EPUBContentWidth.medium.em
     /// CSS stack, nil = publisher default (no override emitted).

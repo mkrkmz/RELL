@@ -19,11 +19,70 @@ import WebKit
 final class RELLEPUBWebView: WKWebView {
 
     var selectionProvider: (() -> String)?
+    /// Current reading font size, mirrored from the appearance settings so a
+    /// pinch has something to move (U-X3).
+    var fontSize: Double = EPUBTypography.defaultFontSize
+    /// Reports a pinch-driven font size back to the appearance settings.
+    var onFontSizeChange: ((Double) -> Void)?
+    /// Two-finger horizontal swipe, +1 for the next chapter, -1 for the
+    /// previous one (U-X4).
+    var onSwipeChapter: ((Int) -> Void)?
     var onContextSaveWord: (() -> Void)?
     var onContextLookUp:   (() -> Void)?
     var onContextAnalyze:  ((ModuleType) -> Void)?
     var onContextHighlight: ((HighlightColor) -> Void)?
     var onContextSpeak:    (() -> Void)?
+
+    // MARK: - Gestures
+
+    /// Pinch changes the reading font size rather than scaling the page
+    /// (U-X3). v1.30 gave EPUBs WKWebView's native magnification; scaling a
+    /// reflowable document blurs it and leaves the column at the wrong
+    /// measure, while the same gesture on the font size is what the reader
+    /// actually meant. `allowsMagnification` is off, so nothing else handles
+    /// this and `super` is deliberately not called.
+    private var pinchSizer = PinchFontSizer()
+
+    override func magnify(with event: NSEvent) {
+        switch event.phase {
+        case .changed:
+            guard let next = pinchSizer.size(after: event.magnification, from: fontSize) else { return }
+            fontSize = next
+            onFontSizeChange?(next)
+        default:
+            pinchSizer.reset()
+        }
+    }
+
+    /// Two-finger horizontal swipe turns the chapter (U-X4).
+    ///
+    /// Reading `scrollFraction` instead would mean waiting on a 250ms
+    /// throttle — far too coarse to feel like a gesture. The reading column
+    /// never overflows horizontally, so a dominantly horizontal scroll has no
+    /// other meaning here and is safe to consume.
+    private var swipeDetector = SwipeChapterDetector()
+
+    override func scrollWheel(with event: NSEvent) {
+        // A gesture that already turned a chapter must not turn another one
+        // as its momentum decays.
+        if swipeDetector.hasFired, event.momentumPhase != [] { return }
+
+        switch event.phase {
+        case .began:
+            swipeDetector.reset()
+        case .changed:
+            if let direction = swipeDetector.direction(
+                deltaX: event.scrollingDeltaX,
+                deltaY: event.scrollingDeltaY
+            ) {
+                onSwipeChapter?(direction)
+                return
+            }
+        default:
+            break
+        }
+        super.scrollWheel(with: event)
+    }
 
     override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
         super.willOpenMenu(menu, with: event)
@@ -147,6 +206,11 @@ struct EPUBReaderView: NSViewRepresentable {
     var epubHighlightStore: EPUBHighlightStore
     var toastCenter: ToastCenter
     var hoverEnabled: Bool
+    /// Where a pinch-driven font size goes (U-X3). The preference belongs to
+    /// the view that owns it — the same `@AppStorage` the appearance panel and
+    /// the zoom menu items write, so all three stay in step and the size
+    /// persists the same way however it was changed.
+    var onFontSizeChange: (Double) -> Void
 
     func makeNSView(context: Context) -> RELLEPUBWebView {
         let configuration = WKWebViewConfiguration()
@@ -166,10 +230,9 @@ struct EPUBReaderView: NSViewRepresentable {
 
         let webView = RELLEPUBWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = manager
-        // Trackpad pinch-to-zoom (U4). The reading-appearance panel's font-size
-        // control remains the primary way to size text; pinch is a quick,
-        // expected gesture on top of it.
-        webView.allowsMagnification = true
+        // Pinch is handled as a font-size gesture instead of native page
+        // magnification — see `magnify(with:)` (U-X3, replacing v1.30's U4).
+        webView.allowsMagnification = false
         webView.setValue(false, forKey: "drawsBackground")   // theme CSS paints it
 
         manager.webView = webView
@@ -207,6 +270,15 @@ struct EPUBReaderView: NSViewRepresentable {
 
     private func wireCallbacks(_ webView: RELLEPUBWebView) {
         let selectedText = $selectedText
+
+        // Gestures (U-X3, U-X4). The size is pushed in rather than read out,
+        // so a change from the appearance panel moves the pinch's starting
+        // point too.
+        webView.fontSize = typography.fontSize
+        webView.onFontSizeChange = onFontSizeChange
+        webView.onSwipeChapter = { [weak manager] direction in
+            if direction > 0 { manager?.nextChapter() } else { manager?.previousChapter() }
+        }
         let contextSentence = $contextSentence
 
         manager.hoverEnabled = hoverEnabled

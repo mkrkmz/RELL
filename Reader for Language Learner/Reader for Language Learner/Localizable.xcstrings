@@ -145,6 +145,16 @@
     "%lld" : {
 
     },
+    "%lld / %lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld"
+          }
+        }
+      }
+    },
     "%lld available" : {
 
     },
@@ -185,6 +195,16 @@
     },
     "%lld minutes" : {
 
+    },
+    "%lld of %lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld"
+          }
+        }
+      }
     },
     "%lld of %lld min today" : {
       "localizations" : {
@@ -734,6 +754,16 @@
         }
       }
     },
+    "BOOK COVERAGE" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KİTAP KAPSAMI"
+          }
+        }
+      }
+    },
     "Book in your RELL library" : {
       "localizations" : {
         "tr" : {
@@ -817,16 +847,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İş"
-          }
-        }
-      }
-    },
-    "BOOK COVERAGE" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "KİTAP KAPSAMI"
           }
         }
       }
@@ -1410,6 +1430,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir kelimeye çift tıklayın veya\ncümle seçmek için sürükleyin."
+          }
+        }
+      }
+    },
+    "Drag to move through the document" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belge içinde ilerlemek için sürükle"
           }
         }
       }
@@ -3077,6 +3107,16 @@
     },
     "p.%lld" : {
 
+    },
+    "Page" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa"
+          }
+        }
+      }
     },
     "Page %@" : {
       "localizations" : {
@@ -4852,22 +4892,23 @@
         }
       }
     },
-    "Words you know" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildiğin kelimeler"
-          }
-        }
-      }
-    },
     "Words" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kelimeler"
+          }
+        }
+      }
+    },
+    "Words you know" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildiğin kelimeler"
           }
         }
       }
