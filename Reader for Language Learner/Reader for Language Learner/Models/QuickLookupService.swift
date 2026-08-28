@@ -19,6 +19,10 @@ final class QuickLookupService {
     @ObservationIgnored private var nativeMeaningCache = LRUCache<String, String>(capacity: 60)
     @ObservationIgnored private var translationCache = LRUCache<String, String>(capacity: 40)
     @ObservationIgnored private let gate = AsyncLimiter(limit: 1)
+    /// System-dictionary hits and misses alike — a miss is worth remembering
+    /// too, so a word the dictionaries don't cover isn't looked up on every
+    /// hover of it.
+    @ObservationIgnored private var systemDictionaryCache = LRUCache<String, String?>(capacity: 200)
 
     // MARK: - Hover dictionary (respects the user's language preference)
 
@@ -37,7 +41,8 @@ final class QuickLookupService {
                !meaning.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return meaning
             }
-            return cachedNativeMeaning(for: term)
+            if let cached = cachedNativeMeaning(for: term) { return cached }
+            return systemDictionaryDefinition(for: term, in: Language.storedNative)
         }
     }
 
@@ -63,7 +68,21 @@ final class QuickLookupService {
                 return definition
             }
         }
-        return definitionCache.get(cacheKey(term, language: Language.storedTarget))
+        if let cached = definitionCache.get(cacheKey(term, language: Language.storedTarget)) {
+            return cached
+        }
+        return systemDictionaryDefinition(for: term, in: Language.storedTarget)
+    }
+
+    /// macOS's own dictionaries, as an instant offline answer before the model
+    /// is asked (L-E3). Only entries actually written in `language` are used —
+    /// see `SystemDictionary` for why that filter has to be there.
+    private func systemDictionaryDefinition(for term: String, in language: Language) -> String? {
+        let key = cacheKey(term, language: language)
+        if let cached = systemDictionaryCache.get(key) { return cached }
+        let definition = SystemDictionary.definition(for: term, in: language)
+        systemDictionaryCache.set(key, definition)
+        return definition
     }
 
     func definition(for term: String) async throws -> String {

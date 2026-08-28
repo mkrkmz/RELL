@@ -44,10 +44,46 @@ final class QuickLookupServiceTests: XCTestCase {
                        "to assume beforehand")
     }
 
+    /// "unsaved" used to stand in for a miss here. Since v1.38 the instant
+    /// layer also asks macOS's dictionaries, and a real word is no longer a
+    /// miss on a machine whose dictionaries cover it — so the miss case needs
+    /// a term nothing can answer.
     func testCachedDefinitionMissReturnsNil() {
         let service = makeService()
         let store = makeSavedStore()
-        XCTAssertNil(service.cachedDefinition(for: "unsaved", savedWordsStore: store))
+        XCTAssertNil(service.cachedDefinition(for: "zzqqxyw", savedWordsStore: store))
+    }
+
+    /// The system dictionary answers instantly, before any model call — but
+    /// only in the language the reader asked to be answered in, which is what
+    /// keeps it from overriding that choice (see `SystemDictionary`).
+    func testCachedDefinitionCanComeFromTheSystemDictionary() throws {
+        let target = Language.storedTarget
+        let expected = SystemDictionary.definition(for: "sleep", in: target)
+        try XCTSkipIf(
+            expected == nil,
+            "No active dictionary answers \"sleep\" in \(target.rawValue) on this machine"
+        )
+
+        let service = makeService()
+        let store = makeSavedStore()
+        XCTAssertEqual(service.cachedDefinition(for: "sleep", savedWordsStore: store), expected)
+    }
+
+    /// A saved word still wins: the reader's own material outranks the
+    /// system's.
+    func testSavedWordOutranksTheSystemDictionary() {
+        let service = makeService()
+        let store = makeSavedStore()
+        store.add(SavedWord(
+            term: "sleep",
+            llmOutputs: [ModuleType.definitionEN.rawValue: "my own note about sleep"]
+        ))
+
+        XCTAssertEqual(
+            service.cachedDefinition(for: "sleep", savedWordsStore: store),
+            "my own note about sleep"
+        )
     }
 
     func testCachedDefinitionIgnoresPlaceholderDefinition() {

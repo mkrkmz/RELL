@@ -40,6 +40,27 @@ enum LemmaMatcher {
         }
     }
 
+    /// The study language for a `NaturalLanguage` identifier — the reverse of
+    /// `nlLanguage(for:)`, for reading a language back off text the app didn't
+    /// write (a system dictionary entry, say).
+    static func language(for nl: NLLanguage) -> Language? {
+        switch nl {
+        case .english:          return .english
+        case .turkish:          return .turkish
+        case .german:           return .german
+        case .french:           return .french
+        case .spanish:          return .spanish
+        case .japanese:         return .japanese
+        case .korean:           return .korean
+        case .simplifiedChinese, .traditionalChinese: return .chinese
+        case .arabic:           return .arabic
+        case .portuguese:       return .portuguese
+        case .russian:          return .russian
+        case .italian:          return .italian
+        default:                return nil
+        }
+    }
+
     /// The dictionary form of a single word, lowercased. Returns nil when the
     /// tagger offers no lemma — the caller should fall back to exact matching.
     static func lemma(of term: String, language: Language?) -> String? {
