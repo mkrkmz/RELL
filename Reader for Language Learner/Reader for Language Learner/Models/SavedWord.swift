@@ -234,6 +234,25 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.language = language
     }
 
+    /// A real saved definition — the studied-language one when it exists,
+    /// else the native meaning — sanitized, or nil when the word has neither.
+    ///
+    /// Distinct from `reviewDefinition`, which always returns *something* for
+    /// a card back (any output, the context sentence, a placeholder). Anything
+    /// that has to ask a question about the definition needs to know when
+    /// there isn't one: multiple choice can't build options, and a matching
+    /// pair can't be made.
+    var usableDefinition: String? {
+        let priority = [ModuleType.definitionEN.rawValue, ModuleType.meaningTR.rawValue]
+        for key in priority {
+            if let text = llmOutputs[key]?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !text.isEmpty {
+                return MarkdownUtils.sanitizeLLMOutput(text)
+            }
+        }
+        return nil
+    }
+
     /// Best available text for the back of a review card.
     /// Priority: English definition → native meaning → any output → context sentence.
     var reviewDefinition: String {

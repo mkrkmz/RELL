@@ -20,6 +20,9 @@ enum QuizMode: String, CaseIterable, Identifiable {
     case typed = "Type"
     /// Hear the word, then write it — the only mode that starts with audio.
     case listening = "Listen"
+    /// A grid of terms and definitions to pair up — several words at once,
+    /// rather than one card at a time.
+    case matching = "Match"
 
     var id: String { rawValue }
 
@@ -29,12 +32,24 @@ enum QuizMode: String, CaseIterable, Identifiable {
         self == .typed || self == .listening
     }
 
+    /// Whether an answer in this mode reaches the scheduler.
+    ///
+    /// Matching doesn't. Recognising a word among five on a grid isn't
+    /// recalling it, and writing `good` to FSRS for that would stretch
+    /// intervals the answer didn't earn — so the game practices without
+    /// touching the schedule, the way cram does.
+    var affectsSchedule: Bool { self != .matching }
+
+    /// Whether the mode asks about several words at once.
+    var isRoundBased: Bool { self == .matching }
+
     var icon: String {
         switch self {
         case .flashcard:      return "rectangle.on.rectangle"
         case .multipleChoice: return "list.bullet"
         case .typed:          return "keyboard"
         case .listening:      return "ear"
+        case .matching:       return "square.grid.2x2"
         }
     }
 
@@ -44,6 +59,7 @@ enum QuizMode: String, CaseIterable, Identifiable {
         case .multipleChoice: return String(localized: "Choice")
         case .typed:          return String(localized: "Type")
         case .listening:      return String(localized: "Listen")
+        case .matching:       return String(localized: "Match")
         }
     }
 }
@@ -174,6 +190,49 @@ final class QuizSession {
             let updated = store.applyReview(rating, to: word)
             if rating == .again, let updated { queue.append(updated) }
         }
+    }
+
+    /// Moves past a whole grid at once — the matching game answers several
+    /// words in one round, and none of them reach the store.
+    ///
+    /// A run also ends when too few words remain to fill another grid:
+    /// `minimumRemaining` is the smallest grid worth playing, and a leftover
+    /// smaller than that would otherwise leave a dead round on screen with no
+    /// way forward.
+    func advanceRound(of count: Int, minimumRemaining: Int = 1, mode: QuizMode) {
+        let next = currentIndex + max(1, count)
+        if next >= queue.count || queue.count - next < max(1, minimumRemaining) {
+            finish()
+        } else {
+            currentIndex = next
+            prepareCard(mode: mode)
+        }
+    }
+
+    /// How many grids this queue actually plays: the full ones, plus a final
+    /// short one only when it still reaches `minimum`.
+    func playableRounds(of size: Int, minimum: Int) -> Int {
+        let step = max(1, size)
+        let full = queue.count / step
+        let remainder = queue.count % step
+        return max(1, full + (remainder >= max(1, minimum) ? 1 : 0))
+    }
+
+    /// Where this round sits in the run, for a round-based mode's header.
+    func roundPosition(of size: Int) -> Int {
+        currentIndex / max(1, size) + 1
+    }
+
+    func roundTotal(of size: Int) -> Int {
+        guard !queue.isEmpty else { return 1 }
+        let step = max(1, size)
+        return (queue.count + step - 1) / step
+    }
+
+    /// The next `count` words still ahead in the queue — one grid's worth.
+    func upcoming(_ count: Int) -> [SavedWord] {
+        guard currentIndex < queue.count else { return [] }
+        return Array(queue[currentIndex..<min(currentIndex + count, queue.count)])
     }
 
     /// Moves to the next card. Callers check `isLastCard` first when they want

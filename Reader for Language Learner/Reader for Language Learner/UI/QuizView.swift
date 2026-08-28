@@ -47,9 +47,51 @@ struct QuizView: View {
     /// pronunciation — worse than not offering the mode.
     private var availableModes: [QuizMode] {
         QuizMode.allCases.filter { mode in
-            guard mode == .listening else { return true }
-            return canSpeakVocabulary
+            switch mode {
+            case .listening: return canSpeakVocabulary
+            // A grid of fewer than four pairs plays itself, so the mode is
+            // only offered once enough saved words carry a definition.
+            case .matching:  return matchableWords.count >= MatchingRound.minimumPairs
+            default:         return true
+            }
         }
+    }
+
+    /// Words in the current queue that could take a place on a matching grid.
+    /// The run is built from these rather than filtered per grid: a slice of
+    /// the full queue can fall below the minimum even when the vocabulary
+    /// doesn't, which would strand the round with nothing to pair.
+    private var matchableWords: [SavedWord] {
+        var seen: Set<String> = []
+        return wordsToQuiz.filter { word in
+            guard word.usableDefinition != nil else { return false }
+            let term = word.term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            return !term.isEmpty && seen.insert(term).inserted
+        }
+    }
+
+    // MARK: - Matching Round
+
+    @ViewBuilder
+    private var matchingRound: some View {
+        let words = session.upcoming(MatchingRound.defaultPairs)
+        QuizMatchingBody(
+            words: words,
+            roundPosition: session.roundPosition(of: MatchingRound.defaultPairs),
+            roundTotal: session.playableRounds(
+                of: MatchingRound.defaultPairs,
+                minimum: MatchingRound.minimumPairs
+            ),
+            isCram: session.cram,
+            onAttempt: { session.recordObjectiveAnswer(correct: $0) },
+            onRoundComplete: {
+                session.advanceRound(
+                    of: words.count,
+                    minimumRemaining: MatchingRound.minimumPairs,
+                    mode: quizMode
+                )
+            }
+        )
     }
 
     private var canSpeakVocabulary: Bool {
@@ -78,6 +120,8 @@ struct QuizView: View {
                 resultState
             } else if !session.isActive {
                 startState
+            } else if quizMode.isRoundBased {
+                matchingRound
             } else {
                 quizCard
             }
@@ -157,7 +201,15 @@ struct QuizView: View {
                 .menuStyle(.borderlessButton)
                 .controlSize(.small)
                 .fixedSize()
-                .help("Reveal a flashcard, pick the word for a definition, type the missing word, or type what you hear.")
+                .help("Reveal a flashcard, pick the word for a definition, type the missing word, type what you hear, or pair words with their meanings.")
+
+                // Said before the run, not only after it: picking a mode that
+                // doesn't count is a choice, not a surprise.
+                if !quizMode.affectsSchedule {
+                    Label("Practice mode — your review schedule stays as it is.", systemImage: "gamecontroller")
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(DS.Color.textTertiary)
+                }
 
                 if quizMode.isObjectivelyGraded {
                     Toggle("Grade my typed answer automatically", isOn: $typedAutoGrade)
@@ -276,6 +328,8 @@ struct QuizView: View {
             case .multipleChoice: multipleChoiceBody(word)
             case .typed:          typedBody(word)
             case .listening:      listeningBody(word)
+            // Round-based modes never reach the single-card frame.
+            case .matching:       EmptyView()
             }
 
             Spacer()
@@ -502,7 +556,7 @@ struct QuizView: View {
 
     @ViewBuilder
     private func typedBody(_ word: SavedWord) -> some View {
-        let hasQuestion = clozeSentence(for: word) != nil || usableDefinition(for: word) != nil
+        let hasQuestion = clozeSentence(for: word) != nil || word.usableDefinition != nil
 
         VStack(spacing: DS.Spacing.md) {
             if session.isFlipped {
@@ -556,7 +610,7 @@ struct QuizView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
-                    if let definition = usableDefinition(for: word) {
+                    if let definition = word.usableDefinition {
                         VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
                             Text("HINT")
                                 .font(DS.Typography.caption2.weight(.bold))
@@ -608,18 +662,6 @@ struct QuizView: View {
         guard !sentence.isEmpty else { return nil }
         let masked = QuizMatching.maskTerm(word.term, in: sentence)
         return masked == sentence ? nil : masked
-    }
-
-    /// A real saved definition (not the placeholder fallback), sanitized.
-    private func usableDefinition(for word: SavedWord) -> String? {
-        let priority = [ModuleType.definitionEN.rawValue, ModuleType.meaningTR.rawValue]
-        for key in priority {
-            if let text = word.llmOutputs[key]?.trimmingCharacters(in: .whitespacesAndNewlines),
-               !text.isEmpty {
-                return MarkdownUtils.sanitizeLLMOutput(text)
-            }
-        }
-        return nil
     }
 
     // MARK: - Rating Row
@@ -913,10 +955,23 @@ struct QuizView: View {
 
                 reviewStreakBanner
 
-                HStack(spacing: DS.Spacing.lg) {
-                    resultStat(value: "\(session.goodCount)", label: "Good", color: DS.Color.accent)
-                    resultStat(value: "\(session.easyCount)", label: "Easy", color: DS.Color.success)
-                    resultStat(value: "\(session.againCount)", label: "Again", color: DS.Color.danger)
+                // The grade tallies are all zero after a game — it never
+                // grades — so a round-based mode reports what it did instead.
+                if quizMode.affectsSchedule {
+                    HStack(spacing: DS.Spacing.lg) {
+                        resultStat(value: "\(session.goodCount)", label: "Good", color: DS.Color.accent)
+                        resultStat(value: "\(session.easyCount)", label: "Easy", color: DS.Color.success)
+                        resultStat(value: "\(session.againCount)", label: "Again", color: DS.Color.danger)
+                    }
+                } else {
+                    HStack(spacing: DS.Spacing.lg) {
+                        resultStat(value: "\(session.correctCount)", label: "Pairs matched", color: DS.Color.success)
+                        resultStat(
+                            value: "\(max(0, session.gradedCount - session.correctCount))",
+                            label: "Mistakes",
+                            color: DS.Color.warning
+                        )
+                    }
                 }
 
                 // Only the modes that check the answer themselves can report a
@@ -971,6 +1026,9 @@ struct QuizView: View {
     }
 
     private var resultSummaryText: String {
+        if !quizMode.affectsSchedule {
+            return String(localized: "Practice only — nothing in your review schedule changed.")
+        }
         if store.pendingReviewCount > 0 {
             return "Nice pass. There are still due words waiting in the queue."
         }
@@ -1089,7 +1147,8 @@ struct QuizView: View {
     private func beginQuiz() {
         // The session builds its own options; it can't reach the vocabulary.
         session.optionsBuilder = { buildOptions(for: $0) }
-        session.begin(with: wordsToQuiz, mode: quizMode)
+        // A round-based run only carries words that can actually be paired.
+        session.begin(with: quizMode.isRoundBased ? matchableWords : wordsToQuiz, mode: quizMode)
     }
 
     private func flipCard() {
@@ -1131,7 +1190,7 @@ struct QuizView: View {
     /// both signal a plain-reveal fallback.
     private func buildOptions(for word: SavedWord) -> [String] {
         // The question shows the definition, so it must actually exist.
-        guard usableDefinition(for: word) != nil else { return [] }
+        guard word.usableDefinition != nil else { return [] }
 
         let candidates = store.words
             .filter { $0.id != word.id }

@@ -212,10 +212,99 @@ final class QuizSessionTests: XCTestCase {
         XCTAssertEqual(session.accuracy ?? 0, 0.75, accuracy: 0.0001)
     }
 
+    // MARK: - Round-based modes (matching)
+
+    /// The game answers several words at once, so the run steps by a grid.
+    func testAdvanceRoundStepsPastAWholeGrid() {
+        let session = QuizSession()
+        session.begin(with: makeWords(12), mode: .matching)
+
+        session.advanceRound(of: 5, mode: .matching)
+
+        XCTAssertEqual(session.position, 6)
+        XCTAssertFalse(session.isFinished)
+    }
+
+    func testAdvanceRoundFinishesWhenTheQueueRunsOut() {
+        let session = QuizSession()
+        session.begin(with: makeWords(4), mode: .matching)
+
+        session.advanceRound(of: 5, mode: .matching)
+
+        XCTAssertTrue(session.isFinished)
+    }
+
+    func testUpcomingReturnsOneGridsWorth() {
+        let session = QuizSession()
+        session.begin(with: makeWords(12), mode: .matching)
+
+        XCTAssertEqual(session.upcoming(5).count, 5)
+        session.advanceRound(of: 5, mode: .matching)
+        XCTAssertEqual(session.upcoming(5).count, 5)
+        session.advanceRound(of: 5, mode: .matching)
+        // Last grid is short rather than padded.
+        XCTAssertEqual(session.upcoming(5).count, 2)
+    }
+
+    func testRoundCountersDescribeTheRunInGrids() {
+        let session = QuizSession()
+        session.begin(with: makeWords(12), mode: .matching)
+
+        XCTAssertEqual(session.roundPosition(of: 5), 1)
+        session.advanceRound(of: 5, mode: .matching)
+        XCTAssertEqual(session.roundPosition(of: 5), 2)
+    }
+
+    /// 12 words is two full grids and a leftover of two — too small to play,
+    /// so it isn't counted or shown.
+    func testPlayableRoundsIgnoreALeftoverTooSmallToPlay() {
+        let session = QuizSession()
+        session.begin(with: makeWords(12), mode: .matching)
+        XCTAssertEqual(session.playableRounds(of: 5, minimum: 4), 2)
+
+        session.begin(with: makeWords(14), mode: .matching)
+        XCTAssertEqual(session.playableRounds(of: 5, minimum: 4), 3)
+    }
+
+    /// The bug this guards: a run whose leftover slice can't fill a grid used
+    /// to leave a dead round on screen with no way forward.
+    func testRunEndsWhenTooFewWordsRemainForAnotherGrid() {
+        let session = QuizSession()
+        session.begin(with: makeWords(7), mode: .matching)
+
+        session.advanceRound(of: 5, minimumRemaining: 4, mode: .matching)
+
+        XCTAssertTrue(session.isFinished, "two leftover words can't fill a grid")
+    }
+
+    func testRunContinuesWhenTheLeftoverIsStillPlayable() {
+        let session = QuizSession()
+        session.begin(with: makeWords(9), mode: .matching)
+
+        session.advanceRound(of: 5, minimumRemaining: 4, mode: .matching)
+
+        XCTAssertFalse(session.isFinished)
+        XCTAssertEqual(session.upcoming(5).count, 4)
+    }
+
+    /// The decision that defines this mode: a game never reaches the store.
+    func testMatchingModeDoesNotAffectTheSchedule() {
+        XCTAssertFalse(QuizMode.matching.affectsSchedule)
+        XCTAssertTrue(QuizMode.matching.isRoundBased)
+        for mode in QuizMode.allCases where mode != .matching {
+            XCTAssertTrue(mode.affectsSchedule, "\(mode) should still schedule")
+            XCTAssertFalse(mode.isRoundBased, "\(mode) asks one card at a time")
+        }
+    }
+
     // MARK: - Helpers
 
     private func word(_ term: String) -> SavedWord {
         SavedWord(term: term)
+    }
+
+    private func makeWords(_ count: Int) -> [SavedWord] {
+        (0..<count).map { word("term\($0)") }
     }
 
     private func makeStore() -> SavedWordsStore {
