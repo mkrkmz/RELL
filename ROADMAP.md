@@ -1,184 +1,146 @@
-# RELL Roadmap v10 — Dengeli Karisim (4 sprint, v1.35 → v1.38)
+# RELL Roadmap v11 — Once Kullaniciya Dokunanlar (3 sprint, v1.38 → v1.40)
 
-Olusturulma: 2026-08-05 (v1.34.2 sonrasi). v9 roadmap tamamlandi (bes sprintin
-besi de release edildi: v1.29.0 secim aksiyon cubugu + async persistence,
-v1.30.0 zen modu + undo/redo + kitap-geneli ilerleme, v1.31.0 FSRS-4.5 + lemma
-eslestirme + kapsama, v1.32.0 karaoke, v1.33.0 erisilebilirlik). Ardindan
-v1.34.x: hover sozluk dil secimi + iki okuyucu hatasi (PDF acilista cokme,
-bolunmus EPUB'larda yalniz baslik gorunmesi, EPUB okuma kolonunun sola
-yaslanmasi).
+Olusturulma: 2026-08-28 (v1.37.0 sonrasi). v10 roadmap kapandi: v1.35.0 tekrar
+modlari (dinleme + otomatik notlama + `QuizSession`), v1.36.0 lemma-farkinda
+vurgulama + kitap-geneli kapsama (ve iki vurgulama hatasi), v1.37.0 okuma UX
+(sayfa scrubber, pinch→font, swipe→bolum) + sistem sozlugu katmani + T3 borcu.
+v10'un export ailesi (SQLite wrapper, ZIP writer, `.apkg` Faz 1-2) kullanici
+karariyla bu roadmap'e devredildi.
 
-Odak: kullanici "dengeli karisim" secti — her sprint bir tema:
-(1) tekrar modlari, (2) kelime erisimi, (3) okuma UX, (4) export/entegrasyon.
-
-**DURUM (2026-08-28): v10 KAPANDI.** S1 v1.35.0, S2 v1.36.0 release edildi;
-S3 (okuma UX) ve S4'un export-disi kalemleri (sistem sozlugu, T3 borcu,
-dokumantasyon) tamamlandi. **Export ailesi (T-E1, T-E2, L-E1, L-E2)
-kullanici karariyla v11'e ertelendi** — `.apkg`, SQLite wrapper ve ZIP
-writer oradan devam eder. v11 adaylari: eslestirme oyunu (`QuizSession`
-uzerine), sayfalanmis EPUB, kisiye ozel FSRS agirliklari, AnkiConnect,
-kapsama metriginin okunusu (kaydedilen-kelime tabani her kitabi ~%2
-gosteriyor), `Localizable.xcstrings`'te ~277 cevrilmemis anahtar.
-
-Kesifte cikan belirleyici bulgu: **yazma modu zaten mevcut** (`QuizMode.typed`,
-cloze + `QuizMatching.matchesTerm` — v9'da farkinda olunmadan shipped). v9'un
-"L5 yazarak tekrar" kalemi buyuk olcude bitmis; eksik olan otomatik notlama.
-Asil yeni mod **dinleme modu**.
+Odak: kullanici "once kullaniciya dokunanlar" secti — gorunur kalite once,
+oyun ortada, en riskli is (export) sona. Sirasi bilincli: Turkce arayuz
+eksikligi her acilista goruluyor, eslestirme oyunu yeni bir sey katiyor,
+`.apkg` ise disariya bagimli tek kalem (gercek Anki import dogrulamasi).
 
 ## Teknik cerceve (tum sprintler icin gecerli)
 
 - **Sifir dis bagimlilik korunur.** `.apkg` icin sistem `import SQLite3`
-  (projedeki ilk C-API yuzeyi), lemma icin Apple `NaturalLanguage`, sistem
-  sozlugu icin CoreServices `DCSCopyTextDefinition`.
-- Her release oncesi **TAM test paketi** CI ile birebir komutla kosulur
-  (odakli paket YETMEZ — v1.29 dersi). Yeni testler **async metod**; senkron
-  `@MainActor` bloklayan test CI runner'ini kilitler.
-- Yeni kullanici metinleri `Localizable.xcstrings`'e TR cevirisiyle
-  (`Text(String)` tuzagi — enum'larda `localizedTitle`).
+  (projedeki ilk C-API yuzeyi), sozluk icin CoreServices, lemma icin Apple
+  `NaturalLanguage`.
+- Her release oncesi **TAM birim test paketi** CI ile birebir komutla kosulur.
+  Yeni testler **async metod**; senkron `@MainActor` bloklayan test CI
+  runner'ini kilitler.
+- **Makineye bagli test dusmez, atlanir** (`XCTSkip`): NL'in Almanca
+  lemmatizer'i ve macOS sozlukleri indirilebilir/kullaniciya bagli varliklar,
+  temiz bir CI runner'inda yoklar (v1.36 CI arizasi). Test, uygulamanin kendi
+  kuralini dogrular; Apple'in icerigini degil.
+- **Anlik cevap katmani model cagrisini tamamen bastirir.** Oraya eklenen her
+  kaynak "Yanit Dili" ayarina uymak zorunda (v1.37 sozluk katmani dersi).
+- Yeni kullanici metinleri `Localizable.xcstrings`'e TR cevirisiyle.
+  **`Text(String)` katalogu ATLAR** — enum'larda `localizedTitle`, yardimci
+  fonksiyonlarda `LocalizedStringKey` parametresi.
 - **`ResultParser`'a gorunur prompt etiketleri degismez; modul raw value'lari
-  asla yeniden adlandirilmaz** (persistence anahtari).
+  ve `@AppStorage` anahtarlarini besleyen enum raw value'lari asla yeniden
+  adlandirilmaz** (persistence anahtari).
 - Yeni `Codable` alanlar `decodeIfPresent` + default (ileri-guvenli JSON).
-- DS token'lari; glass yalniz chrome, **icerige DOGRUDAN uygulanir** (arkaya
-  `.background` katmani degil — v1.33 dersi), interactive yalniz basilabilir
-  yuzeyde.
-- EPUB'da bize ait body-level CSS `!important` (yayinci CSS'i `body`'yi sinif
-  uzerinden stillendiriyor — v1.34.2 dersi).
-- `.PDFViewDocumentChanged` icinden **senkron PDFView navigasyonu yasak**
-  (thumbnail collection view eski belgenin sayisiyla cokuyor — v1.34.1 dersi).
+- DS token'lari; glass yalniz chrome, **icerige DOGRUDAN uygulanir**;
+  interactive yalniz basilabilir yuzeyde.
+- **`Slider(value:in:step:)` AppKit tick mark cizer** — sayfa sayisi kadar
+  centik ikinci bir track gibi gorunur. Buyuk araliklarda `step` kullanma,
+  yuvarlamayi setter'da yap (v1.37).
+- **Tam ekranda ust pikseller menu cubuguna aittir**; hover/pointer esikleri
+  gorunumun gercekten cizildigi koordinat uzayinda olculur, content view'in
+  tepesinden degil (v1.37 zen cubugu dersi).
+- Yeni dosyalar hedefe kendiliginden girer (`PBXFileSystemSynchronizedRootGroup`)
+  — `project.pbxproj` duzenlenmez.
+- UI testleri kosarken uygulamanin ayri bir kopyasi acik olmamali;
+  `XCUIApplication` onu sonlandiramaz ve test duser.
 - **ContentView dosya bolunmesi planlanmaz** — private `@State` extension'a
-  tasimayi engelliyor, kapsullemeyi kozmetik kazanc icin acmak dogru degil
-  (v1.33'te denendi, geri alindi).
+  tasimayi engelliyor (v1.33'te denendi, geri alindi).
 
-**Bilinclice v10 disinda:** eslestirme oyunu (v11 adayi, cikarilan
-`QuizSession` uzerine kurulur), sayfalanmis EPUB, kisiye ozel FSRS agirlik
-optimizasyonu, AnkiConnect, embeddings/RAG, frekans listeleri, PDF koyu-tema
-figur korumasi. Apple-Developer-kilitli kalemler (widget, App Group, CloudKit,
-notarization) uyelik duyurulana kadar Won't.
+**Bilinclice v11 disinda:** sayfalanmis EPUB (kullanici bu tura almadi),
+kapsama metriginin okunusu (kullanici karari: dursun — bkz. Bilinen kisit),
+kisiye ozel FSRS agirlik optimizasyonu, AnkiConnect, embeddings/RAG, frekans
+listeleri, PDF koyu-tema figur korumasi, ContentView bolunmesi.
+Apple-Developer-kilitli kalemler (widget, App Group, CloudKit, notarization)
+uyelik duyurulana kadar Won't.
+
+**Bilinen kisit (v11'de dokunulmuyor):** kitap kapsamasi yalnizca kaydedilen
+kelimelere gore olculuyor, "bildigin kelimeler"e gore degil. Kucuk bir kelime
+hazinesiyle her kitap ~%2 ve kirmizi cikiyor. Kullanici karari: kelime hazinesi
+buyudukce kendiliginden anlamli hale gelsin; taban liste / esik / kalibrasyon
+secenekleri v12'ye.
 
 ---
 
-## Sprint 1 — v1.35.0 "Tekrar modlari" (Must)
+## Sprint 1 — v1.38.0 "Turkce arayuz + tekrar ekraninin borcu" (Must)
 
-Amac: v9'dan kalan tekrar-modu rosterini test edilebilir bir oturum modeli
-uzerinde tamamlamak.
+Amac: uygulamanin yarisi Ingilizce gorunmesin, ve eslestirme oyunu 1145
+satirlik bir dosyanin ustune eklenmesin.
 
-- [ ] **QuizSession cikarimi (T-R1)**: yeni `Models/QuizSession.swift`
-      (`@Observable`) — queue, currentIndex, tally'ler, cram, kart-basina durum
-      (isFlipped/typedAnswer/mcOptions/mcSelectedIndex/showAllBackSections) ve
-      **objektif dogruluk sayaci** (su an `typedResultView`'da inline hesaplanip
-      atiliyor). `UI/QuizView.swift` view builder'lari (`cardFace`,
-      `revealContent`, `backSections`, `ratingRow`) YERINDE kalir — bu bir model
-      cikarimi, dosya bolme degil. `prepareCard`/`advance`/`recordRating`
-      session'a devreder. Birim testleri async. **Kapi: tam paket yesil**
-- [ ] **Yazma modunda otomatik notlama (L-R1)**: `@AppStorage("typedAutoGrade")`
-      varsayilan ACIK — objektif ✓→`.good`, ✗→`.again` + otomatik ilerleme.
-      Kapaliyken mevcut oz-degerlendirme akisi korunur (FSRS 4 notlu; objektif ✓
-      Easy/Hard'i ayirt edemez, v1.31'de eklenen sinyal atilmamali). Dogruluk
-      `QuizSession`'a; sonuc ekranina objektif-dogruluk istatistigi
-- [ ] **SpeechManager tamamlanma sinyali + ses probe'u (T-R2)**: tamamlanma
-      bildirimi (`onFinish` veya state→`.idle` + **basladi-guard'i**; timer YOK)
-      ve public `hasVoice(for: Language)` — `preferredVoice` su an sessizce nil
-      donup sistem sesine dusuyor (yanlis dilde telaffuz)
-- [ ] **Dinleme modu (L-R2)**: yeni `QuizMode.listening` — kelime **kendi
-      `SavedWord.language`** sesiyle okunur (global hedef dil degil), tekrar cal
-      icin mevcut `UI/SpeakButton.swift`, cevap yazilip
-      `QuizMatching.matchesTerm` ile kontrol, reveal `usableDefinition` desenini
-      izler (placeholder yerine nil — `reviewDefinition` KULLANILMAZ). Hedef
-      dilde ses yoksa mod gizlenir
-- [ ] **Mod secici → `Menu`**: segmented Picker 4 modda sikisiyor
-- [ ] Dogrulama: dort mod uctan uca + cram; auto-grade acik/kapali iki yol;
-      Almanca kelimeyle dinleme; sesi olmayan dilde modun gorunmemesi; sonuc
-      ekrani dogruluk istatistigi
+- [ ] **i18n borcu (262 metin)**: katalogdaki 673 anahtarin 277'sinde `tr`
+      yok; bunlarin 262'si gercek kullanici metni, kalan 15'i noktalama/format
+      (`·`, `%@ %@`, `%lld`) — onlar oldugu gibi birakilir.
+      **Dokunulmaz:** collocations `*Example:*`/`*Translation:*`, usage-notes
+      `FREQ:/REG:/CONFUSE:/CAUTION:` etiketleri (ResultParser hedefleri),
+      modul raw value'lari, `SavedWordsSortOrder`/`SavedWordsFilter` raw
+      value'lari (@AppStorage anahtari)
+- [ ] **`Text(String)` denetimi**: katalogun hic gormedigi metinler var —
+      `SavedWordsListView`'daki `metaRow("Mode", …)` boyleydi (v1.36'da
+      bulundu, Xcode anahtari budadi). `Text(` cagrisina `String` parametresi
+      geciren yardimci fonksiyonlari tara; ya `LocalizedStringKey` parametresine
+      cevir ya da cagri yerinde `String(localized:)` ile sar
+- [ ] **TR arayuz gecisi**: Turkce metinler Ingilizceden uzun — dar sutunlarda
+      (sidebar filtre cubugu, toolbar, secim cubugu, quiz rating satiri)
+      tasma/kirpilma kontrolu. Kirpilan yerde metni kisalt, `ViewThatFits`
+      varyanti ekle ya da genisligi esnet
+- [ ] **`QuizView` bolunmesi (1145 → hedef ~600)**: `SavedWordsListView`
+      deseni (v1.37'de 1041→503, hicbir private acilmadan). Kart yuzu/arka
+      bolumleri, rating satiri, sonuc ekrani kendi dosyalarina; model tarafi
+      `QuizSession`'da zaten duruyor. **Sprint 2'den ONCE bitmeli**
+- [ ] Dogrulama: dort mevcut mod uctan uca TR arayuzde; katalog gecerli JSON;
+      tam test paketi; DS denetimi (ham `.font(.system(size:))` yok)
 
-## Sprint 2 — v1.36.0 "Kelime erisimi" (Must)
+## Sprint 2 — v1.39.0 "Eslestirme oyunu" (Must)
 
-Amac: lemma-farkinda metin-ici vurgulama + kitap-bazli kapsama. O kod zaten
-aciliyor, iki canli vurgulama hatasi da burada kapatilir.
+Amac: v10'da cikarilan `QuizSession` uzerine, tanimayi calistiran hafif bir
+mod. Roadmap v10'un kendi v11 adayi.
 
-- [x] **HATA: PDF kelime-siniri**: `PDFKitView.addHighlights` substring
-      esliyor — "run" kaydedince "brunt" vurgulaniyor; EPUB JS
-      (`rellFindTermRanges`) Unicode kelime-siniri kullaniyor, iki okuyucu
-      ayrisiyor. PDF'e ayni kural (CJK substring istisnasi korunur)
-- [x] **HATA: dil filtresi**: iki okuyucu da TUM dillerin kelimelerini
-      vurguluyor (Almanca kelimeler Ingilizce kitapta). Terim kaynagi belge/
-      kelime diline filtrelenir — `SavedWordsStore.lemmaKeySets(for:)` bunu
-      zaten dogru yapiyor, vurgulama yollari kullanmiyor
-- [x] **Lemma-farkinda vurgulama (L-V1)**: `LemmaMatcher`'a
-      `surfaceForms(in:matchingKeys:language:)` (mevcut `enumerateTags` dongusu
-      surface+lemma'yi zaten yan yana hesapliyor, surface'i emit etmiyor).
-      Boru hatti: sayfa/bolum metni **main-disinda** lemmatize (detached-task +
-      generation deseni — `LexicalProfileService`) → `lemmaKeySets` ile kesistir
-      → sayfada gercekten gecen **yuzey formlari** mevcut `[String]` API'lerine
-      ver. Sayfa-basina cache. Yan fayda: terim listesi kisalir, EPUB 500-terim
-      cap'i rahatlar
-- [x] **Kapsama yuzeyleri (L-V2)**: kitap-geneli `LexicalProfile` (Codable)
-      kitap acilisinda lazy + main-disi hesap, `RecentDocument`'e opsiyonel alan
-      (decodeIfPresent). Yuzeyler: `DocumentStats` + statCell, `LibraryCard`
-      kapak overlay'i, `ReadingStatsView`'a bir kart
-- [x] Dogrulama: "run" kaydet → "ran"/"running" iki formatta vurgulu, "brunt"
-      degil; Almanca kelime Ingilizce kitapta vurgulanmiyor; kapsama yeniden
-      acista stabil; buyuk PDF scroll perf'i bozulmamis
+- [ ] **`QuizMode.matching`**: N cift (varsayilan 5, "daha fazla" ile 8),
+      solda terim / sagda karsilik, tiklayarak eslestir. Yanlis eslestirme
+      sayaci; tum ciftler eslesince tur biter
+- [ ] **Karsilik kaynagi**: "Yanit Dili" ayarini izler — target'ta
+      `usableDefinition`, native'te `meaningTR` (v1.35 kurali: placeholder
+      yerine nil, `reviewDefinition` KULLANILMAZ). Karsiligi olmayan kelime
+      cifte girmez
+- [ ] **Karar: eslestirme zamanlamaya YAZMAZ** (cram gibi). Gerekce: 5 kartlik
+      bir izgarada tanimak, tek basina hatirlamakla ayni sey degil; FSRS'e
+      `good` yazmak araligi hak edilmemis sekilde uzatir. Sonuc ekraninda
+      dogruluk gosterilir, `applyReview` cagrilmaz. Cram akisinin mevcut
+      "zamanlamaya dokunmadan calis" deseni yeniden kullanilir
+- [ ] **Mod gizleme**: yeterli uygun cift yoksa (min 4) mod gorunmez —
+      `listening`'in sesi olmayan dilde gizlenmesi deseni
+- [ ] **Erisilebilirlik**: klavyeyle eslestirme (Tab + Space/Return), her
+      hucrede `accessibilityLabel`, eslesme sonucu `accessibilityValue`
+      (v1.33 pass'inin standardi)
+- [ ] **Testler (async)**: cift uretimi (kaynak dili + karsilik dolu olma
+      kurali), yanlis sayaci, tur tamamlanma, yetersiz kart durumu
+- [ ] Dogrulama: bes mod uctan uca; oyundan sonra `nextReviewAt` ve
+      `reviewCount` DEGISMEMIS olmali (karar boyle); klavye turu
 
-## Sprint 3 — v1.37.0 "Okuma UX" (Should)
+## Sprint 3 — v1.40.0 "Export" (Should, v10'dan devir)
 
-Amac: Mac-native navigasyon hissi. Iki model-agir sprint arasinda bilincli
-dusuk-riskli sprint.
+Amac: TSV'nin yapamadigini yapmak — Anki'ye zamanlamasiyla birlikte gitmek.
+Disariya bagimli tek sprint; gercek Anki import'u kapi.
 
-- [x] **PDF sayfa scrubber (U-X1)**: `App/PageIndicatorView.swift`'te Slider
-      varyanti (`PDFViewManager` API'si hazir: pageCount/currentPageIndex/
-      goToPage). **Lokal drag state sart** — observer suruklerken index'i
-      guncelliyor, feedback dongusu olusur
-- [x] **Zen scrubber (U-X2)**: `App/ZenModeBar.swift`'te baslik↔cikis
-      arasindaki Spacer slotu; zen'de toolbar gizli oldugu icin tek zen-ici
-      navigasyon bu
-- [x] **EPUB pinch→font (U-X3)**: `RELLEPUBWebView`'a `magnify(with:)`;
-      birikimli magnification → `epubFontSize` (12…28 clamp).
-      **`allowsMagnification = false` geri alinir** — v1.30 U4'un native
-      zoom'unu semantik font boyutuyla BILINCLI degistirir (CHANGELOG'a not)
-- [x] **EPUB iki-parmak swipe→bolum (U-X4)**: `scrollWheel(with:)` (phase/
-      deltaX veya `isSwipeTrackingFromScrollEventsEnabled`) →
-      `nextChapter`/`previousChapter`. `scrollFraction`'a dayanma (250ms
-      throttle, jest hissi icin fazla kaba)
-- [x] Dogrulama: buyuk PDF'te normal + zen scrub; pinch fontu degistirir ve
-      relaunch'ta kalici; native zoom artik tetiklenmez; swipe iki yonde bolum
-      cevirir, kitap uclarinda no-op; ⌘F / secim cubugu / karaoke etkilenmez
-      — jestler kullanici tarafindan dogrulandi; zen cubugunun kendi kendini
-      kapatma hatasi ve slider tick "ikili gorüntü" hatasi bu sirada bulunup
-      duzeltildi
-
-## Sprint 4 — v1.38.0 "Export, entegrasyon + kapanis" (Should/Could)
-
-Amac: zamanlama koruyan `.apkg` export, sistem sozlugu katmani, borc odemesi.
-
-- [~] **SQLite wrapper (T-E1)** — ERTELENDI (v11): kucuk `SQLiteDatabase` (sistem `import
-      SQLite3`) + birim testleri
-- [~] **ZIP writer (T-E2)** — ERTELENDI (v11): `ZIPArchive.swift` salt-okunur; kardes writer
-      (stored method 0 + CRC-32 Anki'ye yeter) + round-trip testi (yaz →
-      mevcut reader okusun)
-- [~] **.apkg Faz 1 (L-E1)** — ERTELENDI (v11): `ExportFormat.apkg` + **paralel Data/URL yolu**
-      (mevcut boru hatti uctan uca String). Sema col/notes/cards/revlog; ince
-      noktalar `col.models`/`col.decks` JSON, `notes.csum`/`sfld`; media `{}`.
-      Kartlar YENI durumda. **Kapi: gercek Anki desktop'a import dogrulamasi**
-- [~] **.apkg Faz 2 — zamanlama tohumu (L-E2, PLANLI RISK, ~2 gun timebox)** — ERTELENDI (v11):
+- [ ] **SQLite wrapper (T-E1)**: kucuk `SQLiteDatabase` (sistem
+      `import SQLite3`) + birim testleri
+- [ ] **ZIP writer (T-E2)**: `ZIPArchive.swift` salt-okunur (239 satir);
+      kardes writer (stored method 0 + CRC-32 Anki'ye yeter) + round-trip
+      testi (yaz → mevcut reader okusun)
+- [ ] **.apkg Faz 1 (L-E1)**: `ExportFormat.apkg` + **paralel Data/URL yolu**
+      (mevcut boru hatti uctan uca `String`; TSV/CSV/Quizlet aynen kalir).
+      Sema col/notes/cards/revlog; ince noktalar `col.models`/`col.decks`
+      JSON, `notes.csum`/`sfld`; media `{}`. Kartlar YENI durumda.
+      **Kapi: gercek Anki desktop'a import dogrulamasi**
+- [ ] **.apkg Faz 2 — zamanlama tohumu (L-E2, PLANLI RISK, ~2 gun timebox)**:
       FSRS (`stability`/`difficulty`/`nextReviewAt`) → `cards.due/ivl/factor`,
-      `reviewEvents` → `revlog`. TSV'nin asla yapamadigi sey.
-      **Onceden karar verilen fallback: yalniz Faz 1 ship'lenir**
-- [x] **Sistem sozlugu katmani (L-E3)**: `DCSCopyTextDefinition` →
-      `QuickLookupService.cachedDefinition`/`cachedHoverDefinition` (mevcut
-      anlik katman) — HUD + iki okuyucunun hover'i bedavaya kazanir. Dil
-      mevcudiyeti probe'u (macOS 12 dilin alt kumesini sagliyor; nil → katman
-      sessizce atlanir)
-- [x] **T3 borcu: `SavedWordsListView` bolunmesi**: `SavedWordRow` ve
-      `SavedWordDetailSheet` kendi dosyalarina, sort/filter enum'lari
-      `Models/`'a, `filterControls` cikarilir (~1041 → ~550 satir). Mekanik;
-      ContentView'a GENISLETILMEZ
-- [x] Dokumantasyon kapanisi: ROADMAP durum, CHANGELOG, ARCHITECTURE (SQLite
-      wrapper, ZIP writer, Dictionary katmani)
-- [x] Dogrulama (export disi kisim): sozluk katmani sandbox icinden
-      erisiliyor (`SystemDictionaryTests` atlanmadan gecti), yalniz istenen
-      dilde cevap veriyor; `SavedWordsListView` bolunmesi derleniyor ve tam
-      birim test paketi yesil. `.apkg` dogrulamasi export kalemleriyle
-      birlikte v11'e ertelendi
+      `reviewEvents` → `revlog`. **Onceden karar verilen fallback: yalniz
+      Faz 1 ship'lenir**
+- [ ] Dokumantasyon kapanisi: ROADMAP durum, CHANGELOG, ARCHITECTURE (SQLite
+      wrapper + ZIP writer)
+- [ ] Dogrulama: `.apkg` → Anki desktop import → kart tekrari; Faz 2'de
+      due/interval makul; **S1-S2 ozellikleri tam regresyon**
 
 ---
 
