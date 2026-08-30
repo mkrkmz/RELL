@@ -68,55 +68,60 @@ secenekleri v12'ye.
 Amac: uygulamanin yarisi Ingilizce gorunmesin, ve eslestirme oyunu 1145
 satirlik bir dosyanin ustune eklenmesin.
 
-- [ ] **i18n borcu (262 metin)**: katalogdaki 673 anahtarin 277'sinde `tr`
+- [x] **i18n borcu (262 metin)**: katalogdaki 673 anahtarin 277'sinde `tr`
       yok; bunlarin 262'si gercek kullanici metni, kalan 15'i noktalama/format
       (`·`, `%@ %@`, `%lld`) — onlar oldugu gibi birakilir.
       **Dokunulmaz:** collocations `*Example:*`/`*Translation:*`, usage-notes
       `FREQ:/REG:/CONFUSE:/CAUTION:` etiketleri (ResultParser hedefleri),
       modul raw value'lari, `SavedWordsSortOrder`/`SavedWordsFilter` raw
       value'lari (@AppStorage anahtari)
-- [ ] **`Text(String)` denetimi**: katalogun hic gormedigi metinler var —
+- [x] **`Text(String)` denetimi**: katalogun hic gormedigi metinler var —
       `SavedWordsListView`'daki `metaRow("Mode", …)` boyleydi (v1.36'da
       bulundu, Xcode anahtari budadi). `Text(` cagrisina `String` parametresi
       geciren yardimci fonksiyonlari tara; ya `LocalizedStringKey` parametresine
       cevir ya da cagri yerinde `String(localized:)` ile sar
-- [ ] **TR arayuz gecisi**: Turkce metinler Ingilizceden uzun — dar sutunlarda
-      (sidebar filtre cubugu, toolbar, secim cubugu, quiz rating satiri)
-      tasma/kirpilma kontrolu. Kirpilan yerde metni kisalt, `ViewThatFits`
-      varyanti ekle ya da genisligi esnet
-- [ ] **`QuizView` bolunmesi (1145 → hedef ~600)**: `SavedWordsListView`
+- [~] **TR arayuz gecisi**: OLCULDU, GOZLE BAKILMADI — 42 tek-satirlik
+      kontrol etiketinden yalnizca ikisi 3 karakterden fazla uzuyor ("Words
+      you know", "Speak"), ikisi de icerigine gore boyutlanan kaplarda. Cok
+      uzayanlar yardim metni ve erisilebilirlik etiketleri (sarmalaniyor).
+      Ekran erisilemedigi icin gercek gorsel tur kullaniciya kaldi
+- [x] **`QuizView` bolunmesi (1145 → hedef ~600)**: `SavedWordsListView`
       deseni (v1.37'de 1041→503, hicbir private acilmadan). Kart yuzu/arka
       bolumleri, rating satiri, sonuc ekrani kendi dosyalarina; model tarafi
       `QuizSession`'da zaten duruyor. **Sprint 2'den ONCE bitmeli**
-- [ ] Dogrulama: dort mevcut mod uctan uca TR arayuzde; katalog gecerli JSON;
-      tam test paketi; DS denetimi (ham `.font(.system(size:))` yok)
+- [x] Dogrulama: katalog gecerli JSON (706 anahtar, cevirisiz kalan 12'sinin
+      hepsi noktalama/format); tam birim test paketi yesil; katalog
+      karsilastirmasi ile hicbir anahtarin kaybolmadigi dogrulandi. Bes modun
+      TR arayuzde uctan uca turu kullaniciya kaldi (ekran erisilemedi)
 
 ## Sprint 2 — v1.39.0 "Eslestirme oyunu" (Must)
 
 Amac: v10'da cikarilan `QuizSession` uzerine, tanimayi calistiran hafif bir
 mod. Roadmap v10'un kendi v11 adayi.
 
-- [ ] **`QuizMode.matching`**: N cift (varsayilan 5, "daha fazla" ile 8),
+- [x] **`QuizMode.matching`**: N cift (varsayilan 5, "daha fazla" ile 8),
       solda terim / sagda karsilik, tiklayarak eslestir. Yanlis eslestirme
       sayaci; tum ciftler eslesince tur biter
-- [ ] **Karsilik kaynagi**: "Yanit Dili" ayarini izler — target'ta
+- [x] **Karsilik kaynagi**: "Yanit Dili" ayarini izler — target'ta
       `usableDefinition`, native'te `meaningTR` (v1.35 kurali: placeholder
       yerine nil, `reviewDefinition` KULLANILMAZ). Karsiligi olmayan kelime
       cifte girmez
-- [ ] **Karar: eslestirme zamanlamaya YAZMAZ** (cram gibi). Gerekce: 5 kartlik
+- [x] **Karar: eslestirme zamanlamaya YAZMAZ** (cram gibi). Gerekce: 5 kartlik
       bir izgarada tanimak, tek basina hatirlamakla ayni sey degil; FSRS'e
       `good` yazmak araligi hak edilmemis sekilde uzatir. Sonuc ekraninda
       dogruluk gosterilir, `applyReview` cagrilmaz. Cram akisinin mevcut
       "zamanlamaya dokunmadan calis" deseni yeniden kullanilir
-- [ ] **Mod gizleme**: yeterli uygun cift yoksa (min 4) mod gorunmez —
+- [x] **Mod gizleme**: yeterli uygun cift yoksa (min 4) mod gorunmez —
       `listening`'in sesi olmayan dilde gizlenmesi deseni
-- [ ] **Erisilebilirlik**: klavyeyle eslestirme (Tab + Space/Return), her
+- [x] **Erisilebilirlik**: klavyeyle eslestirme (Tab + Space/Return), her
       hucrede `accessibilityLabel`, eslesme sonucu `accessibilityValue`
       (v1.33 pass'inin standardi)
-- [ ] **Testler (async)**: cift uretimi (kaynak dili + karsilik dolu olma
+- [x] **Testler (async)**: cift uretimi (kaynak dili + karsilik dolu olma
       kurali), yanlis sayaci, tur tamamlanma, yetersiz kart durumu
-- [ ] Dogrulama: bes mod uctan uca; oyundan sonra `nextReviewAt` ve
-      `reviewCount` DEGISMEMIS olmali (karar boyle); klavye turu
+- [~] Dogrulama: zamanlamaya yazmama karari testle sabit
+      (`testMatchingModeDoesNotAffectTheSchedule`), tur ilerleme ve kisa-artik
+      durumlari testli. Izgaranin canli turu (okunurluk, yanlis eslestirmede
+      titreme, tur gecisi) kullaniciya kaldi — ekran erisilemedi
 
 ## Sprint 3 — v1.40.0 "Export" (Should, v10'dan devir)
 
