@@ -4,6 +4,38 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.38.0] - 2026-08-28
+
+A new way to review, and an interface that finally speaks Turkish all the way
+through. Roadmap v11 Sprints 1 and 2.
+
+### Added
+
+- **Matching game.** A grid of words on one side and their meanings on the
+  other, paired up by clicking one from each side. It's practice, not review:
+  recognising a word among five isn't the same as recalling it, so a round
+  never changes when your words come up again. The review setup says so before
+  you start, and the results screen counts pairs and mistakes rather than
+  grades. The mode appears once at least four saved words have a definition to
+  pair with.
+
+### Changed
+
+- **The interface is now Turkish throughout.** 281 pieces of text had never
+  been translated — the onboarding tour, the reading and library statistics,
+  the review screens, the notes and highlight menus, most tooltips and every
+  keyboard hint. What's left in English is punctuation and number formats.
+
+### Fixed
+
+- **Some text stayed English however it was translated.** A whole class of
+  labels — the statistics tiles, the reading heatmap, the review counters, the
+  LLM status rows, the entire first-run tour — was never being looked up in
+  the translation catalogue at all, so it shipped in English no matter what
+  the translation said. Sixteen of those had never even been collected for
+  translation. Highlight colours and note categories had the same problem in
+  their menus.
+
 ## [1.37.0] - 2026-08-28
 
 Getting around a book, and an answer that arrives before you've finished
