@@ -117,9 +117,35 @@ struct QuizView: View {
             } else if wordsToQuiz.isEmpty {
                 allMasteredState
             } else if session.isFinished {
-                resultState
+                QuizResultView(
+                    session: session,
+                    store: store,
+                    mode: quizMode,
+                    canReviewMore: !wordsToQuiz.isEmpty,
+                    onReviewMore: {
+                        session.resume()
+                        beginQuiz()
+                    },
+                    onContinueReading: onContinueReading,
+                    onOpenSavedWords: onOpenSavedWords
+                )
             } else if !session.isActive {
-                startState
+                QuizStartView(
+                    store: store,
+                    session: session,
+                    wordsToQuiz: wordsToQuiz,
+                    dueWords: dueWords,
+                    isUsingFallbackQueue: isUsingFallbackQueue,
+                    availableModes: availableModes,
+                    quizMode: Binding(
+                        get: { quizMode },
+                        set: { quizModeRaw = $0.rawValue }
+                    ),
+                    includeAll: $includeAll,
+                    selectedTag: $selectedTag,
+                    typedAutoGrade: $typedAutoGrade,
+                    onStart: beginQuiz
+                )
             } else if quizMode.isRoundBased {
                 matchingRound
             } else {
@@ -151,143 +177,6 @@ struct QuizView: View {
             .help("Close Review (Esc)")
             .padding(DS.Spacing.sm)
         }
-    }
-
-    // MARK: - Start Screen
-
-    private var startState: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: DS.Spacing.lg) {
-                Image(systemName: "brain.filled.head.profile")
-                    .font(DS.Typography.icon(38, weight: .light))
-                    .foregroundStyle(DS.Color.accent)
-
-                VStack(spacing: DS.Spacing.xs) {
-                    Text("Review Center")
-                        .font(DS.Typography.headline)
-                        .foregroundStyle(DS.Color.textPrimary)
-                    Text(startSummaryText)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(3)
-                }
-
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: DS.Spacing.sm) {
-                    reviewStat(icon: "clock.badge.exclamationmark", value: "\(dueWords.count)", label: "Due now", color: dueWords.isEmpty ? DS.Color.success : DS.Color.warning)
-                    reviewStat(icon: "sparkles", value: "\(store.newCount)", label: "New", color: DS.Color.accent)
-                    reviewStat(icon: "brain", value: "\(store.learningCount)", label: "Learning", color: DS.Color.warning)
-                    reviewStat(icon: "checkmark.seal", value: "\(store.masteredCount)", label: "Mastered", color: DS.Color.success)
-                    reviewStat(icon: "checkmark.circle", value: "\(store.reviewedTodayCount)", label: "Reviewed today", color: DS.Color.success)
-                }
-
-                // A Menu rather than a segmented picker: four modes no longer
-                // fit the sidebar's width.
-                Menu {
-                    ForEach(availableModes) { mode in
-                        Button {
-                            quizModeRaw = mode.rawValue
-                        } label: {
-                            Label(
-                                mode.localizedTitle,
-                                systemImage: mode == quizMode ? "checkmark" : mode.icon
-                            )
-                        }
-                    }
-                } label: {
-                    Label(quizMode.localizedTitle, systemImage: quizMode.icon)
-                        .font(DS.Typography.caption)
-                }
-                .menuStyle(.borderlessButton)
-                .controlSize(.small)
-                .fixedSize()
-                .help("Reveal a flashcard, pick the word for a definition, type the missing word, type what you hear, or pair words with their meanings.")
-
-                // Said before the run, not only after it: picking a mode that
-                // doesn't count is a choice, not a surprise.
-                if !quizMode.affectsSchedule {
-                    Label("Practice mode — your review schedule stays as it is.", systemImage: "gamecontroller")
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
-
-                if quizMode.isObjectivelyGraded {
-                    Toggle("Grade my typed answer automatically", isOn: $typedAutoGrade)
-                        .toggleStyle(.switch)
-                        .controlSize(.mini)
-                        .font(DS.Typography.caption)
-                        .tint(DS.Color.accent)
-                        .help("Right or wrong is decided by the check. Turn off to rate every card yourself.")
-                }
-
-                Toggle("Include all saved words", isOn: $includeAll)
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .font(DS.Typography.caption)
-                    .tint(DS.Color.accent)
-                    .help("Review every saved word instead of the due-first queue.")
-
-                Toggle("Cram — practice without changing the schedule", isOn: $session.cram)
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .font(DS.Typography.caption)
-                    .tint(DS.Color.warning)
-                    .help("Drill cards without affecting spaced-repetition timing.")
-
-                if !store.allTags.isEmpty {
-                    Menu {
-                        Button {
-                            selectedTag = nil
-                        } label: {
-                            Label("All decks", systemImage: selectedTag == nil ? "checkmark" : "")
-                        }
-                        Divider()
-                        ForEach(store.allTags, id: \.self) { tag in
-                            Button {
-                                selectedTag = tag
-                            } label: {
-                                Label(
-                                    "\(tag) (\(store.tagCount(tag)))",
-                                    systemImage: selectedTag?.lowercased() == tag.lowercased() ? "checkmark" : ""
-                                )
-                            }
-                        }
-                    } label: {
-                        Label(selectedTag.map { "Deck: \($0)" } ?? "All decks", systemImage: "tag")
-                            .font(DS.Typography.caption)
-                    }
-                    .menuStyle(.borderlessButton)
-                    .controlSize(.small)
-                    .fixedSize()
-                    .help("Review only words in a deck (tag).")
-                }
-
-                Button {
-                    beginQuiz()
-                } label: {
-                    Label("Start Review", systemImage: "play.fill")
-                        .font(DS.Typography.callout.weight(.semibold))
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.regular)
-                .keyboardShortcut(.defaultAction)
-                .help("Start the current review queue")
-            }
-            .padding(DS.Spacing.lg)
-        }
-    }
-
-    private var startSummaryText: String {
-        if includeAll {
-            return "\(wordsToQuiz.count) saved words are ready for an all-in review."
-        }
-        if !dueWords.isEmpty {
-            return "\(dueWords.count) words are due now. Start here to keep the review queue moving."
-        }
-        if isUsingFallbackQueue {
-            return "No words are due right now, so Review Center will practice new and learning words."
-        }
-        return "Your review queue is clear."
     }
 
     // MARK: - Quiz Card
@@ -894,161 +783,6 @@ struct QuizView: View {
         .accessibilityHint("Marks the current card as \(label) and advances review")
     }
 
-    // MARK: - Review Streak Banner
-
-    /// Flame + current streak, plus a snowflake count when freezes are banked.
-    /// Earned freezes auto-bridge a single missed day (see ReviewStreak).
-    @ViewBuilder
-    private var reviewStreakBanner: some View {
-        let streak = store.reviewStreak()
-        if streak.current > 0 {
-            HStack(spacing: DS.Spacing.sm) {
-                Image(systemName: "flame.fill")
-                    .foregroundStyle(DS.Color.warning)
-                Text("\(streak.current)-day streak")
-                    .font(DS.Typography.subhead.weight(.semibold))
-                    .foregroundStyle(DS.Color.textPrimary)
-
-                if streak.freezesRemaining > 0 {
-                    Divider().frame(height: 12)
-                    HStack(spacing: 2) {
-                        Image(systemName: "snowflake")
-                            .foregroundStyle(DS.Color.accent)
-                        Text("\(streak.freezesRemaining)")
-                            .font(DS.Typography.caption.weight(.semibold))
-                            .foregroundStyle(DS.Color.textSecondary)
-                    }
-                    .help("Streak freezes — each automatically covers one missed day")
-                }
-            }
-            .font(DS.Typography.caption)
-            .padding(.horizontal, DS.Spacing.md)
-            .padding(.vertical, DS.Spacing.sm)
-            .dsGlassCapsule(fallbackShadow: nil)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(
-                streak.freezesRemaining > 0
-                    ? "\(streak.current) day review streak, \(streak.freezesRemaining) freezes banked"
-                    : "\(streak.current) day review streak"
-            )
-        }
-    }
-
-    // MARK: - Result Screen
-
-    private var resultState: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: DS.Spacing.lg) {
-                Image(systemName: session.againCount == 0 ? "star.fill" : "checkmark.circle.fill")
-                    .font(DS.Typography.icon(46, weight: .light))
-                    .foregroundStyle(session.againCount == 0 ? DS.Color.star : DS.Color.success)
-
-                VStack(spacing: DS.Spacing.xs) {
-                    Text("Review Complete")
-                        .font(DS.Typography.headline)
-                        .foregroundStyle(DS.Color.textPrimary)
-                    Text(resultSummaryText)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .multilineTextAlignment(.center)
-                }
-
-                reviewStreakBanner
-
-                // The grade tallies are all zero after a game — it never
-                // grades — so a round-based mode reports what it did instead.
-                if quizMode.affectsSchedule {
-                    HStack(spacing: DS.Spacing.lg) {
-                        resultStat(value: "\(session.goodCount)", label: "Good", color: DS.Color.accent)
-                        resultStat(value: "\(session.easyCount)", label: "Easy", color: DS.Color.success)
-                        resultStat(value: "\(session.againCount)", label: "Again", color: DS.Color.danger)
-                    }
-                } else {
-                    HStack(spacing: DS.Spacing.lg) {
-                        resultStat(value: "\(session.correctCount)", label: "Pairs matched", color: DS.Color.success)
-                        resultStat(
-                            value: "\(max(0, session.gradedCount - session.correctCount))",
-                            label: "Mistakes",
-                            color: DS.Color.warning
-                        )
-                    }
-                }
-
-                // Only the modes that check the answer themselves can report a
-                // real accuracy; flashcards only have the user's own judgement.
-                if let accuracy = session.accuracy {
-                    resultStat(
-                        value: "\(Int((accuracy * 100).rounded()))%",
-                        label: "Answered correctly",
-                        color: accuracy >= 0.8 ? DS.Color.success : DS.Color.warning
-                    )
-                    .frame(maxWidth: .infinity)
-                }
-
-                VStack(spacing: DS.Spacing.sm) {
-                    Button {
-                        session.resume()
-                        beginQuiz()
-                    } label: {
-                        Label(store.pendingReviewCount > 0 ? "Review More" : "Practice Again", systemImage: "arrow.clockwise")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.regular)
-                    .disabled(wordsToQuiz.isEmpty)
-
-                    if let onContinueReading {
-                        Button(action: onContinueReading) {
-                            Label("Continue Reading", systemImage: "book.pages")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.regular)
-                    }
-
-                    if let onOpenSavedWords {
-                        Button(action: onOpenSavedWords) {
-                            Label("Open Saved Words", systemImage: "star")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.regular)
-                    }
-                }
-                .font(DS.Typography.caption.weight(.semibold))
-
-                Text("\(store.pendingReviewCount) words still due")
-                    .font(DS.Typography.caption2)
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
-            .padding(DS.Spacing.lg)
-        }
-    }
-
-    private var resultSummaryText: String {
-        if !quizMode.affectsSchedule {
-            return String(localized: "Practice only — nothing in your review schedule changed.")
-        }
-        if store.pendingReviewCount > 0 {
-            return "Nice pass. There are still due words waiting in the queue."
-        }
-        if session.againCount > 0 {
-            return "Good work. Words marked Again are scheduled back into review soon."
-        }
-        return "Clean session. Your due queue is clear for now."
-    }
-
-    private func resultStat(value: String, label: String, color: Color) -> some View {
-        VStack(spacing: DS.Spacing.xxs) {
-            Text(value)
-                .font(DS.Typography.statNumber(32))
-                .foregroundStyle(color)
-            Text(label)
-                .font(DS.Typography.caption2)
-                .foregroundStyle(DS.Color.textTertiary)
-        }
-    }
-
     // MARK: - Empty / All Mastered
 
     private var emptyState: some View {
@@ -1121,26 +855,6 @@ struct QuizView: View {
         return "Saved vocabulary"
     }
 
-    private func reviewStat(icon: String, value: String, label: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-            Image(systemName: icon)
-                .font(DS.Typography.icon(13, weight: .semibold))
-                .foregroundStyle(color)
-            Text(value)
-                .font(DS.Typography.headline)
-                .foregroundStyle(DS.Color.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-            Text(label)
-                .font(DS.Typography.caption2)
-                .foregroundStyle(DS.Color.textTertiary)
-                .lineLimit(1)
-        }
-        .padding(DS.Spacing.sm)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(color.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-    }
 
     // MARK: - Logic
 
