@@ -213,6 +213,8 @@ struct LibraryView: View {
         }
     }
 
+    /// `title` stays a String: the call sites pass `String(localized:)` or a
+    /// collection's own name, both of which are already resolved.
     private func filterChip(_ filter: LibraryFilter, title: String, systemImage: String?) -> some View {
         let isActive = activeFilter == filter
         return Button {
@@ -539,7 +541,10 @@ private struct DocumentStatsSheet: View {
         return "—"
     }
 
-    private func statCell(icon: String, value: String, label: String, tint: Color) -> some View {
+    /// `label` is a `LocalizedStringKey`: `Text(String)` never reaches the
+    /// string catalog, so a String here ships English no matter what the
+    /// catalog says (CLAUDE.md).
+    private func statCell(icon: String, value: String, label: LocalizedStringKey, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             Image(systemName: icon)
                 .font(DS.Typography.icon(13))

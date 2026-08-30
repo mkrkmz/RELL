@@ -143,7 +143,7 @@ private struct LLMStatusPopover: View {
         }
     }
 
-    private func detailRow(label: String, value: String) -> some View {
+    private func detailRow(label: LocalizedStringKey, value: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(label)
                 .font(DS.Typography.caption)

@@ -219,7 +219,7 @@ struct OnboardingView: View {
         }
     }
 
-    private func tourRow(icon: String, title: String, detail: String) -> some View {
+    private func tourRow(icon: String, title: LocalizedStringKey, detail: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: DS.Spacing.md) {
             Image(systemName: icon)
                 .font(DS.Typography.icon(15, weight: .medium))
@@ -246,7 +246,7 @@ struct OnboardingView: View {
 
     // MARK: - Shared
 
-    private func stepHeader(icon: String, title: String, subtitle: String) -> some View {
+    private func stepHeader(icon: String, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
         VStack(spacing: DS.Spacing.md) {
             ZStack {
                 Circle()

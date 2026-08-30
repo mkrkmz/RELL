@@ -32,6 +32,19 @@ enum HighlightColor: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Visible UI text goes through this — `Text(String)` skips the string
+    /// catalog, so `label` above ships English wherever it is shown directly
+    /// (CLAUDE.md).
+    var localizedTitle: String {
+        switch self {
+        case .yellow: return String(localized: "Yellow")
+        case .green:  return String(localized: "Green")
+        case .blue:   return String(localized: "Blue")
+        case .pink:   return String(localized: "Pink")
+        case .purple: return String(localized: "Purple")
+        }
+    }
+
     /// Base color for both the annotation fill and the sidebar swatch.
     var nsColor: NSColor {
         switch self {

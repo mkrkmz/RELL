@@ -22,6 +22,15 @@ enum PDFNoteCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Visible UI text goes through this — see `HighlightColor.localizedTitle`.
+    var localizedTitle: String {
+        switch self {
+        case .vocabulary: return String(localized: "Vocabulary")
+        case .insight: return String(localized: "Insight")
+        case .review: return String(localized: "Review")
+        }
+    }
+
     var icon: String {
         switch self {
         case .vocabulary: return "text.book.closed"
@@ -45,6 +54,16 @@ enum PDFNoteFilter: String, CaseIterable, Identifiable {
         case .vocabulary: return "Vocabulary"
         case .insight: return "Insight"
         case .review: return "Review"
+        }
+    }
+
+    /// Visible UI text goes through this — see `PDFNoteCategory.localizedTitle`.
+    var localizedTitle: String {
+        switch self {
+        case .all: return String(localized: "All")
+        case .vocabulary: return String(localized: "Vocabulary")
+        case .insight: return String(localized: "Insight")
+        case .review: return String(localized: "Review")
         }
     }
 

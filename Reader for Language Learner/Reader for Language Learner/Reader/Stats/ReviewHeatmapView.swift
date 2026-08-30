@@ -120,7 +120,7 @@ struct ReviewHeatmapView: View {
         return DS.Color.success.opacity(intensity)
     }
 
-    private func heatmapStat(_ label: String, _ value: String) -> some View {
+    private func heatmapStat(_ label: LocalizedStringKey, _ value: String) -> some View {
         HStack(spacing: 3) {
             Text(label)
                 .foregroundStyle(DS.Color.textTertiary)

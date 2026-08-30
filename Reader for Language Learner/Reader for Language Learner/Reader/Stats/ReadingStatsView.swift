@@ -493,7 +493,10 @@ struct ReadingStatsView: View {
     private func statCell(
         icon: String,
         value: String,
-        label: String,
+        // LocalizedStringKey, not String: `Text(String)` skips the catalog,
+        // so these labels shipped untranslated however carefully they were
+        // added to it (CLAUDE.md).
+        label: LocalizedStringKey,
         iconColor: SwiftUI.Color = DS.Color.accent
     ) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {

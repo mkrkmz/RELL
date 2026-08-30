@@ -186,7 +186,7 @@ private struct EPUBHighlightRow: View {
                     onRecolor(color)
                 } label: {
                     Label {
-                        Text(color.label)
+                        Text(color.localizedTitle)
                     } icon: {
                         Image(systemName: highlight.color == color ? "checkmark.circle.fill" : "circle.fill")
                             .foregroundStyle(Color(nsColor: color.nsColor))

@@ -90,7 +90,7 @@ struct PDFNotesView: View {
             }
         } label: {
             HStack(spacing: DS.Spacing.xs) {
-                Text(item.label)
+                Text(item.localizedTitle)
                 Text("\(count)")
                     .font(DS.Typography.caption2.weight(.bold))
                     .padding(.horizontal, 5)
