@@ -147,6 +147,7 @@ struct ContentView: View {
     // time`) even though a warm local cache let it slide.
     var body: some View {
         withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))))
+            .dataRecoveryAlert()
     }
 
     /// Floating playback bar while SpeechManager is speaking/paused — shared

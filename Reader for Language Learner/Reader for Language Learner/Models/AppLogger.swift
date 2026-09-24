@@ -21,10 +21,20 @@ enum AppLogger {
 }
 
 enum RELLJSONStore {
+    /// Loads a store's file, or `defaultValue` when there is none.
+    ///
+    /// A file that exists but can't be read or decoded is **moved aside**
+    /// (`PersistenceRecovery.quarantine`) before the default is returned.
+    /// Every store writes its whole value back on the next mutation, so
+    /// returning an empty default while leaving the file in place used to
+    /// overwrite the user's entire vocabulary with the one word they saved
+    /// next. `userVisible: false` quarantines without telling the user —
+    /// for regenerable data such as the LLM output cache.
     static func load<Value: Decodable>(
         _ type: Value.Type,
         from url: URL,
         storeName: String,
+        userVisible: Bool = true,
         defaultValue: @autoclosure () -> Value
     ) -> Value {
         guard FileManager.default.fileExists(atPath: url.path) else {
@@ -40,6 +50,7 @@ enum RELLJSONStore {
             return try JSONDecoder().decode(Value.self, from: data)
         } catch {
             AppLogger.persistence.error("\(storeName) load failed at \(url.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
+            PersistenceRecovery.quarantine(url, userVisible: userVisible)
             return defaultValue()
         }
     }

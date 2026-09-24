@@ -27,6 +27,7 @@ import os
 @MainActor
 protocol Flushable: AnyObject {
     func flush()
+    func discardPending()
 }
 
 /// Flushes every live writer at a single point (app termination). Writers
@@ -40,6 +41,12 @@ enum PersistenceCoordinator {
 
     private static var writers: [Weak] = []
 
+    /// Set once a backup restore has replaced the files on disk: from then
+    /// until the relaunch, nothing in memory may be written back over them —
+    /// not a pending debounce, not the termination flush, not a session that
+    /// ends because its window closes.
+    private(set) static var isSuspended = false
+
     static func register(_ writer: Flushable) {
         writers.append(Weak(value: writer))
     }
@@ -50,6 +57,18 @@ enum PersistenceCoordinator {
         for entry in writers { entry.value?.flush() }
         writers.removeAll { $0.value == nil }
     }
+
+    /// Drops every pending write and refuses new ones for the rest of the
+    /// process. Used right before a restore swaps the files underneath.
+    static func discardPendingWrites() {
+        isSuspended = true
+        for entry in writers { entry.value?.discardPending() }
+    }
+
+    #if DEBUG
+    /// Tests only: a restore test suspends writes for the whole process.
+    static func resumeWritesForTesting() { isSuspended = false }
+    #endif
 }
 
 /// Coalescing, off-main writer for a single JSON file. All state and the encode
@@ -71,6 +90,15 @@ final class DebouncedFileWriter: Flushable {
     /// Pure GCD keeps scheduling deterministic and off the concurrency runtime.
     private var pendingWorkItem: DispatchWorkItem?
 
+    /// Every encoded snapshot gets the next number; `lastWritten` records the
+    /// newest one on disk. The debounced write (on `ioQueue`) and `flush()`
+    /// (on the calling thread) both write under `lastWritten`'s lock and skip
+    /// anything older than what's already there — without it, a snapshot
+    /// still in flight when the app quits could land AFTER the termination
+    /// flush and replace the newer data with older data.
+    private var nextGeneration: UInt64 = 0
+    private let lastWritten = OSAllocatedUnfairLock<UInt64>(initialState: 0)
+
     /// Called on the main actor after each write with the failure message, or
     /// `nil` on success — lets a store surface `saveError` without polling.
     var onResult: ((String?) -> Void)?
@@ -89,6 +117,7 @@ final class DebouncedFileWriter: Flushable {
     /// Records how to encode the latest value and schedules a write. Successive
     /// calls within the debounce window collapse into one write of the newest.
     func schedule(_ encode: @escaping () throws -> Data) {
+        guard !PersistenceCoordinator.isSuspended else { return }
         pendingEncode = encode
         guard debounce > 0 else { flush(); return }
         guard pendingWorkItem == nil else { return }
@@ -116,8 +145,10 @@ final class DebouncedFileWriter: Flushable {
         }
         let url = fileURL
         let name = storeName
+        let generation = takeGeneration()
+        let lastWritten = lastWritten
         ioQueue.async { [weak self] in
-            let error = Self.writeData(data, to: url, storeName: name)
+            let error = Self.writeData(data, generation: generation, lastWritten: lastWritten, to: url, storeName: name)
             DispatchQueue.main.async {
                 MainActor.assumeIsolated { self?.onResult?(error) }
             }
@@ -136,6 +167,10 @@ final class DebouncedFileWriter: Flushable {
     func flush() {
         pendingWorkItem?.cancel()
         pendingWorkItem = nil
+        guard !PersistenceCoordinator.isSuspended else {
+            pendingEncode = nil
+            return
+        }
         guard let encode = pendingEncode else { return }
         pendingEncode = nil
         let data: Data
@@ -146,8 +181,29 @@ final class DebouncedFileWriter: Flushable {
             onResult?(error.localizedDescription)
             return
         }
-        let error = Self.writeData(data, to: fileURL, storeName: storeName)
+        let error = Self.writeData(
+            data, generation: takeGeneration(), lastWritten: lastWritten,
+            to: fileURL, storeName: storeName
+        )
         onResult?(error)
+    }
+
+    #if DEBUG
+    /// Tests only: holds the background queue so a debounced write can be
+    /// left in flight while `flush()` runs.
+    func suspendIOForTesting() { ioQueue.suspend() }
+    func resumeIOForTesting() { ioQueue.resume() }
+    #endif
+
+    func discardPending() {
+        pendingWorkItem?.cancel()
+        pendingWorkItem = nil
+        pendingEncode = nil
+    }
+
+    private func takeGeneration() -> UInt64 {
+        nextGeneration += 1
+        return nextGeneration
     }
 
     /// Resolves the JSON store's file URL and a matching writer. A test
@@ -171,15 +227,29 @@ final class DebouncedFileWriter: Flushable {
         return (DebouncedFileWriter(fileURL: url, storeName: storeName), url, false)
     }
 
-    nonisolated private static func writeData(_ data: Data, to url: URL, storeName: String) -> String? {
-        do {
-            let directory = url.deletingLastPathComponent()
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            try data.write(to: url, options: [.atomic])
-            return nil
-        } catch {
-            AppLogger.persistence.error("\(storeName) save failed at \(url.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
-            return error.localizedDescription
+    /// Writes `data` unless a newer generation is already on disk. Holding
+    /// the lock across the write orders the two writers; it is a plain lock,
+    /// never a `Dispatch` sync onto `ioQueue` (see `flush()`).
+    nonisolated private static func writeData(
+        _ data: Data,
+        generation: UInt64,
+        lastWritten: OSAllocatedUnfairLock<UInt64>,
+        to url: URL,
+        storeName: String
+    ) -> String? {
+        lastWritten.withLock { newest -> String? in
+            guard generation > newest else { return nil }
+            do {
+                let directory = url.deletingLastPathComponent()
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try data.write(to: url, options: [.atomic])
+                newest = generation
+                return nil
+            } catch {
+                Logger(subsystem: "com.rell.app", category: "persistence")
+                    .error("\(storeName) save failed at \(url.path, privacy: .private): \(error.localizedDescription, privacy: .public)")
+                return error.localizedDescription
+            }
         }
     }
 }

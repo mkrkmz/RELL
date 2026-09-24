@@ -79,6 +79,10 @@ struct Reader_for_Language_LearnerApp: App {
         // Daily-goal reminder — becomes the UNUserNotificationCenter delegate
         // and re-schedules if the user already opted in on a previous launch.
         DailyReminderManager.shared.configure()
+        // Once-a-day copy of every data file, newest seven kept. Every store
+        // above has loaded by now, so a file that failed to load has already
+        // been quarantined and can't displace yesterday's good copy.
+        PersistenceBackup.runDailyIfNeeded()
     }
 
     var body: some Scene {

@@ -105,6 +105,7 @@ final class InspectorViewModel {
             LRUCache<OutputCacheKey, [ModuleType: String]>.self,
             from: url,
             storeName: "InspectorOutputCache",
+            userVisible: false,
             defaultValue: LRUCache(capacity: cacheCapacity)
         )
         // Re-insert into a cache with the current capacity; oldest entries

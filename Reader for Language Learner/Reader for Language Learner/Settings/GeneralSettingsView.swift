@@ -154,6 +154,8 @@ struct GeneralSettingsView: View {
                 Text("Reminders")
             }
 
+            BackupSettingsSection()
+
             Section {
                 Button("Show Welcome Tour Again") {
                     hasCompletedOnboarding = false
