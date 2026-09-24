@@ -81,8 +81,11 @@ final class InspectorViewModel {
 
     // MARK: - Cache helpers
 
+    /// Caches the finished modules. A module that ended in an error is left
+    /// out: its partial text would otherwise come back as a "cache hit" for
+    /// this word from then on, on every launch.
     func snapshotToCache(key: OutputCacheKey) {
-        let snapshot = outputs.filter { !$0.value.isEmpty }
+        let snapshot = outputs.filter { !$0.value.isEmpty && errors[$0.key] == nil }
         guard !snapshot.isEmpty else { return }
         var merged = cache.get(key) ?? [:]
         for (module, value) in snapshot { merged[module] = value }

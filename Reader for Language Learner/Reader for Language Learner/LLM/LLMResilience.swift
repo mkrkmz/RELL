@@ -115,21 +115,31 @@ struct ResilientLLMProvider: LLMProvider {
         topP: Double,
         onToken: @MainActor @escaping (String) -> Void
     ) async throws -> LLMFinishReason? {
-        try await withRetry {
+        // Once a token has reached the caller, a retry would stream the whole
+        // answer again after the part already shown — the caller appends, so
+        // the result read "Hello worldHello world" and was then cached.
+        let delivery = StreamDelivery()
+        return try await withRetry(canRetry: { !delivery.started }) {
             try await inner.stream(
                 system: system,
                 user: user,
                 temperature: temperature,
                 maxTokens: maxTokens,
                 topP: topP,
-                onToken: onToken
+                onToken: { token in
+                    delivery.started = true
+                    onToken(token)
+                }
             )
         }
     }
 
     // MARK: - Retry Logic
 
-    private func withRetry<T>(_ operation: () async throws -> T) async throws -> T {
+    private func withRetry<T>(
+        canRetry: () -> Bool = { true },
+        _ operation: () async throws -> T
+    ) async throws -> T {
         guard circuitBreaker.isAvailable else {
             throw LLMResilienceError.circuitOpen
         }
@@ -155,6 +165,8 @@ struct ResilientLLMProvider: LLMProvider {
 
                 circuitBreaker.recordFailure()
 
+                guard canRetry() else { throw error }
+
                 if attempt < maxRetries {
                     let delay = baseDelay * pow(2.0, Double(attempt))
                     AppLogger.llm.info("Retry \(attempt + 1)/\(self.maxRetries) after \(delay)s")
@@ -166,12 +178,18 @@ struct ResilientLLMProvider: LLMProvider {
         throw lastError ?? LLMResilienceError.allRetriesFailed
     }
 
-    private func isNonRetryable(_ error: Error) -> Bool {
+    /// Errors that asking again won't fix. A 4xx means the request itself is
+    /// wrong (unknown model, bad parameter) — retrying it three times also
+    /// tripped the circuit breaker, reporting a healthy server as down.
+    /// 408 (timeout), 409 and 429 (rate limit) are the transient 4xx.
+    func isNonRetryable(_ error: Error) -> Bool {
         if let clientError = error as? LLMClient.ClientError {
             switch clientError {
             case .invalidURL, .unauthorized:
                 return true
-            case .serverNotReachable, .badStatusCode, .invalidResponse:
+            case .badStatusCode(let status, _):
+                return Self.isPermanentClientError(status)
+            case .serverNotReachable, .invalidResponse:
                 return false
             }
         }
@@ -179,12 +197,24 @@ struct ResilientLLMProvider: LLMProvider {
             switch anthropicError {
             case .invalidURL, .unauthorized:
                 return true
-            case .serverNotReachable, .badStatusCode, .invalidResponse:
+            case .badStatusCode(let status, _):
+                return Self.isPermanentClientError(status)
+            case .serverNotReachable, .invalidResponse:
                 return false
             }
         }
         return false
     }
+
+    static func isPermanentClientError(_ status: Int) -> Bool {
+        (400...499).contains(status) && ![408, 409, 429].contains(status)
+    }
+}
+
+/// Whether any token of the current stream has reached the caller.
+@MainActor
+private final class StreamDelivery {
+    var started = false
 }
 
 // MARK: - Error

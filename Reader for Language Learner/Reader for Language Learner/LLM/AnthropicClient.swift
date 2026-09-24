@@ -38,15 +38,12 @@ struct AnthropicClient: LLMProvider {
     }
 
     var baseURLString: String = "https://api.anthropic.com"
-    var model: String = "claude-sonnet-4-20250514"
+    var model: String = AnthropicModelTraits.defaultModel
     var apiKey: String = ""
     var session: URLSession = AnthropicClient.makeSession()
 
     static func makeSession(timeout: Double = LLMConfiguration.defaultTimeout) -> URLSession {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest  = timeout
-        config.timeoutIntervalForResource = max(300, timeout * 5)
-        return URLSession(configuration: config)
+        LLMSessionPool.session(timeout: timeout)
     }
 
     // MARK: - Non-streaming
@@ -131,7 +128,8 @@ struct AnthropicClient: LLMProvider {
                 throw ClientError.unauthorized
             }
             guard (200...299).contains(httpResponse.statusCode) else {
-                throw ClientError.badStatusCode(status: httpResponse.statusCode, body: "")
+                let body = await LLMSessionPool.errorBody(from: asyncBytes)
+                throw ClientError.badStatusCode(status: httpResponse.statusCode, body: body)
             }
 
             // Anthropic SSE format:
@@ -145,8 +143,7 @@ struct AnthropicClient: LLMProvider {
             for try await line in asyncBytes.lines {
                 try Task.checkCancellation()
 
-                guard line.hasPrefix("data: ") else { continue }
-                let payload = String(line.dropFirst(6))
+                guard let payload = LLMSessionPool.ssePayload(line) else { continue }
 
                 guard let data = payload.data(using: .utf8),
                       let event = try? JSONDecoder().decode(StreamEvent.self, from: data)
@@ -184,7 +181,7 @@ struct AnthropicClient: LLMProvider {
 
     // MARK: - Request builder
 
-    private func buildRequest(
+    func buildRequest(
         system: String, user: String,
         temperature: Double, maxTokens: Int, topP: Double,
         stream: Bool
@@ -193,13 +190,17 @@ struct AnthropicClient: LLMProvider {
             throw ClientError.invalidURL
         }
 
+        // Sampling and thinking depend on the model — see AnthropicModelTraits.
+        // `topP` is accepted for LLMProvider conformance but never sent.
+        let sampling = AnthropicModelTraits.acceptsSampling(model)
+        let thinks = AnthropicModelTraits.thinksByDefault(model)
         let body = MessagesRequest(
             model: model,
-            max_tokens: maxTokens,
+            max_tokens: thinks ? maxTokens + AnthropicModelTraits.thinkingHeadroom : maxTokens,
             system: system,
             messages: [AnthropicMessage(role: "user", content: user)],
-            temperature: temperature,
-            top_p: topP,
+            temperature: sampling ? temperature : nil,
+            output_config: sampling ? nil : OutputConfig(effort: "low"),
             stream: stream
         )
         let bodyData = try JSONEncoder().encode(body)
@@ -221,9 +222,13 @@ private struct MessagesRequest: Codable {
     let max_tokens: Int
     let system: String
     let messages: [AnthropicMessage]
-    let temperature: Double
-    let top_p: Double
+    let temperature: Double?
+    let output_config: OutputConfig?
     let stream: Bool
+}
+
+private struct OutputConfig: Codable {
+    let effort: String
 }
 
 private struct AnthropicMessage: Codable {
@@ -276,4 +281,44 @@ private struct StreamDelta: Codable {
     let type: String?
     let text: String?
     let stop_reason: String?
+}
+
+// MARK: - Model traits
+
+/// What a Claude model accepts, from its id. The request used to send both
+/// `temperature` and `top_p` to every model: Claude 4.x rejects the pair,
+/// and Opus 4.7+, Sonnet 5, Opus 5 and later reject sampling parameters
+/// altogether (HTTP 400 on every request).
+enum AnthropicModelTraits {
+    static let defaultModel = "claude-opus-5"
+
+    /// Extra `max_tokens` for models that think by default. Thinking tokens
+    /// count against `max_tokens`, and RELL's per-module budgets (100–900)
+    /// were sized for the visible answer alone.
+    static let thinkingHeadroom = 2_048
+
+    /// Older models that still take `temperature`. An allow-list on purpose:
+    /// a model RELL has never heard of is newer, and newer models reject it.
+    private static let samplingPrefixes = [
+        "claude-3",
+        "claude-haiku-4-5",
+        "claude-sonnet-4-0", "claude-sonnet-4-2025", "claude-sonnet-4-5", "claude-sonnet-4-6",
+        "claude-opus-4-0", "claude-opus-4-2025", "claude-opus-4-1", "claude-opus-4-5", "claude-opus-4-6",
+    ]
+
+    /// Opus 4.7/4.8 reject sampling but run without thinking unless asked.
+    private static let noDefaultThinkingPrefixes = ["claude-opus-4-7", "claude-opus-4-8"]
+
+    nonisolated static func acceptsSampling(_ model: String) -> Bool {
+        let id = model.lowercased()
+        return samplingPrefixes.contains { id.hasPrefix($0) }
+    }
+
+    /// Models that think adaptively unless told otherwise (Sonnet 5, Opus 5
+    /// and later). They get `effort: low` — a word lookup doesn't need deep
+    /// reasoning — plus `thinkingHeadroom` so any thinking can't eat the answer.
+    nonisolated static func thinksByDefault(_ model: String) -> Bool {
+        let id = model.lowercased()
+        return !acceptsSampling(id) && !noDefaultThinkingPrefixes.contains { id.hasPrefix($0) }
+    }
 }

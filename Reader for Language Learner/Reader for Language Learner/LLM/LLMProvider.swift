@@ -118,7 +118,7 @@ enum LLMProviderType: String, CaseIterable, Identifiable {
         case .lmStudio:  return "google/gemma-3-4b"
         case .ollama:    return "llama3.2"
         case .openAI:    return "gpt-4o-mini"
-        case .anthropic: return "claude-sonnet-4-20250514"
+        case .anthropic: return AnthropicModelTraits.defaultModel
         }
     }
 

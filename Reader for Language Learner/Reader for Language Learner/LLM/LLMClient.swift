@@ -78,12 +78,10 @@ struct LLMClient {
         return host == "127.0.0.1" || host == "localhost" || host == "::1"
     }
 
-    /// URLSession configured with the given request timeout.
+    /// URLSession configured with the given request timeout — shared per
+    /// timeout (`LLMSessionPool`), not created per request.
     static func makeSession(timeout: Double = LLMConfiguration.defaultTimeout) -> URLSession {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest  = timeout
-        config.timeoutIntervalForResource = max(300, timeout * 5)
-        return URLSession(configuration: config)
+        LLMSessionPool.session(timeout: timeout)
     }
 
     // MARK: - Non-streaming (kept for any call sites not yet migrated)
@@ -213,7 +211,8 @@ struct LLMClient {
                 throw ClientError.unauthorized
             }
             guard (200...299).contains(httpResponse.statusCode) else {
-                throw ClientError.badStatusCode(status: httpResponse.statusCode, body: "")
+                let body = await LLMSessionPool.errorBody(from: asyncBytes)
+                throw ClientError.badStatusCode(status: httpResponse.statusCode, body: body)
             }
 
             var finishReason: LLMFinishReason?
@@ -223,8 +222,7 @@ struct LLMClient {
                 // Respect task cancellation
                 try Task.checkCancellation()
 
-                guard line.hasPrefix("data: ") else { continue }
-                let payload = String(line.dropFirst(6))
+                guard let payload = LLMSessionPool.ssePayload(line) else { continue }
                 if payload == "[DONE]" { break }
 
                 guard let data = payload.data(using: .utf8),
@@ -388,4 +386,45 @@ private struct StreamChoice: Codable {
 
 private struct StreamDelta: Codable {
     let content: String?
+}
+
+// MARK: - Shared transport helpers
+
+/// One `URLSession` per timeout value, shared by every provider. Sessions
+/// were created per request and never invalidated, so each lookup leaked one.
+enum LLMSessionPool {
+    private static var sessions: [Double: URLSession] = [:]
+
+    static func session(timeout: Double) -> URLSession {
+        if let existing = sessions[timeout] { return existing }
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest  = timeout
+        config.timeoutIntervalForResource = max(300, timeout * 5)
+        let session = URLSession(configuration: config)
+        sessions[timeout] = session
+        return session
+    }
+
+    /// The payload of an SSE `data:` line, or nil for any other line. The
+    /// space after the colon is optional in the SSE spec, and some servers
+    /// omit it.
+    nonisolated static func ssePayload(_ line: String) -> String? {
+        guard line.hasPrefix("data:") else { return nil }
+        let rest = line.dropFirst(5)
+        return String(rest.first == " " ? rest.dropFirst() : rest)
+    }
+
+    /// Reads the start of an error response body so the user sees the
+    /// server's reason ("model not found", "rate limited") rather than a bare
+    /// status code.
+    static func errorBody(from bytes: URLSession.AsyncBytes, limit: Int = 2_000) async -> String {
+        var body = ""
+        do {
+            for try await line in bytes.lines {
+                body += line
+                if body.count >= limit { break }
+            }
+        } catch {}
+        return String(body.prefix(limit))
+    }
 }
