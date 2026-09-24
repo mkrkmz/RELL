@@ -1,6 +1,10 @@
 name: Test
 
 on:
+  # Also on push: work lands on main directly, so a PR-only trigger meant
+  # the tests first ran at release-tag time (v1.36 and v1.38 both failed there).
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
