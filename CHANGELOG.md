@@ -4,6 +4,44 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.39.0] - 2026-09-24
+
+Your data, safe. Roadmap v12 Sprint 1.
+
+### Added
+
+- **Daily backups.** Once a day RELL copies your words, notes, highlights,
+  bookmarks and reading history, and keeps the last seven. Settings ▸
+  General ▸ Backups restores any of them, and can export everything to a
+  folder or bring it back in — for a new Mac, or just a copy of your own.
+  Restoring saves what you have now as its own backup first, so it can be
+  undone.
+
+### Fixed
+
+- **A damaged data file could cost you your whole vocabulary.** If RELL
+  couldn't read your saved words — one bad byte was enough — it started
+  with an empty list, and the next word you saved replaced the file. Now
+  the file is set aside untouched, RELL tells you what happened, and a
+  backup is one click away.
+- **Changes made just before quitting could be lost** to an older copy
+  that finished writing a moment later.
+- **An answer could appear twice** when the connection dropped halfway
+  through and RELL tried again, and a half-finished answer could come back
+  from the cache on every later lookup. A retry now only happens before
+  anything has been shown, and a failed answer is never cached.
+- **Claude didn't work with current models.** Every request sent two
+  settings that Claude models now refuse, so anything newer than the old
+  default failed. The default Claude model is now Claude Opus 5.
+- **A wrong model name no longer reads as "server down".** It used to be
+  retried three times and then block every request for half a minute. You
+  now see the server's own explanation instead.
+- **EPUBs can't run their own scripts.** A book could open links, other
+  apps or files on your Mac without you clicking anything. Links now open
+  only when you click them, and only web and email links leave RELL.
+- The statistics tiles and review counters that were still in English are
+  now in Turkish.
+
 ## [1.38.0] - 2026-08-28
 
 A new way to review, and an interface that finally speaks Turkish all the way

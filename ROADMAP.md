@@ -73,66 +73,75 @@ yanlis cevabi kalici hale getirmesin, ve acilan bir kitap uygulamayi
 kullanicinin adina disari yonlendiremesin.
 
 **Veri**
-- [ ] **Bozuk dosya karantinasi**: `RELLJSONStore.load` decode hatasinda
+- [x] **Bozuk dosya karantinasi**: `RELLJSONStore.load` decode hatasinda
       `defaultValue` donuyor (`Models/AppLogger.swift:41`) ve ilk kayit
       bos diziyi dosyanin ustune yaziyor → tum kelime hazinesi gider.
-      Duzeltme: hatali dosyayi `<ad>.corrupt-<tarih>.json` olarak kopyala,
-      store'u "salt-okunur / kurtarma" durumuna al, toast ile soyle.
-      Test: bozuk JSON → load → save → orijinal bayt'lar hala diskte
-- [ ] **Donen yedekler**: `saved_words.json` ve not/vurgu store'lari icin
+      Yapildi: dosya `<ad>.corrupt-<zaman>.json` olarak **tasinir** (rename,
+      bayt'lar aynen), store bos baslar, ilk pencere kalici bir alert ile
+      soyler (Finder'da goster / yedekten geri yukle). "Salt-okunur store"
+      gerekmedi: dosya kenardayken yeni kayit onu ezemez
+- [x] **Donen yedekler**: `saved_words.json` ve not/vurgu store'lari icin
       gunluk kopya, son 7 gun (`Backups/`). Ayarlar'da "Yedegi geri yukle"
-- [ ] **Kapanista yazma sirasi**: `DebouncedFileWriter.flush()` ana thread'de
+- [x] **Kapanista yazma sirasi**: `DebouncedFileWriter.flush()` ana thread'de
       dogrudan yazarken `ioQueue`'da daha eski bir snapshot ucusta olabilir
       ve sonra bitip yeniyi ezer. Duzeltme: nesil sayaci (kilitli), eski
       nesil yazimi atlanir. `ioQueue.sync` KULLANILMAZ (CI kilitlenme dersi)
-- [ ] **Tam yedek disa/ice aktarma**: tum store'lari bir klasore
+- [x] **Tam yedek disa/ice aktarma**: tum store'lari bir klasore
       (`RELL Backup <tarih>/`) disa aktar, ayni klasorden geri yukle —
       makine degisimi ve ileride sandbox tasimasi icin de on kosul
 
 **LLM dogrulugu**
-- [ ] **Stream yeniden denemesi**: `ResilientLLMProvider` stream'i bastan
+- [x] **Stream yeniden denemesi**: `ResilientLLMProvider` stream'i bastan
       tekrarliyor, `InspectorView.swift:452` `+= token` ile ekliyor → yarida
       kopan baglantida cevap iki kez yaziliyor. Kural: ilk token geldiyse
       retry yok, hata gosterilir
-- [ ] **Hatali modul cache'lenmez**: `snapshotToCache` hatasi olan modulun
+- [x] **Hatali modul cache'lenmez**: `snapshotToCache` hatasi olan modulun
       kismi ciktisini diske yaziyor; sonraki acilista "cache hit" olarak
       yarim cevap geliyor
-- [ ] **4xx yeniden denenmez** (408/429 haric; 429'da `Retry-After`); simdi
+- [~] **4xx yeniden denenmez** (408/409/429 haric) — `Retry-After` okunmadi, 429 ustel beklemeyle yeniden denenir; simdi
       yanlis model adi 3 deneme yapip circuit breaker'i aciyor
-- [ ] **URLSession tekrar kullanimi**: `makeProvider()` her istekte yeni
+- [x] **URLSession tekrar kullanimi**: `makeProvider()` her istekte yeni
       `URLSession` uretiyor ve hic `invalidate` edilmiyor — timeout basina
       paylasilan oturum
-- [ ] **Anthropic istek sekli (S1 sirasinda bulundu)**: her istek hem
+- [x] **Anthropic istek sekli (S1 sirasinda bulundu)**: her istek hem
       `temperature` hem `top_p` gonderiyordu — Claude 4.x ikisini birlikte,
       Opus 4.7+/Sonnet 5/Opus 5 ise hicbirini kabul etmez (HTTP 400). Yani
       Anthropic saglayicisi eski varsayilan `claude-sonnet-4-20250514`
       (deprecated) disinda hicbir guncel modelde calismiyordu. `top_p` hic
       gonderilmez, `temperature` yalniz eski modellere; dusunen modellere
       `effort: low` + `max_tokens` payi; varsayilan model `claude-opus-5`
-- [ ] Testler: `URLProtocol` stub ile SSE parse (`data:` bosluksuz varyant
+- [x] Testler (29 yeni: `PersistenceSafetyTests`, `LLMTransportTests`,
+      `EPUBSecurityTests`; yazma sirasi ve JS kapatma testleri mutant ile
+      dogrulandi — duzeltme geri alininca dusuyorlar). `URLProtocol` stub ile SSE parse (`data:` bosluksuz varyant
       dahil), kopan stream, 401/404/429 davranisi, `AnthropicClient` (su an
       %0), `ResilientLLMProvider` (%3). Inceleme sirasindaki iki probe testi
       (bozuk dosya, cift stream) regresyon testi olarak kalici hale gelir
 
 **EPUB guvenligi**
-- [ ] Kitabin kendi JS'i kapali: `defaultWebpagePreferences
+- [x] Kitabin kendi JS'i kapali: `defaultWebpagePreferences
       .allowsContentJavaScript = false`; uygulama script'leri ve mesaj
       handler'lari ayri `WKContentWorld`'de (kitap JS'i `rellSelection`
       mesajini taklit edemez)
-- [ ] Dis link yalniz `navigationType == .linkActivated` ve `http/https/
+- [x] Dis link yalniz `navigationType == .linkActivated` ve `http/https/
       mailto` ise `NSWorkspace.open` — simdi herhangi bir sema (`file://`
       dahil) tiklama olmadan aciliyor (`EPUBViewManager.swift:889`)
-- [ ] `scroll(toFragment:)` JSON-encode (su an yalniz `'` kacisli)
-- [ ] ZIP: bildirilen `uncompressedSize` icin ust sinir (orn. 256 MB/entry)
+- [x] `scroll(toFragment:)` JSON-encode (su an yalniz `'` kacisli)
+- [x] ZIP: bildirilen `uncompressedSize` icin ust sinir (orn. 256 MB/entry)
       — `Data(count:)` 4 GB'a kadar onceden ayiriyor
 
 **Kucuk borclar**
-- [ ] Commit edilmemis katalog degisikligi: 14 metin TR'siz ("Due now",
+- [x] Commit edilmemis katalog degisikligi: 14 metin TR'siz ("Due now",
       "Words saved", "Lifetime accuracy"…) — v1.38 istatistik kutulari
       kataloga girince Xcode topladi, ceviri yapilmadi
-- [ ] CI: `test.yml` yalniz PR'da kosuyor, is akisi dogrudan `main` →
+- [x] CI: `test.yml` yalniz PR'da kosuyor, is akisi dogrudan `main` →
       testler ilk kez tag'de kosuyor (v1.36 ve v1.38 release'leri boyle
       dustu). `push: main`'e de ekle
+- [ ] **Canli tur (kullaniciya kaldi, ekran kilitliydi)**: Ayarlar ▸ Genel ▸
+      Yedekler bolumu; bir EPUB acip secim/hover/vurgu/karaoke'nin JS
+      kapaliyken calistigi; bir Claude modeliyle Inspector istegi
+- [x] Dogrulama: tam birim paketi CI komutuyla **505 test, 0 hata, 1
+      atlanan**; derleyici uyarisi 30 → 29 (yeni kodda uyari yok);
+      `-exportLocalizations` ile cevirisiz kalan yalniz format dizeleri
 
 ## Sprint 2 — v1.40.0 "Sifir kurulum" (Must, once 1 gunluk spike)
 
