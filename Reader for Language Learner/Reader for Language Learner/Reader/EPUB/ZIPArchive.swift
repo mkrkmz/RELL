@@ -56,6 +56,10 @@ struct ZIPEntry {
 
 struct ZIPArchive {
 
+    /// Largest uncompressed entry RELL will inflate. Real EPUB entries are
+    /// chapters and images, far below this.
+    static let maxEntrySize = 256 * 1_048_576
+
     private let bytes: Data
     private let entriesByPath: [String: ZIPEntry]
 
@@ -99,6 +103,11 @@ struct ZIPArchive {
 
             if compressed == 0xFFFF_FFFF || uncompressed == 0xFFFF_FFFF || localOffset == 0xFFFF_FFFF {
                 throw ZIPArchiveError.zip64Unsupported
+            }
+            // `inflate` allocates the declared size up front; a crafted
+            // archive could otherwise claim ~4 GB for one entry.
+            if uncompressed > Self.maxEntrySize {
+                throw ZIPArchiveError.corruptArchive("entry larger than \(Self.maxEntrySize / 1_048_576) MB")
             }
 
             let nameStart = cursor + 46

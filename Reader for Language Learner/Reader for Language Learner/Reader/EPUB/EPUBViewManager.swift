@@ -443,9 +443,12 @@ final class EPUBViewManager: NSObject {
     }
 
     private func scroll(toFragment fragment: String) {
-        let escaped = fragment.replacingOccurrences(of: "'", with: "\\'")
+        // The fragment comes from the book; JSON-encoding makes it a string
+        // literal whatever it contains (quotes, backslashes, `</script>`).
+        guard let literal = (try? JSONEncoder().encode(fragment)).flatMap({ String(data: $0, encoding: .utf8) })
+        else { return }
         webView?.evaluateJavaScript(
-            "document.getElementById('\(escaped)')?.scrollIntoView();"
+            "document.getElementById(\(literal))?.scrollIntoView();"
         )
     }
 
@@ -872,6 +875,27 @@ final class EPUBViewManager: NSObject {
     }
 }
 
+// MARK: - Link policy
+
+/// Where a navigation inside the reader may go. Book-internal pages load in
+/// place. Anything else leaves the app only when the reader clicked it and it
+/// is a web or mail link — never a `file://` URL or another app's scheme,
+/// and never on the page's own initiative (a redirect, a meta refresh).
+enum EPUBLinkPolicy: Equatable {
+    case allow
+    case openExternally(URL)
+    case block
+
+    static let externalSchemes: Set<String> = ["http", "https", "mailto"]
+
+    static func decision(for url: URL?, userClicked: Bool) -> EPUBLinkPolicy {
+        guard let url, let scheme = url.scheme?.lowercased() else { return .block }
+        if scheme == EPUBScheme.scheme || scheme == "about" { return .allow }
+        guard userClicked, externalSchemes.contains(scheme) else { return .block }
+        return .openExternally(url)
+    }
+}
+
 // MARK: - WKNavigationDelegate
 
 extension EPUBViewManager: WKNavigationDelegate {
@@ -882,16 +906,16 @@ extension EPUBViewManager: WKNavigationDelegate {
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
         MainActor.assumeIsolated {
-            guard let url = navigationAction.request.url else {
-                decisionHandler(.cancel)
-                return
-            }
-            // Book-internal navigation stays in the web view; external links
-            // open in the default browser.
-            if url.scheme == EPUBScheme.scheme || url.scheme == "about" {
+            switch EPUBLinkPolicy.decision(
+                for: navigationAction.request.url,
+                userClicked: navigationAction.navigationType == .linkActivated
+            ) {
+            case .allow:
                 decisionHandler(.allow)
-            } else {
+            case .openExternally(let url):
                 NSWorkspace.shared.open(url)
+                decisionHandler(.cancel)
+            case .block:
                 decisionHandler(.cancel)
             }
         }

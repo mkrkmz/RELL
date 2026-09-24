@@ -212,9 +212,15 @@ struct EPUBReaderView: NSViewRepresentable {
     /// persists the same way however it was changed.
     var onFontSizeChange: (Double) -> Void
 
-    func makeNSView(context: Context) -> RELLEPUBWebView {
+    /// The reader's web view configuration. The book's own JavaScript is
+    /// switched off (`allowsContentJavaScript = false`): a book could
+    /// otherwise navigate to any URL scheme without a click, or post fake
+    /// `rellSelection` messages. RELL's user scripts and `evaluateJavaScript`
+    /// calls are the app's, not the page's, and keep running.
+    static func makeConfiguration(for manager: EPUBViewManager) -> WKWebViewConfiguration {
         let configuration = WKWebViewConfiguration()
         configuration.setURLSchemeHandler(manager.schemeHandler, forURLScheme: EPUBScheme.scheme)
+        configuration.defaultWebpagePreferences.allowsContentJavaScript = false
 
         let controller = configuration.userContentController
         // highlightScript must precede selectionScript: the latter calls
@@ -227,6 +233,11 @@ struct EPUBReaderView: NSViewRepresentable {
         controller.add(manager, name: EPUBViewManager.scrollMessageName)
         controller.add(manager, name: EPUBViewManager.selectionMessageName)
         controller.add(manager, name: EPUBViewManager.hoverMessageName)
+        return configuration
+    }
+
+    func makeNSView(context: Context) -> RELLEPUBWebView {
+        let configuration = Self.makeConfiguration(for: manager)
 
         let webView = RELLEPUBWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = manager
