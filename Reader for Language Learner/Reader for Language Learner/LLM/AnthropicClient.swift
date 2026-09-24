@@ -299,7 +299,7 @@ enum AnthropicModelTraits {
 
     /// Older models that still take `temperature`. An allow-list on purpose:
     /// a model RELL has never heard of is newer, and newer models reject it.
-    private static let samplingPrefixes = [
+    nonisolated private static let samplingPrefixes = [
         "claude-3",
         "claude-haiku-4-5",
         "claude-sonnet-4-0", "claude-sonnet-4-2025", "claude-sonnet-4-5", "claude-sonnet-4-6",
@@ -307,7 +307,7 @@ enum AnthropicModelTraits {
     ]
 
     /// Opus 4.7/4.8 reject sampling but run without thinking unless asked.
-    private static let noDefaultThinkingPrefixes = ["claude-opus-4-7", "claude-opus-4-8"]
+    nonisolated private static let noDefaultThinkingPrefixes = ["claude-opus-4-7", "claude-opus-4-8"]
 
     nonisolated static func acceptsSampling(_ model: String) -> Bool {
         let id = model.lowercased()
