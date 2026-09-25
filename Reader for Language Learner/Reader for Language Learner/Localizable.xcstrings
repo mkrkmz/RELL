@@ -4,236 +4,6 @@
     "" : {
 
     },
-    "Backup failed" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedekleme başarısız"
-          }
-        }
-      }
-    },
-    "Backups" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedekler"
-          }
-        }
-      }
-    },
-    "Choose a RELL Backup folder." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir RELL Backup klasörü seç."
-          }
-        }
-      }
-    },
-    "Choose where to save a copy of all your RELL data." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tüm RELL verilerinin bir kopyasının kaydedileceği yeri seç."
-          }
-        }
-      }
-    },
-    "Collections" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Koleksiyonlar"
-          }
-        }
-      }
-    },
-    "Daily Backups" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Günlük Yedekler"
-          }
-        }
-      }
-    },
-    "Export Backup…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedeği Dışa Aktar…"
-          }
-        }
-      }
-    },
-    "Export Here" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Buraya Aktar"
-          }
-        }
-      }
-    },
-    "Import Backup…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedeği İçe Aktar…"
-          }
-        }
-      }
-    },
-    "Library" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kitaplık"
-          }
-        }
-      }
-    },
-    "None yet" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Henüz yok"
-          }
-        }
-      }
-    },
-    "OK" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tamam"
-          }
-        }
-      }
-    },
-    "Reading history" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Okuma geçmişi"
-          }
-        }
-      }
-    },
-    "RELL copies your words, notes, highlights, bookmarks and reading history once a day and keeps the last seven. Restoring replaces what's there now and relaunches RELL; the current data is saved as its own backup first." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "RELL kelimelerini, notlarını, vurgularını, yer imlerini ve okuma geçmişini günde bir kez kopyalar ve son yedisini saklar. Geri yükleme mevcut verinin yerine geçer ve RELL'i yeniden başlatır; mevcut veri önce ayrı bir yedek olarak kaydedilir."
-          }
-        }
-      }
-    },
-    "RELL couldn't read %@, so it started without them. Nothing was deleted: the original file was set aside unchanged in RELL's data folder. You can restore a daily backup from Settings ▸ General." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "RELL şunları okuyamadı: %@. Bu yüzden onlarsız başladı. Hiçbir şey silinmedi: özgün dosya RELL'in veri klasöründe değiştirilmeden kenara alındı. Ayarlar ▸ Genel'den günlük bir yedeği geri yükleyebilirsin."
-          }
-        }
-      }
-    },
-    "Restore" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geri Yükle"
-          }
-        }
-      }
-    },
-    "Restore and Relaunch" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geri Yükle ve Yeniden Başlat"
-          }
-        }
-      }
-    },
-    "Restore from Backup…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedekten Geri Yükle…"
-          }
-        }
-      }
-    },
-    "Restore the backup from %@?" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ yedeği geri yüklensin mi?"
-          }
-        }
-      }
-    },
-    "Restore…" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geri Yükle…"
-          }
-        }
-      }
-    },
-    "Some of your data couldn't be read" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verilerinin bir kısmı okunamadı"
-          }
-        }
-      }
-    },
-    "That folder doesn't contain a RELL backup." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bu klasörde bir RELL yedeği yok."
-          }
-        }
-      }
-    },
-    "Your words, notes, highlights, bookmarks and reading history will be replaced with the backup's. RELL will quit and open again." : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kelimelerin, notların, vurguların, yer imlerin ve okuma geçmişin yedektekilerle değiştirilecek. RELL kapanıp yeniden açılacak."
-          }
-        }
-      }
-    },
     "— you wrote “%@”" : {
       "localizations" : {
         "tr" : {
@@ -969,6 +739,16 @@
         }
       }
     },
+    "AI provider" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI sağlayıcısı"
+          }
+        }
+      }
+    },
     "AI-estimated level" : {
       "localizations" : {
         "tr" : {
@@ -1020,6 +800,7 @@
       }
     },
     "All three use your AI provider. Turn them off to avoid extra requests." : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -1141,6 +922,16 @@
         }
       }
     },
+    "Answers on this Mac — no setup, no internet, no cost." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac'te cevap verir — kurulum, internet ve ücret gerekmez."
+          }
+        }
+      }
+    },
     "Anthropic Claude API" : {
       "localizations" : {
         "tr" : {
@@ -1191,6 +982,86 @@
         }
       }
     },
+    "Apple On-Device Model" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Cihaz İçi Model"
+          }
+        }
+      }
+    },
+    "Apple Translation (offline)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Çeviri (çevrimdışı)"
+          }
+        }
+      }
+    },
+    "Apple's on-device model declined to answer this one." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın cihaz içi modeli bunu cevaplamayı reddetti."
+          }
+        }
+      }
+    },
+    "Apple's on-device model doesn't support %@ yet." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın cihaz içi modeli henüz %@ dilini desteklemiyor."
+          }
+        }
+      }
+    },
+    "Apple's on-device model doesn't support this language." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın cihaz içi modeli bu dili desteklemiyor."
+          }
+        }
+      }
+    },
+    "Apple's on-device model is ready" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın cihaz içi modeli hazır"
+          }
+        }
+      }
+    },
+    "Apple's on-device model isn't available right now." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın cihaz içi modeli şu anda kullanılamıyor."
+          }
+        }
+      }
+    },
+    "Apple's on-device model isn't reliable for this module, so it uses your AI provider — which failed: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın cihaz içi modeli bu modülde güvenilir değil, bu yüzden AI sağlayıcın kullanılıyor — o da başarısız oldu: %@"
+          }
+        }
+      }
+    },
     "Ask (↩)" : {
       "localizations" : {
         "tr" : {
@@ -1207,6 +1078,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir şey daha sor…"
+          }
+        }
+      }
+    },
+    "Ask AI and word levels" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takip soruları ve kelime seviyeleri"
           }
         }
       }
@@ -1319,6 +1200,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arka uç"
+          }
+        }
+      }
+    },
+    "Backup failed" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yedekleme başarısız"
+          }
+        }
+      }
+    },
+    "Backups" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yedekler"
           }
         }
       }
@@ -1697,6 +1598,26 @@
         }
       }
     },
+    "Choose a RELL Backup folder." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir RELL Backup klasörü seç."
+          }
+        }
+      }
+    },
+    "Choose where to save a copy of all your RELL data." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm RELL verilerinin bir kopyasının kaydedileceği yeri seç."
+          }
+        }
+      }
+    },
     "Clear" : {
       "localizations" : {
         "tr" : {
@@ -1873,6 +1794,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tümünü Daralt"
+          }
+        }
+      }
+    },
+    "Collections" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koleksiyonlar"
           }
         }
       }
@@ -2166,6 +2097,16 @@
         }
       }
     },
+    "Daily Backups" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Günlük Yedekler"
+          }
+        }
+      }
+    },
     "Daily Goal" : {
       "localizations" : {
         "tr" : {
@@ -2288,6 +2229,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tanımlar %1$@ dilinde kalır; anlamlar ve çeviriler %2$@ dilini kullanır. Bunu istediğin zaman Ayarlar'dan değiştirebilirsin."
+          }
+        }
+      }
+    },
+    "Definitions, meanings, examples" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanımlar, anlamlar, örnekler"
+          }
+        }
+      }
+    },
+    "Definitions, meanings, examples and synonyms work now, offline. A server adds pronunciation, etymology, mnemonics, collocations and word family." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanımlar, anlamlar, örnekler ve eş anlamlılar şimdi, çevrimdışı çalışır. Bir sunucu telaffuz, etimoloji, hatırlatıcılar, eşdizimler ve kelime ailesini ekler."
           }
         }
       }
@@ -2660,12 +2621,32 @@
         }
       }
     },
+    "Export Backup…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yedeği Dışa Aktar…"
+          }
+        }
+      }
+    },
     "Export Fields… (⌘E)" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alanları Dışa Aktar… (⌘E)"
+          }
+        }
+      }
+    },
+    "Export Here" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buraya Aktar"
           }
         }
       }
@@ -3236,6 +3217,26 @@
         }
       }
     },
+    "Hover and pre-analysis use your AI provider, or Apple's on-device model where it's on. Apple Translation works offline once the language is downloaded, and falls back to your AI provider for pairs it doesn't support." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İmleç sözlüğü ve ön analiz AI sağlayıcını ya da açıksa Apple'ın cihaz içi modelini kullanır. Apple Çeviri dil indirildikten sonra çevrimdışı çalışır; desteklemediği dil çiftlerinde AI sağlayıcına düşer."
+          }
+        }
+      }
+    },
+    "Hover dictionary" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İmleç sözlüğü"
+          }
+        }
+      }
+    },
     "Hover Dictionary" : {
       "localizations" : {
         "tr" : {
@@ -3252,6 +3253,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "RELL nasıl çalışır"
+          }
+        }
+      }
+    },
+    "Import Backup…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yedeği İçe Aktar…"
           }
         }
       }
@@ -3446,6 +3457,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seviye"
+          }
+        }
+      }
+    },
+    "Library" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitaplık"
           }
         }
       }
@@ -4357,6 +4378,16 @@
         }
       }
     },
+    "None yet" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz yok"
+          }
+        }
+      }
+    },
     "Normal" : {
       "localizations" : {
         "tr" : {
@@ -4469,6 +4500,16 @@
         }
       }
     },
+    "OK" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamam"
+          }
+        }
+      }
+    },
     "Oldest" : {
       "localizations" : {
         "tr" : {
@@ -4487,6 +4528,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Açık"
+          }
+        }
+      }
+    },
+    "On-Device" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cihaz İçi"
+          }
+        }
+      }
+    },
+    "Only the selected word or sentence and its surrounding sentence are sent — never the whole book." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnızca seçilen kelime veya cümle ve çevresindeki cümle gönderilir — asla kitabın tamamı değil."
           }
         }
       }
@@ -5139,6 +5200,16 @@
         }
       }
     },
+    "Pronunciation, etymology, mnemonics" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telaffuz, etimoloji, hatırlatıcılar"
+          }
+        }
+      }
+    },
     "Provider" : {
       "localizations" : {
         "tr" : {
@@ -5339,6 +5410,16 @@
         }
       }
     },
+    "Reading history" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okuma geçmişi"
+          }
+        }
+      }
+    },
     "Reading minutes for the last 7 days" : {
       "localizations" : {
         "tr" : {
@@ -5437,6 +5518,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Üslup"
+          }
+        }
+      }
+    },
+    "RELL copies your words, notes, highlights, bookmarks and reading history once a day and keeps the last seven. Restoring replaces what's there now and relaunches RELL; the current data is saved as its own backup first." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL kelimelerini, notlarını, vurgularını, yer imlerini ve okuma geçmişini günde bir kez kopyalar ve son yedisini saklar. Geri yükleme mevcut verinin yerine geçer ve RELL'i yeniden başlatır; mevcut veri önce ayrı bir yedek olarak kaydedilir."
+          }
+        }
+      }
+    },
+    "RELL couldn't read %@, so it started without them. Nothing was deleted: the original file was set aside unchanged in RELL's data folder. You can restore a daily backup from Settings ▸ General." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL şunları okuyamadı: %@. Bu yüzden onlarsız başladı. Hiçbir şey silinmedi: özgün dosya RELL'in veri klasöründe değiştirilmeden kenara alındı. Ayarlar ▸ Genel'den günlük bir yedeği geri yükleyebilirsin."
           }
         }
       }
@@ -5598,6 +5699,16 @@
         }
       }
     },
+    "Requires macOS 26 or later." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 26 veya üstü gerekir."
+          }
+        }
+      }
+    },
     "Reset All" : {
       "localizations" : {
         "tr" : {
@@ -5674,6 +5785,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tipografiyi Sıfırla"
+          }
+        }
+      }
+    },
+    "Restore" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geri Yükle"
+          }
+        }
+      }
+    },
+    "Restore and Relaunch" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geri Yükle ve Yeniden Başlat"
+          }
+        }
+      }
+    },
+    "Restore from Backup…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yedekten Geri Yükle…"
+          }
+        }
+      }
+    },
+    "Restore the backup from %@?" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ yedeği geri yüklensin mi?"
+          }
+        }
+      }
+    },
+    "Restore…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geri Yükle…"
           }
         }
       }
@@ -6385,6 +6546,16 @@
         }
       }
     },
+    "Sentence translation" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümle çevirisi"
+          }
+        }
+      }
+    },
     "Sentence Translation" : {
       "localizations" : {
         "tr" : {
@@ -6603,6 +6774,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Daha küçük metin (⌘-)"
+          }
+        }
+      }
+    },
+    "Some of your data couldn't be read" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verilerinin bir kısmı okunamadı"
           }
         }
       }
@@ -6989,12 +7170,32 @@
         }
       }
     },
+    "That folder doesn't contain a RELL backup." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu klasörde bir RELL yedeği yok."
+          }
+        }
+      }
+    },
     "The deck will be added to all %lld selected words." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deste, seçilen %lld kelimenin tümüne eklenecek."
+          }
+        }
+      }
+    },
+    "The model is still downloading. Try again later." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model hâlâ indiriliyor. Daha sonra tekrar dene."
           }
         }
       }
@@ -7015,6 +7216,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Model metin üretmeye başlar başlamaz yanıt burada görünecek."
+          }
+        }
+      }
+    },
+    "The selection is too long for Apple's on-device model." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçim Apple'ın cihaz içi modeli için fazla uzun."
           }
         }
       }
@@ -7045,6 +7256,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu Belge"
+          }
+        }
+      }
+    },
+    "This Mac" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac"
+          }
+        }
+      }
+    },
+    "This Mac (Apple Translation)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac (Apple Çeviri)"
+          }
+        }
+      }
+    },
+    "This Mac (local server)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac (yerel sunucu)"
+          }
+        }
+      }
+    },
+    "This Mac doesn't support Apple Intelligence." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac Apple Intelligence'ı desteklemiyor."
           }
         }
       }
@@ -7151,6 +7402,16 @@
         }
       }
     },
+    "Translate With" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çeviri Motoru"
+          }
+        }
+      }
+    },
     "Translating…" : {
       "localizations" : {
         "tr" : {
@@ -7179,6 +7440,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Farklı bir arama terimi deneyin."
+          }
+        }
+      }
+    },
+    "Turn on Apple Intelligence in System Settings to use it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanmak için Sistem Ayarları'nda Apple Intelligence'ı aç."
           }
         }
       }
@@ -7335,6 +7606,16 @@
         }
       }
     },
+    "Used for definitions, meanings, examples, synonyms, usage notes, Ask AI and word levels. Pronunciation, etymology, mnemonics, collocations and word family always use the provider below — the on-device model gets them wrong too often." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanımlar, anlamlar, örnekler, eş anlamlılar, kullanım notları, takip soruları ve kelime seviyeleri için kullanılır. Telaffuz, etimoloji, hatırlatıcılar, eşdizimler ve kelime ailesi her zaman aşağıdaki sağlayıcıyı kullanır — cihaz içi model bunlarda çok sık yanılıyor."
+          }
+        }
+      }
+    },
     "View all" : {
       "localizations" : {
         "tr" : {
@@ -7403,6 +7684,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "RELL'e hoş geldin"
+          }
+        }
+      }
+    },
+    "Where Your Text Goes" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metnin Nereye Gidiyor"
           }
         }
       }
@@ -7527,6 +7818,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tekrar sıran boş. Ekstra çalışma için öğrenilen kelimeleri de dahil et."
+          }
+        }
+      }
+    },
+    "Your words, notes, highlights, bookmarks and reading history will be replaced with the backup's. RELL will quit and open again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimelerin, notların, vurguların, yer imlerin ve okuma geçmişin yedektekilerle değiştirilecek. RELL kapanıp yeniden açılacak."
           }
         }
       }

@@ -64,6 +64,12 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(DS.Color.textTertiary)
                     }
                 }
+                Picker("Translate With", selection: $sentenceTranslationEngineRaw) {
+                    ForEach(SentenceTranslationEngine.allCases) { engine in
+                        Text(engine.localizedTitle).tag(engine.rawValue)
+                    }
+                }
+                .disabled(!sentenceTranslationEnabled)
                 Toggle(isOn: $pageAnalysisEnabled) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Page Pre-Analysis")
@@ -75,7 +81,7 @@ struct GeneralSettingsView: View {
             } header: {
                 Text("Reading Aids")
             } footer: {
-                Text("All three use your AI provider. Turn them off to avoid extra requests.")
+                Text("Hover and pre-analysis use your AI provider, or Apple's on-device model where it's on. Apple Translation works offline once the language is downloaded, and falls back to your AI provider for pairs it doesn't support.")
                     .foregroundStyle(DS.Color.textTertiary)
             }
 
@@ -171,6 +177,8 @@ struct GeneralSettingsView: View {
     @AppStorage(HoverDictionaryLanguage.storageKey)
     private var hoverDictionaryLanguageRaw = HoverDictionaryLanguage.default.rawValue
     @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+    @AppStorage(SentenceTranslationEngine.storageKey)
+    private var sentenceTranslationEngineRaw = SentenceTranslationEngine.default.rawValue
     @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
     @AppStorage("speechRate") private var speechRate: Double = 0.5
     @AppStorage("menuBarExtraEnabled") private var menuBarExtraEnabled = true

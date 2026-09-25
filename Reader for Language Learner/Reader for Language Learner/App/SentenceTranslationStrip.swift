@@ -3,10 +3,13 @@
 //  Reader for Language Learner
 //
 //  Thin bar below the PDF showing a native-language translation of the
-//  currently selected sentence. Loads via QuickLookupService (cache-first).
+//  currently selected sentence. Cache-first; then Apple Translation when the
+//  pair is supported (v1.40), otherwise — or if it fails — the AI provider
+//  via QuickLookupService.
 //
 
 import SwiftUI
+import Translation
 
 struct SentenceTranslationStrip: View {
     let sentence: String
@@ -14,6 +17,8 @@ struct SentenceTranslationStrip: View {
     let onClose: () -> Void
 
     @State private var phase: Phase = .loading
+    /// Non-nil hands the current sentence to Apple Translation.
+    @State private var appleConfiguration: TranslationSession.Configuration?
 
     enum Phase: Equatable {
         case loading
@@ -49,6 +54,9 @@ struct SentenceTranslationStrip: View {
             fallbackStroke: .hairline
         )
         .task(id: sentence) { await load() }
+        .translationTask(appleConfiguration) { session in
+            await translateWithApple(session)
+        }
         .accessibilityElement(children: .combine)
     }
 
@@ -82,6 +90,36 @@ struct SentenceTranslationStrip: View {
             return
         }
         phase = .loading
+        if SentenceTranslationEngine.stored == .apple,
+           await AppleTranslation.canTranslate(from: Language.storedTarget, to: Language.storedNative) {
+            let source = AppleTranslation.localeLanguage(for: Language.storedTarget)
+            let target = AppleTranslation.localeLanguage(for: Language.storedNative)
+            if appleConfiguration?.source == source, appleConfiguration?.target == target {
+                appleConfiguration?.invalidate()   // same pair, new sentence: run again
+            } else {
+                appleConfiguration = TranslationSession.Configuration(source: source, target: target)
+            }
+            return
+        }
+        await translateWithAIProvider()
+    }
+
+    private func translateWithApple(_ session: TranslationSession) async {
+        let current = sentence
+        do {
+            let response = try await session.translate(current)
+            guard current == sentence else { return }
+            service.storeTranslation(response.targetText, for: current)
+            phase = .loaded(response.targetText)
+        } catch {
+            // Declined download, missing pack, unsupported text: the AI
+            // provider still gets a chance.
+            guard current == sentence else { return }
+            await translateWithAIProvider()
+        }
+    }
+
+    private func translateWithAIProvider() async {
         do {
             let translation = try await service.translate(sentence: sentence)
             phase = .loaded(translation)
