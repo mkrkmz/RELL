@@ -4,6 +4,28 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.41.0] - 2026-09-25
+
+Mostly under the hood: the reader window and the inspector were rebuilt so
+they can be tested, which turned up a bug. Roadmap v12 Sprint 3.
+
+### Fixed
+
+- **Re-running a module could leave it looking finished while it was still
+  working** — or mix the end of the old answer into the new one. Asking
+  again cancelled the first request, but that request still tidied up
+  after itself when it ended, over the top of the new one. The same could
+  happen to a follow-up question asked while the previous one was still
+  answering.
+- **Zen mode's full-screen follows its own window** when more than one
+  document is open, instead of whichever window happened to be in front.
+
+### Changed
+
+- The reader window's state moved out of its 1,500-line view into a model
+  of its own, and the inspector's request handling into its view model —
+  both now covered by tests. Compiler warnings are down from 29 to zero.
+
 ## [1.40.0] - 2026-09-25
 
 Works the moment it opens. Roadmap v12 Sprint 2.

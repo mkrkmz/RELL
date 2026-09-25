@@ -196,37 +196,45 @@ Amac: en cok degisen iki gorunumu test edilebilir hale getirmek. v11'deki
 "ContentView bolunmez" karari **dosya bolme** icindi (private `@State`
 extension'a tasinamiyor); buradaki oneri farkli: state'i bir modele tasimak.
 
-- [ ] `ReaderWindowModel` (`@Observable @MainActor`, pencere basina):
-      `ContentView`'daki 25 `@State` + 21 `onChange`'in belgeye ait olanlari.
-      View yalniz baglar. Hedef `ContentView` < 800 satir
-- [ ] LLM istek orkestrasyonu `InspectorView`'dan (`fetchModule` gorunumun
-      icinde) `InspectorViewModel`'e — bugun test edilemiyor
-- [ ] `@AppStorage` anahtarlari tek `enum` sabitinde (30 anahtar, bazisi
-      4 yerde string literal olarak tekrar)
-- [ ] **30 esanlilik uyarisini sifirla**, sonra Swift 6 dil modu (bugun
-      `SWIFT_VERSION = 5.0`, README rozeti "6.2" diyor). Uyarilarin cogu
-      `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` altinda `@MainActor`
-      kalmis saf kodun arka planda cagrilmasi: `EPUBDocument` (8, ZIP okuma),
-      `BookCoverageService`/`LexicalProfileService`/`InflectedTermService`
-      (`Task.detached` icinden), `PDFKitView`/`EPUBViewManager` (yakalanan
-      `self`), `SpeechManager` (`AVSpeechSynthesizer`). Cozum cogunlukla
-      `nonisolated` isaretlemek; bugun calisiyor ama Swift 6'da hata
+- [x] `ReaderWindowModel` (`@Observable @MainActor`, pencere basina):
+      yoneticiler, panel/odak/zen durumu ve gecisleri, bul cubugu, PDF sayfa
+      konumlari + acilista geri yukleme. Gecisler saf; animasyon view'da.
+      State modelde oldugu icin dosya bolme de mumkun oldu:
+      **`ContentView` 1504 → 669 satir** + `ContentView+ContextStrip/
+      Toolbar/Actions/Commands.swift`. 11 test. Sayfa konumlari ayni
+      anahtar ve JSON bicimiyle (eski deger okunuyor, testli)
+- [x] LLM istek orkestrasyonu `InspectorViewModel.start`/`startFollowUp`'a.
+      Tasirken bulunan yaris: yeniden calistirilan modulun iptal edilen eski
+      istegi bitince yenisinin `loading`/`activeTasks`/ciktisini eziyordu
+      (Ask AI'da da). Calisma kimligiyle kapandi; iki yaris testi koruma
+      kaldirilinca dusuyor. 7 test
+- [x] `StorageKey`: 30 cipla anahtar tek enum'da, degerler testle sabit
+- [x] **Uyarilar 29 → 0** (test hedefinde 18 → 0). Swift 6 dil modunda
+      uygulama hedefi **derleniyor**; `SWIFT_VERSION` bilincli olarak 5'te
+      birakildi: Swift 6, ObjC API'lerine verilen closure'lara calisma
+      zamani izolasyon denetimi ekler (Spotlight tamamlama blogu gibi arka
+      plan cagrilari cokebilir) — once canli tur. `decidePolicyFor` imzasi
+      SDK ile birebir eslestirildi
+- [x] Dogrulama: tam paket **533 test, 0 hata**, temiz derleme 0 uyari
+- [ ] **Canli tur (kullaniciya kaldi)**: odak/zen giris-cikis, zen'den
+      yesil butonla cikis, PDF'i yeniden acinca son sayfa, bul cubugu,
+      Inspector'da bir modulu calisirken yeniden baslatma
+- [ ] Sonraki adim (v13 adayi): Swift 6 modunu ac — once ObjC tamamlama
+      bloklarini (CSSearchableIndex, UNUserNotificationCenter, NSWorkspace)
+      canli turda dogrula
 
 ---
 
-## Hijyen (herhangi bir sprintle, tek commit)
+## Hijyen
 
-- `Configurations/*.xcconfig` projeye bagli degil (`baseConfigurationReference`
-  yok) — `RELL_DEFAULT_LLM_*` hic okunmuyor. Bagla ya da sil
-- `ARCHITECTURE.md` bayat: cache 20 degil 50 giris; API anahtari artik
-  Keychain'de, UserDefaults listesinde duruyor
-- `HANDOFF_SUMMARY.md` (Mayis) ve `docs/phase-*-issues.md` tarihsel — sil
-  veya `docs/archive/`
-- Dogrulanacak: `open -g` ile (arka planda) baslatilan uygulama hic pencere
-  acmadi, File > New Window gerekti. Normal Dock/Finder acilisinda tekrar
-  dene; tekrarlarsa bos durum restorasyonu incelenir
-- Test hedefleri `MACOSX_DEPLOYMENT_TARGET = 26.2` (uygulama 15.0); CI
-  komut satirinda eziyor, yerelde gizli bir fark
+- [x] `Configurations/*.xcconfig` silindi (projeye hic bagli degildi;
+      sandbox'i acik gosteriyordu, gercekte kapali)
+- [x] `ARCHITECTURE.md` guncellendi (v1.39–v1.41 bilesenleri, 50'lik
+      cache, Keychain); README (sifir kurulum, yedekler, rozet)
+- [x] `HANDOFF_SUMMARY.md` ve `docs/phase-*-issues.md` → `docs/archive/`
+- [ ] Dogrulanacak: `open -g` ile baslatilan uygulama pencere acmadi
+- [ ] Test hedefleri `MACOSX_DEPLOYMENT_TARGET = 26.2` (uygulama 15.0);
+      CI komut satirinda eziyor — dokunulmadi
 
 ## Genel dogrulama (her sprint sonu)
 
