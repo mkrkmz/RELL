@@ -16,8 +16,8 @@ struct ReadingAppearanceView: View {
     /// (fixed layout — only the theme applies).
     let isEPUB: Bool
 
-    @AppStorage("pageTheme") private var pageThemeRaw = PageTheme.original.rawValue
-    @AppStorage("epubFontSize") private var epubFontSize: Double = 18
+    @AppStorage(StorageKey.pageTheme) private var pageThemeRaw = PageTheme.original.rawValue
+    @AppStorage(StorageKey.epubFontSize) private var epubFontSize: Double = 18
     @AppStorage(EPUBTypography.lineHeightKey) private var epubLineHeight: Double = 1.6
     @AppStorage(EPUBFontFamily.storageKey) private var epubFontFamilyRaw = EPUBFontFamily.publisher.rawValue
     @AppStorage(EPUBContentWidth.storageKey) private var epubContentWidthRaw = EPUBContentWidth.medium.rawValue

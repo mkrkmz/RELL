@@ -22,12 +22,12 @@ struct InspectorView: View {
     @State var viewModel = InspectorViewModel()
     @State var explainMode: ExplainMode = .word
     @State var explainDetail: ExplainDetail = .short
-    @AppStorage("domainPreference") var domainRaw: String = DomainPreference.general.rawValue
+    @AppStorage(StorageKey.domainPreference) var domainRaw: String = DomainPreference.general.rawValue
     var domainPreference: DomainPreference {
         DomainPreference(rawValue: domainRaw) ?? .general
     }
     @State var activeModule: ModuleType?
-    @AppStorage("speechRate") var speechRate: Double = 0.5
+    @AppStorage(StorageKey.speechRate) var speechRate: Double = 0.5
     @State var lastUsedModule: ModuleType = .definitionEN
     @State var showAnkiExport = false
     @State var showToast      = false
@@ -37,8 +37,8 @@ struct InspectorView: View {
     @State var selectionDebounceTask: Task<Void, Never>?
     /// Last auto-scroll during streaming — throttles scroll-to-bottom to ~6/s.
     @State var lastStreamScrollAt: Date = .distantPast
-    @AppStorage("autoRunEnabled") var autoRunEnabled: Bool = true
-    @AppStorage("inspectorShowMoreModules") var showMoreModules: Bool = false
+    @AppStorage(StorageKey.autoRunEnabled) var autoRunEnabled: Bool = true
+    @AppStorage(StorageKey.inspectorShowMoreModules) var showMoreModules: Bool = false
 
     @Namespace var moduleNamespace
 
@@ -50,7 +50,7 @@ struct InspectorView: View {
     @AppStorage(Language.targetLanguageKey)    var targetLanguageRaw: String = Language.defaultTarget.rawValue
     @Environment(AnkiModulePreferences.self) var ankiPrefs
     @Environment(\.openSettings) private var openSettings
-    @AppStorage("settingsSelectedTab") private var settingsSelectedTab = SettingsTab.general.rawValue
+    @AppStorage(StorageKey.settingsSelectedTab) private var settingsSelectedTab = SettingsTab.general.rawValue
 
     var speechManager: SpeechManager { SpeechManager.shared }
 
@@ -393,11 +393,11 @@ struct InspectorView: View {
         if !forceRefresh, let cached = viewModel.outputs[module], !cached.isEmpty { return }
 
         let route = AppleOnDevice.currentRoute(for: module)
-        let customPreamble = UserDefaults.standard.string(forKey: "customSystemPreamble") ?? ""
+        let customPreamble = UserDefaults.standard.string(forKey: StorageKey.customSystemPreamble) ?? ""
 
         // Temperature override from Prompt settings if set, otherwise module default.
         let temperature: Double = {
-            guard let data = UserDefaults.standard.string(forKey: "temperatureOverrides")?.data(using: .utf8),
+            guard let data = UserDefaults.standard.string(forKey: StorageKey.temperatureOverrides)?.data(using: .utf8),
                   let overrides = try? JSONDecoder().decode([String: Double].self, from: data),
                   let custom = overrides[module.rawValue]
             else { return module.recommendedTemperature }

@@ -16,7 +16,7 @@ enum SavedWordsSortOrder: String, CaseIterable, Identifiable {
     case alphaDesc = "Z → A"
     var id: String { rawValue }
 
-    /// Raw values back `@AppStorage("savedWordsSortOrder")` — keep them
+    /// Raw values back `@AppStorage(StorageKey.savedWordsSortOrder)` — keep them
     /// stable and English; the picker displays this instead.
     var localizedTitle: String {
         switch self {

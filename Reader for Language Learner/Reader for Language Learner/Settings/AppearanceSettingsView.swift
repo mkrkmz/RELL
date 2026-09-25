@@ -13,11 +13,11 @@ struct AppearanceSettingsView: View {
     // while the reader read "pageTheme" — the Settings picker never had any
     // effect. Rebound to the live key; the orphan is silently ignored (it
     // never influenced anything, so there is nothing worth migrating).
-    @AppStorage("pageTheme") private var pageThemeRaw = PageTheme.original.rawValue
-    @AppStorage("appTheme")  private var appThemeRaw = AppTheme.system.rawValue
+    @AppStorage(StorageKey.pageTheme) private var pageThemeRaw = PageTheme.original.rawValue
+    @AppStorage(StorageKey.appTheme)  private var appThemeRaw = AppTheme.system.rawValue
     @AppStorage(AccentChoice.storageKey) private var accentRaw = AccentChoice.system.rawValue
-    @AppStorage("inspectorWidth")   private var inspectorWidth: Double = Double(DS.Layout.inspectorDefault)
-    @AppStorage("sidebarWidth")     private var sidebarWidth:   Double = Double(DS.Layout.sidebarDefault)
+    @AppStorage(StorageKey.inspectorWidth)   private var inspectorWidth: Double = Double(DS.Layout.inspectorDefault)
+    @AppStorage(StorageKey.sidebarWidth)     private var sidebarWidth:   Double = Double(DS.Layout.sidebarDefault)
 
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .system }
     private var accent: AccentChoice { AccentChoice(rawValue: accentRaw) ?? .system }

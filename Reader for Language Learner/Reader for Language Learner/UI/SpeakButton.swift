@@ -17,7 +17,7 @@ struct SpeakButton: View {
     var language: Language? = nil
     var tint: SwiftUI.Color = DS.Color.textTertiary
 
-    @AppStorage("speechRate") private var speechRate: Double = 0.5
+    @AppStorage(StorageKey.speechRate) private var speechRate: Double = 0.5
     @AppStorage(Language.targetLanguageKey) private var targetRaw = Language.defaultTarget.rawValue
 
     private var spokenLanguage: Language {

@@ -26,10 +26,10 @@ struct QuizView: View {
     @State private var selectedTag: String?
 
     // Modes
-    @AppStorage("quizMode") private var quizModeRaw = QuizMode.flashcard.rawValue
+    @AppStorage(StorageKey.quizMode) private var quizModeRaw = QuizMode.flashcard.rawValue
     /// In the modes the app can check itself, let the check be the grade
     /// instead of asking the user to judge an answer already marked ✓ or ✗.
-    @AppStorage("typedAutoGrade") private var typedAutoGrade = true
+    @AppStorage(StorageKey.typedAutoGrade) private var typedAutoGrade = true
 
     /// Modules shown on the card back by default; the rest sit behind "Show more".
     private static let summaryModules: [ModuleType] = [.definitionEN, .meaningTR]
@@ -437,7 +437,7 @@ struct QuizView: View {
     }
 
     private func speak(_ word: SavedWord) {
-        let rate = UserDefaults.standard.object(forKey: "speechRate") as? Double ?? 0.5
+        let rate = UserDefaults.standard.object(forKey: StorageKey.speechRate) as? Double ?? 0.5
         SpeechManager.shared.speak(word.term, language: voiceLanguage(for: word), rate: Float(rate))
     }
 

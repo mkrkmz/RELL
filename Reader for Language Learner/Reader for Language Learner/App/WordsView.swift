@@ -18,7 +18,7 @@ struct WordsView: View {
         var id: String { rawValue }
     }
 
-    @AppStorage("wordsSegment") private var segmentRaw = Segment.words.rawValue
+    @AppStorage(StorageKey.wordsSegment) private var segmentRaw = Segment.words.rawValue
 
     private var segment: Segment {
         Segment(rawValue: segmentRaw) ?? .words

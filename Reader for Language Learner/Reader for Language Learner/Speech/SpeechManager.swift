@@ -132,7 +132,7 @@ final class SpeechManager: NSObject {
     /// coordinators) that can't use `@AppStorage`: resolves the voice from
     /// the stored target language and reads the stored speech rate directly.
     func speakResolved(_ text: String, limit: Int? = 500) {
-        let rate = UserDefaults.standard.object(forKey: "speechRate") as? Double ?? 0.5
+        let rate = UserDefaults.standard.object(forKey: StorageKey.speechRate) as? Double ?? 0.5
         speak(text, language: Language.storedTarget, rate: Float(rate), limit: limit)
     }
 

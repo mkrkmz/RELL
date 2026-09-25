@@ -63,7 +63,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     /// The stored choice; unknown/missing rawValues fall back to `.system`.
     static var current: AppTheme {
-        guard let raw = UserDefaults.standard.string(forKey: "appTheme"),
+        guard let raw = UserDefaults.standard.string(forKey: StorageKey.appTheme),
               let theme = AppTheme(rawValue: raw) else { return .system }
         return theme
     }

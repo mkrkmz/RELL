@@ -14,7 +14,7 @@ import SwiftUI
 private struct DataRecoveryAlert: ViewModifier {
     @State private var files: [PersistenceRecovery.QuarantinedFile] = []
     @Environment(\.openSettings) private var openSettings
-    @AppStorage("settingsSelectedTab") private var settingsSelectedTab = SettingsTab.general.rawValue
+    @AppStorage(StorageKey.settingsSelectedTab) private var settingsSelectedTab = SettingsTab.general.rawValue
 
     private var isPresented: Binding<Bool> {
         Binding(get: { !files.isEmpty }, set: { if !$0 { files = [] } })

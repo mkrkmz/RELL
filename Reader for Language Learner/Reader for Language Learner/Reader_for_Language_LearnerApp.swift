@@ -32,8 +32,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 @main
 struct Reader_for_Language_LearnerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @AppStorage("menuBarExtraEnabled") private var menuBarExtraEnabled = true
-    @AppStorage("appTheme") private var appThemeRaw = AppTheme.system.rawValue
+    @AppStorage(StorageKey.menuBarExtraEnabled) private var menuBarExtraEnabled = true
+    @AppStorage(StorageKey.appTheme) private var appThemeRaw = AppTheme.system.rawValue
 
     // Document-independent stores live at App scope so every scene — main
     // window(s), menu bar extra, HUD panel — shares one instance of each.

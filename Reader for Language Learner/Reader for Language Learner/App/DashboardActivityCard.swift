@@ -15,7 +15,7 @@ struct DashboardActivityCard: View {
     let readingStreak: Int
     var streakAtRisk: Bool = false
 
-    @AppStorage("dailyReadingGoalMinutes") private var goalMinutes: Int = 20
+    @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
 
     private static let goalChoices = [10, 15, 20, 30, 45, 60]
 

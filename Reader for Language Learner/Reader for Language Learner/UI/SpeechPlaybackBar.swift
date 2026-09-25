@@ -13,9 +13,9 @@ import SwiftUI
 struct SpeechPlaybackBar: View {
     var manager: SpeechManager
 
-    @AppStorage("speechRate") private var speechRate: Double = 0.5
+    @AppStorage(StorageKey.speechRate) private var speechRate: Double = 0.5
     /// Karaoke: highlight the sentence being read aloud in the document (L4).
-    @AppStorage("karaokeEnabled") private var karaokeEnabled = true
+    @AppStorage(StorageKey.karaokeEnabled) private var karaokeEnabled = true
 
     private static let ratePresets: [Double] = [0.4, 0.5, 0.6]
 

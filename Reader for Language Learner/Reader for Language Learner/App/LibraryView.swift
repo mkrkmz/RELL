@@ -26,7 +26,7 @@ struct LibraryView: View {
     @State private var pendingCollectionAssignment: RecentDocument?
     @State private var newCollectionName = ""
     @State private var showingManageCollections = false
-    @AppStorage("librarySortOrder") private var sortOrderRaw: String = LibrarySortOrder.lastOpened.rawValue
+    @AppStorage(StorageKey.librarySortOrder) private var sortOrderRaw: String = LibrarySortOrder.lastOpened.rawValue
     @FocusState private var searchFocused: Bool
 
     private var sortOrder: LibrarySortOrder {

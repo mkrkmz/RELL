@@ -1,0 +1,48 @@
+//
+//  StorageKey.swift
+//  Reader for Language Learner
+//
+//  Every UserDefaults key RELL reads or writes by name. These strings are
+//  persistence keys: renaming one silently resets that preference for every
+//  user. `StorageKeyTests` pins the values.
+//
+//  Keys defined next to their feature (`Language.targetLanguageKey`,
+//  `LLMConfiguration.providerTypeKey`, `AppleOnDevice.enabledKey`, ...) stay
+//  there; this collects the ones that were bare string literals, several
+//  repeated in up to four files.
+//
+
+import Foundation
+
+nonisolated enum StorageKey {
+    static let annotationsSegment = "annotationsSegment"
+    static let appTheme = "appTheme"
+    static let autoRunEnabled = "autoRunEnabled"
+    static let bulkExportFormat = "bulkExportFormat"
+    static let customSystemPreamble = "customSystemPreamble"
+    static let dailyReadingGoalMinutes = "dailyReadingGoalMinutes"
+    static let dailyReminderTime = "dailyReminderTime"
+    static let domainPreference = "domainPreference"
+    static let epubFontSize = "epubFontSize"
+    static let hasCompletedOnboarding = "hasCompletedOnboarding"
+    static let hoverDictionaryEnabled = "hoverDictionaryEnabled"
+    static let inspectorShowMoreModules = "inspectorShowMoreModules"
+    static let inspectorWidth = "inspectorWidth"
+    static let karaokeEnabled = "karaokeEnabled"
+    static let librarySortOrder = "librarySortOrder"
+    static let menuBarExtraEnabled = "menuBarExtraEnabled"
+    static let pageAnalysisEnabled = "pageAnalysisEnabled"
+    static let pageTheme = "pageTheme"
+    static let pdfDisplayMode = "pdfDisplayMode"
+    static let quizMode = "quizMode"
+    static let readingPositions = "readingPositions"
+    static let savedWordsSortOrder = "savedWordsSortOrder"
+    static let sentenceTranslationEnabled = "sentenceTranslationEnabled"
+    static let settingsSelectedTab = "settingsSelectedTab"
+    static let sidebarWidth = "sidebarWidth"
+    static let speechRate = "speechRate"
+    static let temperatureOverrides = "temperatureOverrides"
+    static let thumbnailSize = "thumbnailSize"
+    static let typedAutoGrade = "typedAutoGrade"
+    static let wordsSegment = "wordsSegment"
+}

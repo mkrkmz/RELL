@@ -22,7 +22,7 @@ struct BulkAnkiExportView: View {
     @State private var scopeMastery: MasteryLevel?
     @State private var scopeLanguage: Language?
 
-    @AppStorage("bulkExportFormat") private var formatRaw = ExportFormat.ankiTSV.rawValue
+    @AppStorage(StorageKey.bulkExportFormat) private var formatRaw = ExportFormat.ankiTSV.rawValue
 
     @State private var exportResult: ExportResult?
 

@@ -19,7 +19,7 @@ struct AnkiNoteDraft {
 }
 
 /// Output flavors for bulk export. Raw values are stable — they back
-/// `@AppStorage("bulkExportFormat")`.
+/// `@AppStorage(StorageKey.bulkExportFormat)`.
 enum ExportFormat: String, CaseIterable, Identifiable {
     case ankiTSV = "Anki TSV"
     case csv = "CSV"

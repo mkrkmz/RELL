@@ -85,7 +85,7 @@ private struct LLMStatusPopover: View {
     var model: String
 
     @Environment(\.openSettings) private var openSettings
-    @AppStorage("settingsSelectedTab") private var settingsSelectedTab = SettingsTab.general.rawValue
+    @AppStorage(StorageKey.settingsSelectedTab) private var settingsSelectedTab = SettingsTab.general.rawValue
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {

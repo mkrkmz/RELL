@@ -11,12 +11,12 @@ struct PromptSettingsView: View {
 
     // MARK: - System Prompt Override
 
-    @AppStorage("customSystemPreamble") private var customPreamble = ""
+    @AppStorage(StorageKey.customSystemPreamble) private var customPreamble = ""
     @State private var showResetConfirm = false
 
     // MARK: - Temperature Overrides (stored as JSON dict)
 
-    @AppStorage("temperatureOverrides") private var temperatureOverridesJSON = "{}"
+    @AppStorage(StorageKey.temperatureOverrides) private var temperatureOverridesJSON = "{}"
 
     private var temperatureOverrides: [String: Double] {
         guard let data = temperatureOverridesJSON.data(using: .utf8),

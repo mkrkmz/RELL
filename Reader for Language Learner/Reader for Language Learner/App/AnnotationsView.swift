@@ -38,7 +38,7 @@ struct AnnotationsView: View {
         }
     }
 
-    @AppStorage("annotationsSegment") private var segmentRaw = Segment.bookmarks.rawValue
+    @AppStorage(StorageKey.annotationsSegment) private var segmentRaw = Segment.bookmarks.rawValue
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var segment: Segment {

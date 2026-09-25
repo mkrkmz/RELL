@@ -13,7 +13,7 @@ struct SavedWordsListView: View {
 
     @Environment(CEFREstimator.self) private var cefrEstimator
 
-    @AppStorage("savedWordsSortOrder") private var sortRaw = SavedWordsSortOrder.dateDesc.rawValue
+    @AppStorage(StorageKey.savedWordsSortOrder) private var sortRaw = SavedWordsSortOrder.dateDesc.rawValue
     @State private var searchText    = ""
     @FocusState private var searchFocused: Bool
     @State private var selectedFilter: SavedWordsFilter = .all

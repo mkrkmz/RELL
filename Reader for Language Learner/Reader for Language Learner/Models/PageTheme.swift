@@ -20,7 +20,7 @@ enum PageTheme: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Raw English name — rawValues back `@AppStorage("pageTheme")`, keep
+    /// Raw English name — rawValues back `@AppStorage(StorageKey.pageTheme)`, keep
     /// stable. Visible UI goes through `localizedTitle`.
     var displayName: String {
         switch self {

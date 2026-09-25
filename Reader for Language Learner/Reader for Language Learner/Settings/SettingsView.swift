@@ -15,7 +15,7 @@ enum SettingsTab: String {
 }
 
 struct SettingsView: View {
-    @AppStorage("settingsSelectedTab") private var selectedTabRaw = SettingsTab.general.rawValue
+    @AppStorage(StorageKey.settingsSelectedTab) private var selectedTabRaw = SettingsTab.general.rawValue
 
     private var selectedTab: Binding<SettingsTab> {
         Binding(

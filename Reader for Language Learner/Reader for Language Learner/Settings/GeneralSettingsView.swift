@@ -15,7 +15,7 @@ struct GeneralSettingsView: View {
     private var native: Language { Language(rawValue: nativeRaw) ?? .turkish }
     private var target: Language { Language(rawValue: targetRaw) ?? .english }
 
-    @AppStorage("domainPreference") private var domainRaw = DomainPreference.general.rawValue
+    @AppStorage(StorageKey.domainPreference) private var domainRaw = DomainPreference.general.rawValue
 
     var body: some View {
         Form {
@@ -172,16 +172,16 @@ struct GeneralSettingsView: View {
         .formStyle(.grouped)
     }
 
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
-    @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
+    @AppStorage(StorageKey.hasCompletedOnboarding) private var hasCompletedOnboarding = true
+    @AppStorage(StorageKey.hoverDictionaryEnabled) private var hoverDictionaryEnabled = true
     @AppStorage(HoverDictionaryLanguage.storageKey)
     private var hoverDictionaryLanguageRaw = HoverDictionaryLanguage.default.rawValue
-    @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+    @AppStorage(StorageKey.sentenceTranslationEnabled) private var sentenceTranslationEnabled = true
     @AppStorage(SentenceTranslationEngine.storageKey)
     private var sentenceTranslationEngineRaw = SentenceTranslationEngine.default.rawValue
-    @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
-    @AppStorage("speechRate") private var speechRate: Double = 0.5
-    @AppStorage("menuBarExtraEnabled") private var menuBarExtraEnabled = true
+    @AppStorage(StorageKey.pageAnalysisEnabled) private var pageAnalysisEnabled = false
+    @AppStorage(StorageKey.speechRate) private var speechRate: Double = 0.5
+    @AppStorage(StorageKey.menuBarExtraEnabled) private var menuBarExtraEnabled = true
 
     private var speechRateLabel: LocalizedStringKey {
         switch speechRate {

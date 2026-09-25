@@ -59,7 +59,7 @@ struct SidebarView: View {
     var epubNoteStore: EPUBNoteStore
 
     @State private var selectedTab: SidebarTab = .thumbnails
-    @AppStorage("thumbnailSize") private var thumbnailSizeRaw = DS.ThumbnailSize.medium.rawValue
+    @AppStorage(StorageKey.thumbnailSize) private var thumbnailSizeRaw = DS.ThumbnailSize.medium.rawValue
 
     private var thumbnailSize: DS.ThumbnailSize {
         DS.ThumbnailSize(rawValue: thumbnailSizeRaw) ?? .medium

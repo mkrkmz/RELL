@@ -20,7 +20,7 @@ final class DailyReminderManager: NSObject {
     static let shared = DailyReminderManager()
 
     static let enabledKey = "dailyReminderEnabled"
-    static let timeKey = "dailyReminderTime"
+    static let timeKey = StorageKey.dailyReminderTime
 
     private override init() {
         super.init()
@@ -81,7 +81,7 @@ final class DailyReminderManager: NSObject {
     }
 
     static func storedTime() -> Date {
-        // @AppStorage("dailyReminderTime") in GeneralSettingsView writes a
+        // @AppStorage(StorageKey.dailyReminderTime) in GeneralSettingsView writes a
         // Date directly (UserDefaults' native property-list Date type).
         UserDefaults.standard.object(forKey: timeKey) as? Date
             ?? Calendar.current.date(bySettingHour: 19, minute: 0, second: 0, of: Date())
