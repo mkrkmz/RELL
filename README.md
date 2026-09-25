@@ -12,7 +12,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/platform-macOS%2015%2B-blue" alt="macOS 15+" />
-  <img src="https://img.shields.io/badge/swift-6.2-orange" alt="Swift 6.2" />
+  <img src="https://img.shields.io/badge/swift-6.2%20toolchain-orange" alt="Swift 6.2 toolchain" />
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" />
   <img src="https://img.shields.io/badge/dependencies-zero-brightgreen" alt="Zero Dependencies" />
 </p>
@@ -37,9 +37,11 @@
 
 - **PDF & EPUB Reader** — Full-featured PDF viewer built on PDFKit (page navigation, search, bookmarks, zoom) plus a dependency-free EPUB 2/3 engine (chapters, table of contents, in-book search) — both share reading position memory
 - **10 Analysis Modules** — Definition, native-language meaning, collocations, examples, pronunciation (IPA), etymology, mnemonics, synonyms, word family, usage notes
-- **Multi-LLM Support** — LM Studio, Ollama, OpenAI-compatible APIs, and Anthropic Claude
+- **Works without setup** — On a Mac with Apple Intelligence, definitions, meanings, examples and synonyms come from Apple's on-device model; sentences translate offline with Apple Translation
+- **Multi-LLM Support** — LM Studio, Ollama, OpenAI-compatible APIs, and Anthropic Claude for everything else
 - **12 Languages** — English, Turkish, German, French, Spanish, Japanese, Korean, Chinese, Arabic, Portuguese, Russian, Italian
-- **Anki Export** — Save words and export as TSV flashcards (single or bulk) with context sentences
+- **Anki Export** — Save words and export as TSV, CSV or Quizlet flashcards (single or bulk) with context sentences
+- **Your data, safe** — Daily backups (last seven kept), one-click restore, export/import of everything
 - **Reading Stats** — Daily/weekly reading time tracking, unique documents count
 - **Text-to-Speech** — Listen to selected text with system voices
 - **Themes** — Light/dark/system app theme, page themes for both PDFs and EPUBs (original, sepia, dark)
@@ -77,7 +79,7 @@ make ui-test  # macOS launch/performance UI tests
 
 ### 1. Set Up an LLM Backend
 
-RELL supports four LLM backends. Pick one:
+On macOS 26 with Apple Intelligence on, RELL answers the core modules on-device with nothing to install. For pronunciation, etymology, mnemonics, collocations and word family — or on older Macs — pick one of four backends:
 
 | Backend | Local | API Key | Default URL |
 |---------|-------|---------|-------------|
@@ -153,7 +155,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation.
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Swift 6.2 |
+| Language | Swift (Swift 6.2 toolchain, Swift 5 language mode; the app target also compiles in Swift 6 mode) |
 | UI | SwiftUI |
 | PDF | PDFKit |
 | EPUB | In-house ZIP decoder + EPUB 2/3 parser, rendered via WKWebView |

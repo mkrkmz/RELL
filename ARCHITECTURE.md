@@ -59,15 +59,16 @@ final class SavedWordsStore { ... }
 
 | Sinif | Sorumluluk | Yasam Suresi |
 |-------|-----------|--------------|
-| `SelectionState` | Aktif belge, secili metin, baglam cumlesi | ContentView @State (pencere-basina) |
+| `ReaderWindowModel` | Pencere-basina durum: asagidaki yoneticiler + panel/odak/zen durumu, bul cubugu, PDF sayfa konumlari (v1.41) | ContentView @State (pencere-basina) |
+| `SelectionState` | Aktif belge, secili metin, baglam cumlesi | ReaderWindowModel |
 | `SavedWordsStore` | Kelime CRUD + JSON persistence + Spotlight indeksleme | **App @State**, `.environment()` ile tum pencerelere/HUD'a |
 | `ReadingSessionStore` | Okuma oturumu takibi + istatistik/streak | App @State (paylasilan) |
 | `RecentDocumentStore`, `PDFBookmarkStore`, `PDFNoteStore`, `PDFHighlightStore`, `DocumentCoverStore` | Belgeden bagimsiz kalicilik | App @State (paylasilan) |
-| `InspectorViewModel` | LLM istek/yanit yonetimi + LRU cache | InspectorView @State |
-| `PDFViewManager` | PDFView koordinasyonu (zoom, sayfa) | ContentView @State (pencere-basina) |
-| `PDFSearchManager` | PDF icinde metin arama | ContentView @State (pencere-basina) |
-| `EPUBViewManager` | EPUB okuyucu durumu (bolum, scroll, tema, hover, kaynak servisi) | ContentView @State (pencere-basina) |
-| `EPUBSearchManager` | EPUB kitap-ici arama (bolum basina eslesme) | ContentView @State (pencere-basina) |
+| `InspectorViewModel` | Modul istekleri ve Ask AI akisi (`start`/`startFollowUp`, calisma kimligiyle bayat istek korumasi), LRU cache | InspectorView @State |
+| `PDFViewManager` | PDFView koordinasyonu (zoom, sayfa) | ReaderWindowModel |
+| `PDFSearchManager` | PDF icinde metin arama | ReaderWindowModel |
+| `EPUBViewManager` | EPUB okuyucu durumu (bolum, scroll, tema, hover, kaynak servisi) | ReaderWindowModel |
+| `EPUBSearchManager` | EPUB kitap-ici arama (bolum basina eslesme) | ReaderWindowModel |
 | `SpeechManager` | Text-to-speech (singleton) | Static shared |
 
 ### Veri Akisi
@@ -161,7 +162,11 @@ protocol LLMProvider {
 }
 ```
 
-`LLMClient` OpenAI-compatible provider'lari, `AnthropicClient` Claude Messages API'yi uygular. `ResilientLLMProvider` retry, circuit breaker ve kullaniciya okunabilir hata mesajlari icin bu provider'lari sarar.
+`LLMClient` OpenAI-compatible provider'lari, `AnthropicClient` Claude Messages API'yi uygular (`AnthropicModelTraits`: `top_p` hic, `temperature` yalniz kabul eden eski modellere; dusunen modellere `effort: low`). `ResilientLLMProvider` retry, circuit breaker ve kullaniciya okunabilir hata mesajlari icin bu provider'lari sarar — stream ilk token'dan sonra yeniden denenmez, kalici 4xx hic denenmez. Oturumlar `LLMSessionPool`'da paylasilir.
+
+### Apple cihaz-ici katman (v1.40)
+
+`AppleOnDevice.route(for:)` (saf fonksiyon) her istegi ya Apple'in cihaz-ici modeline (`AppleOnDeviceClient`, FoundationModels, macOS 26+) ya da yapilandirilmis saglayiciya yollar. Apple yalniz spike'ta guvenilir cikan modulleri cevaplar (tanim, anlam, ornekler, es anlamlilar, kullanim notlari + Ask AI, CEFR); telaffuz, etimoloji, hatirlatici, esdizim ve kelime ailesi her zaman yapilandirilmis saglayiciya gider. Arapca/Rusca desteklenmez. Cumle seridi varsayilan olarak Apple Translation framework'unu kullanir (`AppleTranslation`), desteklenmeyen ciftte AI saglayicisina duser.
 
 ## Persistence
 
@@ -176,6 +181,8 @@ Tum veri `~/Library/Application Support/RELL/` altinda:
 | `pdf_notes.json` | `[PDFNote]` | Limitsiz |
 | `recent_documents.json` | `[RecentDocument]` | 12 belge |
 
+**Guvenlik (v1.39):** okunamayan dosya uzerine yazilmaz — `PersistenceRecovery` onu `<ad>.corrupt-<zaman>.json` olarak kenara tasir ve ilk pencere kullaniciya soyler. `PersistenceBackup` gunde bir kez tum veri dosyalarini (+ UserDefaults'taki PDF yer imleri) `Backups/<tarih>/` altina kopyalar, son 7'yi tutar; Ayarlar ▸ Genel'den geri yukleme ve klasore disa/ice aktarma. Geri yukleme once mevcut veriyi yedekler, tum yazicilari askiya alir ve uygulamayi yeniden baslatir. `DebouncedFileWriter` yazimlari nesil sirasiyla, tek kilit altinda yapar (kapanista eski snapshot yeniyi ezemez).
+
 **Yedekleme/Atomik Yazma:** Store'lar ortak `RELLJSONStore` yardimcisiyla JSON encode/decode eder, atomik yazar ve bos/bozuk persistence dosyalarinda uygulamayi bozmak yerine guvenli varsayilana doner. Hatalar `AppLogger.persistence` ile loglanir.
 
 ### UserDefaults
@@ -185,7 +192,8 @@ Kullanici tercihleri `@AppStorage` ile UserDefaults'ta saklanir:
 - Panel genislikleri (`sidebarWidth`, `inspectorWidth`)
 - Tema (`appTheme`, `pageTheme`)
 - Dil secimi (`nativeLanguage`, `targetLanguage`)
-- LLM ayarlari (`llmProviderType`, `llmServerURL`, `llmModel`, `llmRequestTimeout`, `llmAPIKey`)
+- LLM ayarlari (`llmProviderType`, `llmServerURL`, `llmModel`, `llmRequestTimeout`); API anahtari Keychain'de
+- Adi dogrudan yazilan anahtarlar `StorageKey`'de toplanir; degerleri `StorageKeyTests` ile sabitlenmistir (yeniden adlandirma ayari sifirlar)
 - Domain tercihi (`domainPreference`)
 - Yer imleri (`rell_pdf_bookmarks_v1`)
 
@@ -193,7 +201,7 @@ Kullanici tercihleri `@AppStorage` ile UserDefaults'ta saklanir:
 
 ### LRU Cache
 
-`InspectorViewModel` icinde 20 girislik LRU cache:
+`InspectorViewModel` icinde 50 girislik, diske kalici LRU cache (hatayla biten modul cache'e girmez):
 
 **Anahtar:** `OutputCacheKey(term, mode, detail, domain)`
 **Deger:** Tum modul ciktilari + yukleme/hata durumlari
