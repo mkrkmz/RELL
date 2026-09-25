@@ -15,121 +15,113 @@ struct ContentView: View {
     @Binding var documentURL: URL?
 
     // Per-window state — every window gets its own document and viewer.
-    @State private var selectionState   = SelectionState()
-    @State private var searchManager    = PDFSearchManager()
-    @State private var pdfViewManager   = PDFViewManager()
-    @State private var epubManager      = EPUBViewManager()
-    @State private var toastCenter      = ToastCenter()
-    @State private var epubSearchManager = EPUBSearchManager()
-    @State private var circuitBreaker   = CircuitBreaker()
-    @State private var llmHealth        = LLMHealthMonitor()
-    @State private var pageAnalysisService = PageAnalysisService()
+    // Lives in ReaderWindowModel; the forwarding properties below keep the
+    // view code reading as it did.
+    @State var model = ReaderWindowModel()
 
-    private var isEPUBDocument: Bool {
-        selectionState.documentURL?.pathExtension.lowercased() == "epub"
-    }
+    var selectionState: SelectionState { model.selectionState }
+    var searchManager: PDFSearchManager { model.searchManager }
+    var pdfViewManager: PDFViewManager { model.pdfViewManager }
+    var epubManager: EPUBViewManager { model.epubManager }
+    var toastCenter: ToastCenter { model.toastCenter }
+    var epubSearchManager: EPUBSearchManager { model.epubSearchManager }
+    var circuitBreaker: CircuitBreaker { model.circuitBreaker }
+    var llmHealth: LLMHealthMonitor { model.llmHealth }
+    var pageAnalysisService: PageAnalysisService { model.pageAnalysisService }
+    var lexicalProfileService: LexicalProfileService { model.lexicalProfileService }
+    var bookCoverageService: BookCoverageService { model.bookCoverageService }
 
-    private var speechManager: SpeechManager { SpeechManager.shared }
+    var isEPUBDocument: Bool { model.isEPUBDocument }
+
+    var speechManager: SpeechManager { SpeechManager.shared }
 
     // Shared stores — owned by the App scene, injected via environment.
-    @Environment(SavedWordsStore.self)     private var savedWordsStore
-    @Environment(QuickLookupService.self)  private var quickLookup
-    @Environment(PDFBookmarkStore.self)    private var bookmarkStore
-    @Environment(PDFNoteStore.self)        private var noteStore
-    @Environment(PDFHighlightStore.self)   private var highlightStore
-    @Environment(EPUBHighlightStore.self)  private var epubHighlightStore
-    @Environment(EPUBBookmarkStore.self)   private var epubBookmarkStore
-    @Environment(EPUBNoteStore.self)       private var epubNoteStore
-    @Environment(ReadingSessionStore.self) private var sessionStore
-    @Environment(RecentDocumentStore.self) private var recentDocumentStore
-    @Environment(DocumentCoverStore.self)  private var coverStore
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.undoManager) private var undoManager
+    @Environment(SavedWordsStore.self)     var savedWordsStore
+    @Environment(QuickLookupService.self)  var quickLookup
+    @Environment(PDFBookmarkStore.self)    var bookmarkStore
+    @Environment(PDFNoteStore.self)        var noteStore
+    @Environment(PDFHighlightStore.self)   var highlightStore
+    @Environment(EPUBHighlightStore.self)  var epubHighlightStore
+    @Environment(EPUBBookmarkStore.self)   var epubBookmarkStore
+    @Environment(EPUBNoteStore.self)       var epubNoteStore
+    @Environment(ReadingSessionStore.self) var sessionStore
+    @Environment(RecentDocumentStore.self) var recentDocumentStore
+    @Environment(DocumentCoverStore.self)  var coverStore
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+    @Environment(\.undoManager) var undoManager
 
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
-    @State private var showInspector = true
-    @State private var isDropTargeted = false
-    @State private var showWorkspaceReview = false
-    @State private var showStats = false
-    @State private var showReadingAppearance = false
+    var columnVisibility: NavigationSplitViewVisibility { model.columnVisibility }
+    var showInspector: Bool {
+        get { model.showInspector }
+        nonmutating set { model.showInspector = newValue }
+    }
+    var showWorkspaceReview: Bool {
+        get { model.showWorkspaceReview }
+        nonmutating set { model.showWorkspaceReview = newValue }
+    }
+    var showStats: Bool {
+        get { model.showStats }
+        nonmutating set { model.showStats = newValue }
+    }
+    var showReadingAppearance: Bool {
+        get { model.showReadingAppearance }
+        nonmutating set { model.showReadingAppearance = newValue }
+    }
+    var isDropTargeted: Bool { model.isDropTargeted }
+    var focusMode: Bool { model.focusMode }
+    var zenMode: Bool { model.zenMode }
+    var showSidebar: Bool { model.showSidebar }
+    var chromeHidden: Bool { model.chromeHidden }
 
-    // Focus mode hides the side panels for distraction-free reading and
-    // remembers their prior visibility so exiting restores the layout.
-    @State private var focusMode = false
-    @State private var preFocusSidebar = true
-    @State private var preFocusInspector = true
-
-    // Zen mode goes further than focus: full-screen, the window toolbar and
-    // context strip also hide (revealed on hover), for immersive reading.
-    /// Per-window coverage profiler for the passage on screen (L3).
-    @State private var lexicalProfileService = LexicalProfileService()
-    /// Whole-book coverage, computed on open when the stored one is stale (L-V2).
-    @State private var bookCoverageService = BookCoverageService()
-
-    @State private var zenMode = false
-    @State private var preZenSidebar = true
-    @State private var preZenInspector = true
-
-    /// Column widths are managed (and persisted) by NavigationSplitView /
-    /// .inspector themselves; only visibility is app state.
-    private var showSidebar: Bool { columnVisibility != .detailOnly }
-
-    /// The in-reader chrome (context strip, translation strip) hides in both
-    /// focus and zen modes.
-    private var chromeHidden: Bool { focusMode || zenMode }
-
-    @AppStorage("appTheme")       private var appThemeRaw:    String = AppTheme.system.rawValue
-    @AppStorage("pageTheme")      private var pageThemeRaw:   String = PageTheme.original.rawValue
-    @AppStorage("pdfDisplayMode") private var pdfDisplayModeRaw: String = PDFLayoutMode.single.rawValue
-    @AppStorage("readingPositions") private var readingPositionsData: Data = Data()
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @AppStorage("hoverDictionaryEnabled") private var hoverDictionaryEnabled = true
-    @AppStorage("sentenceTranslationEnabled") private var sentenceTranslationEnabled = true
+    @AppStorage(StorageKey.appTheme)       var appThemeRaw:    String = AppTheme.system.rawValue
+    @AppStorage(StorageKey.pageTheme)      var pageThemeRaw:   String = PageTheme.original.rawValue
+    @AppStorage(StorageKey.pdfDisplayMode) var pdfDisplayModeRaw: String = PDFLayoutMode.single.rawValue
+    @AppStorage(StorageKey.hasCompletedOnboarding) var hasCompletedOnboarding = false
+    @AppStorage(StorageKey.hoverDictionaryEnabled) var hoverDictionaryEnabled = true
+    @AppStorage(StorageKey.sentenceTranslationEnabled) var sentenceTranslationEnabled = true
     /// Karaoke: highlight the sentence being read aloud (L4).
-    @AppStorage("karaokeEnabled") private var karaokeEnabled = true
-    @AppStorage("epubFontSize") private var epubFontSize: Double = 18
-    @AppStorage(EPUBTypography.lineHeightKey) private var epubLineHeight: Double = 1.6
-    @AppStorage(EPUBFontFamily.storageKey) private var epubFontFamilyRaw = EPUBFontFamily.publisher.rawValue
-    @AppStorage(EPUBContentWidth.storageKey) private var epubContentWidthRaw = EPUBContentWidth.medium.rawValue
-    @AppStorage(EPUBTypography.justifiedKey) private var epubJustified = false
+    @AppStorage(StorageKey.karaokeEnabled) var karaokeEnabled = true
+    @AppStorage(StorageKey.epubFontSize) var epubFontSize: Double = 18
+    @AppStorage(EPUBTypography.lineHeightKey) var epubLineHeight: Double = 1.6
+    @AppStorage(EPUBFontFamily.storageKey) var epubFontFamilyRaw = EPUBFontFamily.publisher.rawValue
+    @AppStorage(EPUBContentWidth.storageKey) var epubContentWidthRaw = EPUBContentWidth.medium.rawValue
+    @AppStorage(EPUBTypography.justifiedKey) var epubJustified = false
     /// Off by default — background vocabulary pre-warming from visible page
     /// text. Every call site checks this before invoking the service.
-    @AppStorage("pageAnalysisEnabled") private var pageAnalysisEnabled = false
+    @AppStorage(StorageKey.pageAnalysisEnabled) var pageAnalysisEnabled = false
     // Observed so switching study language re-renders the saved-word
     // underlines, which are scoped to it (see `SavedWordsStore.terms(for:)`).
-    @AppStorage(Language.targetLanguageKey) private var targetLanguageRaw = Language.defaultTarget.rawValue
-    @AppStorage(LLMConfiguration.providerTypeKey) private var llmProviderTypeRaw: String = LLMConfiguration.defaultProviderType.rawValue
-    @AppStorage(LLMConfiguration.serverURLKey)    private var llmServerURL: String = LLMConfiguration.defaultServerURL
-    @AppStorage(LLMConfiguration.modelKey)        private var llmModel: String = LLMConfiguration.defaultModel
+    @AppStorage(Language.targetLanguageKey) var targetLanguageRaw = Language.defaultTarget.rawValue
+    @AppStorage(LLMConfiguration.providerTypeKey) var llmProviderTypeRaw: String = LLMConfiguration.defaultProviderType.rawValue
+    @AppStorage(LLMConfiguration.serverURLKey)    var llmServerURL: String = LLMConfiguration.defaultServerURL
+    @AppStorage(LLMConfiguration.modelKey)        var llmModel: String = LLMConfiguration.defaultModel
 
-    /// Sentence the user dismissed; suppresses the strip until the selection changes.
-    @State private var dismissedTranslationSentence: String = ""
+    var dismissedTranslationSentence: String {
+        get { model.dismissedTranslationSentence }
+        nonmutating set { model.dismissedTranslationSentence = newValue }
+    }
 
-    /// This view's NSWindow — used for tab preference and key-window
-    /// session tracking in the multi-window world.
-    @State private var hostWindow: NSWindow?
-
-    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openWindow) var openWindow
 
     init(documentURL: Binding<URL?>) {
         self._documentURL = documentURL
         // Users with existing reading history predate the first-run flow —
         // mark it complete before the first render so the sheet never flashes.
         let defaults = UserDefaults.standard
-        if !defaults.bool(forKey: "hasCompletedOnboarding"),
+        if !defaults.bool(forKey: StorageKey.hasCompletedOnboarding),
            let dir = FileManager.default.rellAppSupportDirectory(),
            FileManager.default.fileExists(atPath: dir.appendingPathComponent("recent_documents.json").path) {
-            defaults.set(true, forKey: "hasCompletedOnboarding")
+            defaults.set(true, forKey: StorageKey.hasCompletedOnboarding)
         }
     }
 
-    private var appTheme:  AppTheme  { AppTheme(rawValue: appThemeRaw) ?? .system }
-    private var pageTheme: PageTheme { PageTheme(rawValue: pageThemeRaw) ?? .original }
-    private var pdfDisplayMode: PDFLayoutMode { PDFLayoutMode(rawValue: pdfDisplayModeRaw) ?? .single }
+    var appTheme:  AppTheme  { AppTheme(rawValue: appThemeRaw) ?? .system }
+    var pageTheme: PageTheme { PageTheme(rawValue: pageThemeRaw) ?? .original }
+    var pdfDisplayMode: PDFLayoutMode { PDFLayoutMode(rawValue: pdfDisplayModeRaw) ?? .single }
     /// Snapshot of the stored EPUB typography prefs; reading the @AppStorage
     /// properties here (not UserDefaults directly) keeps the view observing
     /// each key, so panel changes re-render the reader live.
-    private var epubTypography: EPUBTypography {
+    var epubTypography: EPUBTypography {
         EPUBTypography(
             fontSize: epubFontSize,
             lineHeight: min(2.0, max(1.2, epubLineHeight)),
@@ -152,7 +144,7 @@ struct ContentView: View {
 
     /// Floating playback bar while SpeechManager is speaking/paused — shared
     /// by the inspector's Speak button and Speech ▸ Read Page Aloud.
-    private func withSpeechPlayback(_ content: some View) -> some View {
+    func withSpeechPlayback(_ content: some View) -> some View {
         content.overlay(alignment: .bottom) {
             if speechManager.state != .idle {
                 SpeechPlaybackBar(manager: speechManager)
@@ -166,7 +158,7 @@ struct ContentView: View {
     /// Window-level toast overlay + environment injection, so any view in
     /// this window (note rows, context menus, bookmark toggle) can confirm a
     /// silent action through the shared `ToastCenter`.
-    private func withToast(_ content: some View) -> some View {
+    func withToast(_ content: some View) -> some View {
         @Bindable var toastCenter = toastCenter
         return content
             .dsToast(
@@ -177,7 +169,7 @@ struct ContentView: View {
             .environment(toastCenter)
     }
 
-    private var baseContent: some View {
+    var baseContent: some View {
         Group {
             if selectionState.documentURL != nil {
                 readerSplitView
@@ -197,7 +189,7 @@ struct ContentView: View {
                         coverStore: coverStore,
                         sessionStore: sessionStore
                     )
-                    .onDrop(of: [.pdf, .epub], isTargeted: $isDropTargeted, perform: handleDrop)
+                    .onDrop(of: [.pdf, .epub], isTargeted: Bindable(model).isDropTargeted, perform: handleDrop)
                     .overlay { if isDropTargeted { dropOverlay } }
                     .toolbar { toolbarContent }
                     .navigationTitle(windowTitle)
@@ -208,12 +200,12 @@ struct ContentView: View {
         .frame(minWidth: DS.Layout.windowMin.width, minHeight: DS.Layout.windowMin.height)
         .onDrop(
             of: [.pdf, .epub],
-            isTargeted: selectionState.documentURL != nil ? $isDropTargeted : nil,
+            isTargeted: selectionState.documentURL != nil ? Bindable(model).isDropTargeted : nil,
             perform: handleDrop
         )
     }
 
-    private func withNotifications(_ content: some View) -> some View {
+    func withNotifications(_ content: some View) -> some View {
         content
             .onReceive(NotificationCenter.default.publisher(for: .openPDFCommand)) { _ in openPDF() }
             .onReceive(NotificationCenter.default.publisher(for: .openReviewWindowCommand)) { _ in
@@ -228,7 +220,7 @@ struct ContentView: View {
                     openDocument(url)
                 case .word(let id):
                     // Reveal the card: Words tab in the sidebar + detail sheet.
-                    columnVisibility = .all
+                    model.columnVisibility = .all
                     NotificationCenter.default.post(name: .revealSavedWordCommand, object: id)
                 }
             }
@@ -240,7 +232,7 @@ struct ContentView: View {
             }
     }
 
-    private func withDocumentAndEPUBSync(_ content: some View) -> some View {
+    func withDocumentAndEPUBSync(_ content: some View) -> some View {
         content
             .onChange(of: selectionState.documentURL) { oldURL, newURL in
                 if let newURL {
@@ -280,14 +272,14 @@ struct ContentView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { note in
                 // Active window wins: focusing this window resumes its session.
-                guard let window = note.object as? NSWindow, window === hostWindow,
+                guard let window = note.object as? NSWindow, window === model.hostWindow,
                       let filename = selectionState.documentURL?.lastPathComponent,
                       sessionStore.activeSession?.pdfFilename != filename
                 else { return }
                 sessionStore.startSession(for: filename)
             }
             .background(WindowAccessor { window in
-                hostWindow = window
+                model.hostWindow = window
                 // Additional documents open as native tabs by default; users
                 // can still drag a tab out into its own window.
                 window.tabbingMode = .preferred
@@ -348,7 +340,7 @@ struct ContentView: View {
             }
     }
 
-    private func withSheets(_ content: some View) -> some View {
+    func withSheets(_ content: some View) -> some View {
         content
             .sheet(item: Binding(
                 get: { noteStore.draftNote },
@@ -368,7 +360,7 @@ struct ContentView: View {
                     onCancel: { noteStore.cancelDraft() }
                 )
             }
-            .sheet(isPresented: $showWorkspaceReview) {
+            .sheet(isPresented: Bindable(model).showWorkspaceReview) {
                 QuizView(
                     store: savedWordsStore,
                     onContinueReading: { showWorkspaceReview = false },
@@ -376,7 +368,7 @@ struct ContentView: View {
                 )
                     .frame(width: 460, height: 560)
             }
-            .sheet(isPresented: $showStats) {
+            .sheet(isPresented: Bindable(model).showStats) {
                 NavigationStack {
                     ReadingStatsView(
                         sessionStore: sessionStore,
@@ -403,8 +395,8 @@ struct ContentView: View {
 
     // MARK: - Reader Layout (3-panel, native)
 
-    private var readerSplitView: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+    var readerSplitView: some View {
+        NavigationSplitView(columnVisibility: Bindable(model).columnVisibility) {
             SidebarView(
                 pdfViewManager:      pdfViewManager,
                 savedWordsStore:     savedWordsStore,
@@ -436,7 +428,7 @@ struct ContentView: View {
                         )
                     }
                 }
-                .inspector(isPresented: $showInspector) {
+                .inspector(isPresented: Bindable(model).showInspector) {
                     InspectorView(
                         selectedText: selectionState.selectedText,
                         contextSentence: selectionState.contextSentence,
@@ -490,7 +482,7 @@ struct ContentView: View {
     }
 
     // ── Reader column (PDF or EPUB) ───────────────────────────────────
-    private var pdfColumn: some View {
+    var pdfColumn: some View {
         VStack(spacing: DS.Spacing.sm) {
                     if !isEPUBDocument, searchManager.isFindBarVisible {
                         FindBarView(searchManager: searchManager, onClose: closeFindBar)
@@ -595,7 +587,7 @@ struct ContentView: View {
 
     /// PDF: 1-based page. EPUB: 1-based chapter — feeds the same
     /// SavedWord.pageNumber / Anki source fields.
-    private var currentPageNumber: Int? {
+    var currentPageNumber: Int? {
         if isEPUBDocument {
             return epubManager.chapterCount > 0 ? epubManager.chapterIndex + 1 : nil
         }
@@ -606,404 +598,22 @@ struct ContentView: View {
         return idx + 1
     }
 
-    private var currentDocumentName: String? {
+    var currentDocumentName: String? {
         selectionState.documentURL?.deletingPathExtension().lastPathComponent
     }
 
     /// The selected text when it reads as a sentence (≥3 words) and hasn't
     /// been dismissed — the source for the translation strip.
-    private var translatableSentence: String? {
+    var translatableSentence: String? {
         let selection = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard selection.split(whereSeparator: \.isWhitespace).count >= 3 else { return nil }
         guard selection != dismissedTranslationSentence else { return nil }
         return selection
     }
 
-    private var readerContextStrip: some View {
-        HStack(spacing: DS.Spacing.sm) {
-            readerContextChip(
-                icon: "doc.text",
-                text: currentDocumentName ?? "Open"
-            )
-            readerContextDivider
-            readerContextChip(
-                icon: "book.pages",
-                text: pageStatusText
-            )
-
-            Spacer(minLength: DS.Spacing.sm)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DS.Spacing.xs) {
-                    readerContextMetricChip(icon: "note.text", value: "\(currentNoteCount)", label: "notes")
-                    readerContextMetricChip(icon: "star", value: "\(currentSavedWordCount)", label: "saved")
-                    readerContextMetricChip(
-                        icon: currentDueWordCount > 0 ? "clock.badge.exclamationmark" : "checkmark.seal",
-                        value: "\(currentDueWordCount)",
-                        label: "due",
-                        tint: currentDueWordCount > 0 ? DS.Color.warning : DS.Color.success
-                    )
-                    if let profile = lexicalProfileService.current, profile.totalTokens > 0 {
-                        // How much of what's on screen the reader already knows
-                        // — comprehensible-input coverage (L3).
-                        readerContextMetricChip(
-                            icon: "percent",
-                            value: "\(Int((profile.knownShare * 100).rounded()))",
-                            label: "known",
-                            tint: DS.Color.coverageTint(for: profile.difficulty)
-                        )
-                    }
-                    readerContextChip(
-                        icon: selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            ? "cursorarrow.click"
-                            : "text.cursor",
-                        text: selectionSummaryText
-                    )
-                }
-            }
-            .frame(maxWidth: 360)
-        }
-        .padding(.horizontal, DS.Spacing.md)
-        .padding(.vertical, 6)
-        .background(DS.Color.surfaceElevated.opacity(0.94))
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
-        )
-    }
-
-    /// Profiles the whole open book against the reader's vocabulary, unless
-    /// the stored snapshot still holds. Safe to call on every open: the
-    /// service returns immediately when nothing has changed.
-    private func refreshBookCoverage() {
-        guard let url = selectionState.documentURL else { return }
-        let isEPUB = url.pathExtension.lowercased() == "epub"
-        // An EPUB opens in two steps; wait for the archive this URL belongs to.
-        if isEPUB, epubManager.loadedURL != url { return }
-
-        bookCoverageService.refreshIfNeeded(
-            url: url,
-            epubDocument: isEPUB ? epubManager.document : nil,
-            existing: recentDocumentStore.documents.first { $0.path == url.path }?.coverage,
-            language: Language.storedTarget,
-            savedWordsStore: savedWordsStore,
-            onComputed: { coverage in
-                recentDocumentStore.setCoverage(coverage, for: url)
-            }
-        )
-    }
-
-    /// Profiles the passage on screen against the reader's vocabulary. Cheap to
-    /// call repeatedly — the service caches by passage and computes off-main.
-    private func refreshLexicalProfile() {
-        guard let filename = currentDocumentName else { return }
-        let language = Language.storedTarget
-
-        if isEPUBDocument {
-            let chapter = epubManager.chapterIndex
-            guard epubManager.chapterCount > 0 else { return }
-            Task {
-                let text = await epubManager.currentChapterPlainText()
-                lexicalProfileService.profile(
-                    text: text,
-                    cacheKey: "\(filename)#c\(chapter)",
-                    language: language,
-                    savedWordsStore: savedWordsStore
-                )
-            }
-        } else {
-            guard let page = pdfViewManager.pdfView?.currentPage,
-                  let text = page.string,
-                  let index = currentPageNumber
-            else { return }
-            lexicalProfileService.profile(
-                text: text,
-                cacheKey: "\(filename)#p\(index)",
-                language: language,
-                savedWordsStore: savedWordsStore
-            )
-        }
-    }
-
-    private var pageStatusText: String {
-        if isEPUBDocument {
-            guard epubManager.chapterCount > 0 else { return String(localized: "Opening book…") }
-            let chapter = String(localized: "Chapter \(epubManager.chapterIndex + 1) / \(epubManager.chapterCount)")
-            // Book-wide, content-weighted progress + time left (U3) — more
-            // honest than the in-chapter scroll percentage this used to show.
-            let percent = Int((epubManager.bookProgress * 100).rounded())
-            let minutes = epubManager.minutesRemaining
-            let tail = minutes > 0 ? String(localized: "\(percent)% · \(minutes) min left") : "\(percent)%"
-            return "\(chapter) · \(tail)"
-        }
-        guard pdfViewManager.pageCount > 0 else { return String(localized: "Ready") }
-        if let currentPageNumber {
-            return String(localized: "Page \(currentPageNumber) / \(pdfViewManager.pageCount)")
-        }
-        return String(localized: "\(pdfViewManager.pageCount) pages")
-    }
-
-    private var selectionSummaryText: String {
-        let trimmedSelection = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedSelection.isEmpty else { return String(localized: "Select text to analyze") }
-
-        let wordCount = trimmedSelection.split(whereSeparator: \.isWhitespace).count
-        if wordCount <= 1 {
-            return String(localized: "1 word selected")
-        }
-        if wordCount <= 8 {
-            return String(localized: "\(wordCount) words selected")
-        }
-        return String(localized: "Sentence selection ready")
-    }
-
-    private var currentNoteCount: Int {
-        noteStore.count(for: currentDocumentName)
-    }
-
-    private var currentSavedWordCount: Int {
-        savedWordsStore.savedCount(for: currentDocumentName)
-    }
-
-    private var currentDueWordCount: Int {
-        savedWordsStore.dueCount(for: currentDocumentName)
-    }
-
-    private var readerContextDivider: some View {
-        Divider()
-            .frame(height: 12)
-    }
-
-    private func readerContextChip(icon: String, text: String) -> some View {
-        HStack(spacing: DS.Spacing.xs) {
-            Image(systemName: icon)
-                .font(DS.Typography.icon(10, weight: .semibold))
-                .foregroundStyle(DS.Color.textTertiary)
-
-            Text(text)
-                .lineLimit(1)
-                .truncationMode(.tail)
-        }
-        .font(DS.Typography.caption)
-        .foregroundStyle(DS.Color.textSecondary)
-    }
-
-    private func readerContextMetricChip(
-        icon: String,
-        value: String,
-        label: String,
-        tint: Color = DS.Color.accent
-    ) -> some View {
-        HStack(spacing: DS.Spacing.xs) {
-            Image(systemName: icon)
-                .font(DS.Typography.icon(10, weight: .semibold))
-                .foregroundStyle(tint)
-                // The adjacent text already names the metric; the glyph would
-                // otherwise be announced as a second, meaningless element.
-                .accessibilityHidden(true)
-            Text("\(value) \(label)")
-                .lineLimit(1)
-        }
-        .font(DS.Typography.caption)
-        .foregroundStyle(DS.Color.textSecondary)
-        .padding(.horizontal, DS.Spacing.xs)
-        .padding(.vertical, 3)
-        .background(tint.opacity(0.08))
-        .clipShape(Capsule())
-        .accessibilityElement(children: .combine)
-    }
-
-    // MARK: - Toolbar
-
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .navigation) {
-            if selectionState.documentURL != nil {
-                Button(action: closeDocument) {
-                    Label("Home", systemImage: "house")
-                }
-                .help("Close document and return to Home (⇧⌘W)")
-                .accessibilityLabel("Return to Home")
-            }
-        }
-
-        // NavigationSplitView supplies the system sidebar toggle.
-
-        ToolbarItem(placement: .navigation) {
-            if selectionState.documentURL != nil, !isEPUBDocument {
-                HStack(spacing: DS.Spacing.sm) {
-                    PageIndicatorView(
-                        currentPageIndex: pdfViewManager.currentPageIndex,
-                        pageCount: pdfViewManager.pageCount
-                    ) { index in
-                        pdfViewManager.goToPage(index: index)
-                    }
-
-                    if pdfViewManager.pageCount > 1 {
-                        PageScrubberView(
-                            currentPageIndex: pdfViewManager.currentPageIndex,
-                            pageCount: pdfViewManager.pageCount
-                        ) { index in
-                            pdfViewManager.goToPage(index: index)
-                        }
-                        .frame(width: 130)
-                    }
-                }
-            }
-        }
-
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button(action: openPDF) {
-                Label("Open", systemImage: "folder.badge.plus")
-            }
-            .help("Open a PDF or EPUB (⌘O)")
-
-            Button(action: openFindBar) {
-                Label("Find", systemImage: "magnifyingglass")
-            }
-            .keyboardShortcut("f", modifiers: [.command])
-            .help("Find (⌘F)")
-            .disabled(selectionState.documentURL == nil)
-
-            Button(action: toggleCurrentPageBookmark) {
-                Label(
-                    "Bookmark",
-                    systemImage: isCurrentPageBookmarked ? "bookmark.fill" : "bookmark"
-                )
-            }
-            .keyboardShortcut("b", modifiers: [.command])
-            .help(isCurrentPageBookmarked ? "Remove Bookmark (⌘B)" : "Bookmark Page (⌘B)")
-            .disabled(selectionState.documentURL == nil)
-        }
-
-        ToolbarItemGroup(placement: .automatic) {
-            if selectionState.documentURL != nil {
-                if !isEPUBDocument {
-                    zoomControls
-                    Button { pdfViewManager.fitToWidth() } label: {
-                        Label("Fit Width", systemImage: "arrow.left.and.right.text.vertical")
-                    }
-                    .help("Fit to Width (⌘0)")
-                    .keyboardShortcut("0", modifiers: [.command])
-                }
-
-                // "Aa" — page theme for both formats, typography for EPUB.
-                // EPUB text-size stepping keeps its ⌘+/⌘− shortcuts through
-                // the View menu (ReaderCommands zoomIn/zoomOut), which was
-                // already the canonical path.
-                Button { showReadingAppearance.toggle() } label: {
-                    Label("Reading Appearance", systemImage: "textformat.size")
-                }
-                .help("Reading Appearance")
-                .popover(isPresented: $showReadingAppearance, arrowEdge: .bottom) {
-                    ReadingAppearanceView(isEPUB: isEPUBDocument)
-                }
-            }
-        }
-
-        ToolbarItem(placement: .automatic) {
-            Menu {
-                Section("App Theme") {
-                    ForEach(AppTheme.allCases) { theme in
-                        Button { appThemeRaw = theme.rawValue } label: {
-                            HStack {
-                                Label(theme.localizedTitle, systemImage: theme.iconName)
-                                if appTheme == theme { Spacer(); Image(systemName: "checkmark") }
-                            }
-                        }
-                    }
-                }
-                Section("Page Theme") {
-                    ForEach(PageTheme.allCases) { theme in
-                        Button { pageThemeRaw = theme.rawValue } label: {
-                            HStack {
-                                Label(theme.localizedTitle, systemImage: theme.iconName)
-                                if pageTheme == theme { Spacer(); Image(systemName: "checkmark") }
-                            }
-                        }
-                    }
-                }
-            } label: {
-                Label("Theme", systemImage: "paintbrush")
-            }
-            .help("App & Page Themes")
-        }
-
-        ToolbarItem(placement: .automatic) {
-            Button { toggleFocusMode() } label: {
-                Label(
-                    "Focus Mode",
-                    systemImage: focusMode
-                        ? "arrow.down.right.and.arrow.up.left"
-                        : "arrow.up.left.and.arrow.down.right"
-                )
-            }
-            .help(focusMode ? "Exit Focus Mode (⇧⌘D)" : "Focus Mode — hide panels (⇧⌘D)")
-            .disabled(selectionState.documentURL == nil)
-        }
-
-        ToolbarItem(placement: .automatic) {
-            Button { showStats = true } label: {
-                Label("Stats", systemImage: "chart.bar")
-            }
-            .help("Reading & vocabulary stats")
-        }
-
-        ToolbarItem(placement: .status) {
-            LLMStatusItem(health: llmHealth, circuitBreaker: circuitBreaker)
-        }
-
-        ToolbarItem(placement: .automatic) {
-            Button { toggleInspector() } label: {
-                Label("Toggle Inspector", systemImage: "sidebar.right")
-            }
-            .help("Toggle Inspector (⌘⌥I)")
-        }
-    }
-
-    private var zoomControls: some View {
-        HStack(spacing: 0) {
-            Button { pdfViewManager.zoomOut() } label: {
-                Image(systemName: "minus")
-                    .frame(width: 26, height: 22)
-                    .contentShape(Rectangle())
-            }
-            .help("Zoom Out (⌘-)")
-            .accessibilityLabel(Text("Zoom Out"))
-            .keyboardShortcut("-", modifiers: [.command])
-
-            Divider().frame(height: 16)
-
-            Text(pdfViewManager.zoomLabel)
-                .font(DS.Typography.mono)
-                .foregroundStyle(DS.Color.textSecondary)
-                .frame(width: 46)
-                .onTapGesture { pdfViewManager.fitToWidth() }
-
-            Divider().frame(height: 16)
-
-            Button { pdfViewManager.zoomIn() } label: {
-                Image(systemName: "plus")
-                    .frame(width: 26, height: 22)
-                    .contentShape(Rectangle())
-            }
-            .help("Zoom In (⌘+)")
-            .accessibilityLabel(Text("Zoom In"))
-            .keyboardShortcut("+", modifiers: [.command])
-        }
-        .buttonStyle(.borderless)
-        .background(DS.Color.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.separator, lineWidth: 0.5)
-        )
-    }
-
     // MARK: - Drop Overlay
 
-    private var dropOverlay: some View {
+    var dropOverlay: some View {
         RoundedRectangle(cornerRadius: DS.Radius.lg)
             .strokeBorder(DS.Color.accent, style: StrokeStyle(lineWidth: 3, dash: [10, 6]))
             .background(DS.Color.accentSubtle.clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg)))
@@ -1013,7 +623,7 @@ struct ContentView: View {
 
     // MARK: - Window Title
 
-    private var windowTitle: String {
+    var windowTitle: String {
         guard let url = selectionState.documentURL else { return "RELL" }
         if isEPUBDocument, let bookTitle = epubManager.bookTitle, !bookTitle.isEmpty {
             return bookTitle
@@ -1021,488 +631,18 @@ struct ContentView: View {
         return url.deletingPathExtension().lastPathComponent
     }
 
-    // MARK: - Actions
-
-    private func openPDF() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.allowedContentTypes = [.pdf, .epub]
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        openDocument(url)
-    }
-
-    private func openDocument(_ url: URL) {
-        if selectionState.documentURL == nil || selectionState.documentURL == url {
-            // Dashboard (or same document): this window adopts the document.
-            // Setting both bindings here pre-empts the `.onChange(of:
-            // documentURL)` guard below (`selectionState.documentURL` is
-            // already equal to `newValue` by the time that closure runs),
-            // so this is the one place that reliably sees "a document was
-            // just opened in this window" for the dashboard-click path —
-            // restore the reading position directly instead of relying on
-            // onChange/onAppear to catch it.
-            documentURL = url
-            selectionState.documentURL = url
-            closeFindBar()
-            restorePageIfPDF(url)
-        } else {
-            // Another document is already on screen — open side by side
-            // (a native tab by default). openWindow dedupes by URL.
-            openWindow(value: url)
-        }
-    }
-
-    /// Closes the current document and returns to the Home dashboard.
-    /// Session end and last-page persistence are handled by the
-    /// `onChange(of: selectionState.documentURL)` / page-change observers.
-    private func closeDocument() {
-        documentURL = nil
-        selectionState.documentURL = nil
-        selectionState.selectedText = ""
-        selectionState.contextSentence = nil
-        closeFindBar()
-    }
-
-    private func openFindBar() {
-        if isEPUBDocument {
-            epubSearchManager.showFindBar()
-        } else {
-            searchManager.showFindBar()
-        }
-    }
-
-    private func closeFindBar() {
-        searchManager.closeFindBar()
-        epubSearchManager.closeFindBar()
-    }
-
-    /// "Find Next" — jumps to the next match of whatever query is already
-    /// in the find bar. A no-op if nothing has been searched yet.
-    private func findNext() {
-        if isEPUBDocument {
-            epubManager.findInPage(epubSearchManager.query, forward: true)
-        } else {
-            searchManager.next()
-        }
-    }
-
-    private func findPrevious() {
-        if isEPUBDocument {
-            epubManager.findInPage(epubSearchManager.query, forward: false)
-        } else {
-            searchManager.previous()
-        }
-    }
-
-    /// Menu-bar mirror of the toolbar's zoom/font-size controls — EPUB has
-    /// no optical zoom, so "zoom" steps its reader font size instead.
-    private func menuZoomIn() {
-        if isEPUBDocument { epubFontSize = min(EPUBTypography.maxFontSize, epubFontSize + 1) }
-        else { pdfViewManager.zoomIn() }
-    }
-
-    private func menuZoomOut() {
-        if isEPUBDocument { epubFontSize = max(EPUBTypography.minFontSize, epubFontSize - 1) }
-        else { pdfViewManager.zoomOut() }
-    }
-
-    /// "Actual Size" — 100% for PDF, the default reader font size for EPUB.
-    private func menuActualSize() {
-        if isEPUBDocument { epubFontSize = EPUBTypography.defaultFontSize }
-        else { pdfViewManager.actualSize() }
-    }
-
-    private var isCurrentTermSaved: Bool {
-        let term = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !term.isEmpty else { return false }
-        return savedWordsStore.isSaved(
-            term: term,
-            pdfFilename: selectionState.documentURL?.deletingPathExtension().lastPathComponent,
-            pageNumber: currentPageNumber
-        )
-    }
-
-    private func toggleSidebar() {
-        withAnimation(DS.Animation.respecting(DS.Animation.standard, reduceMotion: reduceMotion)) {
-            columnVisibility = showSidebar ? .detailOnly : .all
-        }
-    }
-
-    private func toggleInspector() {
-        withAnimation(DS.Animation.respecting(DS.Animation.standard, reduceMotion: reduceMotion)) {
-            showInspector.toggle()
-        }
-    }
-
-    /// Enters focus mode by hiding both side panels, remembering their prior
-    /// state so exiting restores exactly what was visible. Symmetric curve
-    /// in both directions — entering and exiting focus mode should feel the
-    /// same, not snap one way and glide the other.
-    private func toggleFocusMode() {
-        withAnimation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion)) {
-            if focusMode {
-                focusMode = false
-                columnVisibility = preFocusSidebar ? .all : .detailOnly
-                showInspector = preFocusInspector
-            } else {
-                preFocusSidebar = showSidebar
-                preFocusInspector = showInspector
-                focusMode = true
-                columnVisibility = .detailOnly
-                showInspector = false
-            }
-        }
-    }
-
-    /// Zen mode: immersive full-screen reading with the panels, toolbar, and
-    /// context strip hidden. Remembers the panel layout so exiting restores it,
-    /// and drives the window in/out of macOS full-screen to match.
-    private func toggleZenMode() {
-        let entering = !zenMode
-        if entering {
-            preZenSidebar = showSidebar
-            preZenInspector = showInspector
-        }
-        withAnimation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion)) {
-            zenMode = entering
-            if entering {
-                focusMode = false
-                columnVisibility = .detailOnly
-                showInspector = false
-            } else {
-                columnVisibility = preZenSidebar ? .all : .detailOnly
-                showInspector = preZenInspector
-            }
-        }
-        setWindowFullScreen(entering)
-    }
-
-    /// Restores the panels when the user leaves full-screen by other means
-    /// (green button, ⌃⌘F) — keeps `zenMode` honest without re-toggling the
-    /// window, which is already exiting full-screen.
-    private func exitZenChrome() {
-        guard zenMode else { return }
-        withAnimation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion)) {
-            zenMode = false
-            columnVisibility = preZenSidebar ? .all : .detailOnly
-            showInspector = preZenInspector
-        }
-    }
-
-    private func setWindowFullScreen(_ full: Bool) {
-        guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return }
-        if window.styleMask.contains(.fullScreen) != full {
-            window.toggleFullScreen(nil)
-        }
-    }
-
-    /// Points the annotation stores at this window's undo manager so their
-    /// mutations register undo/redo.
-    private func wireUndoManagers() {
-        highlightStore.undoManager = undoManager
-        noteStore.undoManager = undoManager
-        bookmarkStore.undoManager = undoManager
-        epubHighlightStore.undoManager = undoManager
-        epubNoteStore.undoManager = undoManager
-        epubBookmarkStore.undoManager = undoManager
-    }
-
-    private var isCurrentPageBookmarked: Bool {
-        guard let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent
-        else { return false }
-        if isEPUBDocument {
-            return epubBookmarkStore.isBookmarked(
-                filename: filename,
-                chapterIndex: epubManager.chapterIndex,
-                near: epubManager.scrollFraction
-            )
-        }
-        guard let idx = currentPageNumber.map({ $0 - 1 }) else { return false }
-        return bookmarkStore.isBookmarked(filename: filename, pageIndex: idx)
-    }
-
-    private func toggleCurrentPageBookmark() {
-        guard let filename = selectionState.documentURL?.deletingPathExtension().lastPathComponent
-        else { return }
-        if isEPUBDocument {
-            toggleEPUBBookmark(filename: filename)
-            return
-        }
-        guard let pageNum = currentPageNumber else { return }
-        let pageIndex = pageNum - 1
-        let pageLabel = "Page \(pageNum)"
-        let added = bookmarkStore.toggle(filename: filename, pageIndex: pageIndex, pageLabel: pageLabel)
-        toastCenter.show(
-            added ? String(localized: "Bookmark added") : String(localized: "Bookmark removed"),
-            variant: .info
-        )
-    }
-
-    /// EPUB path: the position is captured immediately; the snippet (first
-    /// visible line, the row label) arrives async from the WebView — if an
-    /// existing bookmark is near this position it's removed synchronously,
-    /// otherwise the add waits for the snippet (falling back to "" on failure).
-    private func toggleEPUBBookmark(filename: String) {
-        let chapterIndex = epubManager.chapterIndex
-        let fraction = epubManager.scrollFraction
-        if let existing = epubBookmarkStore.bookmark(for: filename, chapterIndex: chapterIndex, near: fraction) {
-            epubBookmarkStore.remove(id: existing.id)
-            toastCenter.show(String(localized: "Bookmark removed"), variant: .info)
-            return
-        }
-        Task {
-            let snippet = await epubManager.visibleSnippet()
-            // Re-check: a second ⌘B may have landed while the JS ran.
-            guard epubBookmarkStore.bookmark(for: filename, chapterIndex: chapterIndex, near: fraction) == nil
-            else { return }
-            epubBookmarkStore.add(EPUBBookmark(
-                epubFilename: filename,
-                chapterIndex: chapterIndex,
-                scrollFraction: fraction,
-                snippet: snippet
-            ))
-            toastCenter.show(String(localized: "Bookmark added"), variant: .info)
-        }
-    }
-
-    private func focusInspectorAndRun() {
-        revealInspectorThenRepost(.inspectorRunLastModule, object: nil, forcePost: true)
-    }
-
-    private func runModule(_ module: ModuleType) {
-        revealInspectorThenRepost(.inspectorRunModule, object: module.rawValue, forcePost: true)
-    }
-
-    /// Guarantees the Inspector receives a run notification even when it is
-    /// hidden: unhide it first, then re-post on the next runloop turn so the
-    /// freshly mounted view's `onReceive` is already subscribed. Re-entry is
-    /// safe — once the panel is visible this only posts when `forcePost` is set.
-    private func revealInspectorThenRepost(_ name: Notification.Name, object: Any?, forcePost: Bool = false) {
-        if !showInspector {
-            showInspector = true
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(name: name, object: object)
-            }
-        } else if forcePost {
-            NotificationCenter.default.post(name: name, object: object)
-        }
-    }
-
-    // MARK: - Menu Bar Bridge
-
-    /// Snapshot of window state + actions published to the main menu
-    /// (`ReaderMenuCommands`) through FocusedValues.
-    private var readerCommands: ReaderCommands {
-        ReaderCommands(
-            hasDocument: selectionState.documentURL != nil,
-            hasSelection: !selectionState.selectedText
-                .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-            isSidebarVisible: showSidebar,
-            isInspectorVisible: showInspector,
-            focusMode: focusMode,
-            zenMode: zenMode,
-            canGoToPreviousPage: isEPUBDocument
-                ? epubManager.canGoToPreviousChapter
-                : pdfViewManager.canGoToPreviousPage,
-            canGoToNextPage: isEPUBDocument
-                ? epubManager.canGoToNextChapter
-                : pdfViewManager.canGoToNextPage,
-            recentDocuments: recentDocumentStore.recentDocuments,
-            isEPUBDocument: isEPUBDocument,
-            isCurrentPageBookmarked: isCurrentPageBookmarked,
-            isCurrentTermSaved: isCurrentTermSaved,
-            pageTheme: pageTheme,
-            pdfDisplayMode: pdfDisplayMode,
-            speechState: speechManager.state,
-            openDocument: { openDocument($0) },
-            closeDocument: { closeDocument() },
-            toggleSidebar: { toggleSidebar() },
-            toggleInspector: { toggleInspector() },
-            toggleFocusMode: { toggleFocusMode() },
-            toggleZenMode: { toggleZenMode() },
-            goToPreviousPage: {
-                if isEPUBDocument { epubManager.previousChapter() }
-                else { pdfViewManager.goToPreviousPage() }
-            },
-            goToNextPage: {
-                if isEPUBDocument { epubManager.nextChapter() }
-                else { pdfViewManager.goToNextPage() }
-            },
-            runModule: { runModule($0) },
-            runLastModule: { focusInspectorAndRun() },
-            clearRecentDocuments: { recentDocumentStore.clear() },
-            showFind: { openFindBar() },
-            findNext: { findNext() },
-            findPrevious: { findPrevious() },
-            toggleBookmark: { toggleCurrentPageBookmark() },
-            toggleSaveWord: {
-                revealInspectorThenRepost(.inspectorToggleSaveWord, object: nil, forcePost: true)
-            },
-            zoomIn: { menuZoomIn() },
-            zoomOut: { menuZoomOut() },
-            actualSize: { menuActualSize() },
-            fitToWidth: { pdfViewManager.fitToWidth() },
-            setPageTheme: { pageThemeRaw = $0.rawValue },
-            setPDFDisplayMode: { pdfDisplayModeRaw = $0.rawValue },
-            readAloud: { readCurrentPageAloud() },
-            pauseSpeech: { speechManager.pause() },
-            resumeSpeech: { speechManager.resume() },
-            stopSpeech: { speechManager.stop() }
-        )
-    }
-
-    /// PDF: the current page's full text. EPUB: the current chapter's
-    /// (async JS-evaluated) plain text. Either way, no character cap —
-    /// whole-page reads are meant to run to completion, not truncate at the
-    /// 500-char default used for word/selection speak.
-    private func readCurrentPageAloud() {
-        if isEPUBDocument {
-            Task {
-                let text = await epubManager.currentChapterPlainText()
-                speechManager.speakResolved(text, limit: nil)
-            }
-        } else {
-            guard let text = pdfViewManager.pdfView?.currentPage?.string else { return }
-            speechManager.speakResolved(text, limit: nil)
-        }
-    }
-
-    private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
-        guard let provider = providers.first,
-              let type = [UTType.pdf, UTType.epub].first(where: {
-                  provider.hasItemConformingToTypeIdentifier($0.identifier)
-              })
-        else { return false }
-        provider.loadItem(forTypeIdentifier: type.identifier, options: nil) { item, _ in
-            let url: URL?
-            if let u = item as? URL { url = u }
-            else if let d = item as? Data { url = URL(dataRepresentation: d, relativeTo: nil) }
-            else { url = nil }
-            if let url {
-                DispatchQueue.main.async {
-                    openDocument(url)
-                }
-            }
-        }
-        return true
-    }
-
     // MARK: - Reading Position Persistence
 
-    private func persistPage(_ index: Int, for filename: String) {
-        var dict = decodedPositions()
-        dict[filename] = index
-        readingPositionsData = (try? JSONEncoder().encode(dict)) ?? Data()
+    func persistPage(_ index: Int, for filename: String) {
+        model.persistPage(index, for: filename)
     }
 
-    /// A window adopting its very first document (via `.onAppear` or the
-    /// `documentURL` binding changing from outside) never sees
-    /// `PDFKitView`'s own `.onChange(of: selectionState.documentURL)` fire —
-    /// that view doesn't exist in the hierarchy yet at the moment the URL
-    /// first lands, and SwiftUI never fires `.onChange` retroactively for
-    /// the state change that caused a view to mount. This covers that gap;
-    /// the PDFKitView-scoped `.onChange` still handles same-window switches
-    /// to a different PDF once the reader is already showing.
-    private func restorePageIfPDF(_ url: URL?) {
-        guard let url, url.pathExtension.lowercased() != "epub" else { return }
-        restorePage(for: url.deletingPathExtension().lastPathComponent)
+    func restorePageIfPDF(_ url: URL?) {
+        model.restorePageIfPDF(url)
     }
 
-    /// Restores the saved page for a newly-opened document. Event-driven
-    /// when possible: `PDFKitView.Coordinator.requestDocumentUpdate` assigns
-    /// `pdfView.document` asynchronously (a `DispatchQueue.main.async` hop),
-    /// which is what the old blind `Task.sleep(0.3s)` was really waiting
-    /// out — PDFKit posts `.PDFViewDocumentChanged` the moment that
-    /// assignment lands, so we restore right on that signal instead of
-    /// guessing a delay. The 0.3s timeout always still runs as a fallback,
-    /// both because the notification could in principle be unreliable and
-    /// because `pdfViewManager.pdfView` itself can still be nil here (a
-    /// brand-new window's `PDFKitView.makeNSView` hasn't necessarily run by
-    /// the time this fires) — bailing out early in that case, instead of
-    /// falling through to the timeout, is what silently broke restore on
-    /// first open.
-    private func restorePage(for filename: String) {
-        guard let index = decodedPositions()[filename] else { return }
-        let manager = pdfViewManager
-        let restore = PageRestoreAttempt { [manager] in
-            guard let pdfView = manager.pdfView,
-                  let doc = pdfView.document,
-                  // Only restore into the document this position belongs to.
-                  // The observer below can fire for another window's load, and
-                  // page 14 of one book is not page 14 of another.
-                  doc.documentURL?.deletingPathExtension().lastPathComponent == filename,
-                  index < doc.pageCount,
-                  doc.page(at: index) != nil
-            else { return false }
-
-            // Navigate on the NEXT runloop pass, never inline in the
-            // document-changed notification. PDFKit's own observers — the
-            // thumbnail view's collection view among them — are still catching
-            // up to the new document at this point, and navigating first made
-            // the thumbnail view select an index against the *previous*
-            // document's item count ("indexPath (0,14) out of bounds", crash).
-            DispatchQueue.main.async {
-                guard let pdfView = manager.pdfView,
-                      let doc = pdfView.document,
-                      index < doc.pageCount,
-                      let page = doc.page(at: index)
-                else { return }
-                pdfView.go(to: page)
-            }
-            return true
-        }
-
-        // Register the document-load observer unconditionally. Passing a nil
-        // `object` (when this window's PDFView hasn't been created yet — the
-        // first-open case) observes any PDFView's load; the attempt gates on
-        // this window's PDFView *and* on the document actually being the one
-        // we saved a position for.
-        restore.observer = NotificationCenter.default.addObserver(
-            forName: Notification.Name.PDFViewDocumentChanged,
-            object: pdfViewManager.pdfView,
-            queue: .main
-        ) { _ in
-            MainActor.assumeIsolated { restore.attempt() }
-        }
-
-        // Safety net only — the observer above is the primary path now.
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(0.5))
-            restore.finish()
-            restore.attempt()
-        }
-    }
-
-    private func decodedPositions() -> [String: Int] {
-        (try? JSONDecoder().decode([String: Int].self, from: readingPositionsData)) ?? [:]
-    }
-}
-
-// MARK: - Page restore
-
-/// One restore-on-open attempt: runs `tryRestore` until it succeeds once,
-/// then stops listening. A class (not captured locals) so the notification
-/// block can reach it from its `@Sendable` closure.
-@MainActor
-private final class PageRestoreAttempt {
-    var observer: NSObjectProtocol?
-    private var didRestore = false
-    private let tryRestore: () -> Bool
-
-    init(tryRestore: @escaping () -> Bool) {
-        self.tryRestore = tryRestore
-    }
-
-    func attempt() {
-        guard !didRestore, tryRestore() else { return }
-        didRestore = true
-        finish()
-    }
-
-    func finish() {
-        if let observer { NotificationCenter.default.removeObserver(observer) }
-        observer = nil
+    func restorePage(for filename: String) {
+        model.restorePage(for: filename)
     }
 }
 
