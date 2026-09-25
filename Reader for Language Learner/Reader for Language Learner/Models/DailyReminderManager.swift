@@ -13,7 +13,7 @@ import os
 
 /// Not actor-isolated — the notification delegate callbacks fire off the
 /// main actor, so this identifier needs to be reachable from there too.
-private let dailyReminderRequestIdentifier = "dailyGoalReminder"
+private nonisolated let dailyReminderRequestIdentifier = "dailyGoalReminder"
 
 @MainActor
 final class DailyReminderManager: NSObject {

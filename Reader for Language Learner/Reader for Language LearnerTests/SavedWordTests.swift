@@ -6,6 +6,7 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class SavedWordTests: XCTestCase {
 
     func testCodableRoundTrip() throws {

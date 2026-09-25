@@ -12,7 +12,7 @@
 
 import Foundation
 
-enum TermMatcher {
+nonisolated enum TermMatcher {
 
     /// Scripts with no whitespace word segmentation: Hiragana/Katakana, CJK
     /// ideographs, Hangul syllables. A boundary check would reject every real

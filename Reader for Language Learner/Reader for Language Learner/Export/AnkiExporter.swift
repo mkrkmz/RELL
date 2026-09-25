@@ -179,7 +179,7 @@ enum AnkiExporter {
         let header = "Front,Back,Tags,Source"
         let rows = notes.map { note in
             [note.front, plainText(fromAnkiHTML: note.back), note.tags, note.source]
-                .map(escapeCSV)
+                .map { escapeCSV($0) }
                 .joined(separator: ",")
         }
         return ([header] + rows).joined(separator: "\n") + "\n"

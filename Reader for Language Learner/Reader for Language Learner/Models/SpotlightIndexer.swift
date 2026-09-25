@@ -13,15 +13,15 @@ import Foundation
 
 enum SpotlightIndexer {
 
-    static let wordDomain = "savedWords"
+    nonisolated static let wordDomain = "savedWords"
     static let documentDomain = "documents"
 
-    private static let wordPrefix = "word-"
+    private nonisolated static let wordPrefix = "word-"
     private static let documentPrefix = "doc-"
 
     // MARK: - Identifiers
 
-    static func identifier(for word: SavedWord) -> String {
+    nonisolated static func identifier(for word: SavedWord) -> String {
         wordPrefix + word.id.uuidString
     }
 
@@ -62,13 +62,12 @@ enum SpotlightIndexer {
     /// Launch-time sync: rebuilds the word domain so edits, tag changes,
     /// and deletions that bypassed the hooks never leave stale results.
     static func reindexAllWords(_ words: [SavedWord]) {
-        let index = CSSearchableIndex.default()
-        index.deleteSearchableItems(withDomainIdentifiers: [wordDomain]) { _ in
-            index.indexSearchableItems(words.map(searchableItem(for:)))
+        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [wordDomain]) { _ in
+            CSSearchableIndex.default().indexSearchableItems(words.map(searchableItem(for:)))
         }
     }
 
-    private static func searchableItem(for word: SavedWord) -> CSSearchableItem {
+    private nonisolated static func searchableItem(for word: SavedWord) -> CSSearchableItem {
         let attributes = CSSearchableItemAttributeSet(contentType: .text)
         attributes.title = word.term
 

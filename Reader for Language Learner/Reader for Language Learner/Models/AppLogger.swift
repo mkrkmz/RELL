@@ -9,7 +9,7 @@
 import Foundation
 import os
 
-enum AppLogger {
+nonisolated enum AppLogger {
     private static let subsystem = "com.rell.app"
 
     static let persistence = Logger(subsystem: subsystem, category: "persistence")

@@ -117,5 +117,5 @@ struct RELLShortcuts: AppShortcutsProvider {
 
 extension Notification.Name {
     /// Posted by StartReviewIntent; any ContentView opens the review window.
-    static let openReviewWindowCommand = Notification.Name("openReviewWindowCommand")
+    nonisolated static let openReviewWindowCommand = Notification.Name("openReviewWindowCommand")
 }

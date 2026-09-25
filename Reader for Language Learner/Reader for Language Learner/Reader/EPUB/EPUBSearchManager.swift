@@ -77,7 +77,14 @@ final class EPUBSearchManager {
         results = []
         hasSearched = true
 
-        currentSearchTask = Task.detached(priority: .userInitiated) { [weak self] in
+        // Built here, on the main actor, so the detached scan never touches
+        // `self`; a stale generation (a newer search started) is dropped.
+        let deliver: @MainActor @Sendable (EPUBSearchResult) -> Void = { [weak self] result in
+            guard let self, self.searchGeneration == generation else { return }
+            self.results.append(result)
+        }
+
+        currentSearchTask = Task.detached(priority: .userInitiated) {
             for index in 0..<document.chapterCount {
                 if Task.isCancelled { return }
                 let text = document.plainText(at: index)
@@ -103,10 +110,7 @@ final class EPUBSearchManager {
                     snippet: Self.snippet(around: firstRange, in: text)
                 )
 
-                await MainActor.run {
-                    guard let self, self.searchGeneration == generation else { return }
-                    self.results.append(result)
-                }
+                await deliver(result)
             }
         }
     }

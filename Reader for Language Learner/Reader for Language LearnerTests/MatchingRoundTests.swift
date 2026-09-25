@@ -9,6 +9,7 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class MatchingRoundTests: XCTestCase {
 
     private func word(_ term: String, definition: String? = "a definition") -> SavedWord {

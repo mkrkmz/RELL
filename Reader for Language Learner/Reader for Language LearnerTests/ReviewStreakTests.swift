@@ -10,6 +10,7 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class ReviewStreakTests: XCTestCase {
 
     private let calendar = Calendar.current

@@ -1424,13 +1424,9 @@ struct ContentView: View {
     /// first open.
     private func restorePage(for filename: String) {
         guard let index = decodedPositions()[filename] else { return }
-
-        var didRestore = false
-        var observer: NSObjectProtocol?
-
-        func attempt() {
-            guard !didRestore,
-                  let pdfView = pdfViewManager.pdfView,
+        let manager = pdfViewManager
+        let restore = PageRestoreAttempt { [manager] in
+            guard let pdfView = manager.pdfView,
                   let doc = pdfView.document,
                   // Only restore into the document this position belongs to.
                   // The observer below can fire for another window's load, and
@@ -1438,9 +1434,7 @@ struct ContentView: View {
                   doc.documentURL?.deletingPathExtension().lastPathComponent == filename,
                   index < doc.pageCount,
                   doc.page(at: index) != nil
-            else { return }
-            didRestore = true
-            if let observer { NotificationCenter.default.removeObserver(observer) }
+            else { return false }
 
             // Navigate on the NEXT runloop pass, never inline in the
             // document-changed notification. PDFKit's own observers — the
@@ -1449,36 +1443,66 @@ struct ContentView: View {
             // the thumbnail view select an index against the *previous*
             // document's item count ("indexPath (0,14) out of bounds", crash).
             DispatchQueue.main.async {
-                guard let pdfView = pdfViewManager.pdfView,
+                guard let pdfView = manager.pdfView,
                       let doc = pdfView.document,
                       index < doc.pageCount,
                       let page = doc.page(at: index)
                 else { return }
                 pdfView.go(to: page)
             }
+            return true
         }
 
         // Register the document-load observer unconditionally. Passing a nil
         // `object` (when this window's PDFView hasn't been created yet — the
-        // first-open case) observes any PDFView's load; `attempt()` gates on
+        // first-open case) observes any PDFView's load; the attempt gates on
         // this window's PDFView *and* on the document actually being the one
         // we saved a position for.
-        observer = NotificationCenter.default.addObserver(
+        restore.observer = NotificationCenter.default.addObserver(
             forName: Notification.Name.PDFViewDocumentChanged,
             object: pdfViewManager.pdfView,
             queue: .main
-        ) { _ in attempt() }
+        ) { _ in
+            MainActor.assumeIsolated { restore.attempt() }
+        }
 
         // Safety net only — the observer above is the primary path now.
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(0.5))
-            if let observer { NotificationCenter.default.removeObserver(observer) }
-            attempt()
+            restore.finish()
+            restore.attempt()
         }
     }
 
     private func decodedPositions() -> [String: Int] {
         (try? JSONDecoder().decode([String: Int].self, from: readingPositionsData)) ?? [:]
+    }
+}
+
+// MARK: - Page restore
+
+/// One restore-on-open attempt: runs `tryRestore` until it succeeds once,
+/// then stops listening. A class (not captured locals) so the notification
+/// block can reach it from its `@Sendable` closure.
+@MainActor
+private final class PageRestoreAttempt {
+    var observer: NSObjectProtocol?
+    private var didRestore = false
+    private let tryRestore: () -> Bool
+
+    init(tryRestore: @escaping () -> Bool) {
+        self.tryRestore = tryRestore
+    }
+
+    func attempt() {
+        guard !didRestore, tryRestore() else { return }
+        didRestore = true
+        finish()
+    }
+
+    func finish() {
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+        observer = nil
     }
 }
 

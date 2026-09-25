@@ -17,7 +17,7 @@
 import Foundation
 
 /// Coverage of one document by the reader's saved vocabulary.
-struct LexicalProfile: Equatable, Hashable, Codable {
+nonisolated struct LexicalProfile: Equatable, Hashable, Codable {
     /// Running words counted (tokens, not distinct words).
     var totalTokens: Int
     /// Tokens whose dictionary form the reader has mastered.
@@ -80,7 +80,7 @@ struct LexicalProfile: Equatable, Hashable, Codable {
 /// carries enough to know when it has gone stale: the study language, and a
 /// fingerprint of the saved words. Both are checked when the book is opened,
 /// which is the only moment the (~1s, off-main) pass is worth running.
-struct BookCoverage: Equatable, Hashable, Codable {
+nonisolated struct BookCoverage: Equatable, Hashable, Codable {
     var profile: LexicalProfile
     /// `Language.rawValue` the profile was computed for.
     var language: String
@@ -93,7 +93,7 @@ struct BookCoverage: Equatable, Hashable, Codable {
     }
 }
 
-enum LexicalProfileBuilder {
+nonisolated enum LexicalProfileBuilder {
 
     /// Profiles `text` against the reader's vocabulary.
     ///

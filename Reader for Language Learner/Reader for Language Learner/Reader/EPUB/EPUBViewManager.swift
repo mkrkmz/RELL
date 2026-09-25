@@ -35,41 +35,39 @@ enum EPUBScheme {
 // MARK: - Scheme Handler
 
 /// Serves chapter XHTML and its resources (images, CSS, fonts) straight from
-/// the ZIP archive. WebKit calls these on the main thread; the nonisolated
-/// annotations satisfy the protocol, `assumeIsolated` recovers main-actor state.
+/// the ZIP archive. WebKit's protocol is main-actor isolated, so these run
+/// on the main actor like the rest of the reader.
 final class EPUBSchemeHandler: NSObject, WKURLSchemeHandler {
 
     var document: EPUBDocument?
 
-    nonisolated func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
-        MainActor.assumeIsolated {
-            guard let url = urlSchemeTask.request.url,
-                  let document
-            else {
-                urlSchemeTask.didFailWithError(URLError(.fileDoesNotExist))
-                return
-            }
+    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
+        guard let url = urlSchemeTask.request.url,
+              let document
+        else {
+            urlSchemeTask.didFailWithError(URLError(.fileDoesNotExist))
+            return
+        }
 
-            let path = EPUBScheme.archivePath(from: url)
-            do {
-                let resource = try document.resource(at: path)
-                let response = URLResponse(
-                    url: url,
-                    mimeType: resource.mimeType,
-                    expectedContentLength: resource.data.count,
-                    textEncodingName: resource.mimeType.contains("xml") || resource.mimeType.hasPrefix("text")
-                        ? "utf-8" : nil
-                )
-                urlSchemeTask.didReceive(response)
-                urlSchemeTask.didReceive(resource.data)
-                urlSchemeTask.didFinish()
-            } catch {
-                urlSchemeTask.didFailWithError(error)
-            }
+        let path = EPUBScheme.archivePath(from: url)
+        do {
+            let resource = try document.resource(at: path)
+            let response = URLResponse(
+                url: url,
+                mimeType: resource.mimeType,
+                expectedContentLength: resource.data.count,
+                textEncodingName: resource.mimeType.contains("xml") || resource.mimeType.hasPrefix("text")
+                    ? "utf-8" : nil
+            )
+            urlSchemeTask.didReceive(response)
+            urlSchemeTask.didReceive(resource.data)
+            urlSchemeTask.didFinish()
+        } catch {
+            urlSchemeTask.didFailWithError(error)
         }
     }
 
-    nonisolated func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
+    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
         // Loads are synchronous slices from memory — nothing to cancel.
     }
 }
@@ -190,8 +188,9 @@ final class EPUBViewManager: NSObject {
     @ObservationIgnored private var hoverTask: Task<Void, Never>?
     @ObservationIgnored private var currentHoverTerm = ""
 
-    @ObservationIgnored private var highlightsChangedObserver: NSObjectProtocol?
-    @ObservationIgnored private var savedWordAddedObserver: NSObjectProtocol?
+    // `nonisolated(unsafe)`: written once in init, read only by deinit.
+    @ObservationIgnored nonisolated(unsafe) private var highlightsChangedObserver: NSObjectProtocol?
+    @ObservationIgnored nonisolated(unsafe) private var savedWordAddedObserver: NSObjectProtocol?
 
     // MARK: Init
 
@@ -203,7 +202,7 @@ final class EPUBViewManager: NSObject {
         highlightsChangedObserver = NotificationCenter.default.addObserver(
             forName: .epubHighlightsChanged, object: nil, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.refreshHighlights() }
+            Task { @MainActor [weak self] in self?.refreshHighlights() }
         }
         // A newly-saved word should pick up its underline mark without
         // waiting for the next chapter turn. Removal isn't observed the
@@ -214,7 +213,7 @@ final class EPUBViewManager: NSObject {
         savedWordAddedObserver = NotificationCenter.default.addObserver(
             forName: .savedWordAdded, object: nil, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.refreshHighlights() }
+            Task { @MainActor [weak self] in self?.refreshHighlights() }
         }
     }
 
@@ -903,7 +902,7 @@ extension EPUBViewManager: WKNavigationDelegate {
     nonisolated func webView(
         _ webView: WKWebView,
         decidePolicyFor navigationAction: WKNavigationAction,
-        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
     ) {
         MainActor.assumeIsolated {
             switch EPUBLinkPolicy.decision(

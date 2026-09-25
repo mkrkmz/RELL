@@ -54,8 +54,13 @@ struct SentenceTranslationStrip: View {
             fallbackStroke: .hairline
         )
         .task(id: sentence) { await load() }
-        .translationTask(appleConfiguration) { session in
-            await translateWithApple(session)
+        .translationTask(appleConfiguration) { [sentence] session in
+            // The session lives only for this closure and is used by nothing
+            // else, so handing it to its own nonisolated `translate` can't
+            // race; the SDK just doesn't mark it Sendable.
+            nonisolated(unsafe) let session = session
+            let translated = try? await session.translate(sentence).targetText
+            await applyAppleTranslation(translated, for: sentence)
         }
         .accessibilityElement(children: .combine)
     }
@@ -104,19 +109,16 @@ struct SentenceTranslationStrip: View {
         await translateWithAIProvider()
     }
 
-    private func translateWithApple(_ session: TranslationSession) async {
-        let current = sentence
-        do {
-            let response = try await session.translate(current)
-            guard current == sentence else { return }
-            service.storeTranslation(response.targetText, for: current)
-            phase = .loaded(response.targetText)
-        } catch {
-            // Declined download, missing pack, unsupported text: the AI
-            // provider still gets a chance.
-            guard current == sentence else { return }
+    /// `nil` means Apple couldn't: a declined download, a missing pack or
+    /// text it won't take. The AI provider still gets a chance.
+    private func applyAppleTranslation(_ translation: String?, for translated: String) async {
+        guard translated == sentence else { return }
+        guard let translation else {
             await translateWithAIProvider()
+            return
         }
+        service.storeTranslation(translation, for: translated)
+        phase = .loaded(translation)
     }
 
     private func translateWithAIProvider() async {

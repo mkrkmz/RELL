@@ -13,7 +13,7 @@ import Foundation
 
 // MARK: - Errors
 
-enum ZIPArchiveError: LocalizedError, Equatable {
+nonisolated enum ZIPArchiveError: LocalizedError, Equatable {
     case notAZipFile
     case zip64Unsupported
     case encryptedEntryUnsupported(String)
@@ -41,7 +41,7 @@ enum ZIPArchiveError: LocalizedError, Equatable {
 
 // MARK: - Entry
 
-struct ZIPEntry {
+nonisolated struct ZIPEntry: Sendable {
     let path: String
     let compressionMethod: UInt16
     let generalPurposeFlags: UInt16
@@ -54,7 +54,7 @@ struct ZIPEntry {
 
 // MARK: - Archive
 
-struct ZIPArchive {
+nonisolated struct ZIPArchive: Sendable {
 
     /// Largest uncompressed entry RELL will inflate. Real EPUB entries are
     /// chapters and images, far below this.

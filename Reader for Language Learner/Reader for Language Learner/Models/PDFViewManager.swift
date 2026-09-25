@@ -27,14 +27,15 @@ final class PDFViewManager {
             object: pdfView,
             queue: .main
         ) { [weak self] _ in
-            self?.updateZoomLabel()
+            // Delivered on the main queue (`queue: .main`).
+            MainActor.assumeIsolated { self?.updateZoomLabel() }
         }
         pageObserver = NotificationCenter.default.addObserver(
             forName: Notification.Name.PDFViewPageChanged,
             object: pdfView,
             queue: .main
         ) { [weak self] _ in
-            self?.updatePageInfo()
+            MainActor.assumeIsolated { self?.updatePageInfo() }
         }
         updateZoomLabel()
         updatePageInfo()

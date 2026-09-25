@@ -240,7 +240,10 @@ extension SpeechManager: AVSpeechSynthesizerDelegate {
             // finishing is what actually ends playback, but `isSpeaking` on
             // the synthesizer itself is authoritative for "any queued
             // utterance still pending" without tracking queue length here.
-            guard !synthesizer.isSpeaking else { return }
+            // The manager's own synthesizer (the one delegating here), read
+            // on the main actor like before — not the parameter, which
+            // isn't Sendable.
+            guard !self.synthesizer.isSpeaking else { return }
             self.state = .idle
             self.progress = nil
             self.spokenSentence = nil
@@ -252,7 +255,10 @@ extension SpeechManager: AVSpeechSynthesizerDelegate {
             // A mid-playback rate change cancels the queue and immediately
             // re-enqueues, so the synthesizer is speaking again here — only a
             // real stop (nothing queued) should reset state.
-            guard !synthesizer.isSpeaking else { return }
+            // The manager's own synthesizer (the one delegating here), read
+            // on the main actor like before — not the parameter, which
+            // isn't Sendable.
+            guard !self.synthesizer.isSpeaking else { return }
             self.state = .idle
             self.progress = nil
             self.spokenSentence = nil

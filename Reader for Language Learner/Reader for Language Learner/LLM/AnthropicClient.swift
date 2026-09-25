@@ -152,7 +152,7 @@ struct AnthropicClient: LLMProvider {
                 switch event.type {
                 case "content_block_delta":
                     if let text = event.delta?.text, !text.isEmpty {
-                        await onToken(text)
+                        onToken(text)
                     }
                 case "message_delta":
                     if let rawReason = event.delta?.stop_reason {

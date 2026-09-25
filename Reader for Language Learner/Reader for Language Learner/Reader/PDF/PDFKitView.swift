@@ -213,13 +213,16 @@ struct PDFKitView: NSViewRepresentable {
                 forName: Notification.Name.PDFViewSelectionChanged,
                 object: pdfView,
                 queue: .main
-            ) { [weak self] _ in
-                guard let self else { return }
-                let value = pdfView.currentSelection?.string?
-                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                self.scheduleSelectionUpdate(value)
-                // A deliberate selection supersedes a passive hover.
-                self.closeHoverPopover()
+            ) { [weak self, weak pdfView] _ in
+                // Delivered on the main queue (`queue: .main`).
+                MainActor.assumeIsolated {
+                    guard let self, let pdfView else { return }
+                    let value = pdfView.currentSelection?.string?
+                        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    self.scheduleSelectionUpdate(value)
+                    // A deliberate selection supersedes a passive hover.
+                    self.closeHoverPopover()
+                }
             }
             
             visiblePagesObserver = NotificationCenter.default.addObserver(
@@ -227,7 +230,7 @@ struct PDFKitView: NSViewRepresentable {
                 object: pdfView,
                 queue: .main
             ) { [weak self] _ in
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.scheduleVisiblePagesRefresh()
                     self?.updateSelectionBar()
                 }
@@ -243,7 +246,7 @@ struct PDFKitView: NSViewRepresentable {
                     object: clipView,
                     queue: .main
                 ) { [weak self] _ in
-                    Task { @MainActor in self?.updateSelectionBar() }
+                    Task { @MainActor [weak self] in self?.updateSelectionBar() }
                 }
             }
 
@@ -254,7 +257,7 @@ struct PDFKitView: NSViewRepresentable {
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
-                Task { @MainActor in
+                Task { @MainActor [weak self] in
                     self?.resetHighlightsCache()
                 }
             }
@@ -987,7 +990,10 @@ struct PDFKitView: NSViewRepresentable {
         }
 
         deinit {
-            detach()
+            // SwiftUI releases coordinators on the main thread; `isolated
+            // deinit` would say so, but needs a newer runtime than macOS 15.0.
+            guard Thread.isMainThread else { return }
+            MainActor.assumeIsolated { detach() }
         }
     }
 }

@@ -18,7 +18,7 @@
 import Foundation
 import NaturalLanguage
 
-enum LemmaMatcher {
+nonisolated enum LemmaMatcher {
 
     /// NaturalLanguage's identifier for a study language, or nil when the
     /// framework has no lemmatizer worth asking.
