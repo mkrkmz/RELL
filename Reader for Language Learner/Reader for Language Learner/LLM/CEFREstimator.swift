@@ -112,7 +112,7 @@ final class CEFREstimator {
         let user = "CEFR level of \"\(term)\" for a learner of \(target.rawValue):"
 
         do {
-            let provider = LLMConfiguration().makeProvider()
+            let provider = AppleOnDevice.provider(for: nil)
             let raw = try await provider.chat(
                 system: system,
                 user: user,

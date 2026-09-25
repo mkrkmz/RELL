@@ -30,6 +30,8 @@ struct LLMSettingsView: View {
 
     var body: some View {
         Form {
+            AppleOnDeviceSection()
+
             Section {
                 providerRow
             } header: {
@@ -53,6 +55,8 @@ struct LLMSettingsView: View {
             Section {
                 connectionTestRow
             }
+
+            PrivacySummarySection()
         }
         .formStyle(.grouped)
         .task { apiKey = LLMConfiguration.storedAPIKey }

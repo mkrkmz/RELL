@@ -99,7 +99,8 @@ final class QuickLookupService {
             system: system,
             user: user,
             maxTokens: maxTokens,
-            temperature: module.recommendedTemperature
+            temperature: module.recommendedTemperature,
+            module: module
         )
         let cleaned = MarkdownUtils.sanitizeLLMOutput(text)
         definitionCache.set(key, cleaned)
@@ -127,11 +128,11 @@ final class QuickLookupService {
         let user = module.userPrompt(term: term, mode: .word, detail: .short, nativeLanguage: native)
         let maxTokens = module.recommendedMaxTokens(mode: .word, detail: .short, modelIdentifier: LLMConfiguration().model)
 
-        let local = isLocalProvider
+        let local = isLocalProvider(for: module)
         if local { await gate.acquire() }
         defer { if local { gate.release() } }
 
-        let provider = LLMConfiguration().makeProvider()
+        let provider = AppleOnDevice.provider(for: module)
         var accumulated = ""
         _ = try await provider.stream(
             system: system,
@@ -168,7 +169,8 @@ final class QuickLookupService {
             system: system,
             user: user,
             maxTokens: maxTokens,
-            temperature: module.recommendedTemperature
+            temperature: module.recommendedTemperature,
+            module: module
         )
         let cleaned = MarkdownUtils.sanitizeLLMOutput(text)
         nativeMeaningCache.set(key, cleaned)
@@ -180,6 +182,13 @@ final class QuickLookupService {
     func cachedTranslation(for sentence: String) -> String? {
         guard !normalize(sentence).isEmpty else { return nil }
         return translationCache.get(cacheKey(sentence, language: Language.storedNative))
+    }
+
+    /// Caches a translation made elsewhere (Apple Translation) so the strip
+    /// finds it next time like any other.
+    func storeTranslation(_ translation: String, for sentence: String) {
+        guard !normalize(sentence).isEmpty else { return }
+        translationCache.set(cacheKey(sentence, language: Language.storedNative), translation)
     }
 
     func translate(sentence: String) async throws -> String {
@@ -194,7 +203,7 @@ final class QuickLookupService {
         """
         let user = "Translate to \(native.nativeName):\n\(sentence)"
 
-        let text = try await run(system: system, user: user, maxTokens: 240, temperature: 0.1)
+        let text = try await run(system: system, user: user, maxTokens: 240, temperature: 0.1, module: nil)
         let cleaned = MarkdownUtils.sanitizeLLMOutput(text)
         translationCache.set(key, cleaned)
         return cleaned
@@ -202,12 +211,14 @@ final class QuickLookupService {
 
     // MARK: - Shared
 
-    private func run(system: String, user: String, maxTokens: Int, temperature: Double) async throws -> String {
-        let local = isLocalProvider
+    private func run(
+        system: String, user: String, maxTokens: Int, temperature: Double, module: ModuleType?
+    ) async throws -> String {
+        let local = isLocalProvider(for: module)
         if local { await gate.acquire() }
         defer { if local { gate.release() } }
 
-        let provider = LLMConfiguration().makeProvider()
+        let provider = AppleOnDevice.provider(for: module)
         return try await provider.chat(
             system: system,
             user: user,
@@ -217,7 +228,10 @@ final class QuickLookupService {
         )
     }
 
-    private var isLocalProvider: Bool {
+    /// Local servers get one request at a time; Apple's model and remote
+    /// APIs don't need the gate.
+    private func isLocalProvider(for module: ModuleType?) -> Bool {
+        guard AppleOnDevice.currentRoute(for: module) == .configured else { return false }
         let type = LLMConfiguration().providerType
         return type == .lmStudio || type == .ollama
     }

@@ -67,11 +67,23 @@ struct InspectorView: View {
         Language(rawValue: targetLanguageRaw) ?? .english
     }
 
-    var llmProvider: any LLMProvider {
-        ResilientLLMProvider(
-            provider: LLMConfiguration().makeProvider(),
-            circuitBreaker: circuitBreaker
-        )
+    /// The provider for `module` (nil: free-form work such as Ask AI).
+    /// Apple's on-device model is used directly — retries and the circuit
+    /// breaker exist for a network server, and an on-device failure must not
+    /// mark the configured server as down.
+    func llmProvider(for module: ModuleType?) -> any LLMProvider {
+        let provider = AppleOnDevice.provider(for: module)
+        guard AppleOnDevice.currentRoute(for: module) == .configured else { return provider }
+        return ResilientLLMProvider(provider: provider, circuitBreaker: circuitBreaker)
+    }
+
+    /// Provider part of the output cache key. Apple's layer changes which
+    /// model answers some modules, so it's part of the key: turning it on or
+    /// off never serves the other model's answers.
+    var cacheProviderLabel: String {
+        AppleOnDevice.currentRoute(for: nil) == .appleOnDevice
+            ? "\(llmProviderTypeRaw)+\(AppleOnDevice.providerLabel)"
+            : llmProviderTypeRaw
     }
 
     var trimmedSelection: String {
@@ -352,7 +364,7 @@ struct InspectorView: View {
         let key = OutputCacheKey(
             term: term, mode: explainMode.rawValue,
             detail: explainDetail.rawValue, domain: domainPreference.rawValue,
-            provider: llmProviderTypeRaw, model: llmModel,
+            provider: cacheProviderLabel, model: llmModel,
             native: nativeLanguageRaw, target: targetLanguageRaw
         )
         let loaded = viewModel.loadFromCache(key: key)
@@ -389,7 +401,9 @@ struct InspectorView: View {
         viewModel.errors[module]  = nil
         viewModel.outputs[module] = ""
 
-        let client       = llmProvider
+        let route        = AppleOnDevice.currentRoute(for: module)
+        let isFallback   = AppleOnDevice.isFallback(module)
+        let client       = llmProvider(for: module)
         let customPreamble = UserDefaults.standard.string(forKey: "customSystemPreamble") ?? ""
         let systemPrompt = module.systemPrompt(
             customPreamble: customPreamble,
@@ -408,7 +422,7 @@ struct InspectorView: View {
         let cacheKey = OutputCacheKey(
             term: trimmedSelection, mode: explainMode.rawValue,
             detail: explainDetail.rawValue, domain: domainPreference.rawValue,
-            provider: llmProviderTypeRaw, model: llmModel,
+            provider: cacheProviderLabel, model: llmModel,
             native: nativeLanguageRaw, target: targetLanguageRaw
         )
 
@@ -429,8 +443,9 @@ struct InspectorView: View {
 
         // Local servers process requests on one GPU context — running many
         // streams at once slows all of them, so gate their concurrency.
-        let isLocalProvider = llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
-            || llmProviderTypeRaw == LLMProviderType.ollama.rawValue
+        let isLocalProvider = route == .configured
+            && (llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
+                || llmProviderTypeRaw == LLMProviderType.ollama.rawValue)
 
         let task = Task {
             var finishReason: LLMFinishReason?
@@ -454,7 +469,11 @@ struct InspectorView: View {
             } catch {
                 if !Task.isCancelled {
                     await MainActor.run {
-                        viewModel.errors[module] = LLMErrorMessage.userMessage(for: error)
+                        let message = LLMErrorMessage.userMessage(for: error)
+                        // Say why this module needed the server at all.
+                        viewModel.errors[module] = isFallback
+                            ? String(localized: "Apple's on-device model isn't reliable for this module, so it uses your AI provider — which failed: \(message)")
+                            : message
                     }
                 }
             }

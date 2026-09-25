@@ -187,7 +187,8 @@ extension InspectorView {
             FollowUpExchange(id: exchangeID, question: question, answer: "", isLoading: true, error: nil)
         )
 
-        let client = llmProvider
+        let client = llmProvider(for: nil)
+        let route = AppleOnDevice.currentRoute(for: nil)
         let native = nativeLanguage
 
         var contextLines = ["Term/phrase: \(trimmedSelection)"]
@@ -211,8 +212,9 @@ extension InspectorView {
         \(contextLines.joined(separator: "\n"))
         """
 
-        let isLocalProvider = llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
-            || llmProviderTypeRaw == LLMProviderType.ollama.rawValue
+        let isLocalProvider = route == .configured
+            && (llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
+                || llmProviderTypeRaw == LLMProviderType.ollama.rawValue)
 
         let task = Task {
             do {

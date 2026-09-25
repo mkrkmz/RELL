@@ -115,6 +115,24 @@ struct OnboardingView: View {
                 subtitle: "RELL uses a local LLM via LM Studio by default — private and free. Start LM Studio, load a model, and enable the local server."
             )
 
+            // With Apple's model there, the reader works before any server
+            // exists; the server below adds the modules it isn't used for.
+            if AppleOnDevice.currentRoute(for: nil) == .appleOnDevice {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Apple's on-device model is ready")
+                            .font(DS.Typography.callout.weight(.semibold))
+                        Text("Definitions, meanings, examples and synonyms work now, offline. A server adds pronunciation, etymology, mnemonics, collocations and word family.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+                } icon: {
+                    Image(systemName: "apple.intelligence")
+                        .foregroundStyle(DS.Color.success)
+                }
+                .frame(maxWidth: 420, alignment: .leading)
+            }
+
             VStack(spacing: DS.Spacing.md) {
                 HStack(spacing: DS.Spacing.sm) {
                     Image(systemName: "link")
