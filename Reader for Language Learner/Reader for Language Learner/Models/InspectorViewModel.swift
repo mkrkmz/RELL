@@ -31,6 +31,14 @@ final class InspectorViewModel {
     /// Cancellable task handles per module.
     var activeTasks: [ModuleType: Task<Void, Never>] = [:]
 
+    /// How long each finished module took, shown in the result header.
+    var moduleElapsed: [ModuleType: Double] = [:]
+    private var moduleStartTimes: [ModuleType: Date] = [:]
+    /// The live request per module. A cancelled request finishes after its
+    /// replacement has started; it may only touch state while it's current.
+    private var currentRunIDs: [ModuleType: UUID] = [:]
+    private var currentFollowUpRunID: UUID?
+
     /// Session-scoped "Ask AI" follow-up exchanges for the current selection.
     var followUps: [FollowUpExchange] = []
     var followUpTask: Task<Void, Never>?
@@ -142,11 +150,158 @@ final class InspectorViewModel {
     func cancel(module: ModuleType) {
         activeTasks[module]?.cancel()
         activeTasks[module] = nil
+        currentRunIDs[module] = nil
         loading[module] = false
+        moduleElapsed[module] = nil
     }
 
     func cancelAll() {
         for (_, task) in activeTasks { task.cancel() }
         activeTasks.removeAll()
+        currentRunIDs.removeAll()
+    }
+
+    // MARK: - Running a module
+
+    /// Everything one module request needs, resolved by the view (prompts,
+    /// route, budgets) so the running itself can be tested without a view.
+    struct ModuleRun {
+        let module: ModuleType
+        let system: String
+        let user: String
+        let temperature: Double
+        let maxTokens: Int
+        let cacheKey: OutputCacheKey
+        /// Sent to the configured provider only because Apple's model isn't
+        /// reliable for this module — said so if that provider fails.
+        let isFallback: Bool
+        /// LM Studio / Ollama: share `localRequestGate`.
+        let usesLocalGate: Bool
+    }
+
+    /// Streams `run.module` from `provider` into `outputs`, then records the
+    /// error, the truncation guess, the elapsed time and the cache snapshot.
+    /// Replaces any request already running for that module.
+    func start(_ run: ModuleRun, provider: any LLMProvider) {
+        let module = run.module
+        cancel(module: module)
+        moduleStartTimes[module] = Date()
+        loading[module] = true
+        errors[module] = nil
+        wasTruncated[module] = nil
+        outputs[module] = ""
+
+        let runID = UUID()
+        currentRunIDs[module] = runID
+        let gate = localRequestGate
+        let task = Task { [weak self] in
+            var finishReason: LLMFinishReason?
+            var failure: Error?
+            do {
+                if run.usesLocalGate { await gate.acquire() }
+                defer { if run.usesLocalGate { gate.release() } }
+                try Task.checkCancellation()
+                finishReason = try await provider.stream(
+                    system: run.system,
+                    user: run.user,
+                    temperature: run.temperature,
+                    maxTokens: run.maxTokens,
+                    topP: 0.9
+                ) { token in
+                    guard let self, self.currentRunIDs[module] == runID else { return }
+                    self.outputs[module, default: ""] += token
+                }
+            } catch {
+                failure = error
+            }
+            guard let self, self.currentRunIDs[module] == runID else { return }
+            self.finish(run, finishReason: finishReason, failure: failure, cancelled: Task.isCancelled)
+        }
+        activeTasks[module] = task
+    }
+
+    private func finish(_ run: ModuleRun, finishReason: LLMFinishReason?, failure: Error?, cancelled: Bool) {
+        let module = run.module
+        if !cancelled {
+            if let failure {
+                let message = LLMErrorMessage.userMessage(for: failure)
+                // Say why this module needed the server at all.
+                errors[module] = run.isFallback
+                    ? String(localized: "Apple's on-device model isn't reliable for this module, so it uses your AI provider — which failed: \(message)")
+                    : message
+            }
+            wasTruncated[module] = Self.looksTruncated(
+                finishReason: finishReason,
+                outputLength: outputs[module]?.count ?? 0,
+                maxTokens: run.maxTokens
+            )
+            snapshotToCache(key: run.cacheKey)
+            if let start = moduleStartTimes[module] {
+                moduleElapsed[module] = Date().timeIntervalSince(start)
+            }
+        }
+        loading[module] = false
+        activeTasks[module] = nil
+        currentRunIDs[module] = nil
+    }
+
+    /// The server's finish reason when it gave one; otherwise a heuristic —
+    /// about 3.5 characters per token, and output at 90% of the budget most
+    /// likely hit the limit.
+    nonisolated static func looksTruncated(finishReason: LLMFinishReason?, outputLength: Int, maxTokens: Int) -> Bool {
+        if let finishReason { return finishReason == .length }
+        let budgetChars = Int(Double(maxTokens) * 3.5)
+        return outputLength >= Int(Double(budgetChars) * 0.90)
+    }
+
+    // MARK: - Ask AI
+
+    /// Appends a follow-up exchange and streams its answer into it.
+    func startFollowUp(
+        question: String,
+        system: String,
+        provider: any LLMProvider,
+        usesLocalGate: Bool
+    ) {
+        followUpTask?.cancel()
+        let exchangeID = UUID()
+        followUps.append(
+            FollowUpExchange(id: exchangeID, question: question, answer: "", isLoading: true, error: nil)
+        )
+        let runID = UUID()
+        currentFollowUpRunID = runID
+        let gate = localRequestGate
+        followUpTask = Task { [weak self] in
+            var failure: Error?
+            do {
+                if usesLocalGate { await gate.acquire() }
+                defer { if usesLocalGate { gate.release() } }
+                try Task.checkCancellation()
+                _ = try await provider.stream(
+                    system: system, user: question, temperature: 0.3, maxTokens: 400, topP: 0.9
+                ) { token in
+                    guard let self, self.currentFollowUpRunID == runID,
+                          let index = self.followUpIndex(exchangeID) else { return }
+                    self.followUps[index].answer += token
+                }
+            } catch {
+                failure = error
+            }
+            guard let self else { return }
+            if let index = self.followUpIndex(exchangeID) {
+                if let failure, !Task.isCancelled {
+                    self.followUps[index].error = LLMErrorMessage.userMessage(for: failure)
+                }
+                self.followUps[index].isLoading = false
+            }
+            if self.currentFollowUpRunID == runID {
+                self.followUpTask = nil
+                self.currentFollowUpRunID = nil
+            }
+        }
+    }
+
+    private func followUpIndex(_ id: UUID) -> Int? {
+        followUps.firstIndex { $0.id == id }
     }
 }

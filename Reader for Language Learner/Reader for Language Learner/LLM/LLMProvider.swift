@@ -13,7 +13,7 @@ import Foundation
 
 /// Why a streamed response ended, as reported by the server.
 /// `nil` from `stream` means the server did not report one.
-enum LLMFinishReason: Equatable, Sendable {
+nonisolated enum LLMFinishReason: Equatable, Sendable {
     /// Model finished naturally (`stop` / `end_turn`).
     case stop
     /// Response was cut off by the max_tokens limit (`length` / `max_tokens`).

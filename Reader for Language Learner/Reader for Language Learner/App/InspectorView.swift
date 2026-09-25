@@ -32,8 +32,6 @@ struct InspectorView: View {
     @State var showAnkiExport = false
     @State var showToast      = false
     @State var toastMessage   = ""
-    @State var moduleStartTimes: [ModuleType: Date] = [:]
-    @State var moduleElapsed: [ModuleType: Double] = [:]
     @State var displayedText: String = ""
     @State var followUpQuestion: String = ""
     @State var selectionDebounceTask: Task<Void, Never>?
@@ -394,46 +392,11 @@ struct InspectorView: View {
         guard module.isEnabled(mode: explainMode), hasSelection else { return }
         if !forceRefresh, let cached = viewModel.outputs[module], !cached.isEmpty { return }
 
-        viewModel.cancel(module: module)
-        moduleStartTimes[module] = Date()
-        moduleElapsed[module] = nil
-        viewModel.loading[module] = true
-        viewModel.errors[module]  = nil
-        viewModel.outputs[module] = ""
-
-        let route        = AppleOnDevice.currentRoute(for: module)
-        let isFallback   = AppleOnDevice.isFallback(module)
-        let client       = llmProvider(for: module)
+        let route = AppleOnDevice.currentRoute(for: module)
         let customPreamble = UserDefaults.standard.string(forKey: "customSystemPreamble") ?? ""
-        let systemPrompt = module.systemPrompt(
-            customPreamble: customPreamble,
-            nativeLanguage: nativeLanguage,
-            targetLanguage: targetLanguage
-        )
-        let userPrompt   = module.userPrompt(
-            term: trimmedSelection,
-            mode: explainMode,
-            detail: explainDetail,
-            domain: domainPreference,
-            context: contextSentence,
-            nativeLanguage: nativeLanguage,
-            targetLanguage: targetLanguage
-        )
-        let cacheKey = OutputCacheKey(
-            term: trimmedSelection, mode: explainMode.rawValue,
-            detail: explainDetail.rawValue, domain: domainPreference.rawValue,
-            provider: cacheProviderLabel, model: llmModel,
-            native: nativeLanguageRaw, target: targetLanguageRaw
-        )
 
-        let resolvedMaxTokens = module.recommendedMaxTokens(
-            mode: explainMode,
-            detail: explainDetail,
-            modelIdentifier: llmModel
-        )
-
-        // Use temperature override from Prompt settings if set, otherwise module default
-        let resolvedTemperature: Double = {
+        // Temperature override from Prompt settings if set, otherwise module default.
+        let temperature: Double = {
             guard let data = UserDefaults.standard.string(forKey: "temperatureOverrides")?.data(using: .utf8),
                   let overrides = try? JSONDecoder().decode([String: Double].self, from: data),
                   let custom = overrides[module.rawValue]
@@ -441,66 +404,42 @@ struct InspectorView: View {
             return custom
         }()
 
-        // Local servers process requests on one GPU context — running many
-        // streams at once slows all of them, so gate their concurrency.
-        let isLocalProvider = route == .configured
-            && (llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
-                || llmProviderTypeRaw == LLMProviderType.ollama.rawValue)
+        let run = InspectorViewModel.ModuleRun(
+            module: module,
+            system: module.systemPrompt(
+                customPreamble: customPreamble,
+                nativeLanguage: nativeLanguage,
+                targetLanguage: targetLanguage
+            ),
+            user: module.userPrompt(
+                term: trimmedSelection,
+                mode: explainMode,
+                detail: explainDetail,
+                domain: domainPreference,
+                context: contextSentence,
+                nativeLanguage: nativeLanguage,
+                targetLanguage: targetLanguage
+            ),
+            temperature: temperature,
+            maxTokens: module.recommendedMaxTokens(mode: explainMode, detail: explainDetail, modelIdentifier: llmModel),
+            cacheKey: OutputCacheKey(
+                term: trimmedSelection, mode: explainMode.rawValue,
+                detail: explainDetail.rawValue, domain: domainPreference.rawValue,
+                provider: cacheProviderLabel, model: llmModel,
+                native: nativeLanguageRaw, target: targetLanguageRaw
+            ),
+            isFallback: AppleOnDevice.isFallback(module),
+            // Local servers process requests on one GPU context — running many
+            // streams at once slows all of them, so gate their concurrency.
+            usesLocalGate: route == .configured && configuredProviderIsLocal
+        )
+        viewModel.start(run, provider: llmProvider(for: module))
+    }
 
-        let task = Task {
-            var finishReason: LLMFinishReason?
-            do {
-                if isLocalProvider {
-                    await viewModel.localRequestGate.acquire()
-                }
-                defer {
-                    if isLocalProvider { viewModel.localRequestGate.release() }
-                }
-                try Task.checkCancellation()
-                finishReason = try await client.stream(
-                    system: systemPrompt,
-                    user: userPrompt,
-                    temperature: resolvedTemperature,
-                    maxTokens: resolvedMaxTokens,
-                    topP: 0.9
-                ) { token in
-                    self.viewModel.outputs[module, default: ""] += token
-                }
-            } catch {
-                if !Task.isCancelled {
-                    await MainActor.run {
-                        let message = LLMErrorMessage.userMessage(for: error)
-                        // Say why this module needed the server at all.
-                        viewModel.errors[module] = isFallback
-                            ? String(localized: "Apple's on-device model isn't reliable for this module, so it uses your AI provider — which failed: \(message)")
-                            : message
-                    }
-                }
-            }
-
-            if !Task.isCancelled {
-                await MainActor.run {
-                    if let finishReason {
-                        viewModel.wasTruncated[module] = finishReason == .length
-                    } else {
-                        // No server-reported finish reason — fall back to a heuristic:
-                        // avg ~3.5 chars/token; output at ≥90% of the budget likely hit the limit.
-                        let outputLength = viewModel.outputs[module]?.count ?? 0
-                        let tokenBudgetChars = Int(Double(resolvedMaxTokens) * 3.5)
-                        viewModel.wasTruncated[module] = outputLength >= Int(Double(tokenBudgetChars) * 0.90)
-                    }
-                    viewModel.snapshotToCache(key: cacheKey)
-                }
-            }
-            await MainActor.run {
-                if let start = moduleStartTimes[module] {
-                    moduleElapsed[module] = Date().timeIntervalSince(start)
-                }
-                viewModel.loading[module] = false
-                viewModel.activeTasks[module] = nil
-            }
-        }
-        viewModel.activeTasks[module] = task
+    /// LM Studio / Ollama — the servers `localRequestGate` exists for.
+    var configuredProviderIsLocal: Bool {
+        llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
+            || llmProviderTypeRaw == LLMProviderType.ollama.rawValue
     }
 
     func runAllPrimaryModules() {

@@ -173,19 +173,12 @@ extension InspectorView {
         let question = rawQuestion.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !question.isEmpty, hasSelection else { return }
 
-        viewModel.followUpTask?.cancel()
-
         // Prior turns for this selection, oldest first — capped so a long
         // thread doesn't blow the prompt budget. Snapshotted before the new
-        // exchange is appended below, so it never includes itself.
+        // exchange is appended by `startFollowUp`, so it never includes itself.
         let priorTurns = viewModel.followUps
             .filter { $0.error == nil && !$0.answer.isEmpty }
             .suffix(4)
-
-        let exchangeID = UUID()
-        viewModel.followUps.append(
-            FollowUpExchange(id: exchangeID, question: question, answer: "", isLoading: true, error: nil)
-        )
 
         let client = llmProvider(for: nil)
         let route = AppleOnDevice.currentRoute(for: nil)
@@ -212,42 +205,11 @@ extension InspectorView {
         \(contextLines.joined(separator: "\n"))
         """
 
-        let isLocalProvider = route == .configured
-            && (llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
-                || llmProviderTypeRaw == LLMProviderType.ollama.rawValue)
-
-        let task = Task {
-            do {
-                if isLocalProvider { await viewModel.localRequestGate.acquire() }
-                defer { if isLocalProvider { viewModel.localRequestGate.release() } }
-                try Task.checkCancellation()
-                _ = try await client.stream(
-                    system: system,
-                    user: question,
-                    temperature: 0.3,
-                    maxTokens: 400,
-                    topP: 0.9
-                ) { token in
-                    if let index = self.viewModel.followUps.firstIndex(where: { $0.id == exchangeID }) {
-                        self.viewModel.followUps[index].answer += token
-                    }
-                }
-            } catch {
-                if !Task.isCancelled {
-                    await MainActor.run {
-                        if let index = viewModel.followUps.firstIndex(where: { $0.id == exchangeID }) {
-                            viewModel.followUps[index].error = LLMErrorMessage.userMessage(for: error)
-                        }
-                    }
-                }
-            }
-            await MainActor.run {
-                if let index = viewModel.followUps.firstIndex(where: { $0.id == exchangeID }) {
-                    viewModel.followUps[index].isLoading = false
-                }
-                viewModel.followUpTask = nil
-            }
-        }
-        viewModel.followUpTask = task
+        viewModel.startFollowUp(
+            question: question,
+            system: system,
+            provider: client,
+            usesLocalGate: route == .configured && configuredProviderIsLocal
+        )
     }
 }

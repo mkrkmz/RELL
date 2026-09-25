@@ -60,7 +60,7 @@ extension InspectorView {
     func activeResultView(for module: ModuleType) -> some View {
         let output          = viewModel.outputs[module] ?? ""
         let isLoading       = viewModel.loading[module] == true
-        let elapsed         = moduleElapsed[module]
+        let elapsed         = viewModel.moduleElapsed[module]
         let isTruncated     = viewModel.wasTruncated[module] == true
         let renderedOutput  = isLoading ? output : MarkdownUtils.sanitizeLLMOutput(output)
         let sectionTitle    = isLoading ? "Live Output" : "Result"
@@ -126,7 +126,6 @@ extension InspectorView {
                         if isLoading {
                             resultToolbarButton(systemImage: "xmark.circle.fill") {
                                 viewModel.cancel(module: module)
-                                moduleElapsed[module] = nil
                             }
                             .foregroundStyle(DS.Color.danger.opacity(0.78))
                             .help("Cancel")
