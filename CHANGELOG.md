@@ -4,6 +4,27 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.40.0] - 2026-09-25
+
+Works the moment it opens. Roadmap v12 Sprint 2.
+
+### Added
+
+- **Answers without setting anything up.** On a Mac with Apple
+  Intelligence, definitions, meanings in your language, examples,
+  synonyms, usage notes, hover lookups and follow-up questions come from
+  Apple's on-device model — offline, free, usually in under a second. No
+  server to install, no key to paste. Pronunciation, etymology, mnemonics,
+  collocations and word family still use your AI provider: the on-device
+  model gets those wrong too often to trust. Arabic and Russian aren't
+  supported by it yet. You can switch it off in Settings ▸ AI.
+- **Offline sentence translation.** The strip under the page now uses
+  Apple's own translation, which works without a connection once the
+  language is downloaded. Pairs it doesn't cover still go to your AI
+  provider. Settings ▸ General lets you choose.
+- **See where your text goes.** Settings ▸ AI lists every feature and
+  whether its text stays on this Mac or goes to a server — and which one.
+
 ## [1.39.0] - 2026-09-24
 
 Your data, safe. Roadmap v12 Sprint 1.

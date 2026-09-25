@@ -151,25 +151,44 @@ kendi kurulumu Ollama uzerinden bulut model — `gemma4:31b-cloud`; yani hover,
 cumle cevirisi ve CEFR tahmini zaten her secimde agdan gidiyor. Translation
 kalemi bu kurulumda da gecikmeyi ve istek sayisini dusurur.)
 
-- [ ] **Spike (kapi, ~1 gun)**: `FoundationModels` (`SystemLanguageModel`)
-      ile 10 modulu 12 dilde dene. Olc: kalite (etimoloji/IPA zayif
-      olabilir), gecikme, desteklenen diller (Turkce/Arapca vb. dogrulanacak),
-      baglam siniri. Karar tablosu: hangi modul hangi dilde "Apple" ile
-      verilebilir. **Kapi gecilmezse yalniz Translation kalemi ship'lenir**
-- [ ] `LLMProviderType.appleOnDevice` (macOS 26+, `availability` kontrollu):
-      streaming `LanguageModelSession`, `LLMProvider` uyumu; model yoksa
-      (Apple Intelligence kapali, desteklenmeyen dil/cihaz) secenek gorunmez
-      ve nedeni soylenir. Onboarding'de mevcutsa varsayilan
-- [ ] Modul bazinda yedek saglayici: Apple modelinin zayif oldugu modul
-      (spike'a gore) kullanicinin ikinci saglayicisina duser
-- [ ] **Cumle cevirisi Translation framework'u ile** (macOS 15+): cevrimdisi,
+- [x] **Spike (kapi)** — 2026-09-24, macOS 27, gercek prompt'lar, 5 dil
+      cifti (TR→EN, EN→DE, TR→DE, EN→JA, EN→ES) x 10 modul + cumle cevirisi.
+      **Kapi modul bazinda gecildi.**
+      - Gecikme: medyan 0.9 sn, p90 2.8 sn, en fazla 3.0 sn
+      - Diller: 12'nin 10'u; **Arapca ve Rusca desteklenmiyor**
+      - Guclu: tanim, anlam (TR), ornekler, es anlamlilar, kullanim notlari
+        (parser etiketleri FREQ:/REG: korunuyor), cumle cevirisi
+      - Sinirda: esdizimler (koseli parantez sizintisi, "English only"
+        ifadesi), kelime ailesi (uydurma "resiliencing")
+      - Guvenilmez: **telaffuz** (DE/JA/ES IPA'si tamamen yanlis),
+        **etimoloji** (uydurma koken: "Verstandnis Latince"),
+        **hatirlatici** (anlamsiz)
+- [x] **Apple cihaz-ici katman** (macOS 26+): ayri bir `LLMProviderType`
+      yerine yapilandirilmis saglayicinin ONUNDE bir katman
+      (`AppleOnDevice.route`, saf fonksiyon). Kullanici karari 1a: guvenilir
+      modul Apple'da, zayif modul yapilandirilmis saglayiciya. Ayarlar'da
+      anahtar (varsayilan acik) + kullanilamama nedeni; onboarding "hazir"
+      der. Apple istekleri retry/circuit breaker/yerel kuyruktan gecmez
+- [x] Modul bazinda yedek: telaffuz, etimoloji, hatirlatici, esdizim,
+      kelime ailesi → yapilandirilmis saglayici; o da ulasilamazsa hata
+      mesaji nedenini soyler (ikinci bir saglayici ayari eklenmedi — mevcut
+      saglayici yedek rolunde)
+- [x] **Cumle cevirisi Translation framework'u ile** (macOS 15+, kullanici
+      karari 2a: varsayilan; Ayarlar ▸ Genel'de secilebilir): cevrimdisi,
       ucretsiz, hizli; dil paketi yoksa sistem indirme istemi. LLM yolu
       yedek olarak kalir. Bugun her secim, bulut saglayicida ucretli bir
       istek (`sentenceTranslationEnabled` varsayilan `true`)
-- [ ] Gizlilik ekrani: hangi ozellik hangi saglayiciya ne gonderiyor
+- [x] Gizlilik ozeti (Ayarlar ▸ AI, canli yonlendirmeden hesaplanir): hangi ozellik hangi saglayiciya ne gonderiyor
       (hover, ceviri, CEFR tahmini, sayfa analizi) — tek bakista
-- [ ] Testler: saglayici secimi/yedege dusme mantigi saf fonksiyon olarak;
-      model/dil paketi olmayan runner'da `XCTSkip`
+- [x] Testler (10): yonlendirme kurallari, her modulun bilincli
+      siniflandirilmasi, canli streaming delta'lari ve dil destegi
+      (modelsiz makinede `XCTSkip`), Translation dil kodlari, cache
+- [x] Dogrulama: tam paket **515 test, 0 hata**; uyari 29 (yeni kodda yok)
+- [ ] **Canli tur (kullaniciya kaldi)**: Xcode'dan acilmis eski bir kopya
+      (ayni bundle id, ayni veri) aciktti; iki kopya ayni dosyalara yazdigi
+      icin yenisi kapatildi. Kontrol: Ayarlar ▸ AI (anahtar + ozet), bir
+      kelimede tanim Apple'dan / etimoloji saglayicidan, cumle seridinde
+      dil paketi istemi
 
 ## Sprint 3 — v1.41.0 "Pencere modeli" (Could)
 
