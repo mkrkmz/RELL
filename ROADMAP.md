@@ -94,29 +94,50 @@ Bu sprint S2–S4'un veri temelidir.
 
 **Spike:** 277 sayfalik PDF ve uzun bir EPUB'da, sayfa/bolum basina eslesme +
 kayit maliyeti (ms) ve bir okuma oturumunun urettigi yazma sayisi. Kapi: sayfa
-cevirme hissedilir sekilde yavaslamaz (< 16 ms ana thread).
+cevirme hissedilir sekilde yavaslamaz (< 16 ms ana thread). **Sonuc:** tarama
+(lemma + cumle bolme) ve EPUB metin cikarma tamamen ana thread disinda;
+ana thread'de yalniz dwell sonrasi bir `page.string` + dizi ekleme. Sayfa
+cevirmede is yok — `.task(id:)` dwell'i pasaj degisince iptal ediyor.
+Yazma: okunan sayfa basina en fazla bir kez (ayni kelime/yer/gun tekillesir).
 
-- [ ] **Karsilasma Gunlugu** — kayitli bir kelime okunan sayfada gectiginde
-      (kitap, sayfa/bolum, cumle, tarih) sessizce kaydedilir. Kaynak: zaten
-      her sayfada calisan `TermMatcher` / `LemmaMatcher` (cekimli bicimler
-      dahil). Ayni sayfa ayni gun bir kez sayilir. FSRS'e yazmaz
-- [ ] **Kelime Sayfasi (UI)** — `SavedWordDetailSheet` sheet olmaktan cikip
-      tam bir sayfa: ustte buyuk kelime + IPA + ses + CEFR rozeti; altinda
-      karsilasma zaman cizelgesi ("3 kitapta 7 kez"), cumleler galerisi
-      (tiklayinca kitapta o yere gider), kelime ailesi, FSRS "sonraki tekrar /
-      hafiza gucu" gostergesi
-- [ ] **Cloze modu** (`QuizMode.cloze`) — kart, kelimenin *senin okudugun*
-      cumlesini bosluklu gosterir; sonraki tekrarlarda Karsilasma
-      Gunlugu'nden *farkli* bir cumle secilir (baglam cesitliligi). Yazilan
-      cevap otomatik notlanir (`isObjectivelyGraded`), FSRS'e yazar.
-      `QuizMode` raw value'lari degismez, yeni case eklenir
-- [ ] Should: **Cumle madenciligi** — secim cubugunda "Cumleyi kaydet": cumle
-      karti (`SavedWord.kind`, default `.word`, `decodeIfPresent`). Tekrarda
-      once TTS ile dinle, sonra anlamini hatirla
-- [ ] Testler: karsilasma tekillestirme ve ust sinir, bozuk `encounters.json`
-      karantinasi, eski `saved_words.json`'un `kind` olmadan okunmasi, cloze
-      cumle secimi (tekrar etmez), cloze'un FSRS'e yazdigi / karsilasmanin
-      yazmadigi (mutation-check)
+- [x] **Karsilasma Gunlugu** — `WordEncounterStore` (`word_encounters.json`,
+      yedek + karantina kapsaminda) + saf `EncounterScanner`. Sayfa 8 sn,
+      bolum 15 sn ekranda kalinca okunmus sayilir (`ContentView+Encounters`,
+      `.task(id:)` ile — kaydirip gecilen sayfa sayilmaz). Cekimli bicimler
+      dahil; ayni kelime+yer+gun tek kayit; kelime basina son 50; silinen
+      kelimelerin kayitlari budanir; kelimenin kaydedildigi cumle sayilmaz.
+      FSRS'e yazmaz. **Canli turda bulunan:** PDF'te ilk gecis cogu zaman
+      sayfa basligi ("REM-Sleep Dreaming") — artik en az 6 kelimelik ilk
+      duzyazi cumlesi tercih ediliyor, yoksa ilk gecis
+- [x] **Kelime Sayfasi (UI)** — `SavedWordDetailSheet` yeniden tasarlandi
+      (520×680): ust bolum (kelime, ses, CEFR, ustalik, tanim), "su an
+      hatirlama olasiligin" gostergesi (FSRS retrievability) + sonraki tekrar,
+      "okumalarinda karsina cikti" listesi (cekimli bicim kalin; kaynak,
+      sayfa, ne zaman, ×adet), kaydettigin yer, Ayrintilar altinda
+      etiket/not/ciktilar. Cumleye tiklamak kitabi o sayfada acar
+      (`DocumentJump`: konum once okuma konumu olarak yazilir, sonra
+      `openWindow`; acik pencere bildirimle atlar). Tam sayfa pencere yerine
+      buyuk sheet: ayri pencere ortam/pencere yonetimini buyutuyordu
+- [x] **Cloze — bilincli sapma:** `QuizMode.cloze` eklenmedi, cunku mevcut
+      "Type" modu zaten kaydedilen cumleden cloze'du; ikinci mod ayni isi
+      yapardi. Yeni olan baglam cesitliligi: `ClozeContext` kart cumlesini
+      kaydedilen cumle + karsilasma cumleleri arasinda tekrar sayisina gore
+      dondurur, kaynagi kartta gosterir. Yalniz kelimenin kaydedildigi
+      bicimde gectigi cumleler — cevap o bicime gore notlaniyor. FSRS yolu
+      degismedi (Type zaten yaziyordu)
+- [ ] Should: **Cumle madenciligi** — ertelendi (kullanici karari bekliyor).
+      Etki alani genis: `SavedWord` cumle olunca vurgulama (butun cumle alti
+      cizili), kapsama/lemma anahtarlari, CEFR tahmini, coktan secmeli ve
+      eslestirme modlari, Anki disa aktarimi ayri ele alinmali
+- [x] Testler (25 yeni, `WordEncounterTests` + `WordPageTests`):
+      tekillestirme, ust sinir, budama, dil kapsami, kalicilik, bozuk dosya
+      karantinasi, yedek listesi, baslik yerine duzyazi, cekimli bicim,
+      cloze rotasyonu ve cekimli-bicim atlama, PDF atlama konumu, tekil
+      ozet. Mutation-check: tekillestirme, dil filtresi, cloze rotasyonu,
+      bicim atlama — geri alininca dusuyorlar
+- [x] Dogrulama: tam paket **558 test, 0 hata, 1 atlanan**; 0 uyari;
+      katalog 23 yeni TR metin. Canli: PDF'te dwell → kayit, Kelime
+      Sayfasi, s.145 → s.143 atlama
 
 ## Sprint 2 — v1.43.0 "Okuma dongusu" (Must)
 
