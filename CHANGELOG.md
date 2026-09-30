@@ -4,6 +4,61 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [Unreleased] — planned as 1.42.0
+
+Reading, not just looking things up. Roadmap v13 (Sprints 0–5), released
+together.
+
+### Added
+
+- **Words have a history now.** Every page you actually read (not skim
+  past) is checked for your saved words, and each word keeps the sentences
+  it turned up in, in any form — "ran" counts for "run". A word's page
+  shows them all, with the chance you remember it right now; click a
+  sentence and the book opens there.
+- **Typing practice uses your own books.** A typed-recall card now rotates
+  through the sentences you've met the word in, and says where each is from.
+- **A recap when you come back.** Open a book after three days away and a
+  short card sums up where you left off, in simple language at your level,
+  written only from what you'd already read.
+- **Chapter warm-up.** Opening a book chapter offers its hard words first,
+  each with a short meaning and the sentence it's in, saved in one click.
+- **Your level.** Settings ▸ General ▸ Your Level (B1 by default) — recaps,
+  warm-ups, simplified text and stories are written for it.
+- **Meanings above the words.** In books, View ▸ Show Meanings Above Words
+  (⌥⌘G) writes a one-to-three-word meaning above the words you're still
+  learning and the chapter's hard words.
+- **Simplify to your level.** Select a passage and rewrite it at your level,
+  side by side with the original.
+- **Retell in your own words.** Select a passage, write it from memory, and
+  see every correction word by word; words from the correction save in one
+  click.
+- **Import web articles.** File ▸ Import Web Article… (⇧⌘I) keeps a page's
+  text and opens it as a book, with everything RELL does for books.
+- **A story from your words.** Go ▸ Story From Your Words… writes a short
+  story around the words you're due to review and opens it as a book.
+- **Command palette.** ⌘K finds commands, modules, chapters, saved words and
+  books; type a number to jump to that page.
+- **Grammar lens.** Select a sentence and the inspector tags each word's part
+  of speech, and can explain the structure.
+- **A word card in the inspector**: a single word shown large, with its
+  sound, level, a one-line meaning and how often you've met it.
+- **Review without opening a window.** The menu bar window shows your next
+  due word, and the daily reminder asks about one — answer "I Knew It" or
+  "Not Yet" right there.
+- **Today.** The home screen is ordered by the day's work — your book, your
+  reviews, your reading goal — and tells you when a recap is waiting.
+
+### Fixed
+
+- **Opening a book after a break could crash RELL** — the recap card resized
+  the page underneath it until the window gave up. Found before release.
+
+### Changed
+
+- The app now runs in Swift 6 language mode, and RELL's own tests no longer
+  touch your data while they run.
+
 ## [1.41.0] - 2026-09-25
 
 Mostly under the hood: the reader window and the inspector were rebuilt so

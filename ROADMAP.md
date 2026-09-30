@@ -307,6 +307,38 @@ El Pais; Ars ve Spiegel JS/ucretli). **(a) yapilmadi** — asagiya bakin.
       Retell (sentetik cift tiklama WKWebView'da secim olusturmuyor).
       Canli denemeler kutuphaneye ya da diske iz birakmadi
 
+## Sprint 5 — kapanis (kullanici karari: S5 bitince tek surum)
+
+Kapsam (kullanici secimi, 2026-09-30): test izolasyonu + canli tur, Komut
+Paleti + Dilbilgisi Mercegi, bildirim/menu cubugu tekrari. Golgeleme, cumle
+kaydetme ve modul izgarasini gizleme **v14'e ertelendi**; Karakter Rehberi
+ve Okuma Cetveli alinmadi.
+
+- [x] **Test izolasyonu** — `RELLProcess.isTestHost`: test host'unda veri
+      klasoru surece ozel gecici klasor; Spotlight, kisayol, bildirim ve
+      gunluk yedek atlanir. Dogrulama: tam kosuda gercek veri dosyalarinin
+      degisiklik zamanlari ve yedek sayisi degismedi. Regresyon testi
+- [x] **Komut Paleti (⌘K)** — Gorunum ▸ Komut Paleti: komutlar, moduller,
+      acik kitabin bolumleri, kayitli kelimeler, kutuphane; sayi → o sayfa/
+      bolum. Buyuk/kucuk harf ve aksan duyarsiz; siralama saf (`PaletteMatcher`)
+- [x] **Dilbilgisi Mercegi** — Inspector'da ifade/cumle seciminde acilir
+      "Dilbilgisi": `NLTagger` sozcuk turleri, renk + kelimenin altinda
+      etiket (yalniz renk degil); istege bagli "Yapiyi acikla"
+- [x] **Bildirimden tekrar** — gunluk hatirlatma, zamani gelen bir kelimeyi
+      sorar; banner'da "Bildim / Henuz Degil" → FSRS (hatirlama); cevaptan
+      sonra bildirim siradaki kelimeyle yeniden kurulur
+- [x] **Menu cubugunda siradaki kelime** — Hizli Arama penceresinin altinda
+      kart: anlami goster, "Henuz Degil / Bildim" → FSRS
+- [x] Testler: 598 → **604**, 0 hata, 0 uyari; 39 yeni TR metin
+- [ ] **Canli tur (yayin oncesi, kullanici gerekli)** — ekran kilitliydi.
+      Kontrol listesi: ⌘K; Dilbilgisi; menu cubugu karti; hatirlatmayi
+      acip banner eylemleri; kelime karti; Sadelestir; Yeniden Anlat; web
+      ice aktarma (⇧⌘I); Kelimelerinden Hikaye; hazirlik listesi; ⌥⌘G'de
+      sayfa kaymasi
+- [ ] **Yayin** — CHANGELOG "Unreleased — planned as 1.42.0" hazir; canli
+      tur + kullanici onayindan sonra baslik → `[1.42.0]`, tag, push, CI
+      release run'i izlenir
+
 ## Fikir havuzu (sprinte alinmadi)
 
 - **Seviye testi (ilk acilis)** — 3 dakikalik LexTALE-tarzi evet/hayir kelime
