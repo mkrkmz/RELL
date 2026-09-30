@@ -47,6 +47,8 @@ final class ReaderWindowModel {
     var showStats = false
     /// The chapter warm-up popover (v13 Sprint 2).
     var showWarmUp = false
+    /// The passage being rewritten at the reader's level (v13 Sprint 3).
+    var gradedRewriteSource: String?
     var showReadingAppearance = false
 
     /// Focus mode hides the side panels and remembers what was visible.

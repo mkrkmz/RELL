@@ -27,6 +27,22 @@ extension InspectorView {
 
     var selectionHeader: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            if isSingleWordSelection {
+                wordCard
+            } else {
+                phraseHeader
+            }
+
+            Divider()
+
+            actionBar
+        }
+        .padding(.horizontal, DS.Spacing.xs)
+        .padding(.top, DS.Spacing.xxs)
+    }
+
+    /// A phrase or sentence: the text itself and its saved state.
+    private var phraseHeader: some View {
             HStack(alignment: .top, spacing: DS.Spacing.sm) {
                 Text(trimmedSelection)
                     .font(DS.Typography.headline)
@@ -49,13 +65,6 @@ extension InspectorView {
                 }
             }
             .animation(DS.Animation.springFast, value: isCurrentlySaved)
-
-            Divider()
-
-            actionBar
-        }
-        .padding(.horizontal, DS.Spacing.xs)
-        .padding(.top, DS.Spacing.xxs)
     }
 
     // MARK: - Control Strip (Mode + Detail + Recent Terms)

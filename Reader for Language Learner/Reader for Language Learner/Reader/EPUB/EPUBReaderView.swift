@@ -631,7 +631,7 @@ struct EPUBReaderView: NSViewRepresentable {
                 return true;
             }
 
-            function rellMarkRangesInNode(node, ranges, color) {
+            function rellMarkRangesInNode(node, ranges, color, gloss, underline) {
                 var text = node.textContent;
                 var frag = document.createDocumentFragment();
                 var last = 0;
@@ -640,11 +640,17 @@ struct EPUBReaderView: NSViewRepresentable {
                         frag.appendChild(document.createTextNode(text.substring(last, r.start)));
                     }
                     var span = document.createElement('span');
-                    span.setAttribute('data-rell-saved-word', '1');
-                    span.style.textDecorationLine = 'underline';
-                    span.style.textDecorationStyle = 'dotted';
-                    span.style.textDecorationColor = color;
-                    span.style.textUnderlineOffset = '2px';
+                    span.setAttribute('data-rell-saved-word', underline ? '1' : 'gloss');
+                    // The meaning is drawn by CSS (::after, attr()) — a
+                    // pseudo-element adds nothing to textContent, so text
+                    // offsets for highlights, search and karaoke stay valid.
+                    if (gloss) { span.setAttribute('data-rell-gloss', gloss); }
+                    if (underline) {
+                        span.style.textDecorationLine = 'underline';
+                        span.style.textDecorationStyle = 'dotted';
+                        span.style.textDecorationColor = color;
+                        span.style.textUnderlineOffset = '2px';
+                    }
                     span.style.cursor = 'pointer';
                     span.textContent = text.substring(r.start, r.end);
                     frag.appendChild(span);
@@ -661,9 +667,63 @@ struct EPUBReaderView: NSViewRepresentable {
             /// matching for accented Latin, Cyrillic, and Arabic scripts,
             /// while CJK terms use plain substring matching (no boundary
             /// concept applies there — see `rellFindTermRanges`).
-            window.rellMarkSavedWords = function(terms, color) {
+            function rellSetGlossStyle(on, glossColor) {
+                var root = document.documentElement;
+                var was = root.classList.contains('rell-glossing');
+                // Turning glosses on or off changes the line height, which
+                // moves every line; keep the reader at the same place in
+                // the chapter rather than the same pixel offset.
+                var fraction = was === on ? null
+                    : window.scrollY / Math.max(1, root.scrollHeight - window.innerHeight);
+                rellApplyGlossStyle(on, glossColor);
+                if (fraction !== null && fraction > 0) {
+                    window.scrollTo(0, fraction * Math.max(0, root.scrollHeight - window.innerHeight));
+                }
+            }
+
+            function rellApplyGlossStyle(on, glossColor) {
+                var style = document.getElementById('rell-gloss-style');
+                if (!on) {
+                    if (style) { style.remove(); }
+                    document.documentElement.classList.remove('rell-glossing');
+                    return;
+                }
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = 'rell-gloss-style';
+                    document.documentElement.appendChild(style);
+                }
+                // Room above each line for the meaning; more specific than
+                // the appearance rules, so it wins while glosses are on.
+                style.textContent =
+                    'html.rell-glossing body, html.rell-glossing body p, html.rell-glossing body li, ' +
+                    'html.rell-glossing body blockquote { line-height: 2.35 !important; }' +
+                    'span[data-rell-gloss] { position: relative; }' +
+                    'span[data-rell-gloss]::after { content: attr(data-rell-gloss); position: absolute; ' +
+                    'left: 50%; bottom: 88%; transform: translateX(-50%); font-size: 0.56em; ' +
+                    'line-height: 1; white-space: nowrap; font-style: normal; font-weight: 500; ' +
+                    'letter-spacing: 0; text-indent: 0; text-transform: none; pointer-events: none; ' +
+                    '-webkit-user-select: none; user-select: none; color: ' + glossColor + '; }';
+                document.documentElement.classList.add('rell-glossing');
+            }
+
+            /// `glosses`: lowercased term → short meaning shown above it.
+            /// `glossOnly`: terms that get a meaning but aren't saved words
+            /// (the chapter warm-up), so no saved-word underline.
+            window.rellMarkSavedWords = function(terms, color, glosses, glossOnly, glossColor) {
                 rellUnmarkSavedWords();
-                if (!terms || !terms.length) { return; }
+                glosses = glosses || {};
+                glossOnly = glossOnly || [];
+                var glossing = Object.keys(glosses).length > 0;
+                rellSetGlossStyle(glossing, glossColor);
+                var onlySet = {};
+                glossOnly.forEach(function(t) { onlySet[t.toLowerCase()] = true; });
+                // Warm-up words first: there are only a handful, and the
+                // 500-term cap below shouldn't be able to crowd them out.
+                terms = glossOnly.filter(function(t) {
+                    return glosses[t.toLowerCase()];
+                }).concat(terms || []);
+                if (!terms.length) { return; }
                 rellBindSavedWordClicks();
 
                 // Bounds: at most 500 terms and 50 matches per term per
@@ -680,7 +740,8 @@ struct EPUBReaderView: NSViewRepresentable {
                         var node = nodes[i];
                         var ranges = rellFindTermRanges(term, node.textContent, 50 - matched);
                         if (ranges.length) {
-                            rellMarkRangesInNode(node, ranges, color);
+                            var key = term.toLowerCase();
+                            rellMarkRangesInNode(node, ranges, color, glosses[key], !onlySet[key]);
                             matched += ranges.length;
                         }
                     }

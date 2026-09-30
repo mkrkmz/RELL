@@ -225,3 +225,127 @@ nonisolated enum ChapterWarmUp {
         }
     }
 }
+
+// MARK: - Interlinear gloss
+
+/// A few words of meaning drawn above a word in the book (Roadmap v13
+/// Sprint 3) — for the words the app knows are hard for this reader: saved
+/// words still being learned, and the chapter's warm-up words.
+nonisolated enum InterlinearGloss {
+
+    /// Longest gloss drawn. Above a word there's room for two or three short
+    /// words; a sentence would run into its neighbours.
+    static let maxLength = 28
+    /// Words asked for in one request.
+    static let maxBatch = 60
+    static let maxTokens = 1_200
+
+    static func systemPrompt(target: Language, answerIn: Language, level: CEFRLevel) -> String {
+        """
+        You write tiny glosses for a CEFR \(level.rawValue) learner reading a \
+        \(target.rawValue) book. For each word, give its most common meaning in \
+        \(answerIn.rawValue) in 1 to 3 words — like a note written above the word. \
+        One per line, exactly:
+        word | gloss
+        """
+    }
+
+    static func userPrompt(words: [String]) -> String {
+        "Words: " + words.joined(separator: ", ")
+    }
+
+    /// Strict parse: `word | gloss` lines for words that were asked for;
+    /// a gloss too long to sit above a word is cut at a word boundary or,
+    /// failing that, dropped.
+    static func parse(_ raw: String, requested: [String]) -> [String: String] {
+        let allowed = Set(requested.map { $0.lowercased() })
+        var result: [String: String] = [:]
+        for line in raw.components(separatedBy: .newlines) {
+            let parts = line.split(separator: "|", maxSplits: 1).map {
+                $0.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: "*-•`\"")))
+            }
+            guard parts.count == 2 else { continue }
+            let term = parts[0].lowercased()
+            guard allowed.contains(term), result[term] == nil,
+                  let gloss = fit(parts[1])
+            else { continue }
+            result[term] = gloss
+        }
+        return result
+    }
+
+    /// Trailing punctuation dropped; over `maxLength`, cut back to the last
+    /// whole word that fits, or nil when even the first word doesn't.
+    static func fit(_ raw: String) -> String? {
+        var gloss = raw.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+        guard !gloss.isEmpty else { return nil }
+        if gloss.count > maxLength {
+            let words = gloss.split(separator: " ")
+            var kept = ""
+            for word in words {
+                let next = kept.isEmpty ? String(word) : kept + " " + word
+                guard next.count <= maxLength else { break }
+                kept = next
+            }
+            gloss = kept.trimmingCharacters(in: .punctuationCharacters.union(.whitespaces))
+        }
+        return gloss.isEmpty ? nil : gloss
+    }
+}
+
+// MARK: - Graded rewrite
+
+/// A passage rewritten at the reader's level, shown next to the original
+/// (Roadmap v13 Sprint 3) — for the paragraph that lost them.
+nonisolated enum GradedRewrite {
+
+    /// Below this there's nothing to simplify — the hover dictionary and the
+    /// inspector already cover a word or a short phrase.
+    static let minimumWords = 6
+    /// Characters sent. A long selection is cut at a sentence boundary.
+    static let maxInput = 2_500
+    static let maxTokens = 1_600
+
+    static func isEligible(_ text: String) -> Bool {
+        text.split(whereSeparator: \.isWhitespace).count >= minimumWords
+    }
+
+    /// The selection trimmed to `maxInput`, ending on a full sentence when
+    /// one ends inside the limit.
+    static func input(_ text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count > maxInput else { return trimmed }
+        let head = String(trimmed.prefix(maxInput))
+        if let end = head.lastIndex(where: { ".!?…".contains($0) }) {
+            return String(head[...end])
+        }
+        return head
+    }
+
+    static func systemPrompt(language: Language, level: CEFRLevel) -> String {
+        """
+        Rewrite the passage in simple \(language.rawValue) for a CEFR \(level.rawValue) \
+        learner. Keep the meaning, the names and the order of events. Split long \
+        sentences and use common words instead of rare ones. Add nothing that isn't \
+        in the passage. Output only the rewritten passage, no title or preamble.
+        """
+    }
+
+    static func userPrompt(passage: String) -> String {
+        "Passage:\n\(passage)"
+    }
+
+    /// The model's answer with preamble lines dropped and markdown bold
+    /// removed; paragraph breaks are kept.
+    static func clean(_ raw: String) -> String? {
+        let lines = raw.components(separatedBy: .newlines)
+        let kept = lines.drop { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            return trimmed.isEmpty || ReadingRecap.isPreamble(trimmed)
+        }
+        let text = kept.joined(separator: "\n")
+            .replacingOccurrences(of: "**", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty ? nil : text
+    }
+}

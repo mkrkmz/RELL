@@ -11,6 +11,7 @@ import SwiftUI
 
 struct ReaderMenuCommands: Commands {
     @FocusedValue(\.readerCommands) private var reader
+    @AppStorage(StorageKey.interlinearGlossEnabled) private var glossEnabled = false
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
@@ -100,6 +101,11 @@ struct ReaderMenuCommands: Commands {
             Divider()
 
             pageThemeMenu
+
+            // Books only: a PDF page's text can't carry anything above a word.
+            Toggle("Show Meanings Above Words", isOn: $glossEnabled)
+                .keyboardShortcut("g", modifiers: [.command, .option])
+                .disabled(reader?.isEPUBDocument != true)
 
             Divider()
 

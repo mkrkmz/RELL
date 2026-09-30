@@ -17,10 +17,47 @@ extension ContentView {
                 guard let url, let document = epubManager.document else { return }
                 readingLoop.epubLoaded(url: url, document: document)
                 openWarmUp(for: epubManager.chapterIndex)
+                refreshGlosses()
             }
             .onChange(of: epubManager.chapterIndex) { _, chapter in
                 openWarmUp(for: chapter)
+                refreshGlosses()
             }
+            .onChange(of: readingLoop.warmUp) { _, _ in refreshGlosses() }
+            .onChange(of: glossEnabled) { _, _ in refreshGlosses() }
+            .onChange(of: savedWordsStore.words.count) { _, _ in refreshGlosses() }
+            .onChange(of: readingLoop.glosses) { _, glosses in
+                epubManager.setGlosses(glosses, glossOnly: readingLoop.glossOnlyTerms)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .simplifySelectionCommand)) { note in
+                // Every window hears it; the one the reader is in answers.
+                guard model.hostWindow?.isKeyWindow == true,
+                      let text = note.object as? String,
+                      GradedRewrite.isEligible(text)
+                else { return }
+                model.gradedRewriteSource = text
+            }
+            .sheet(isPresented: Binding(
+                get: { model.gradedRewriteSource != nil },
+                set: { if !$0 { model.gradedRewriteSource = nil } }
+            )) {
+                if let source = model.gradedRewriteSource {
+                    GradedRewriteSheet(source: source)
+                }
+            }
+    }
+
+    func refreshGlosses() {
+        guard isEPUBDocument, let document = epubManager.document else {
+            readingLoop.refreshGlosses(enabled: false, chapter: 0, document: nil, savedWords: [])
+            return
+        }
+        readingLoop.refreshGlosses(
+            enabled: glossEnabled,
+            chapter: epubManager.chapterIndex,
+            document: document,
+            savedWords: savedWordsStore.words
+        )
     }
 
     private func openWarmUp(for chapter: Int) {

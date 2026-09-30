@@ -211,4 +211,92 @@ final class ReadingLoopModel {
         warmUp = .none
         warmUpChapter = nil
     }
+
+    // MARK: - Interlinear gloss
+
+    /// Lowercased term → short meaning for the open chapter.
+    private(set) var glosses: [String: String] = [:]
+    /// Glossed terms that aren't saved words (the warm-up's).
+    private(set) var glossOnlyTerms: [String] = []
+
+    @ObservationIgnored private var glossTask: Task<Void, Never>?
+
+    #if DEBUG
+    /// Tests only: waits for the gloss pass `refreshGlosses` started.
+    func waitForGlosses() async { await glossTask?.value }
+    #endif
+    /// Glosses already fetched, by answer language and term — shared by every
+    /// window and chapter for the session, so a word is asked about once.
+    @ObservationIgnored private static var glossCache: [String: String] = [:]
+
+    /// Works out which words in the chapter need a meaning above them — saved
+    /// words still being learned that occur here, and the warm-up words —
+    /// fetches the ones not cached in one request, and publishes the lot.
+    func refreshGlosses(
+        enabled: Bool,
+        chapter: Int,
+        document: EPUBDocument?,
+        savedWords: [SavedWord]
+    ) {
+        glossTask?.cancel()
+        guard enabled, let document else {
+            glosses = [:]
+            glossOnlyTerms = []
+            return
+        }
+        let target = Language.storedTarget
+        let answerIn = HoverDictionaryLanguage.stored == .native ? Language.storedNative : target
+        let level = CEFRLevel.storedLearnerLevel
+        let learning = savedWords.compactMap { word -> EncounterScanner.Entry? in
+            guard word.masteryLevel != .mastered,
+                  word.language == nil || word.language == target.rawValue
+            else { return nil }
+            return EncounterScanner.Entry(id: word.id, term: word.term)
+        }
+        let savedTerms = Set(savedWords.map { $0.term.lowercased() })
+        var warmUpTerms: [String] = []
+        if case .ready(let words) = warmUp, warmUpChapter == chapter {
+            warmUpTerms = words.map(\.term).filter { !savedTerms.contains($0.lowercased()) }
+        }
+
+        glossTask = Task { [weak self] in
+            let present = await Task.detached(priority: .utility) { () -> [String] in
+                let hits = EncounterScanner.scan(text: document.plainText(at: chapter), vocabulary: learning, language: target)
+                let ids = Set(hits.map(\.wordID))
+                return learning.filter { ids.contains($0.id) }.map(\.term)
+            }.value
+            guard !Task.isCancelled else { return }
+
+            let wanted = Array(Set((present + warmUpTerms).map { $0.lowercased() })).sorted()
+            let cacheKey = { (term: String) in "\(answerIn.rawValue)|\(level.rawValue)|\(term)" }
+            let missing = wanted.filter { Self.glossCache[cacheKey($0)] == nil }
+
+            for batch in stride(from: 0, to: missing.count, by: InterlinearGloss.maxBatch) {
+                let words = Array(missing[batch..<min(batch + InterlinearGloss.maxBatch, missing.count)])
+                do {
+                    let raw = try await AppleOnDevice.chatWithFallback(
+                        system: InterlinearGloss.systemPrompt(target: target, answerIn: answerIn, level: level),
+                        user: InterlinearGloss.userPrompt(words: words),
+                        temperature: 0.1,
+                        maxTokens: InterlinearGloss.maxTokens
+                    )
+                    for (term, gloss) in InterlinearGloss.parse(raw, requested: words) {
+                        Self.glossCache[cacheKey(term)] = gloss
+                    }
+                } catch {
+                    AppLogger.llm.info("Glosses failed: \(error.localizedDescription, privacy: .public)")
+                }
+                guard !Task.isCancelled else { return }
+            }
+
+            var result: [String: String] = [:]
+            for term in wanted {
+                if let gloss = Self.glossCache[cacheKey(term)] { result[term] = gloss }
+            }
+            AppLogger.llm.notice("Glosses: \(result.count, privacy: .public) of \(wanted.count, privacy: .public) words (\(missing.count, privacy: .public) fetched)")
+            guard let self, !Task.isCancelled else { return }
+            self.glosses = result
+            self.glossOnlyTerms = warmUpTerms.filter { result[$0.lowercased()] != nil }
+        }
+    }
 }

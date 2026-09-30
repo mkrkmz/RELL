@@ -27,6 +27,7 @@ nonisolated enum StorageKey {
     static let epubFontSize = "epubFontSize"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     static let hoverDictionaryEnabled = "hoverDictionaryEnabled"
+    static let interlinearGlossEnabled = "interlinearGlossEnabled"
     static let inspectorShowMoreModules = "inspectorShowMoreModules"
     static let inspectorWidth = "inspectorWidth"
     static let karaokeEnabled = "karaokeEnabled"

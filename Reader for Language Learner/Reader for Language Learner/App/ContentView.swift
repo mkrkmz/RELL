@@ -84,6 +84,8 @@ struct ContentView: View {
     @AppStorage(StorageKey.sentenceTranslationEnabled) var sentenceTranslationEnabled = true
     /// Karaoke: highlight the sentence being read aloud (L4).
     @AppStorage(StorageKey.karaokeEnabled) var karaokeEnabled = true
+    /// Short meanings above hard words in books (v13 Sprint 3).
+    @AppStorage(StorageKey.interlinearGlossEnabled) var glossEnabled = false
     @AppStorage(StorageKey.epubFontSize) var epubFontSize: Double = 18
     @AppStorage(EPUBTypography.lineHeightKey) var epubLineHeight: Double = 1.6
     @AppStorage(EPUBFontFamily.storageKey) var epubFontFamilyRaw = EPUBFontFamily.publisher.rawValue

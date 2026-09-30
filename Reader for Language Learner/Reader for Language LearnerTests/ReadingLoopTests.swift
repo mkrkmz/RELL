@@ -126,6 +126,43 @@ final class ReadingLoopTests: XCTestCase {
         XCTAssertEqual(words.first?.sentence, "They could not elude the watchman at the gate that night.")
     }
 
+    // MARK: - Graded rewrite
+
+    func testRewriteIsOfferedForPassagesNotWords() async {
+        XCTAssertFalse(GradedRewrite.isEligible("serendipity"))
+        XCTAssertFalse(GradedRewrite.isEligible("a short phrase here"))
+        XCTAssertTrue(GradedRewrite.isEligible("He could not accustom himself to the squalor."))
+    }
+
+    func testLongSelectionIsCutAtASentenceEnd() async {
+        let sentence = "This sentence is exactly forty-four chars. "
+        let text = String(repeating: sentence, count: 100)
+        let input = GradedRewrite.input(text)
+        XCTAssertLessThanOrEqual(input.count, GradedRewrite.maxInput)
+        XCTAssertTrue(input.hasSuffix("."), String(input.suffix(20)))
+    }
+
+    func testRewriteCleanKeepsParagraphsAndDropsPreamble() async {
+        let raw = """
+        Here is the simpler version:
+
+        Anne was sad. She missed **Wentworth**.
+
+        She walked home.
+        """
+        XCTAssertEqual(GradedRewrite.clean(raw), "Anne was sad. She missed Wentworth.\n\nShe walked home.")
+    }
+
+    // MARK: - Word card
+
+    func testWordCardShowsTheFirstSentenceOfADefinition() async {
+        XCTAssertEqual(
+            InspectorView.firstLine("A hormone that regulates sleep. It is made by the pineal gland."),
+            "A hormone that regulates sleep."
+        )
+        XCTAssertEqual(InspectorView.firstLine("uyku hormonu"), "uyku hormonu")
+    }
+
     // MARK: - Level
 
     func testLearnerLevelDefaultsToB1() async {

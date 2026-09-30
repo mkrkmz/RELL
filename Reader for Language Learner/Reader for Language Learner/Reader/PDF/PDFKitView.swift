@@ -397,6 +397,9 @@ struct PDFKitView: NSViewRepresentable {
                 onHighlight: { [weak self] in self?.contextHighlight(.yellow) },
                 onSpeak: { [weak self] in self?.contextSpeak() },
                 onCopy: { [weak self] in self?.contextCopy() },
+                onSimplify: GradedRewrite.isEligible(term) ? {
+                    NotificationCenter.default.post(name: .simplifySelectionCommand, object: term)
+                } : nil,
                 isSaved: isSaved
             )
         }

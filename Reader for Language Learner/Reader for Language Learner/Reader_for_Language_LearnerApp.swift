@@ -157,6 +157,9 @@ private struct MenuBarQuickLookupView: View {
 
 extension Notification.Name {
     static let openPDFCommand = Notification.Name("openPDFCommand")
+    /// Object: the selected passage. The key window rewrites it at the
+    /// reader's level (v13 Sprint 3).
+    static let simplifySelectionCommand = Notification.Name("simplifySelectionCommand")
     /// Posted by SavedWordsStore.add with the new word's UUID as `object`.
     static let savedWordAdded = Notification.Name("savedWordAdded")
     /// Posted by LLM settings when the Keychain-backed API key changes.

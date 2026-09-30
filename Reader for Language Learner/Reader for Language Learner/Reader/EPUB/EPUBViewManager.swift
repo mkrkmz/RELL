@@ -164,6 +164,21 @@ final class EPUBViewManager: NSObject {
     /// inflection-aware pass over the chapter (L-V1).
     @ObservationIgnored var savedWordKeysProvider: (() -> Set<String>)?
 
+    /// Interlinear glosses (v13 S3): lowercased term → a short meaning drawn
+    /// above the word. Empty while the feature is off.
+    @ObservationIgnored private(set) var glosses: [String: String] = [:]
+    /// Glossed terms that aren't saved words — the chapter warm-up — marked
+    /// without the saved-word underline.
+    @ObservationIgnored private(set) var glossOnlyTerms: [String] = []
+
+    /// Replaces the glosses and re-marks the chapter when they changed.
+    func setGlosses(_ glosses: [String: String], glossOnly: [String]) {
+        guard glosses != self.glosses || glossOnly != glossOnlyTerms else { return }
+        self.glosses = glosses
+        self.glossOnlyTerms = glossOnly
+        refreshHighlights()
+    }
+
     /// Inflected shapes of saved words, per chapter — computed off-main, so
     /// the first render shows literal matches and the callback re-marks.
     @ObservationIgnored private let inflectedTerms = InflectedTermService()
@@ -588,6 +603,9 @@ final class EPUBViewManager: NSObject {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(text, forType: .string)
             },
+            onSimplify: GradedRewrite.isEligible(term) ? {
+                NotificationCenter.default.post(name: .simplifySelectionCommand, object: term)
+            } : nil,
             isSaved: isSaved
         )
     }
@@ -616,8 +634,15 @@ final class EPUBViewManager: NSObject {
             // Inflections first: they're known to occur in this chapter, so
             // they get the 500-term budget ahead of vocabulary that may not
             // appear here at all.
-            let marked = Self.dedupedTerms(inflectedChapterForms() + terms)
-            webView.evaluateJavaScript(Self.markSavedWordsScript(for: marked, color: Self.savedWordMarkColor(for: currentTheme)))
+            let inflected = inflectedChapterForms()
+            let marked = Self.dedupedTerms(inflected + terms)
+            webView.evaluateJavaScript(Self.markSavedWordsScript(
+                for: marked,
+                color: Self.savedWordMarkColor(for: currentTheme),
+                glosses: Self.glossesIncludingInflections(glosses, inflected: inflected, language: Language.storedTarget),
+                glossOnly: glossOnlyTerms,
+                glossColor: Self.glossColor(for: currentTheme)
+            ))
         }
     }
 
@@ -652,10 +677,50 @@ final class EPUBViewManager: NSObject {
         return terms.filter { seen.insert($0.lowercased()).inserted }
     }
 
-    private static func markSavedWordsScript(for terms: [String], color: String) -> String {
+    static func markSavedWordsScript(
+        for terms: [String],
+        color: String,
+        glosses: [String: String] = [:],
+        glossOnly: [String] = [],
+        glossColor: String = ""
+    ) -> String {
+        func json<T: Encodable>(_ value: T, fallback: String) -> String {
+            (try? JSONEncoder().encode(value)).flatMap { String(data: $0, encoding: .utf8) } ?? fallback
+        }
         let capped = Array(terms.prefix(500))
-        let json = (try? JSONEncoder().encode(capped)).flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
-        return "window.rellMarkSavedWords(\(json), '\(color)');"
+        // JSON-encoded, never interpolated raw: a gloss comes from a model
+        // and may contain quotes.
+        return "window.rellMarkSavedWords(\(json(capped, fallback: "[]")), '\(color)', "
+            + "\(json(glosses, fallback: "{}")), \(json(glossOnly, fallback: "[]")), "
+            + "\(json(glossColor, fallback: "\"\"")));"
+    }
+
+    /// Meaning colour: quieter than body text, legible on every page theme.
+    static func glossColor(for theme: PageTheme) -> String {
+        theme.usesLightInk ? "rgba(170, 195, 255, 0.95)" : "rgba(40, 80, 190, 0.9)"
+    }
+
+    /// Glosses are keyed by the saved form; the chapter may use "ran" for a
+    /// saved "run". Adds each inflected form under its dictionary word's
+    /// gloss. Only the few inflected forms are lemmatized, never the whole
+    /// vocabulary — this runs on every re-mark.
+    nonisolated static func glossesIncludingInflections(
+        _ glosses: [String: String],
+        inflected: [String],
+        language: Language?
+    ) -> [String: String] {
+        guard !glosses.isEmpty, !inflected.isEmpty else { return glosses }
+        var byKey: [String: String] = [:]
+        for (term, gloss) in glosses {
+            byKey[LemmaMatcher.matchKey(for: term, language: language)] = gloss
+        }
+        var result = glosses
+        for form in inflected where result[form.lowercased()] == nil {
+            if let gloss = byKey[LemmaMatcher.matchKey(for: form, language: language)] {
+                result[form.lowercased()] = gloss
+            }
+        }
+        return result
     }
 
     private static func renderHighlightsScript(for highlights: [EPUBHighlight], ink: String) -> String {

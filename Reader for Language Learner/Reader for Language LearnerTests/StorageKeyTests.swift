@@ -47,6 +47,7 @@ final class StorageKeyTests: XCTestCase {
             (StorageKey.learnerLevel, "learnerLevel"),
             (StorageKey.readingRecapEnabled, "readingRecapEnabled"),
             (StorageKey.chapterWarmUpEnabled, "chapterWarmUpEnabled"),
+            (StorageKey.interlinearGlossEnabled, "interlinearGlossEnabled"),
         ]
         for (key, expected) in pinned {
             XCTAssertEqual(key, expected)

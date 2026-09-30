@@ -49,6 +49,10 @@ struct InspectorView: View {
     @AppStorage(Language.nativeLanguageKey)    var nativeLanguageRaw: String = Language.defaultNative.rawValue
     @AppStorage(Language.targetLanguageKey)    var targetLanguageRaw: String = Language.defaultTarget.rawValue
     @Environment(AnkiModulePreferences.self) var ankiPrefs
+    @Environment(QuickLookupService.self) var quickLookup
+    @Environment(WordEncounterStore.self) var encounterStore: WordEncounterStore?
+    /// One-line meaning on the word card (v13 Sprint 3).
+    @State var inspectorQuickMeaning: String?
     @Environment(\.openSettings) private var openSettings
     @AppStorage(StorageKey.settingsSelectedTab) private var settingsSelectedTab = SettingsTab.general.rawValue
 

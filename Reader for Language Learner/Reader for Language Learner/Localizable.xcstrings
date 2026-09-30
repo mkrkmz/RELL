@@ -1173,6 +1173,16 @@
         }
       }
     },
+    "At %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ seviyesinde"
+          }
+        }
+      }
+    },
     "Available Models" : {
       "localizations" : {
         "tr" : {
@@ -6444,6 +6454,26 @@
         }
       }
     },
+    "Rewriting…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden yazılıyor…"
+          }
+        }
+      }
+    },
+    "Rewritten by your AI — meant to get you through the passage, not to replace it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapay zekân yeniden yazdı — pasajı aşmana yardım etmek için, onun yerine geçmek için değil."
+          }
+        }
+      }
+    },
     "Right or wrong is decided by the check. Turn off to rate every card yourself." : {
       "localizations" : {
         "tr" : {
@@ -6874,6 +6904,16 @@
         }
       }
     },
+    "Selected word: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili kelime: %@"
+          }
+        }
+      }
+    },
     "Sentence" : {
       "localizations" : {
         "tr" : {
@@ -7024,6 +7064,16 @@
         }
       }
     },
+    "Show Meanings Above Words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlamları Kelimelerin Üstünde Göster"
+          }
+        }
+      }
+    },
     "Show more (%lld)" : {
       "localizations" : {
         "tr" : {
@@ -7070,6 +7120,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Karşılama Turunu Yeniden Göster"
+          }
+        }
+      }
+    },
+    "Simplified to Your Level" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seviyene Göre Sadeleştirildi"
+          }
+        }
+      }
+    },
+    "Simplify to Your Level" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seviyene Göre Sadeleştir"
           }
         }
       }
@@ -7544,6 +7614,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu klasörde bir RELL yedeği yok."
+          }
+        }
+      }
+    },
+    "The AI returned nothing to show. Try again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapay zekâ gösterilecek bir şey döndürmedi. Yeniden dene."
           }
         }
       }
@@ -8246,6 +8326,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seviyen"
+          }
+        }
+      }
+    },
+    "Your level — changing it here changes it everywhere" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seviyen — burada değiştirirsen her yerde değişir"
           }
         }
       }
