@@ -260,30 +260,52 @@ entitlement'i + `NSMicrophoneUsageDescription` / `NSSpeechRecognitionUsageDescri
 ile `SFSpeechRecognizer` on-device calisiyor mu — bundle id ve sandbox
 degismeden. (b) web: 10 haber/blog sitesinde basit readability sezgisinin
 basari orani. Kapi: (a) izin akisi calisir, (b) ≥ 7/10 okunur cikti.
+**Sonuc (b):** ilk surum 2/10 — iki hata: tidy XHTML ad alaninda
+`elements(forLocalName:uri: nil)` hicbir sey eslestirmiyordu; BBC gibi
+siteler her paragrafi ayri div'e sariyor. Readability puanlamasi (paragraf
+uzunlugu ebeveyne, ½ buyuk ebeveyne, ⅓ ustune), bagalanti yogunlugu, HTTP/
+meta karakter seti (tidy bayttan Latin-1 okuyup "â€™" uretiyordu), cift
+gizli etiket kurali → **8/10** (BBC, Guardian, NPR, DW, Verge, Aeon, Le Monde,
+El Pais; Ars ve Spiegel JS/ucretli). **(a) yapilmadi** — asagiya bakin.
 
-- [ ] **Yeniden Anlat (Retell)** — paragraf sec → "kendi cumlelerinle anlat"
-      editoru → LLM duzeltir, kelime duzeyinde diff (silinen / eklenen, renk +
-      ustu cizili, yalniz renk degil); duzeltilen kelimeler tek tikla kaydedilir
-- [ ] **Web makalesi ice aktarma** — URL yapistir / Servisler menusu →
-      okunabilir metin yerel mini-EPUB'a donusur (`EPUBDocument` yolu), kapakla
-      kutuphaneye duser. `URLSession` + readability sezgisi; script/iframe
-      atilir, EPUB JS kapali kurali korunur
-- [ ] Should: **Golgeleme (Shadowing)** — cumleyi TTS okur, kullanici tekrar
-      eder; on-device transkript, kelime kelime hizalanmis fark. Spike (a)
-      gecilmezse Won't
-- [ ] Should: **Kelimelerinden Hikaye** — vadesi gelen 8–12 kelimeyi kullanan,
-      kullanicinin seviyesinde kisa oyku; RELL'in kendi okuyucusunda mini-EPUB
-      olarak acilir (hover, kaydet, alti cizili kelimeler calisir). FSRS'e yazmaz
-- [ ] Could: **Bildirimden tekrar** — `DailyReminderManager` bildirimi eyleme
-      donusur: kelime + "Biliyorum / Goster"; cevap FSRS'e yazar
-- [ ] Could: **Menu cubugunda siradaki kelime** — mevcut `MenuBarExtra`'ya
-      cevrilen kart
-- [ ] Could: **Kelime Takimyildizi** — kayitli kelimeler grafigi (aile /
-      esanlam / ayni kitap), dugum rengi = hafiza gucu; `Canvas`, deneysel
-- [ ] Testler: diff hizalama (saf fonksiyon), readability cikarimi (yerel
-      HTML fixture'lari, ag yok), hikaye isteginin kelime listesini tasidigi
-
----
+- [x] **Yeniden Anlat (Retell)** — secim cubugunda 6+ kelimede "Kendi
+      cumlelerinle anlat" → sheet: pasaj (gizlenebilir), editor, "Kontrol
+      et" → duzeltilmis metin kelime duzeyinde fark (silinen kirmizi+ustu
+      cizili, eklenen yesil+kalin — yalniz renk degil) + ana dilde kisa not;
+      duzeltmedeki yeni kelimeler tek tikla kaydedilir. `CORRECTED:`/`NOTE:`
+      etiketleri parser-bagli, Ingilizce sabit. FSRS'e yazmaz. Esitlikte
+      once silinen sonra eklenen kelime (test buldu)
+- [x] **Web makalesi ice aktarma** — Dosya ▸ Web Makalesi Ice Aktar… (⇧⌘I),
+      panodaki baglanti onerilir. `ArticleExtractor` (saf) → `MiniEPUB`
+      (EPUB 3) → `ZIPWriter` (stored + gercek CRC-32; baska okuyucular da
+      acar) → Application Support/RELL/Articles, ayni sayfa ikinci kez
+      alininca "-2". Yalniz sayfanin kendisi cekilir; resim/betik yok, AI'ya
+      bir sey gitmez (gizlilik tablosunda ayri satir). **Canli turda
+      bulunan:** paulgraham.com gibi `<p>`'siz, `<br><br>`'li sayfalar
+      reddediliyordu → geri donus yolu (dogrudan metni en cok olan oge,
+      cift br'den bolunur; `<br>` iceren satir ici `<font>` kapsayici sayilir)
+- [ ] Should: **Golgeleme** — alinmadi. Spike (a) proje yapi ayarlarina
+      (Info.plist izin aciklamalari) ve macOS izin istemlerine dokunuyor;
+      ustune kayit + cihaz-ici transkript + hizalama arayuzu. Kullanici
+      karariyla ayri ele alinacak
+- [x] Should: **Kelimelerinden Hikaye** — Git ▸ Kelimelerinden Hikaye…:
+      tekrar zamani gelen (sonra kuyruktaki) 4–12 kelime, seviyende ~300
+      kelimelik oyku → mini EPUB (Application Support/RELL/Stories), RELL'de
+      acilir; sonda hangi kelimelerin kullanilmadigi yazar (lemma esleme).
+      FSRS'e yazmaz
+- [ ] Could: **Bildirimden tekrar**, **Menu cubugunda siradaki kelime**,
+      **Kelime Takimyildizi** — alinmadi
+- [x] Testler (15 yeni, `OutputAndImportTests`, ag yok — yerel HTML):
+      sarili paragraflar, bagalanti/cift etiket, meta karakter seti, br
+      geri donusu, kisa sayfa, adres ayristirma, CRC-32 kontrol degeri,
+      ZIP gidis-donus, mini EPUB acilir + kacis, dosya adi, Retell parse,
+      kelime farki, hikaye parse + kullanilan kelimeler. Mutation-check:
+      ata puanlamasi, bagalanti yogunlugu. 29 yeni TR metin
+- [x] Dogrulama: tam paket **597 test, 0 hata, 1 atlanan**; 0 uyari.
+      **Canli dogrulanmadi:** ice aktarma ve hikaye akislari (ekran kilitli/
+      pencere baska Space'te; ilk deneme PG sayfasinda duzgun hata verdi),
+      Retell (sentetik cift tiklama WKWebView'da secim olusturmuyor).
+      Canli denemeler kutuphaneye ya da diske iz birakmadi
 
 ## Fikir havuzu (sprinte alinmadi)
 
