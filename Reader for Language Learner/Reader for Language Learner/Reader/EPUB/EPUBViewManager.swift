@@ -867,6 +867,12 @@ final class EPUBViewManager: NSObject {
         return (Int(entry["chapter"] ?? 0), entry["fraction"] ?? 0)
     }
 
+    /// Where the book at `url` opens next — the word page's jump to a
+    /// chapter a word was met in, before the book's window exists.
+    static func setStartPosition(chapter: Int, for url: URL) {
+        savePosition(chapter: chapter, fraction: 0, for: url.deletingPathExtension().lastPathComponent)
+    }
+
     private static func savePosition(chapter: Int, fraction: Double, for key: String) {
         var dict = UserDefaults.standard.dictionary(forKey: positionsKey) ?? [:]
         dict[key] = ["chapter": Double(chapter), "fraction": fraction]

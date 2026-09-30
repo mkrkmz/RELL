@@ -21,6 +21,10 @@ struct QuizView: View {
     /// Queue, position, tallies and the card's answer state — see `QuizSession`.
     @State private var session = QuizSession()
 
+    /// Sentences met in reading, for cloze contexts. Optional: a host without
+    /// the encounter log still quizzes from the saved sentence alone.
+    @Environment(WordEncounterStore.self) private var encounterStore: WordEncounterStore?
+
     // Filter: due words only by default
     @State private var includeAll = false
     @State private var selectedTag: String?
@@ -490,13 +494,26 @@ struct QuizView: View {
 
             cardScroll(maxHeight: DS.Layout.cardBackHeightCompact) {
                 VStack(alignment: .leading, spacing: DS.Spacing.md) {
-                    if let cloze = clozeSentence(for: word) {
-                        Text("“\(cloze)”")
-                            .font(DS.Typography.body)
-                            .italic()
-                            .foregroundStyle(DS.Color.textPrimary)
-                            .lineSpacing(4)
-                            .fixedSize(horizontal: false, vertical: true)
+                    if let cloze = clozeChoice(for: word) {
+                        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                            Text("“\(cloze.masked)”")
+                                .font(DS.Typography.body)
+                                .italic()
+                                .foregroundStyle(DS.Color.textPrimary)
+                                .lineSpacing(4)
+                                .fixedSize(horizontal: false, vertical: true)
+                            // A sentence met again in reading says where from;
+                            // the saved one is the card's usual context.
+                            if let source = cloze.source {
+                                Label(
+                                    "\(source.documentTitle) · \(WordPageModel.locationLabel(source))",
+                                    systemImage: source.isEPUB ? "book" : "doc.text"
+                                )
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(DS.Color.textTertiary)
+                                .lineLimit(1)
+                            }
+                        }
                     }
 
                     if let definition = word.usableDefinition {
@@ -544,13 +561,15 @@ struct QuizView: View {
         .padding(.horizontal, DS.Spacing.md)
     }
 
-    /// The saved sentence with the term masked, or nil when the sentence is
-    /// missing or doesn't contain the term (no blank → not a cloze).
+    /// The card's sentence with the term masked — the saved one or one met
+    /// since in reading, rotating by review — or nil when none contains the
+    /// term (no blank → not a cloze).
+    private func clozeChoice(for word: SavedWord) -> ClozeContext.Choice? {
+        ClozeContext.choice(for: word, encounters: encounterStore?.encounters(for: word.id) ?? [])
+    }
+
     private func clozeSentence(for word: SavedWord) -> String? {
-        let sentence = word.sentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !sentence.isEmpty else { return nil }
-        let masked = QuizMatching.maskTerm(word.term, in: sentence)
-        return masked == sentence ? nil : masked
+        clozeChoice(for: word)?.masked
     }
 
     // MARK: - Rating Row

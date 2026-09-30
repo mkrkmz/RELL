@@ -203,13 +203,23 @@ final class ReaderWindowModel {
     }
 
     func persistPage(_ index: Int, for filename: String) {
-        var positions = decodedPositions()
+        Self.persistPage(index, for: filename, defaults: defaults)
+    }
+
+    /// Static so a caller with no window — the word page jumping to where a
+    /// word was met — can set where a document opens.
+    static func persistPage(_ index: Int, for filename: String, defaults: UserDefaults = .standard) {
+        var positions = decodedPositions(defaults)
         positions[filename] = index
-        defaults.set((try? JSONEncoder().encode(positions)) ?? Data(), forKey: Self.readingPositionsKey)
+        defaults.set((try? JSONEncoder().encode(positions)) ?? Data(), forKey: readingPositionsKey)
     }
 
     private func decodedPositions() -> [String: Int] {
-        guard let data = defaults.data(forKey: Self.readingPositionsKey) else { return [:] }
+        Self.decodedPositions(defaults)
+    }
+
+    private static func decodedPositions(_ defaults: UserDefaults) -> [String: Int] {
+        guard let data = defaults.data(forKey: readingPositionsKey) else { return [:] }
         return (try? JSONDecoder().decode([String: Int].self, from: data)) ?? [:]
     }
 

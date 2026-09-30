@@ -46,6 +46,7 @@ struct Reader_for_Language_LearnerApp: App {
     @State private var epubBookmarkStore = EPUBBookmarkStore()
     @State private var epubNoteStore     = EPUBNoteStore()
     @State private var sessionStore      = ReadingSessionStore()
+    @State private var encounterStore    = WordEncounterStore()
     @State private var recentDocumentStore = RecentDocumentStore()
     @State private var coverStore        = DocumentCoverStore()
     @State private var ankiPrefs         = AnkiModulePreferences()
@@ -100,6 +101,7 @@ struct Reader_for_Language_LearnerApp: App {
                 .environment(epubBookmarkStore)
                 .environment(epubNoteStore)
                 .environment(sessionStore)
+                .environment(encounterStore)
                 .environment(recentDocumentStore)
                 .environment(coverStore)
                 .environment(ankiPrefs)
@@ -117,6 +119,7 @@ struct Reader_for_Language_LearnerApp: App {
         // Standalone review window — study without a document open.
         Window("Vocabulary Review", id: "review") {
             QuizView(store: savedWordsStore)
+                .environment(encounterStore)
                 .frame(minWidth: 460, minHeight: 560)
                 .rellAccentTint()
         }

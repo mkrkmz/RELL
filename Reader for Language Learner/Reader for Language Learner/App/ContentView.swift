@@ -47,6 +47,7 @@ struct ContentView: View {
     @Environment(ReadingSessionStore.self) var sessionStore
     @Environment(RecentDocumentStore.self) var recentDocumentStore
     @Environment(DocumentCoverStore.self)  var coverStore
+    @Environment(WordEncounterStore.self)  var encounterStore
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     @Environment(\.undoManager) var undoManager
 
@@ -138,7 +139,7 @@ struct ContentView: View {
     // (`the compiler is unable to type-check this expression in reasonable
     // time`) even though a warm local cache let it slide.
     var body: some View {
-        withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))))
+        withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent))))))
             .dataRecoveryAlert()
     }
 

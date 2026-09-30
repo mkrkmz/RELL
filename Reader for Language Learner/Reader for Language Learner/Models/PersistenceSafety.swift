@@ -97,6 +97,7 @@ enum PersistenceBackup {
         "epub_bookmarks.json",
         "recent_documents.json",
         "library_collections.json",
+        WordEncounterStore.fileName,
     ]
 
     /// PDF bookmarks live in UserDefaults; a backup carries them as a file.
@@ -124,6 +125,7 @@ enum PersistenceBackup {
             return String(localized: "Bookmarks")
         case "recent_documents.json":    return String(localized: "Library")
         case "library_collections.json": return String(localized: "Collections")
+        case WordEncounterStore.fileName: return String(localized: "Word encounters")
         default:                         return name
         }
     }
