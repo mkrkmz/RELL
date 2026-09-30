@@ -205,28 +205,50 @@ Amac: zor metni, onu birakmadan okunur kilmak. Sprintin en gorunur ozelligi.
 **Spike:** EPUB'da `<ruby>` enjeksiyonunun reflow, scroll konumu, bookmark
 yaklasikligi, karaoke ve saved-word vurgusuyla etkilesimi; 300 sayfalik
 kitapta bolum acilis suresi. Kapi: bolum acilisi +%20'den fazla uzamaz.
+**Sonuc:** gercek `<ruby><rt>` elenecek — `rt` metni `textContent`'e girer;
+vurgu capalari, arama ve karaoke karakter sayisina dayandigi icin hepsi
+kayar. Anlam CSS ile cizildi (`::after { content: attr(data-rell-gloss) }`):
+metin degismiyor (testli, mutation-check: `rt` eklenince test dusuyor).
+Bolum acilisi degismiyor — anlamlar bolum yuklendikten sonra ayri bir
+istekle gelir ve mevcut isaretleme gecisine katilir. Kayitli ciktilar
+uzun duzyazi ("A beverage is any liquid…") — ustune sigacak 1–3 kelime
+sezgiyle cikmiyor; bolum basina tek toplu istek (cihaz-ici ~1.5 sn,
+cikti bicimi temiz: `sleep | uyku`), oturum boyu onbellek.
 
-- [ ] **Satir Arasi Parilti (ruby gloss, EPUB)** — bilinmeyen kelimelerin
-      ustunde minik ana-dil karsiligi (furigana gibi). Esik ayarli: kapali /
-      yalniz kayitli-ogreniliyor / kapsama disi her sey. Mevcut EPUB vurgu
-      enjeksiyonu yolundan (uygulama `WKContentWorld`'u; kitap JS'i kapali
-      kalir). Karsiliklar sistem sozlugu / cihaz-ici model / cache; "Yanit
-      Dili" kuralina uyar. Gorunum menusunden ⌥⌘G ile ac/kapa
-- [ ] **Seviyeye Indir** — paragraf sec → kullanicinin CEFR seviyesinde
-      yeniden yaz, yan yana (orijinal | sade); sade metinde de hover ve kaydet
-- [ ] **Inspector "Kelime Karti" (UI)** — modul izgarasinin ustunde kompakt
-      kahraman kart (kelime, IPA, tek satir anlam, kaydet/dinle). Cogu bakista
-      modul calistirmak gerekmez; izgara "daha fazla" altinda. `body`
-      asamali desenle (`baseContent` + `withX`) buyur
-- [ ] Should: **Dilbilgisi Mercegi** — cumle sec → `NLTagger(.lexicalClass)`
-      ile sozcuk turleri renklenir (offline, aninda; renk + etiket, yalniz
-      renk degil) + istege bagli LLM "bu yapinin adi ve neden"
-- [ ] Should: **Komut Paleti (⌘K)** — kitaplar, kayitli kelimeler,
-      sayfa/bolum, menu komutlari ve moduller tek arama kutusunda
-- [ ] Could: **Okuma Cetveli** — aktif satir disi hafifce soluklasir (EPUB
-      CSS, PDF overlay); Zen mod ile
-- [ ] Testler: gloss esik mantigi (saf fonksiyon), ruby HTML uretiminin
-      kacis/escaping'i, komut paleti siralamasi
+- [x] **Anlamlar kelimenin ustunde (EPUB)** — Gorunum ▸ "Anlamlari
+      Kelimelerin Ustunde Goster" (⌥⌘G, varsayilan kapali). Kapsam: bolumde
+      gecen ve hala ogrenilen kayitli kelimeler + bolum hazirligi kelimeleri
+      (bunlar alt cizgisiz). Cekimli bicim sozluk biciminin anlamini alir.
+      "Yanit Dili"ne uyar. Anlam acikken satir araligi 2.35. Canli: "sleep"
+      ustunde "uyku", 11 anlam ~2 sn. Acilip kapanirken okuma konumu oransal
+      korunuyor — **dogrulanmadi**: WebKit'in scroll anchoring'i test
+      ortaminda zaten koruyordu, test ayrim yapmadigi icin cikarildi; canlida
+      acilista hafif kayma goruldu
+- [x] **Seviyeye Indir** — secim cubugunda 6+ kelimelik secimde "Seviyene
+      gore sadelestir" → yan yana sheet (orijinal | seviyende), seviye
+      seciciyle yeniden yazma (secici genel ayari degistirir), kopyala,
+      sesli oku. PDF + EPUB. **Sapma:** sade metinde hover/kaydet yok —
+      sheet icinde okuyucu motoru yok; metin secilebilir. **Canli
+      dogrulanmadi:** sentetik cift tiklama WKWebView'da secim olusturmuyor
+- [x] **Inspector "Kelime Karti" (UI)** — tek kelimelik secimde baslik karta
+      donusur: buyuk kelime, ses, (kayitliysa) CEFR + durum ikonu,
+      hover sozlugunun onbellekli tek satirlik anlami ("Yanit Dili"ne uyar),
+      "N kez karsilastin". **Sapma:** modul izgarasi "daha fazla" altina
+      alinmadi — otomatik calistirma ayarini ve yerlesik akisi degistirir,
+      kullaniciyla konusulacak. **Canli dogrulanmadi** (ayni neden)
+- [ ] Should: **Dilbilgisi Mercegi**, **Komut Paleti (⌘K)**, S2'den
+      **Karakter & Yer Rehberi** — alinmadi
+- [ ] Could: **Okuma Cetveli** — alinmadi
+- [x] Testler (12 yeni: `InterlinearGlossTests` 8, `ReadingLoopTests` +4):
+      gloss parse/uzunluk/cekim, gercek okuyucu yapilandirmasinda cizim
+      (textContent sabit, `::after` icerigi, hazirlik kelimesi alt cizgisiz,
+      kapatinca temizlik, tirnakli anlam), cihaz-ici model hatti (model
+      yoksa XCTSkip), sadelestirme uygunlugu/kirpma/temizlik, kart ilk
+      cumlesi. 9 yeni TR metin
+- [x] Dogrulama: tam paket **582 test, 0 hata, 1 atlanan**; 0 uyari
+- Not: `defaults` komutu eski sandbox kapsayicisindaki tercih dosyasini
+  okuyup yaziyor; uygulama `~/Library/Preferences` altindakini kullaniyor
+  (canli testte yanlis dosyaya yazilan anahtar geri alindi)
 
 ## Sprint 4 — v1.45.0 "Uretim ve disarisi" (Should)
 
