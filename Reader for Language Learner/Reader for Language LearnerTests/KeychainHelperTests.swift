@@ -9,13 +9,14 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class KeychainHelperTests: XCTestCase {
 
     private func uniqueService() -> String {
         "com.rell.tests.\(UUID().uuidString)"
     }
 
-    func testWriteReadDeleteRoundTrip() {
+    func testWriteReadDeleteRoundTrip() async {
         let service = uniqueService()
         defer { KeychainHelper.delete(service: service, account: "k") }
 
@@ -30,7 +31,7 @@ final class KeychainHelperTests: XCTestCase {
         XCTAssertNil(KeychainHelper.read(service: service, account: "k"))
     }
 
-    func testDeleteMissingItemSucceeds() {
+    func testDeleteMissingItemSucceeds() async {
         XCTAssertTrue(KeychainHelper.delete(service: uniqueService(), account: "absent"))
     }
 
@@ -40,7 +41,7 @@ final class KeychainHelperTests: XCTestCase {
         UserDefaults(suiteName: "KeychainHelperTests.\(UUID().uuidString)")!
     }
 
-    func testMigrationMovesLegacyKeyAndClearsDefaults() {
+    func testMigrationMovesLegacyKeyAndClearsDefaults() async {
         let service = uniqueService()
         let defaults = makeDefaults()
         defer { KeychainHelper.delete(service: service, account: LLMConfiguration.apiKeyKey) }
@@ -55,7 +56,7 @@ final class KeychainHelperTests: XCTestCase {
         XCTAssertNil(defaults.string(forKey: LLMConfiguration.apiKeyKey))
     }
 
-    func testMigrationPrefersExistingKeychainValue() {
+    func testMigrationPrefersExistingKeychainValue() async {
         let service = uniqueService()
         let defaults = makeDefaults()
         defer { KeychainHelper.delete(service: service, account: LLMConfiguration.apiKeyKey) }
@@ -71,7 +72,7 @@ final class KeychainHelperTests: XCTestCase {
         XCTAssertNil(defaults.string(forKey: LLMConfiguration.apiKeyKey))
     }
 
-    func testMigrationNoOpsWithoutLegacyValue() {
+    func testMigrationNoOpsWithoutLegacyValue() async {
         let service = uniqueService()
         LLMConfiguration.migrateLegacyAPIKey(defaults: makeDefaults(), service: service)
         XCTAssertNil(KeychainHelper.read(service: service, account: LLMConfiguration.apiKeyKey))

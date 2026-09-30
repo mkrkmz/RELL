@@ -9,11 +9,12 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class BookCoverageTests: XCTestCase {
 
     // MARK: - Summing
 
-    func testProfilesAddUp() {
+    func testProfilesAddUp() async {
         let first = LexicalProfile(totalTokens: 100, masteredTokens: 40, learningTokens: 10)
         let second = LexicalProfile(totalTokens: 50, masteredTokens: 5, learningTokens: 5)
 
@@ -27,7 +28,7 @@ final class BookCoverageTests: XCTestCase {
 
     /// A book profiled page by page has to land where profiling it whole
     /// would — that equivalence is what makes the chunked pass legitimate.
-    func testSummingPagesMatchesProfilingTheWholeText() {
+    func testSummingPagesMatchesProfilingTheWholeText() async {
         let pages = ["the cat sat on the mat", "the dog ran to the cat"]
         let mastered: Set<String> = ["cat"]
         let learning: Set<String> = ["dog"]
@@ -45,7 +46,7 @@ final class BookCoverageTests: XCTestCase {
         XCTAssertEqual(summed, whole)
     }
 
-    func testAddingEmptyChangesNothing() {
+    func testAddingEmptyChangesNothing() async {
         let profile = LexicalProfile(totalTokens: 10, masteredTokens: 2, learningTokens: 1)
         XCTAssertEqual(profile.adding(.empty), profile)
     }
@@ -61,15 +62,15 @@ final class BookCoverageTests: XCTestCase {
         )
     }
 
-    func testSnapshotIsFreshForTheSameLanguageAndVocabulary() {
+    func testSnapshotIsFreshForTheSameLanguageAndVocabulary() async {
         XCTAssertTrue(coverage().isFresh(language: .english, fingerprint: "3-abc"))
     }
 
-    func testSnapshotGoesStaleWhenVocabularyChanges() {
+    func testSnapshotGoesStaleWhenVocabularyChanges() async {
         XCTAssertFalse(coverage().isFresh(language: .english, fingerprint: "4-def"))
     }
 
-    func testSnapshotGoesStaleWhenStudyLanguageChanges() {
+    func testSnapshotGoesStaleWhenStudyLanguageChanges() async {
         XCTAssertFalse(coverage().isFresh(language: .german, fingerprint: "3-abc"))
     }
 
@@ -78,7 +79,7 @@ final class BookCoverageTests: XCTestCase {
     /// Every earlier snapshot of the library predates this field; decoding a
     /// whole array aborts on the first bad element, so a missing key has to
     /// decode to nil rather than throw.
-    func testDocumentWithoutCoverageStillDecodes() throws {
+    func testDocumentWithoutCoverageStillDecodes() async throws {
         let json = """
         [{"id":"\(UUID().uuidString)","path":"/tmp/a.pdf","filename":"a","lastOpenedAt":0}]
         """
@@ -88,7 +89,7 @@ final class BookCoverageTests: XCTestCase {
         XCTAssertNil(documents.first?.coverage)
     }
 
-    func testCoverageSurvivesARoundTrip() throws {
+    func testCoverageSurvivesARoundTrip() async throws {
         let document = RecentDocument(path: "/tmp/a.pdf", filename: "a", coverage: coverage())
         let data = try JSONEncoder().encode([document])
         let decoded = try JSONDecoder().decode([RecentDocument].self, from: data)

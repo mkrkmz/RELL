@@ -67,11 +67,23 @@ sandbox/bundle id) uyelik gelene kadar Won't.
       kapali EPUB'da secim/hover/vurgu/karaoke; bir Claude modeliyle Inspector;
       Ayarlar ▸ AI anahtar + ozet; tanim Apple'dan / etimoloji saglayicidan;
       cumle seridinde dil paketi istemi; odak/zen giris-cikis; PDF'i yeniden
-      acinca son sayfa; calisan modulu yeniden baslatma
-- [ ] **Swift 6 dil modu** (`SWIFT_VERSION = 6`): once ObjC tamamlama
-      bloklarini (`CSSearchableIndex`, `UNUserNotificationCenter`,
-      `NSWorkspace`) canli turda dogrula; cokme olursa ilgili closure'lari
-      `@Sendable`/`nonisolated` yap
+      acinca son sayfa; calisan modulu yeniden baslatma. **Swift 6 icin
+      ekle:** gunluk hatirlatmayi ac/kaydet (bildirim zamanlama yolu),
+      ⌃⌥Space, TTS ile sayfa okuma. (2026-09-30: kullanici tam ekran bir
+      uygulamadaydi, pencere gorunur Space'e alinamadi — gorsel tur yapilamadi)
+- [x] **Swift 6 dil modu** (uygulama hedefi `SWIFT_VERSION = 6.0`, test
+      hedefleri 5'te): arka plan kuyrugunda cagrilan iki ObjC tamamlama
+      blogu ana-aktor izolasyonunu miras aliyordu — Swift 6'da calisma
+      zamani tuzagi. `SpotlightIndexer.reindexAllWords` `nonisolated`,
+      `DailyReminderManager.schedule` async `center.add` kullaniyor.
+      Delegate'ler (`UNUserNotificationCenter`, `AVSpeechSynthesizer`,
+      `WKNavigation`, `WKScriptMessage`) zaten `nonisolated`; `DispatchQueue`
+      closure'lari `@Sendable`. Swift 6 modulune karsi derlenen test
+      hedefinde `@MainActor` eksik 20 sinif desene cekildi (metotlar
+      `async`), bir `wait(for:)` → `await fulfillment`. Temiz derleme 0
+      uyari; **533 test, 0 hata, 1 atlanan**. Arka plan canli kontrolu:
+      acilis + Spotlight yeniden indeksleme, EPUB acma, normal cikis —
+      cokme yok
 - [ ] Hijyen devri: `open -g` ile pencere acilmamasi; test hedeflerinin
       `MACOSX_DEPLOYMENT_TARGET = 26.2` farki
 

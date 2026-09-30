@@ -6,17 +6,18 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class PromptTemplatesTests: XCTestCase {
 
     // MARK: - Native language (meaning module)
 
-    func testMeaningModuleSystemPromptFollowsNativeLanguageNotHardcodedTurkish() {
+    func testMeaningModuleSystemPromptFollowsNativeLanguageNotHardcodedTurkish() async {
         let german = ModuleType.meaningTR.systemPrompt(customPreamble: "", nativeLanguage: .german, targetLanguage: .english)
         XCTAssertTrue(german.contains("Output only in Deutsch."))
         XCTAssertFalse(german.contains("Output only in Turkish."))
     }
 
-    func testMeaningModuleSystemPromptStillTurkishForTurkishNative() {
+    func testMeaningModuleSystemPromptStillTurkishForTurkishNative() async {
         let turkish = ModuleType.meaningTR.systemPrompt(customPreamble: "", nativeLanguage: .turkish, targetLanguage: .english)
         XCTAssertTrue(turkish.contains("Output only in Türkçe."))
         XCTAssertTrue(turkish.contains("\"Bilinmiyor\""))
@@ -24,18 +25,18 @@ final class PromptTemplatesTests: XCTestCase {
 
     // MARK: - Target language (explanation modules)
 
-    func testTargetModuleFollowsTargetLanguage() {
+    func testTargetModuleFollowsTargetLanguage() async {
         let prompt = ModuleType.definitionEN.systemPrompt(customPreamble: "", nativeLanguage: .turkish, targetLanguage: .german)
         XCTAssertTrue(prompt.contains("Output only in Deutsch."))
         XCTAssertTrue(prompt.contains("\"Unbekannt\""))
     }
 
-    func testTargetModuleIgnoresNativeLanguage() {
+    func testTargetModuleIgnoresNativeLanguage() async {
         let prompt = ModuleType.definitionEN.systemPrompt(customPreamble: "", nativeLanguage: .japanese, targetLanguage: .english)
         XCTAssertTrue(prompt.contains("Output only in English."))
     }
 
-    func testDefinitionUserPromptNamesTargetLanguage() {
+    func testDefinitionUserPromptNamesTargetLanguage() async {
         let word = ModuleType.definitionEN.userPrompt(
             term: "Haus", mode: .word, detail: .short,
             nativeLanguage: .turkish, targetLanguage: .german
@@ -53,7 +54,7 @@ final class PromptTemplatesTests: XCTestCase {
     // (regression safety for existing EN-target users — the prompt text below
     // is pinned byte-for-byte; a deliberate prompt change must update these).
 
-    func testGoldenEnglishTargetSystemPrompt() {
+    func testGoldenEnglishTargetSystemPrompt() async {
         let prompt = ModuleType.definitionEN.systemPrompt(customPreamble: "", nativeLanguage: .turkish, targetLanguage: .english)
         XCTAssertEqual(prompt, """
         You are a dictionary assistant for language learners.
@@ -64,7 +65,7 @@ final class PromptTemplatesTests: XCTestCase {
         """)
     }
 
-    func testGoldenEnglishTargetDefinitionUserPrompt() {
+    func testGoldenEnglishTargetDefinitionUserPrompt() async {
         let prompt = ModuleType.definitionEN.userPrompt(
             term: "orbit", mode: .word, detail: .short,
             nativeLanguage: .turkish, targetLanguage: .english
@@ -79,7 +80,7 @@ final class PromptTemplatesTests: XCTestCase {
 
     // MARK: - Collocations (.mixed): English structural labels, localized content
 
-    func testCollocationLabelsStayEnglishForAllNativeLanguages() {
+    func testCollocationLabelsStayEnglishForAllNativeLanguages() async {
         for native in Language.allCases {
             let prompt = ModuleType.collocations.userPrompt(
                 term: "orbit", mode: .word, detail: .short,
@@ -92,7 +93,7 @@ final class PromptTemplatesTests: XCTestCase {
         }
     }
 
-    func testCollocationPromptRequestsNativeLanguageContent() {
+    func testCollocationPromptRequestsNativeLanguageContent() async {
         let prompt = ModuleType.collocations.userPrompt(
             term: "orbit", mode: .word, detail: .short,
             nativeLanguage: .german, targetLanguage: .english
@@ -102,7 +103,7 @@ final class PromptTemplatesTests: XCTestCase {
         XCTAssertFalse(prompt.lowercased().contains("turkish"))
     }
 
-    func testMixedSystemPromptNamesBothLanguages() {
+    func testMixedSystemPromptNamesBothLanguages() async {
         let prompt = ModuleType.collocations.systemPrompt(customPreamble: "", nativeLanguage: .french, targetLanguage: .german)
         XCTAssertTrue(prompt.contains("Example sentences in German only."))
         XCTAssertTrue(prompt.contains("Meanings and translations in French only."))
@@ -111,7 +112,7 @@ final class PromptTemplatesTests: XCTestCase {
 
     // MARK: - Usage notes: machine labels never localized
 
-    func testUsageNotesLabelsStayEnglishMachineTokens() {
+    func testUsageNotesLabelsStayEnglishMachineTokens() async {
         let prompt = ModuleType.usageNotesEN.userPrompt(
             term: "orbit", mode: .word, detail: .detailed,
             nativeLanguage: .japanese, targetLanguage: .german

@@ -9,6 +9,7 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class EPUBDocumentTests: XCTestCase {
 
     // MARK: - Fixture
@@ -87,14 +88,14 @@ final class EPUBDocumentTests: XCTestCase {
 
     // MARK: - Tests
 
-    func testMetadata() throws {
+    func testMetadata() async throws {
         let doc = try makeDocument()
         XCTAssertEqual(doc.title, "Test Kitabı")
         XCTAssertEqual(doc.author, "Ada Yazar")
         XCTAssertEqual(doc.language, "en")
     }
 
-    func testSpineOrderAndChapterAccess() throws {
+    func testSpineOrderAndChapterAccess() async throws {
         let doc = try makeDocument()
         XCTAssertEqual(doc.chapterCount, 2)
         XCTAssertEqual(doc.spinePaths, ["OEBPS/text/ch1.xhtml", "OEBPS/text/ch2.xhtml"])
@@ -106,7 +107,7 @@ final class EPUBDocumentTests: XCTestCase {
         XCTAssertThrowsError(try doc.chapterData(at: 5))
     }
 
-    func testNavTOC() throws {
+    func testNavTOC() async throws {
         let doc = try makeDocument()
         XCTAssertEqual(doc.tocEntries.count, 2)
         XCTAssertEqual(doc.tocEntries[0].title, "Birinci Bölüm")
@@ -116,12 +117,12 @@ final class EPUBDocumentTests: XCTestCase {
         XCTAssertEqual(doc.tocEntries[1].chapterPath, "OEBPS/text/ch2.xhtml")
     }
 
-    func testCoverDetection() throws {
+    func testCoverDetection() async throws {
         let doc = try makeDocument()
         XCTAssertEqual(doc.coverImagePath, "OEBPS/images/cover.png")
     }
 
-    func testResourceLookupUsesManifestMime() throws {
+    func testResourceLookupUsesManifestMime() async throws {
         let doc = try makeDocument()
         let css = try doc.resource(at: "OEBPS/style/book.css")
         XCTAssertEqual(css.mimeType, "text/css")
@@ -129,7 +130,7 @@ final class EPUBDocumentTests: XCTestCase {
         XCTAssertFalse(doc.containsResource(at: "OEBPS/missing.png"))
     }
 
-    func testNotAnEPUBThrows() {
+    func testNotAnEPUBThrows() async {
         let zip = ZIPFixture.build([
             .init(path: "readme.txt", data: Data("not an epub".utf8), deflate: false)
         ])
@@ -140,7 +141,7 @@ final class EPUBDocumentTests: XCTestCase {
         }
     }
 
-    func testPlainTextExtraction() throws {
+    func testPlainTextExtraction() async throws {
         let doc = try makeDocument()
         let text = doc.plainText(at: 0)
         XCTAssertTrue(text.contains("Chapter 1"))
@@ -152,7 +153,7 @@ final class EPUBDocumentTests: XCTestCase {
     /// repeat reads and never crash or corrupt under concurrent access from
     /// multiple threads — this is exactly the access pattern the EPUB
     /// search manager's detached scan produces.
-    func testPlainTextIsStableAndThreadSafeUnderConcurrentAccess() throws {
+    func testPlainTextIsStableAndThreadSafeUnderConcurrentAccess() async throws {
         let doc = try makeDocument()
         let first = doc.plainText(at: 0)
         XCTAssertEqual(doc.plainText(at: 0), first)
@@ -165,16 +166,16 @@ final class EPUBDocumentTests: XCTestCase {
             XCTAssertFalse(text.isEmpty)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 5)
+        await fulfillment(of: [expectation], timeout: 5)
     }
 
-    func testChapterTitleFallsBackWhenNotInTOC() throws {
+    func testChapterTitleFallsBackWhenNotInTOC() async throws {
         let doc = try makeDocument()
         XCTAssertEqual(doc.chapterTitle(at: 0), "Birinci Bölüm")   // from nav TOC
         XCTAssertEqual(doc.chapterTitle(at: 1), "İkinci Bölüm")
     }
 
-    func testHrefResolution() {
+    func testHrefResolution() async {
         XCTAssertEqual(
             EPUBDocument.resolve(href: "text/ch1.xhtml", relativeTo: "OEBPS/content.opf").path,
             "OEBPS/text/ch1.xhtml"

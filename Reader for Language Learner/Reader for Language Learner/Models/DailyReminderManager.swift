@@ -69,8 +69,13 @@ final class DailyReminderManager: NSObject {
         content.sound = .default
 
         let request = UNNotificationRequest(identifier: dailyReminderRequestIdentifier, content: content, trigger: trigger)
-        center.add(request) { error in
-            if let error {
+        // The async form, not the completion block: the block runs on a
+        // background queue, and one formed here would inherit main-actor
+        // isolation — under Swift 6 a runtime check that traps.
+        Task {
+            do {
+                try await center.add(request)
+            } catch {
                 AppLogger.notifications.error("Failed to schedule reminder: \(error.localizedDescription, privacy: .public)")
             }
         }

@@ -10,9 +10,10 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class PageAnalysisServiceTests: XCTestCase {
 
-    func testCandidateWordsPicksContentWordsOnly() {
+    func testCandidateWordsPicksContentWordsOnly() async {
         let text = "The ephemeral butterfly quickly landed on a beautiful flower."
         let candidates = PageAnalysisService.candidateWords(from: text)
 
@@ -24,7 +25,7 @@ final class PageAnalysisServiceTests: XCTestCase {
         XCTAssertFalse(candidates.contains(where: { $0.count < 5 }))
     }
 
-    func testCandidateWordsExcludesAlreadySavedTermsCaseInsensitively() {
+    func testCandidateWordsExcludesAlreadySavedTermsCaseInsensitively() async {
         let text = "The ephemeral butterfly landed on a beautiful flower."
         let candidates = PageAnalysisService.candidateWords(from: text, excluding: ["Ephemeral", "FLOWER"])
 
@@ -32,21 +33,21 @@ final class PageAnalysisServiceTests: XCTestCase {
         XCTAssertFalse(candidates.contains("flower"))
     }
 
-    func testCandidateWordsDedupesRepeatedTerms() {
+    func testCandidateWordsDedupesRepeatedTerms() async {
         let text = "Elephants remember elephants remember elephants."
         let candidates = PageAnalysisService.candidateWords(from: text)
 
         XCTAssertEqual(candidates.filter { $0.lowercased() == "elephants" }.count, 1)
     }
 
-    func testCandidateWordsRespectsLimit() {
+    func testCandidateWordsRespectsLimit() async {
         let text = "Wonderful elephants gracefully remember beautiful gardens flourish endlessly forever."
         let candidates = PageAnalysisService.candidateWords(from: text, limit: 3)
 
         XCTAssertLessThanOrEqual(candidates.count, 3)
     }
 
-    func testCandidateWordsEmptyForEmptyText() {
+    func testCandidateWordsEmptyForEmptyText() async {
         XCTAssertTrue(PageAnalysisService.candidateWords(from: "").isEmpty)
     }
 }

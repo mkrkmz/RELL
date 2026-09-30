@@ -9,6 +9,7 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class LemmaSurfaceFormTests: XCTestCase {
 
     /// Mirrors `SavedWordsStore.lemmaKeys(for:)`: a saved term contributes
@@ -20,7 +21,7 @@ final class LemmaSurfaceFormTests: XCTestCase {
             .map { $0.lowercased() }
     }
 
-    func testFindsInflectionsOfASavedWord() {
+    func testFindsInflectionsOfASavedWord() async {
         let found = forms("They ran home, and he is running still, so we run.", ["run"])
         XCTAssertTrue(found.contains("ran"), "got \(found)")
         XCTAssertTrue(found.contains("running"), "got \(found)")
@@ -28,27 +29,27 @@ final class LemmaSurfaceFormTests: XCTestCase {
     }
 
     /// The whole point: the literal form is only one of the shapes.
-    func testFindsTheSavedFormItself() {
+    func testFindsTheSavedFormItself() async {
         XCTAssertEqual(forms("A quiet orbit.", ["orbit"]), ["orbit"])
     }
 
     /// A word saved in an inflected form still matches the base form.
-    func testSavedInflectionMatchesBaseForm() {
+    func testSavedInflectionMatchesBaseForm() async {
         let found = forms("The flat was empty.", ["flats"])
         XCTAssertTrue(found.contains("flat"), "got \(found)")
     }
 
-    func testIgnoresWordsOutsideTheVocabulary() {
+    func testIgnoresWordsOutsideTheVocabulary() async {
         let found = forms("They ran home.", ["orbit"])
         XCTAssertTrue(found.isEmpty, "got \(found)")
     }
 
-    func testResultsAreDistinct() {
+    func testResultsAreDistinct() async {
         let found = forms("run, run, run", ["run"])
         XCTAssertEqual(found, ["run"])
     }
 
-    func testEmptyInputsProduceNothing() {
+    func testEmptyInputsProduceNothing() async {
         XCTAssertTrue(LemmaMatcher.surfaceForms(in: "", matchingKeys: ["run"], language: .english).isEmpty)
         XCTAssertTrue(LemmaMatcher.surfaceForms(in: "they ran", matchingKeys: [], language: .english).isEmpty)
     }
@@ -56,7 +57,7 @@ final class LemmaSurfaceFormTests: XCTestCase {
     /// Surfaces come back as the text writes them — the highlighters match
     /// case-insensitively, but the string handed to them has to exist in the
     /// page for a range to be found at all.
-    func testSurfaceCasingIsPreserved() {
+    func testSurfaceCasingIsPreserved() async {
         let raw = LemmaMatcher.surfaceForms(
             in: "Running is good.",
             matchingKeys: [LemmaMatcher.matchKey(for: "run", language: .english)],
@@ -70,7 +71,7 @@ final class LemmaSurfaceFormTests: XCTestCase {
     /// and the matcher falls back to exact matching — the documented contract,
     /// covered by the English cases above — so this asserts the extraction on
     /// top of a working tagger and skips where there isn't one.
-    func testGermanInflectionIsFound() throws {
+    func testGermanInflectionIsFound() async throws {
         let taggerKeys = LemmaMatcher.matchKeys(in: "Die Häuser stehen dort.", language: .german)
         try XCTSkipUnless(
             taggerKeys.contains("haus"),

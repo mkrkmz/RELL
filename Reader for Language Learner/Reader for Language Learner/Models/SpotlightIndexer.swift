@@ -61,7 +61,11 @@ enum SpotlightIndexer {
 
     /// Launch-time sync: rebuilds the word domain so edits, tag changes,
     /// and deletions that bypassed the hooks never leave stale results.
-    static func reindexAllWords(_ words: [SavedWord]) {
+    ///
+    /// Nonisolated on purpose: Core Spotlight calls the completion block on
+    /// its own queue, and a closure formed in a main-actor function would
+    /// inherit that isolation — under Swift 6 a runtime check that traps.
+    nonisolated static func reindexAllWords(_ words: [SavedWord]) {
         CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [wordDomain]) { _ in
             CSSearchableIndex.default().indexSearchableItems(words.map(searchableItem(for:)))
         }

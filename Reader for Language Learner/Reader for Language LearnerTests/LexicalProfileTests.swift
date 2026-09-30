@@ -13,22 +13,23 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class LexicalProfileTests: XCTestCase {
 
     // MARK: - LemmaMatcher
 
-    func testExactMatchesAlwaysHold() {
+    func testExactMatchesAlwaysHold() async {
         XCTAssertTrue(LemmaMatcher.matches("run", "run", language: .english))
         XCTAssertTrue(LemmaMatcher.matches("Run", "run", language: .english), "matching is case-insensitive")
         XCTAssertTrue(LemmaMatcher.matches(" run ", "run", language: .english), "surrounding space is trimmed")
     }
 
-    func testUnrelatedWordsDoNotMatch() {
+    func testUnrelatedWordsDoNotMatch() async {
         XCTAssertFalse(LemmaMatcher.matches("run", "elephant", language: .english))
         XCTAssertFalse(LemmaMatcher.matches("house", "car", language: .german))
     }
 
-    func testEmptyInputNeverMatches() {
+    func testEmptyInputNeverMatches() async {
         XCTAssertFalse(LemmaMatcher.matches("", "run", language: .english))
         XCTAssertFalse(LemmaMatcher.matches("run", "   ", language: .english))
     }
@@ -36,35 +37,35 @@ final class LexicalProfileTests: XCTestCase {
     /// The lemma of an inflected form must not be some unrelated word — if the
     /// tagger returns anything, it should relate the two surface forms or fall
     /// back to the exact form.
-    func testMatchKeyFallsBackToTheTermItself() {
+    func testMatchKeyFallsBackToTheTermItself() async {
         // A nonsense token has no lemma, so its key is the normalized term.
         let key = LemmaMatcher.matchKey(for: "zzqqxx", language: .english)
         XCTAssertEqual(key, "zzqqxx")
     }
 
-    func testMatchKeyIsLowercasedAndTrimmed() {
+    func testMatchKeyIsLowercasedAndTrimmed() async {
         XCTAssertEqual(LemmaMatcher.matchKey(for: "  ZZQQXX  ", language: .english), "zzqqxx")
     }
 
-    func testMultiWordPhrasesFallBackToExactComparison() {
+    func testMultiWordPhrasesFallBackToExactComparison() async {
         XCTAssertTrue(LemmaMatcher.matches("New York", "new york", language: .english))
         XCTAssertFalse(LemmaMatcher.matches("New York", "Old York", language: .english))
     }
 
-    func testMatchKeysCoversEveryWordInText() {
+    func testMatchKeysCoversEveryWordInText() async {
         let keys = LemmaMatcher.matchKeys(in: "The cat sat on the mat.", language: .english)
         XCTAssertEqual(keys.count, 6, "six words, punctuation omitted")
         XCTAssertTrue(keys.allSatisfy { !$0.isEmpty })
         XCTAssertTrue(keys.allSatisfy { $0 == $0.lowercased() })
     }
 
-    func testMatchKeysOnEmptyTextIsEmpty() {
+    func testMatchKeysOnEmptyTextIsEmpty() async {
         XCTAssertTrue(LemmaMatcher.matchKeys(in: "", language: .english).isEmpty)
     }
 
     // MARK: - LexicalProfile shares
 
-    func testSharesSplitTheDocument() {
+    func testSharesSplitTheDocument() async {
         let profile = LexicalProfile(totalTokens: 100, masteredTokens: 60, learningTokens: 20)
         XCTAssertEqual(profile.unknownTokens, 20)
         XCTAssertEqual(profile.masteredShare, 0.6, accuracy: 0.0001)
@@ -72,14 +73,14 @@ final class LexicalProfileTests: XCTestCase {
         XCTAssertEqual(profile.unknownShare, 0.2, accuracy: 0.0001)
     }
 
-    func testEmptyProfileIsAllZeroNotDivideByZero() {
+    func testEmptyProfileIsAllZeroNotDivideByZero() async {
         let profile = LexicalProfile.empty
         XCTAssertEqual(profile.knownShare, 0)
         XCTAssertEqual(profile.unknownShare, 0)
         XCTAssertEqual(profile.unknownTokens, 0)
     }
 
-    func testDifficultyBandsFollowComprehensibleInputThresholds() {
+    func testDifficultyBandsFollowComprehensibleInputThresholds() async {
         let comfortable = LexicalProfile(totalTokens: 100, masteredTokens: 96, learningTokens: 0)
         let challenging = LexicalProfile(totalTokens: 100, masteredTokens: 85, learningTokens: 0)
         let demanding   = LexicalProfile(totalTokens: 100, masteredTokens: 50, learningTokens: 0)
@@ -88,7 +89,7 @@ final class LexicalProfileTests: XCTestCase {
         XCTAssertEqual(demanding.difficulty, .demanding)
     }
 
-    func testLearningWordsCountTowardKnownButNotMastered() {
+    func testLearningWordsCountTowardKnownButNotMastered() async {
         let profile = LexicalProfile(totalTokens: 100, masteredTokens: 40, learningTokens: 55)
         XCTAssertEqual(profile.difficulty, .comfortable, "95% is followable even if not all mastered")
         XCTAssertEqual(profile.masteredShare, 0.4, accuracy: 0.0001)
@@ -96,7 +97,7 @@ final class LexicalProfileTests: XCTestCase {
 
     // MARK: - Profile building
 
-    func testProfileCountsMasteredAndLearningTokens() {
+    func testProfileCountsMasteredAndLearningTokens() async {
         let text = "the cat sat on the mat"
         let mastered: Set<String> = ["the"]
         let learning: Set<String> = ["cat"]
@@ -112,7 +113,7 @@ final class LexicalProfileTests: XCTestCase {
         XCTAssertEqual(profile.unknownTokens, 3)
     }
 
-    func testProfileWithNoSavedWordsIsAllUnknown() {
+    func testProfileWithNoSavedWordsIsAllUnknown() async {
         let profile = LexicalProfileBuilder.profile(
             text: "alpha beta gamma", language: .english,
             masteredKeys: [], learningKeys: []
@@ -123,7 +124,7 @@ final class LexicalProfileTests: XCTestCase {
         XCTAssertEqual(profile.difficulty, .demanding)
     }
 
-    func testProfileOfEmptyTextIsEmpty() {
+    func testProfileOfEmptyTextIsEmpty() async {
         let profile = LexicalProfileBuilder.profile(
             text: "   ", language: .english,
             masteredKeys: ["x"], learningKeys: []
@@ -131,7 +132,7 @@ final class LexicalProfileTests: XCTestCase {
         XCTAssertEqual(profile, .empty)
     }
 
-    func testTokenCountsNeverExceedTotal() {
+    func testTokenCountsNeverExceedTotal() async {
         let profile = LexicalProfileBuilder.profile(
             text: "the the the", language: .english,
             masteredKeys: ["the"], learningKeys: ["the"]

@@ -121,9 +121,10 @@ enum ZIPFixture {
 
 // MARK: - Tests
 
+@MainActor
 final class ZIPArchiveTests: XCTestCase {
 
-    func testReadsStoredEntry() throws {
+    func testReadsStoredEntry() async throws {
         let content = Data("hello epub world".utf8)
         let zip = ZIPFixture.build([.init(path: "mimetype", data: content, deflate: false)])
 
@@ -132,7 +133,7 @@ final class ZIPArchiveTests: XCTestCase {
         XCTAssertEqual(try archive.data(at: "mimetype"), content)
     }
 
-    func testReadsDeflatedEntry() throws {
+    func testReadsDeflatedEntry() async throws {
         let content = Data(String(repeating: "compressible text ", count: 200).utf8)
         let zip = ZIPFixture.build([.init(path: "OEBPS/ch1.xhtml", data: content, deflate: true)])
 
@@ -140,7 +141,7 @@ final class ZIPArchiveTests: XCTestCase {
         XCTAssertEqual(try archive.data(at: "OEBPS/ch1.xhtml"), content)
     }
 
-    func testMixedEntriesAndLookup() throws {
+    func testMixedEntriesAndLookup() async throws {
         let a = Data("alpha".utf8)
         let b = Data(String(repeating: "beta ", count: 100).utf8)
         let zip = ZIPFixture.build([
@@ -156,20 +157,20 @@ final class ZIPArchiveTests: XCTestCase {
         XCTAssertEqual(try archive.data(at: "dir/b.txt"), b)
     }
 
-    func testEmptyEntry() throws {
+    func testEmptyEntry() async throws {
         let zip = ZIPFixture.build([.init(path: "empty.txt", data: Data(), deflate: false)])
         let archive = try ZIPArchive(data: zip)
         XCTAssertEqual(try archive.data(at: "empty.txt"), Data())
     }
 
-    func testGarbageIsNotAZip() {
+    func testGarbageIsNotAZip() async {
         let garbage = Data((0..<256).map { UInt8($0 % 251) })
         XCTAssertThrowsError(try ZIPArchive(data: garbage)) { error in
             XCTAssertEqual(error as? ZIPArchiveError, .notAZipFile)
         }
     }
 
-    func testMissingEntryThrows() throws {
+    func testMissingEntryThrows() async throws {
         let zip = ZIPFixture.build([.init(path: "a", data: Data("x".utf8), deflate: false)])
         let archive = try ZIPArchive(data: zip)
         XCTAssertThrowsError(try archive.data(at: "b")) { error in
@@ -177,7 +178,7 @@ final class ZIPArchiveTests: XCTestCase {
         }
     }
 
-    func testTruncatedArchiveThrows() throws {
+    func testTruncatedArchiveThrows() async throws {
         let zip = ZIPFixture.build([.init(path: "a.txt", data: Data("payload".utf8), deflate: false)])
         // Cut into the central directory: EOCD stays intact only if we keep
         // the tail, so instead corrupt by dropping bytes from the middle.

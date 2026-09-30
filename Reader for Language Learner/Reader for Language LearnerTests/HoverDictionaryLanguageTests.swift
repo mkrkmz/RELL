@@ -8,6 +8,7 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class HoverDictionaryLanguageTests: XCTestCase {
 
     private var previous: String?
@@ -22,12 +23,12 @@ final class HoverDictionaryLanguageTests: XCTestCase {
         super.tearDown()
     }
 
-    func testDefaultsToTheStudyLanguage() {
+    func testDefaultsToTheStudyLanguage() async {
         UserDefaults.standard.removeObject(forKey: HoverDictionaryLanguage.storageKey)
         XCTAssertEqual(HoverDictionaryLanguage.stored, .target)
     }
 
-    func testStoredValueRoundTrips() {
+    func testStoredValueRoundTrips() async {
         UserDefaults.standard.set(HoverDictionaryLanguage.native.rawValue, forKey: HoverDictionaryLanguage.storageKey)
         XCTAssertEqual(HoverDictionaryLanguage.stored, .native)
 
@@ -37,12 +38,12 @@ final class HoverDictionaryLanguageTests: XCTestCase {
 
     /// A value written by a future build (or a corrupted default) must fall
     /// back rather than leaving the reader with no hover dictionary at all.
-    func testUnknownStoredValueFallsBackToTheDefault() {
+    func testUnknownStoredValueFallsBackToTheDefault() async {
         UserDefaults.standard.set("esperanto-only", forKey: HoverDictionaryLanguage.storageKey)
         XCTAssertEqual(HoverDictionaryLanguage.stored, HoverDictionaryLanguage.default)
     }
 
-    func testTitlesNameTheActualLanguages() {
+    func testTitlesNameTheActualLanguages() async {
         let target = HoverDictionaryLanguage.target.localizedTitle(target: .german, native: .turkish)
         let native = HoverDictionaryLanguage.native.localizedTitle(target: .german, native: .turkish)
 
@@ -51,7 +52,7 @@ final class HoverDictionaryLanguageTests: XCTestCase {
         XCTAssertNotEqual(target, native)
     }
 
-    func testBothChoicesAreOffered() {
+    func testBothChoicesAreOffered() async {
         XCTAssertEqual(Set(HoverDictionaryLanguage.allCases.map(\.rawValue)), ["target", "native"])
     }
 }

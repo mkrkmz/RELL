@@ -11,25 +11,26 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class SystemDictionaryTests: XCTestCase {
 
     /// A word ordinary English dictionaries carry; also the probe for whether
     /// this machine has any active dictionary at all.
     private let probeWord = "sleep"
 
-    func testEmptyTermIsNotLookedUp() {
+    func testEmptyTermIsNotLookedUp() async {
         XCTAssertNil(SystemDictionary.rawDefinition(for: ""))
         XCTAssertNil(SystemDictionary.rawDefinition(for: "   "))
     }
 
-    func testGibberishHasNoEntry() {
+    func testGibberishHasNoEntry() async {
         XCTAssertNil(SystemDictionary.rawDefinition(for: "zzqqxyw"))
     }
 
     /// Sandbox check as much as anything: the app is sandboxed, and this is
     /// the layer silently doing nothing if Dictionary Services isn't reachable
     /// from inside it.
-    func testLookupReachesTheSystemDictionaries() throws {
+    func testLookupReachesTheSystemDictionaries() async throws {
         let definition = SystemDictionary.rawDefinition(for: probeWord)
         try XCTSkipIf(definition == nil, "No active dictionary covers \"\(probeWord)\" on this machine")
         XCTAssertFalse(definition!.isEmpty)
@@ -39,7 +40,7 @@ final class SystemDictionaryTests: XCTestCase {
     /// choice: an entry is only offered for the language it's written in. A
     /// bilingual dictionary can answer in either, so at most one of these two
     /// can be non-nil for the same word.
-    func testEntryIsOfferedForAtMostOneLanguage() throws {
+    func testEntryIsOfferedForAtMostOneLanguage() async throws {
         try XCTSkipIf(
             SystemDictionary.rawDefinition(for: probeWord) == nil,
             "No active dictionary covers \"\(probeWord)\" on this machine"
@@ -56,7 +57,7 @@ final class SystemDictionaryTests: XCTestCase {
 
     /// A language nothing on this machine is likely to answer in must not be
     /// answered in anyway.
-    func testMismatchedLanguageIsRejected() throws {
+    func testMismatchedLanguageIsRejected() async throws {
         try XCTSkipIf(
             SystemDictionary.rawDefinition(for: probeWord) == nil,
             "No active dictionary covers \"\(probeWord)\" on this machine"
@@ -64,7 +65,7 @@ final class SystemDictionaryTests: XCTestCase {
         XCTAssertNil(SystemDictionary.definition(for: probeWord, in: .korean))
     }
 
-    func testEmptyTermHasNoLanguageMatchEither() {
+    func testEmptyTermHasNoLanguageMatchEither() async {
         XCTAssertNil(SystemDictionary.definition(for: "", in: .english))
     }
 }

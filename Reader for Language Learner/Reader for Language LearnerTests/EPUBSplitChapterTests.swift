@@ -11,21 +11,22 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class EPUBSplitChapterTests: XCTestCase {
 
     // MARK: - HTML surgery
 
-    func testBodyInnerHTMLExtractsBetweenBodyTags() {
+    func testBodyInnerHTMLExtractsBetweenBodyTags() async {
         let html = "<html><head><title>x</title></head><body class=\"c\"><h2>CHAPTER 1</h2></body></html>"
         XCTAssertEqual(EPUBDocument.bodyInnerHTML(of: html), "<h2>CHAPTER 1</h2>")
     }
 
-    func testBodyInnerHTMLReturnsNilForEmptyOrMissingBody() {
+    func testBodyInnerHTMLReturnsNilForEmptyOrMissingBody() async {
         XCTAssertNil(EPUBDocument.bodyInnerHTML(of: "<html><head></head></html>"))
         XCTAssertNil(EPUBDocument.bodyInnerHTML(of: "<html><body>   </body></html>"))
     }
 
-    func testInjectHeadingPlacesItInsideTheBody() throws {
+    func testInjectHeadingPlacesItInsideTheBody() async throws {
         let chapter = "<html><body class=\"c\"><p>To Sleep …</p></body></html>"
         let data = Data(chapter.utf8)
 
@@ -40,7 +41,7 @@ final class EPUBSplitChapterTests: XCTestCase {
         XCTAssertFalse(text.contains("</body></body>"), "the document stays well-formed")
     }
 
-    func testInjectHeadingLeavesBodylessMarkupAlone() {
+    func testInjectHeadingLeavesBodylessMarkupAlone() async {
         XCTAssertNil(EPUBDocument.injectHeading("<h2>X</h2>", into: Data("no body here".utf8)))
     }
 
@@ -48,7 +49,7 @@ final class EPUBSplitChapterTests: XCTestCase {
 
     /// End-to-end on the book that surfaced this: every table-of-contents entry
     /// must land on prose, not on a heading stub.
-    func testRealSplitBookResolvesTOCEntriesToProse() throws {
+    func testRealSplitBookResolvesTOCEntriesToProse() async throws {
         let path = ("~/Downloads/Why We Sleep_ Unlocking the Power of Sleep and Dreams -- Walker, Matthew -- 2215bbe2fa1ffc1b477714adb7464da8 -- Anna’s Archive.epub" as NSString).expandingTildeInPath
         guard FileManager.default.fileExists(atPath: path) else {
             throw XCTSkip("sample book not present on this machine")
@@ -76,7 +77,7 @@ final class EPUBSplitChapterTests: XCTestCase {
 
     /// Reading the folded chapter must show the heading that was split off,
     /// so nothing the author wrote disappears.
-    func testRealSplitBookServesTheHeadingWithTheProse() throws {
+    func testRealSplitBookServesTheHeadingWithTheProse() async throws {
         let path = ("~/Downloads/Why We Sleep_ Unlocking the Power of Sleep and Dreams -- Walker, Matthew -- 2215bbe2fa1ffc1b477714adb7464da8 -- Anna’s Archive.epub" as NSString).expandingTildeInPath
         guard FileManager.default.fileExists(atPath: path) else {
             throw XCTSkip("sample book not present on this machine")
@@ -104,7 +105,7 @@ final class EPUBSplitChapterTests: XCTestCase {
     }
 
     /// A book that isn't split must be served untouched.
-    func testOrdinaryBookIsNotReshuffled() throws {
+    func testOrdinaryBookIsNotReshuffled() async throws {
         let path = ("~/Downloads/Crime and Punishment.epub" as NSString).expandingTildeInPath
         guard FileManager.default.fileExists(atPath: path) else {
             throw XCTSkip("sample book not present on this machine")

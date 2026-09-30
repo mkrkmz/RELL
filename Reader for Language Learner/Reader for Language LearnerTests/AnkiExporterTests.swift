@@ -6,11 +6,12 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class AnkiExporterTests: XCTestCase {
 
     // MARK: - buildNote
 
-    func testBuildNoteBasic() {
+    func testBuildNoteBasic() async {
         let note = AnkiExporter.buildNote(
             selectedText: "hello",
             mode: .word,
@@ -28,7 +29,7 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertEqual(note.source, "")
     }
 
-    func testBuildNoteDomainBadge() {
+    func testBuildNoteDomainBadge() async {
         let note = AnkiExporter.buildNote(
             selectedText: "contract",
             mode: .word,
@@ -43,7 +44,7 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertTrue(note.front.contains("[Legal]"))
     }
 
-    func testBuildNoteWithSource() {
+    func testBuildNoteWithSource() async {
         let note = AnkiExporter.buildNote(
             selectedText: "test",
             mode: .word,
@@ -58,7 +59,7 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertEqual(note.source, "book.pdf (p. 42)")
     }
 
-    func testBuildNoteContextSentence() {
+    func testBuildNoteContextSentence() async {
         let note = AnkiExporter.buildNote(
             selectedText: "ephemeral",
             mode: .word,
@@ -75,7 +76,7 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertTrue(note.back.contains("cherry blossoms"))
     }
 
-    func testBuildNoteTagNormalization() {
+    func testBuildNoteTagNormalization() async {
         let note = AnkiExporter.buildNote(
             selectedText: "x",
             mode: .word,
@@ -92,7 +93,7 @@ final class AnkiExporterTests: XCTestCase {
 
     // MARK: - TSV Serialization
 
-    func testTsvRowFieldCount() {
+    func testTsvRowFieldCount() async {
         let note = AnkiNoteDraft(front: "a", back: "b", tags: "t", source: "s")
         let row = AnkiExporter.tsvRow(from: note)
         let fields = row.components(separatedBy: "\t")
@@ -101,7 +102,7 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertEqual(fields[1], "b")
     }
 
-    func testTsvRowEscapesTabsAndNewlines() {
+    func testTsvRowEscapesTabsAndNewlines() async {
         let note = AnkiNoteDraft(front: "col1\tcol2", back: "line1\nline2", tags: "", source: "")
         let row = AnkiExporter.tsvRow(from: note)
         // Tabs in content should be replaced with spaces
@@ -110,7 +111,7 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertTrue(row.contains("<br>"))
     }
 
-    func testTsvDocumentSingleNote() {
+    func testTsvDocumentSingleNote() async {
         let note = AnkiNoteDraft(front: "word", back: "def", tags: "tag", source: "src")
         let doc = AnkiExporter.tsvDocument(from: note)
         XCTAssertTrue(doc.hasPrefix("#separator:tab"))
@@ -118,7 +119,7 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertTrue(doc.contains("word"))
     }
 
-    func testTsvDocumentMultipleNotes() {
+    func testTsvDocumentMultipleNotes() async {
         let notes = [
             AnkiNoteDraft(front: "a", back: "1", tags: "", source: ""),
             AnkiNoteDraft(front: "b", back: "2", tags: "", source: "")
@@ -128,14 +129,14 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertTrue(doc.contains("b\t2"))
     }
 
-    func testTsvDocumentEmptyNotes() {
+    func testTsvDocumentEmptyNotes() async {
         let doc = AnkiExporter.tsvDocument(from: [])
         XCTAssertEqual(doc, "")
     }
 
     // MARK: - CSV Format
 
-    func testCSVDocumentHasHeaderAndQuotesSpecialFields() {
+    func testCSVDocumentHasHeaderAndQuotesSpecialFields() async {
         let notes = [
             AnkiNoteDraft(front: "run, ran", back: "<b>Context:</b> He said \"go\"<br>line two", tags: "verbs", source: "Book (p. 3)"),
         ]
@@ -152,13 +153,13 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertFalse(doc.contains("<br>"))
     }
 
-    func testCSVDocumentEmptyNotes() {
+    func testCSVDocumentEmptyNotes() async {
         XCTAssertEqual(AnkiExporter.csvDocument(from: []), "")
     }
 
     // MARK: - Quizlet Format
 
-    func testQuizletDocumentIsTwoColumnsWithoutHeaderOrMarkup() {
+    func testQuizletDocumentIsTwoColumnsWithoutHeaderOrMarkup() async {
         let notes = [
             AnkiNoteDraft(front: "ephemeral", back: "<b>[Definition (EN)]</b><br>short-lived<br><br>more", tags: "ignored", source: "ignored"),
             AnkiNoteDraft(front: "lucid", back: "clear", tags: "", source: ""),
@@ -177,12 +178,12 @@ final class AnkiExporterTests: XCTestCase {
         XCTAssertFalse(doc.contains("ignored"), "tags/source columns must not leak in")
     }
 
-    func testPlainTextConversionStripsTagsAndKeepsLineBreaks() {
+    func testPlainTextConversionStripsTagsAndKeepsLineBreaks() async {
         let plain = AnkiExporter.plainText(fromAnkiHTML: "<b>Context:</b> hello<br><i>world</i>")
         XCTAssertEqual(plain, "Context: hello\nworld")
     }
 
-    func testDocumentDispatchMatchesFormatSpecificBuilders() {
+    func testDocumentDispatchMatchesFormatSpecificBuilders() async {
         let notes = [AnkiNoteDraft(front: "a", back: "b", tags: "t", source: "s")]
         XCTAssertEqual(AnkiExporter.document(from: notes, format: .ankiTSV), AnkiExporter.tsvDocument(from: notes))
         XCTAssertEqual(AnkiExporter.document(from: notes, format: .csv), AnkiExporter.csvDocument(from: notes))

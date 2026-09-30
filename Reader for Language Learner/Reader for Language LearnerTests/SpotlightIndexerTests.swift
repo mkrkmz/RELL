@@ -11,9 +11,10 @@
 import XCTest
 @testable import Reader_for_Language_Learner
 
+@MainActor
 final class SpotlightIndexerTests: XCTestCase {
 
-    func testWordIdentifierRoundTrip() throws {
+    func testWordIdentifierRoundTrip() async throws {
         let word = SavedWord(
             term: "ephemeral", sentence: "", pdfFilename: nil, pageNumber: nil,
             mode: "word", domain: "general", llmOutputs: [:]
@@ -28,7 +29,7 @@ final class SpotlightIndexerTests: XCTestCase {
         XCTAssertEqual(id, word.id)
     }
 
-    func testDocumentIdentifierRoundTrip() throws {
+    func testDocumentIdentifierRoundTrip() async throws {
         let path = "/Users/test/Documents/Frankenstein.epub"
         let identifier = SpotlightIndexer.identifier(forDocumentPath: path)
         XCTAssertEqual(identifier, "doc-\(path)")
@@ -40,19 +41,19 @@ final class SpotlightIndexerTests: XCTestCase {
         XCTAssertEqual(url.path, path)
     }
 
-    func testTargetFromUnknownPrefixReturnsNil() {
+    func testTargetFromUnknownPrefixReturnsNil() async {
         XCTAssertNil(SpotlightIndexer.target(from: "something-else-123"))
         XCTAssertNil(SpotlightIndexer.target(from: ""))
     }
 
-    func testTargetFromMalformedWordIdentifierReturnsNil() {
+    func testTargetFromMalformedWordIdentifierReturnsNil() async {
         // "word-" followed by a non-UUID string must fail cleanly rather
         // than crash — this is exactly what a corrupted or foreign
         // NSUserActivity payload would look like.
         XCTAssertNil(SpotlightIndexer.target(from: "word-not-a-uuid"))
     }
 
-    func testTargetFromEmptyDocumentPathReturnsNil() {
+    func testTargetFromEmptyDocumentPathReturnsNil() async {
         XCTAssertNil(SpotlightIndexer.target(from: "doc-"))
     }
 }
