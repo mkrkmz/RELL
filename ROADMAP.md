@@ -147,29 +147,56 @@ sorusunun cevabi tek bakista.
 **Spike:** "onceki bolumde" ozeti ve bolum hazirligi siralamasi icin
 cihaz-ici model vs saglayici; spoiler sizintisi (ozet, okunmamis sayfalari
 gormemeli — yalniz okunan metin gonderilir) ve CEFR seviyesine uyum.
+**Sonuc:** bir bolum ~28k karakter (~7k token) — cihaz-ici modelin 4096
+token'lik penceresine sigmaz; yer iminden onceki son ~6000 karakter yeterli.
+Cihaz-ici ~3 sn, dogru, sade B1; ama Suc ve Ceza'da 3 denemeden 1'i guardrail
+reddi → `AppleOnDevice.chatWithFallback` (cihaz-ici, olmazsa saglayici).
+LM Studio (gemma-4-e4b) 3–11 sn; dusunen model 300 token'da bos cevap
+dondu → 1200 token payi. Hazirlik: uygulama yalniz kayitli kelimeleri
+biliyor; siklik siralamasi kolay kelime veriyor (understand, moment) →
+adaylar nadir icerik lemmalari (≥6 harf, isim degil), zoru model seciyor.
+Kullanici karari: seviye ayari, varsayilan B1.
 
-- [ ] **Bolum Hazirligi ("Isinma")** — bolume girerken, bolumde en cok gecen
-      ve bilmedigin 5–8 kelime kucuk bir kartta: anlam, bolumdeki ilk cumlesi,
-      "simdi ogren / atla / zaten biliyorum". Siralama = frekans × bilinmezlik,
-      `LexicalProfileService` / `BookCoverageService` uzerinden; anlamlar
-      anlik katmandan. Ayarlardan kapatilabilir
-- [ ] **"Onceki bolumde…"** — kitaba ≥ 3 gun sonra donunce, son okunan
-      sayfalardan spoiler'siz 3 cumlelik ozet, hedef dilde, kullanicinin
-      seviyesinde. Tetikleyici `ReadingSessionStore`. Tek tikla kapatilir
-- [ ] **"Bugun" ekrani (UI)** — mevcut dashboard (`EmptyStateView` icindeki
-      `DashboardHeader` / `DashboardWordCard` / `DashboardActivityCard`) tek
-      dikey akisa: *Kaldigin yer* (buyuk kapak + ilerleme + devam et),
-      *Bugunun tekrarlari* (sayi + tek buton), *Bolum hazirligi*, seri
-- [ ] Should: **Karakter & Yer Rehberi ("Kim kimdi?")** — `NLTagger(.nameType)`
-      ile kisi/yer adlari; kenar panelinde liste; tiklayinca LLM *yalniz su
-      ana kadar okunan kisma dayanarak* kisa tanim verir
-- [ ] Could: **Kenar Notlari (marginalia)** — Inspector acmadan, sayfa
-      kenarinda o sayfadaki kayitli kelimelerin kisa karsiliklari; Zen mod
-      ile uyumlu, acilir/kapanir
-- [ ] Could: **Anlama Kontrolu** — bolum sonunda 3 soru, hedef dilde cevap,
-      icerik + dil geri bildirimi; FSRS'e yazmaz
-- [ ] Testler: hazirlik siralamasi (bilinen/kayitli kelime disarida),
-      ozet tetikleyici esigi, ozet isteginin yalniz okunan araligi tasidigi
+- [x] **Seviyen** — Ayarlar ▸ Genel (`StorageKey.learnerLevel`, varsayilan
+      B1); ozet ve hazirlik bu seviyeye gore yazilir (S3 "Seviyeye Indir"
+      de kullanacak)
+- [x] **"Onceki bolumde…"** — kitap ≥ 3 gun sonra acilinca sayfanin
+      ustunde yuzen kart (`ReadingRecap` saf + `ReadingLoopModel`).
+      Metin: PDF'te yer imine kadar son 4 sayfa, EPUB'da bolumun kaydedilen
+      konuma kadarki kismi (+ bolum basindaysa onceki bolum), son 6000
+      karakter — yer iminden sonrasi hic gonderilmez (testli, mutation-check).
+      Onsoz satirlari ("I am a foundation model…") temizlenir; hata sessiz.
+      Ayarlardan kapatilir. **Canli turda bulunan cokme:** kart okuyucunun
+      ustundeki VStack'teydi; buyuyunce WKWebView'i yeniden boyutlandirip
+      AppKit yerlesim dongusune soktu ("more Update Constraints passes than
+      views" → SIGTRAP). Kart artik okuyucunun uzerinde overlay — okuyucu
+      cercevesi hic degismiyor; tekrar denemede cokme yok
+- [x] **Bolum Hazirligi** — EPUB bolumu acilinca baglam seridinde "N
+      kelimeyle isin" cipi; acilir listede tanim (hover sozlugunun cevap
+      dilinde), bolumdeki ilk cumle, Kaydet / Tumunu Kaydet. Kitap+bolum
+      basina bellekte onbellek; basarisiz istek onbellege girmez.
+      **Sapma:** yalniz EPUB — PDF'te bolum siniri yok (icindekiler
+      uzerinden ayrica bakilabilir). Roadmap "tamamen offline" diyordu;
+      siklik verisi olmadan zor kelime secilemiyor, secim modelde
+- [x] **"Bugun" ekrani (UI)** — hedefli degisiklik: dashboard zaten kaldigin
+      yer / tekrar / hedef / seri kartlarini tasiyordu, ayri plan karti ayni
+      sayilari ikinci kez gosterirdi. Baslik "Bugun", sira gunun isine gore
+      (kaldigin yer → tekrarlar → okuma hedefi), kaldigin yer kartinda "N
+      gundur acmadin — acinca kisa ozet goreceksin"
+- [ ] Should: **Karakter & Yer Rehberi** — S3'e devredildi
+- [ ] Could: **Kenar Notlari**, **Anlama Kontrolu** — alinmadi
+- [x] Gizlilik ozeti: "Ozetler ve bolum hazirligi" satiri; alt yazi ozetin
+      son bir iki sayfayi gonderdigini soyluyor. 19 yeni TR metin
+- [x] Testler (12 yeni, `ReadingLoopTests`): ozet esigi ve ilerleme sarti,
+      yer imi siniri (spoiler), kelimeden baslayan kuyruk, onsoz temizligi,
+      aday secimi (isim/kisa/kayitli disarida, alfabetik), siki parse,
+      cumle esleme. Mutation-check: spoiler siniri, kayitli kelime disleme.
+      S1'den kalan zamana bagli bir test (iki yazilis mikro saniye arayla)
+      aralikli dusuyordu — tarihler sabitlendi
+- [x] Dogrulama: tam paket **570 test, 0 hata, 1 atlanan** (iki kez); 0
+      uyari. Canli: Bugun ekrani, Why We Sleep EPUB'da ozet karti (dogru B1
+      ozet) + "5 kelime" cipi. **Dogrulanmadi:** hazirlik listesinin
+      gorunumu — pencere baska bir Space'teydi, popover acilmadi
 
 ## Sprint 3 — v1.44.0 "Metni sana uydur" (Must)
 
