@@ -32,27 +32,36 @@ struct GrammarLensView: View {
 
     private var tokens: [GrammarLens.Token] { GrammarLens.tokens(in: sentence, language: language) }
 
+    /// Each word in its part-of-speech colour with a small tag right after
+    /// it — the tag carries the meaning for readers who can't tell the
+    /// colours apart.
+    private var taggedSentence: AttributedString {
+        var result = AttributedString()
+        for (index, token) in tokens.enumerated() {
+            if index > 0 { result += AttributedString("  ") }
+            var word = AttributedString(token.text)
+            word.foregroundColor = token.kind.color
+            word.font = DS.Typography.callout
+            var tag = AttributedString("\u{2009}" + token.kind.shortLabel)
+            tag.foregroundColor = DS.Color.textTertiary
+            tag.font = DS.Typography.micro(8, weight: .semibold)
+            result += word + tag
+        }
+        return result
+    }
+
     var body: some View {
         DisclosureGroup(isExpanded: $expanded) {
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                FlowLayout(spacing: DS.Spacing.xs) {
-                    ForEach(Array(tokens.enumerated()), id: \.offset) { _, token in
-                        VStack(spacing: 1) {
-                            Text(token.text)
-                                .font(DS.Typography.callout)
-                                .foregroundStyle(token.kind.color)
-                            Text(token.kind.shortLabel)
-                                .font(DS.Typography.micro(8, weight: .semibold))
-                                .foregroundStyle(DS.Color.textTertiary)
-                        }
-                        .padding(.horizontal, 3)
-                        .padding(.vertical, 2)
-                        .background(token.kind.color.opacity(0.08), in: RoundedRectangle(cornerRadius: 4))
-                        .help(token.kind.localizedTitle)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(token.text), \(token.kind.localizedTitle)")
-                    }
-                }
+                // One wrapping Text, not a custom layout: in the inspector
+                // (an AppKit-hosted column) a flow layout whose size depended
+                // on the proposed width fed an update-constraints loop that
+                // crashed the app (seen live in v13 S5).
+                Text(taggedSentence)
+                    .lineSpacing(4)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel(tokens.map { "\($0.text), \($0.kind.localizedTitle)" }.joined(separator: "; "))
 
                 if let explanation {
                     Text(explanation)
