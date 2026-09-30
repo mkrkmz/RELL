@@ -1,246 +1,222 @@
-# RELL Roadmap v12 — Once Guven, Sonra Sifir Kurulum (3 sprint, v1.39 → v1.41)
+# RELL Roadmap v13 — Okumak, Sadece Bakmak Degil (S0 + 4 sprint, v1.42 → v1.45)
 
-Olusturulma: 2026-09-24 (v1.38.0 sonrasi, ~4 haftalik aradan sonra sifirdan
-kod incelemesiyle). Kullanici karari (2026-09-24): sira onaylandi, kapsama
-metrigi oldugu gibi kalir, `.apkg` export Won't.
+Olusturulma: 2026-09-30 (v1.41.0 sonrasi). Kullanici istegi: "tamamen taze
+fikirler, hem ozellik hem UI". Oneri onaylandi; sprint ici kapsam her sprint
+basinda yeniden teyit edilir.
 
-Inceleme zemini (Xcode 27.0, macOS 27): temiz Debug build basarili, **30
-derleyici uyarisi** (hepsi Swift 6 esanlilik); tam birim paketi **476 test,
-0 hata, 1 atlanan**; uygulama kod kapsamasi **%20.9** (FSRS %100,
-ResultParser %91, SavedWordsStore %71; InspectorView/PDFKitView/
-AnthropicClient %0, LLMResilience %3); SwiftLint 118 kucuk uyari. Asagidaki
-iki kritik hata gecici testle **tekrar uretildi**: son bayti kesilen
-`saved_words.json` → 0 kelime yuklendi → tek kayittan sonra diskte yalniz
-yeni kelime kaldi; yarida kopan stream → `"Hello worldHello world"`.
+v12 roadmap kapandi: S1 **v1.39.0 "Guven"** (bozuk dosya karantinasi, gunluk
+yedekler + disa/ice aktarma, nesil sirali `DebouncedFileWriter`, stream'de
+ilk tokendan sonra retry yok, hatali modul cache'lenmez, Anthropic istek
+sekli, EPUB JS kapali + `EPUBLinkPolicy`), S2 **v1.40.0 "Sifir kurulum"**
+(`AppleOnDevice.route` katmani, Translation framework cumle seridi, gizlilik
+ozeti) ve S3 **v1.41.0 "Pencere modeli"** (`ReaderWindowModel`, ContentView
+1504 → 669, Inspector yaris duzeltmesi, `StorageKey`, uyari 29 → 0). Uc surum
+tag'lendi, CI yesil, DMG'ler uretildi; 533 test. **Acik kalan:** uc sprintin
+canli turu kullanicida, Swift 6 dil modu bayragi — ikisi de S0'a devredildi.
 
-v11 roadmap kapandi: S1 (Turkce arayuz, 281 metin + `Text(String)` denetimi,
-`QuizView` 1204→918) ve S2 (eslestirme oyunu, zamanlamaya yazmaz) birlikte
-**v1.38.0** olarak cikti — S2'nin plandaki v1.39 etiketi kullanilmadi. S3
-(export / `.apkg`) hic baslamadi; ucuncu devirde kullanici karariyla Won't. v1.38.0'in ilk release run'i test hatasiyla dustu, test
-duzeltmesinden sonra tag yeniden itildi (v1.36'dan sonra ikinci kez).
+Tani: 1.5 → 1.41 arasindaki neredeyse her ozellik **tek bir kelimeye tepki**
+veriyor (hover, Inspector modulleri, kaydet, tekrar et). Uygulamada eksik
+olan uc sey:
 
-Odak: inceleme, gorunur bir ozellikten once **sessiz veri kaybi ve yanlis
-cevap** uretebilen uc hata buldu (bozuk JSON'da kelime hazinesinin silinmesi,
-kapanista eski verinin yeniyi ezmesi, stream yeniden denemesinde cevabin iki
-kez yazilip diske cache'lenmesi) ve kitabin kendi JavaScript'inin
-kullanicinin tiklamasi olmadan uygulama/dosya acabildigi bir EPUB yuzeyi.
-Bunlar once. Sonra en buyuk urun firsati: LM Studio kurmadan calisan bir
-uygulama (Apple'in cihaz-ici modeli + Translation framework'u).
+1. **Okumadan once ve sonra** — bolume hazirlik yok, bolum sonunda anlama /
+   uretim yok.
+2. **Kelimenin hayati** — kaydedilen kelime tekrar ekrani disinda bir daha
+   gorunmuyor; kitaplarda kac kez karsilasildigi, hangi cumlelerde gectigi
+   kayboluyor.
+3. **Uretim** — uygulama hic yazdirmiyor, konusturmuyor.
 
 ## Teknik cerceve (tum sprintler icin gecerli)
 
-- **Sifir dis bagimlilik korunur.** Foundation Models, Translation, NaturalLanguage, CoreServices — hepsi sistem framework'u.
-- **Deployment target macOS 15 kalir.** macOS 26+ API'leri (`FoundationModels`)
-  `#available` / `@available` arkasinda; 15 yolu derlenir ve calisir.
-- Her release oncesi **TAM birim test paketi** CI ile birebir komutla kosulur.
-  Yeni testler **async metod**; senkron `@MainActor` bloklayan test CI
-  runner'ini kilitler. Makineye bagli test dusmez, `XCTSkip` ile atlanir
-  (NL lemmatizer, macOS sozlukleri, Apple Intelligence modeli, Translation
-  dil paketleri temiz CI runner'inda yok).
-- **Persistence kurali (yeni):** hicbir store, okuyamadigi bir dosyanin
-  ustune yazmaz. Bozuk dosya karantinaya alinir, kullaniciya soylenir.
-- **LLM kurali (yeni):** kismi/hatali bir cevap asla cache'e (bellek veya
-  disk) girmez; stream, ilk token geldikten sonra yeniden denenmez.
-- **Anlik cevap katmani model cagrisini tamamen bastirir.** Oraya eklenen her
-  kaynak (Translation framework dahil) "Yanit Dili" ayarina uymak zorunda.
-- Yeni kullanici metinleri `Localizable.xcstrings`'e TR cevirisiyle.
-  **`Text(String)` katalogu ATLAR** — enum'larda `localizedTitle`.
-- `ResultParser`'a gorunur prompt etiketleri, modul raw value'lari ve
-  `@AppStorage` anahtarini besleyen enum raw value'lari **asla** yeniden
-  adlandirilmaz. Yeni `Codable` alanlar `decodeIfPresent` + default.
-- DS token'lari; ham `.font(.system(size:))` yok, istisna `// DS-exempt:`.
-- `Slider(step:)` buyuk araliklarda kullanilmaz; tam ekranda ust pikseller
-  menu cubugunundur (v1.37 dersleri).
-- Yeni dosyalar hedefe kendiliginden girer — `project.pbxproj` duzenlenmez.
-- **Bundle id ve App Sandbox'a dokunulmaz.** Ikisi de degisirse Application
-  Support yolu / UserDefaults / Keychain yer degistirir → veri tasima
-  gerekir. Apple Developer uyeligiyle (notarization) birlikte, tek seferde.
+v12 cercevesi **aynen** devralinir (sifir dis bagimlilik; deployment target
+macOS 15, 26+ API'leri `#available` arkasinda; tam test paketi CI komutuyla;
+yeni testler async; makineye bagli test `XCTSkip`; bozuk dosyanin ustune
+yazilmaz; kismi LLM cevabi cache'e girmez; anlik katman "Yanit Dili"ne uyar;
+`Text(String)` katalogu atlar; parser etiketleri / raw value'lar / StorageKey
+degerleri yeniden adlandirilmaz; yeni `Codable` alan `decodeIfPresent` +
+default; DS token'lari; `project.pbxproj` elle duzenlenmez; bundle id ve
+sandbox'a dokunulmaz). Eklenenler:
 
-**Bilinclice v12 disinda:** `.apkg` export (SQLite wrapper, ZIP writer,
-zamanlama tohumu — uc roadmap boyunca devredildi, kullanici karariyla Won't;
-TSV/CSV/Quizlet export'u yeterli), kapsama metriginin yeniden
-kalibrasyonu (kullanici karari: oldugu gibi kalsin), sayfalanmis EPUB, AnkiConnect, embeddings/RAG,
-kisiye ozel FSRS agirlik optimizasyonu, PDF koyu-tema figur korumasi,
-iOS/iPadOS. Apple-Developer-kilitli kalemler (notarization, widget, App Group,
-CloudKit, sandbox acma, bundle id duzeltme) uyelik gelene kadar Won't.
+- **FSRS'e yalniz hatirlama yazar.** Karsilasma, anlama kontrolu, hikaye,
+  eslestirme, yeniden anlatma → zamanlamaya dokunmaz. Cloze ve bildirimden
+  verilen cevap yazar (hatirlama sayilir).
+- **Yazma gurultusu kurali:** okuma sirasinda uretilen veri (karsilasmalar)
+  ayri dosyaya (`encounters.json`), `DebouncedFileWriter` ile, kelime basina
+  ust sinirla (son 50) yazilir; `saved_words.json` sismez. Her yeni dosya
+  `PersistenceBackup` kapsamina ve karantina yoluna eklenir.
+- **Gizlilik tablosu:** her yeni LLM ozelligi `PrivacySummarySection`'a satir
+  olarak girer; web ice aktarma ve mikrofon acikca listelenir.
+- **Cihaz-ici yonlendirme:** ozet / soru / yeniden yazma / hikaye icin spike
+  ile guvenilirlik olculur; guvenilmezse `AppleOnDevice.route` yapilandirilmis
+  saglayiciya duser (v1.40 deseni, modul bazinda karar).
+- **Her sprint bir spike ile baslar** (asagida); spike kapisi gecilmezse kalem
+  bir sonraki sprinte veya Won't'a gider — sessizce kucultulmez.
+- **Canli tur tek kopyayla:** kullanicinin Xcode'dan acik kopyasi varken ikinci
+  kopya calistirilmaz (ayni bundle id, ayni veri).
+
+**Bilincli olarak v13 disinda:** `.apkg` export (Won't), sayfali EPUB,
+kapsama metriginin yeniden kalibrasyonu, embeddings/RAG, kisiye ozel FSRS
+agirlik optimizasyonu, AnkiConnect, iOS/iPadOS, PDF'te ruby gloss.
+Apple-Developer-kilitli kalemler (notarization, widget, App Group, CloudKit,
+sandbox/bundle id) uyelik gelene kadar Won't.
 
 ---
 
-## Sprint 1 — v1.39.0 "Guven" (Must)
+## Sprint 0 — v1.41.1 "Borc" (Must, kisa)
 
-Amac: uygulama kullanicinin verisini hicbir kosulda sessizce kaybetmesin,
-yanlis cevabi kalici hale getirmesin, ve acilan bir kitap uygulamayi
-kullanicinin adina disari yonlendiremesin.
+- [ ] **Canli tur** (v1.39–v1.41'den kalan): Ayarlar ▸ Genel ▸ Yedekler; JS
+      kapali EPUB'da secim/hover/vurgu/karaoke; bir Claude modeliyle Inspector;
+      Ayarlar ▸ AI anahtar + ozet; tanim Apple'dan / etimoloji saglayicidan;
+      cumle seridinde dil paketi istemi; odak/zen giris-cikis; PDF'i yeniden
+      acinca son sayfa; calisan modulu yeniden baslatma
+- [ ] **Swift 6 dil modu** (`SWIFT_VERSION = 6`): once ObjC tamamlama
+      bloklarini (`CSSearchableIndex`, `UNUserNotificationCenter`,
+      `NSWorkspace`) canli turda dogrula; cokme olursa ilgili closure'lari
+      `@Sendable`/`nonisolated` yap
+- [ ] Hijyen devri: `open -g` ile pencere acilmamasi; test hedeflerinin
+      `MACOSX_DEPLOYMENT_TARGET = 26.2` farki
 
-**Veri**
-- [x] **Bozuk dosya karantinasi**: `RELLJSONStore.load` decode hatasinda
-      `defaultValue` donuyor (`Models/AppLogger.swift:41`) ve ilk kayit
-      bos diziyi dosyanin ustune yaziyor → tum kelime hazinesi gider.
-      Yapildi: dosya `<ad>.corrupt-<zaman>.json` olarak **tasinir** (rename,
-      bayt'lar aynen), store bos baslar, ilk pencere kalici bir alert ile
-      soyler (Finder'da goster / yedekten geri yukle). "Salt-okunur store"
-      gerekmedi: dosya kenardayken yeni kayit onu ezemez
-- [x] **Donen yedekler**: `saved_words.json` ve not/vurgu store'lari icin
-      gunluk kopya, son 7 gun (`Backups/`). Ayarlar'da "Yedegi geri yukle"
-- [x] **Kapanista yazma sirasi**: `DebouncedFileWriter.flush()` ana thread'de
-      dogrudan yazarken `ioQueue`'da daha eski bir snapshot ucusta olabilir
-      ve sonra bitip yeniyi ezer. Duzeltme: nesil sayaci (kilitli), eski
-      nesil yazimi atlanir. `ioQueue.sync` KULLANILMAZ (CI kilitlenme dersi)
-- [x] **Tam yedek disa/ice aktarma**: tum store'lari bir klasore
-      (`RELL Backup <tarih>/`) disa aktar, ayni klasorden geri yukle —
-      makine degisimi ve ileride sandbox tasimasi icin de on kosul
+## Sprint 1 — v1.42.0 "Kelimenin hayati" (Must)
 
-**LLM dogrulugu**
-- [x] **Stream yeniden denemesi**: `ResilientLLMProvider` stream'i bastan
-      tekrarliyor, `InspectorView.swift:452` `+= token` ile ekliyor → yarida
-      kopan baglantida cevap iki kez yaziliyor. Kural: ilk token geldiyse
-      retry yok, hata gosterilir
-- [x] **Hatali modul cache'lenmez**: `snapshotToCache` hatasi olan modulun
-      kismi ciktisini diske yaziyor; sonraki acilista "cache hit" olarak
-      yarim cevap geliyor
-- [~] **4xx yeniden denenmez** (408/409/429 haric) — `Retry-After` okunmadi, 429 ustel beklemeyle yeniden denenir; simdi
-      yanlis model adi 3 deneme yapip circuit breaker'i aciyor
-- [x] **URLSession tekrar kullanimi**: `makeProvider()` her istekte yeni
-      `URLSession` uretiyor ve hic `invalidate` edilmiyor — timeout basina
-      paylasilan oturum
-- [x] **Anthropic istek sekli (S1 sirasinda bulundu)**: her istek hem
-      `temperature` hem `top_p` gonderiyordu — Claude 4.x ikisini birlikte,
-      Opus 4.7+/Sonnet 5/Opus 5 ise hicbirini kabul etmez (HTTP 400). Yani
-      Anthropic saglayicisi eski varsayilan `claude-sonnet-4-20250514`
-      (deprecated) disinda hicbir guncel modelde calismiyordu. `top_p` hic
-      gonderilmez, `temperature` yalniz eski modellere; dusunen modellere
-      `effort: low` + `max_tokens` payi; varsayilan model `claude-opus-5`
-- [x] Testler (29 yeni: `PersistenceSafetyTests`, `LLMTransportTests`,
-      `EPUBSecurityTests`; yazma sirasi ve JS kapatma testleri mutant ile
-      dogrulandi — duzeltme geri alininca dusuyorlar). `URLProtocol` stub ile SSE parse (`data:` bosluksuz varyant
-      dahil), kopan stream, 401/404/429 davranisi, `AnthropicClient` (su an
-      %0), `ResilientLLMProvider` (%3). Inceleme sirasindaki iki probe testi
-      (bozuk dosya, cift stream) regresyon testi olarak kalici hale gelir
+Amac: kaydedilen kelime, okudugun her yerde izini birakan bir nesneye donussun.
+Bu sprint S2–S4'un veri temelidir.
 
-**EPUB guvenligi**
-- [x] Kitabin kendi JS'i kapali: `defaultWebpagePreferences
-      .allowsContentJavaScript = false`; uygulama script'leri ve mesaj
-      handler'lari ayri `WKContentWorld`'de (kitap JS'i `rellSelection`
-      mesajini taklit edemez)
-- [x] Dis link yalniz `navigationType == .linkActivated` ve `http/https/
-      mailto` ise `NSWorkspace.open` — simdi herhangi bir sema (`file://`
-      dahil) tiklama olmadan aciliyor (`EPUBViewManager.swift:889`)
-- [x] `scroll(toFragment:)` JSON-encode (su an yalniz `'` kacisli)
-- [x] ZIP: bildirilen `uncompressedSize` icin ust sinir (orn. 256 MB/entry)
-      — `Data(count:)` 4 GB'a kadar onceden ayiriyor
+**Spike:** 277 sayfalik PDF ve uzun bir EPUB'da, sayfa/bolum basina eslesme +
+kayit maliyeti (ms) ve bir okuma oturumunun urettigi yazma sayisi. Kapi: sayfa
+cevirme hissedilir sekilde yavaslamaz (< 16 ms ana thread).
 
-**Kucuk borclar**
-- [x] Commit edilmemis katalog degisikligi: 14 metin TR'siz ("Due now",
-      "Words saved", "Lifetime accuracy"…) — v1.38 istatistik kutulari
-      kataloga girince Xcode topladi, ceviri yapilmadi
-- [x] CI: `test.yml` yalniz PR'da kosuyor, is akisi dogrudan `main` →
-      testler ilk kez tag'de kosuyor (v1.36 ve v1.38 release'leri boyle
-      dustu). `push: main`'e de ekle
-- [ ] **Canli tur (kullaniciya kaldi, ekran kilitliydi)**: Ayarlar ▸ Genel ▸
-      Yedekler bolumu; bir EPUB acip secim/hover/vurgu/karaoke'nin JS
-      kapaliyken calistigi; bir Claude modeliyle Inspector istegi
-- [x] Dogrulama: tam birim paketi CI komutuyla **505 test, 0 hata, 1
-      atlanan**; derleyici uyarisi 30 → 29 (yeni kodda uyari yok);
-      `-exportLocalizations` ile cevirisiz kalan yalniz format dizeleri
+- [ ] **Karsilasma Gunlugu** — kayitli bir kelime okunan sayfada gectiginde
+      (kitap, sayfa/bolum, cumle, tarih) sessizce kaydedilir. Kaynak: zaten
+      her sayfada calisan `TermMatcher` / `LemmaMatcher` (cekimli bicimler
+      dahil). Ayni sayfa ayni gun bir kez sayilir. FSRS'e yazmaz
+- [ ] **Kelime Sayfasi (UI)** — `SavedWordDetailSheet` sheet olmaktan cikip
+      tam bir sayfa: ustte buyuk kelime + IPA + ses + CEFR rozeti; altinda
+      karsilasma zaman cizelgesi ("3 kitapta 7 kez"), cumleler galerisi
+      (tiklayinca kitapta o yere gider), kelime ailesi, FSRS "sonraki tekrar /
+      hafiza gucu" gostergesi
+- [ ] **Cloze modu** (`QuizMode.cloze`) — kart, kelimenin *senin okudugun*
+      cumlesini bosluklu gosterir; sonraki tekrarlarda Karsilasma
+      Gunlugu'nden *farkli* bir cumle secilir (baglam cesitliligi). Yazilan
+      cevap otomatik notlanir (`isObjectivelyGraded`), FSRS'e yazar.
+      `QuizMode` raw value'lari degismez, yeni case eklenir
+- [ ] Should: **Cumle madenciligi** — secim cubugunda "Cumleyi kaydet": cumle
+      karti (`SavedWord.kind`, default `.word`, `decodeIfPresent`). Tekrarda
+      once TTS ile dinle, sonra anlamini hatirla
+- [ ] Testler: karsilasma tekillestirme ve ust sinir, bozuk `encounters.json`
+      karantinasi, eski `saved_words.json`'un `kind` olmadan okunmasi, cloze
+      cumle secimi (tekrar etmez), cloze'un FSRS'e yazdigi / karsilasmanin
+      yazmadigi (mutation-check)
 
-## Sprint 2 — v1.40.0 "Sifir kurulum" (Must, once 1 gunluk spike)
+## Sprint 2 — v1.43.0 "Okuma dongusu" (Must)
 
-Amac: ilk acilista LM Studio indirmeden, API anahtari girmeden calisan bir
-uygulama. Bugun onboarding'in ilk adimi bir sunucu kurmak. (Not: gelistiricinin
-kendi kurulumu Ollama uzerinden bulut model — `gemma4:31b-cloud`; yani hover,
-cumle cevirisi ve CEFR tahmini zaten her secimde agdan gidiyor. Translation
-kalemi bu kurulumda da gecikmeyi ve istek sayisini dusurur.)
+Amac: okumanin oncesi ve sonrasi. Uygulamayi acinca "bugun ne yapacagim"
+sorusunun cevabi tek bakista.
 
-- [x] **Spike (kapi)** — 2026-09-24, macOS 27, gercek prompt'lar, 5 dil
-      cifti (TR→EN, EN→DE, TR→DE, EN→JA, EN→ES) x 10 modul + cumle cevirisi.
-      **Kapi modul bazinda gecildi.**
-      - Gecikme: medyan 0.9 sn, p90 2.8 sn, en fazla 3.0 sn
-      - Diller: 12'nin 10'u; **Arapca ve Rusca desteklenmiyor**
-      - Guclu: tanim, anlam (TR), ornekler, es anlamlilar, kullanim notlari
-        (parser etiketleri FREQ:/REG: korunuyor), cumle cevirisi
-      - Sinirda: esdizimler (koseli parantez sizintisi, "English only"
-        ifadesi), kelime ailesi (uydurma "resiliencing")
-      - Guvenilmez: **telaffuz** (DE/JA/ES IPA'si tamamen yanlis),
-        **etimoloji** (uydurma koken: "Verstandnis Latince"),
-        **hatirlatici** (anlamsiz)
-- [x] **Apple cihaz-ici katman** (macOS 26+): ayri bir `LLMProviderType`
-      yerine yapilandirilmis saglayicinin ONUNDE bir katman
-      (`AppleOnDevice.route`, saf fonksiyon). Kullanici karari 1a: guvenilir
-      modul Apple'da, zayif modul yapilandirilmis saglayiciya. Ayarlar'da
-      anahtar (varsayilan acik) + kullanilamama nedeni; onboarding "hazir"
-      der. Apple istekleri retry/circuit breaker/yerel kuyruktan gecmez
-- [x] Modul bazinda yedek: telaffuz, etimoloji, hatirlatici, esdizim,
-      kelime ailesi → yapilandirilmis saglayici; o da ulasilamazsa hata
-      mesaji nedenini soyler (ikinci bir saglayici ayari eklenmedi — mevcut
-      saglayici yedek rolunde)
-- [x] **Cumle cevirisi Translation framework'u ile** (macOS 15+, kullanici
-      karari 2a: varsayilan; Ayarlar ▸ Genel'de secilebilir): cevrimdisi,
-      ucretsiz, hizli; dil paketi yoksa sistem indirme istemi. LLM yolu
-      yedek olarak kalir. Bugun her secim, bulut saglayicida ucretli bir
-      istek (`sentenceTranslationEnabled` varsayilan `true`)
-- [x] Gizlilik ozeti (Ayarlar ▸ AI, canli yonlendirmeden hesaplanir): hangi ozellik hangi saglayiciya ne gonderiyor
-      (hover, ceviri, CEFR tahmini, sayfa analizi) — tek bakista
-- [x] Testler (10): yonlendirme kurallari, her modulun bilincli
-      siniflandirilmasi, canli streaming delta'lari ve dil destegi
-      (modelsiz makinede `XCTSkip`), Translation dil kodlari, cache
-- [x] Dogrulama: tam paket **515 test, 0 hata**; uyari 29 (yeni kodda yok)
-- [ ] **Canli tur (kullaniciya kaldi)**: Xcode'dan acilmis eski bir kopya
-      (ayni bundle id, ayni veri) aciktti; iki kopya ayni dosyalara yazdigi
-      icin yenisi kapatildi. Kontrol: Ayarlar ▸ AI (anahtar + ozet), bir
-      kelimede tanim Apple'dan / etimoloji saglayicidan, cumle seridinde
-      dil paketi istemi
+**Spike:** "onceki bolumde" ozeti ve bolum hazirligi siralamasi icin
+cihaz-ici model vs saglayici; spoiler sizintisi (ozet, okunmamis sayfalari
+gormemeli — yalniz okunan metin gonderilir) ve CEFR seviyesine uyum.
 
-## Sprint 3 — v1.41.0 "Pencere modeli" (Could)
+- [ ] **Bolum Hazirligi ("Isinma")** — bolume girerken, bolumde en cok gecen
+      ve bilmedigin 5–8 kelime kucuk bir kartta: anlam, bolumdeki ilk cumlesi,
+      "simdi ogren / atla / zaten biliyorum". Siralama = frekans × bilinmezlik,
+      `LexicalProfileService` / `BookCoverageService` uzerinden; anlamlar
+      anlik katmandan. Ayarlardan kapatilabilir
+- [ ] **"Onceki bolumde…"** — kitaba ≥ 3 gun sonra donunce, son okunan
+      sayfalardan spoiler'siz 3 cumlelik ozet, hedef dilde, kullanicinin
+      seviyesinde. Tetikleyici `ReadingSessionStore`. Tek tikla kapatilir
+- [ ] **"Bugun" ekrani (UI)** — mevcut dashboard (`EmptyStateView` icindeki
+      `DashboardHeader` / `DashboardWordCard` / `DashboardActivityCard`) tek
+      dikey akisa: *Kaldigin yer* (buyuk kapak + ilerleme + devam et),
+      *Bugunun tekrarlari* (sayi + tek buton), *Bolum hazirligi*, seri
+- [ ] Should: **Karakter & Yer Rehberi ("Kim kimdi?")** — `NLTagger(.nameType)`
+      ile kisi/yer adlari; kenar panelinde liste; tiklayinca LLM *yalniz su
+      ana kadar okunan kisma dayanarak* kisa tanim verir
+- [ ] Could: **Kenar Notlari (marginalia)** — Inspector acmadan, sayfa
+      kenarinda o sayfadaki kayitli kelimelerin kisa karsiliklari; Zen mod
+      ile uyumlu, acilir/kapanir
+- [ ] Could: **Anlama Kontrolu** — bolum sonunda 3 soru, hedef dilde cevap,
+      icerik + dil geri bildirimi; FSRS'e yazmaz
+- [ ] Testler: hazirlik siralamasi (bilinen/kayitli kelime disarida),
+      ozet tetikleyici esigi, ozet isteginin yalniz okunan araligi tasidigi
 
-Amac: en cok degisen iki gorunumu test edilebilir hale getirmek. v11'deki
-"ContentView bolunmez" karari **dosya bolme** icindi (private `@State`
-extension'a tasinamiyor); buradaki oneri farkli: state'i bir modele tasimak.
+## Sprint 3 — v1.44.0 "Metni sana uydur" (Must)
 
-- [x] `ReaderWindowModel` (`@Observable @MainActor`, pencere basina):
-      yoneticiler, panel/odak/zen durumu ve gecisleri, bul cubugu, PDF sayfa
-      konumlari + acilista geri yukleme. Gecisler saf; animasyon view'da.
-      State modelde oldugu icin dosya bolme de mumkun oldu:
-      **`ContentView` 1504 → 669 satir** + `ContentView+ContextStrip/
-      Toolbar/Actions/Commands.swift`. 11 test. Sayfa konumlari ayni
-      anahtar ve JSON bicimiyle (eski deger okunuyor, testli)
-- [x] LLM istek orkestrasyonu `InspectorViewModel.start`/`startFollowUp`'a.
-      Tasirken bulunan yaris: yeniden calistirilan modulun iptal edilen eski
-      istegi bitince yenisinin `loading`/`activeTasks`/ciktisini eziyordu
-      (Ask AI'da da). Calisma kimligiyle kapandi; iki yaris testi koruma
-      kaldirilinca dusuyor. 7 test
-- [x] `StorageKey`: 30 cipla anahtar tek enum'da, degerler testle sabit
-- [x] **Uyarilar 29 → 0** (test hedefinde 18 → 0). Swift 6 dil modunda
-      uygulama hedefi **derleniyor**; `SWIFT_VERSION` bilincli olarak 5'te
-      birakildi: Swift 6, ObjC API'lerine verilen closure'lara calisma
-      zamani izolasyon denetimi ekler (Spotlight tamamlama blogu gibi arka
-      plan cagrilari cokebilir) — once canli tur. `decidePolicyFor` imzasi
-      SDK ile birebir eslestirildi
-- [x] Dogrulama: tam paket **533 test, 0 hata**, temiz derleme 0 uyari
-- [ ] **Canli tur (kullaniciya kaldi)**: odak/zen giris-cikis, zen'den
-      yesil butonla cikis, PDF'i yeniden acinca son sayfa, bul cubugu,
-      Inspector'da bir modulu calisirken yeniden baslatma
-- [ ] Sonraki adim (v13 adayi): Swift 6 modunu ac — once ObjC tamamlama
-      bloklarini (CSSearchableIndex, UNUserNotificationCenter, NSWorkspace)
-      canli turda dogrula
+Amac: zor metni, onu birakmadan okunur kilmak. Sprintin en gorunur ozelligi.
+
+**Spike:** EPUB'da `<ruby>` enjeksiyonunun reflow, scroll konumu, bookmark
+yaklasikligi, karaoke ve saved-word vurgusuyla etkilesimi; 300 sayfalik
+kitapta bolum acilis suresi. Kapi: bolum acilisi +%20'den fazla uzamaz.
+
+- [ ] **Satir Arasi Parilti (ruby gloss, EPUB)** — bilinmeyen kelimelerin
+      ustunde minik ana-dil karsiligi (furigana gibi). Esik ayarli: kapali /
+      yalniz kayitli-ogreniliyor / kapsama disi her sey. Mevcut EPUB vurgu
+      enjeksiyonu yolundan (uygulama `WKContentWorld`'u; kitap JS'i kapali
+      kalir). Karsiliklar sistem sozlugu / cihaz-ici model / cache; "Yanit
+      Dili" kuralina uyar. Gorunum menusunden ⌥⌘G ile ac/kapa
+- [ ] **Seviyeye Indir** — paragraf sec → kullanicinin CEFR seviyesinde
+      yeniden yaz, yan yana (orijinal | sade); sade metinde de hover ve kaydet
+- [ ] **Inspector "Kelime Karti" (UI)** — modul izgarasinin ustunde kompakt
+      kahraman kart (kelime, IPA, tek satir anlam, kaydet/dinle). Cogu bakista
+      modul calistirmak gerekmez; izgara "daha fazla" altinda. `body`
+      asamali desenle (`baseContent` + `withX`) buyur
+- [ ] Should: **Dilbilgisi Mercegi** — cumle sec → `NLTagger(.lexicalClass)`
+      ile sozcuk turleri renklenir (offline, aninda; renk + etiket, yalniz
+      renk degil) + istege bagli LLM "bu yapinin adi ve neden"
+- [ ] Should: **Komut Paleti (⌘K)** — kitaplar, kayitli kelimeler,
+      sayfa/bolum, menu komutlari ve moduller tek arama kutusunda
+- [ ] Could: **Okuma Cetveli** — aktif satir disi hafifce soluklasir (EPUB
+      CSS, PDF overlay); Zen mod ile
+- [ ] Testler: gloss esik mantigi (saf fonksiyon), ruby HTML uretiminin
+      kacis/escaping'i, komut paleti siralamasi
+
+## Sprint 4 — v1.45.0 "Uretim ve disarisi" (Should)
+
+Amac: yazdirmak, konusturmak, kitaplik disindaki metni iceri almak. En
+riskli kalemler bilincli olarak sonda.
+
+**Spike:** (a) mikrofon: sandbox'ta `com.apple.security.device.audio-input`
+entitlement'i + `NSMicrophoneUsageDescription` / `NSSpeechRecognitionUsageDescription`
+ile `SFSpeechRecognizer` on-device calisiyor mu — bundle id ve sandbox
+degismeden. (b) web: 10 haber/blog sitesinde basit readability sezgisinin
+basari orani. Kapi: (a) izin akisi calisir, (b) ≥ 7/10 okunur cikti.
+
+- [ ] **Yeniden Anlat (Retell)** — paragraf sec → "kendi cumlelerinle anlat"
+      editoru → LLM duzeltir, kelime duzeyinde diff (silinen / eklenen, renk +
+      ustu cizili, yalniz renk degil); duzeltilen kelimeler tek tikla kaydedilir
+- [ ] **Web makalesi ice aktarma** — URL yapistir / Servisler menusu →
+      okunabilir metin yerel mini-EPUB'a donusur (`EPUBDocument` yolu), kapakla
+      kutuphaneye duser. `URLSession` + readability sezgisi; script/iframe
+      atilir, EPUB JS kapali kurali korunur
+- [ ] Should: **Golgeleme (Shadowing)** — cumleyi TTS okur, kullanici tekrar
+      eder; on-device transkript, kelime kelime hizalanmis fark. Spike (a)
+      gecilmezse Won't
+- [ ] Should: **Kelimelerinden Hikaye** — vadesi gelen 8–12 kelimeyi kullanan,
+      kullanicinin seviyesinde kisa oyku; RELL'in kendi okuyucusunda mini-EPUB
+      olarak acilir (hover, kaydet, alti cizili kelimeler calisir). FSRS'e yazmaz
+- [ ] Could: **Bildirimden tekrar** — `DailyReminderManager` bildirimi eyleme
+      donusur: kelime + "Biliyorum / Goster"; cevap FSRS'e yazar
+- [ ] Could: **Menu cubugunda siradaki kelime** — mevcut `MenuBarExtra`'ya
+      cevrilen kart
+- [ ] Could: **Kelime Takimyildizi** — kayitli kelimeler grafigi (aile /
+      esanlam / ayni kitap), dugum rengi = hafiza gucu; `Canvas`, deneysel
+- [ ] Testler: diff hizalama (saf fonksiyon), readability cikarimi (yerel
+      HTML fixture'lari, ag yok), hikaye isteginin kelime listesini tasidigi
 
 ---
 
-## Hijyen
+## Fikir havuzu (sprinte alinmadi)
 
-- [x] `Configurations/*.xcconfig` silindi (projeye hic bagli degildi;
-      sandbox'i acik gosteriyordu, gercekte kapali)
-- [x] `ARCHITECTURE.md` guncellendi (v1.39–v1.41 bilesenleri, 50'lik
-      cache, Keychain); README (sifir kurulum, yedekler, rozet)
-- [x] `HANDOFF_SUMMARY.md` ve `docs/phase-*-issues.md` → `docs/archive/`
-- [ ] Dogrulanacak: `open -g` ile baslatilan uygulama pencere acmadi
-- [ ] Test hedefleri `MACOSX_DEPLOYMENT_TARGET = 26.2` (uygulama 15.0);
-      CI komut satirinda eziyor — dokunulmadi
+- **Seviye testi (ilk acilis)** — 3 dakikalik LexTALE-tarzi evet/hayir kelime
+  testi → baslangic "bilinen" kumesi; kapsama *hesabi* degismez (onceki karar)
+- **Tekrar ekrani: surukleyici mod** — tam ekran kart, arka plan kelimenin
+  geldigi kitabin kapak renginden degrade, tamamen klavye (Space / 1–4)
 
 ## Genel dogrulama (her sprint sonu)
 
-- Build + **tam birim test paketi** (UI testleri haric), CI ile birebir komut
-- `Localizable.xcstrings`: yeni metinler TR cevirisiyle; katalog JSON gecerli;
-  commit edilmemis katalog degisikligi birakilmaz
-- DS denetimi; macOS 15 fallback yolu derleniyor
-- CHANGELOG (kullanici-odakli dil) → tag `vX.Y.Z` → push → **CI release
-  run'i izlenir**, DMG uretimi teyit edilir
+- Build + **tam birim test paketi** (UI testleri haric), CI ile birebir komut;
+  her regresyon testi mutation-check (duzeltme geri alininca duser)
+- `Localizable.xcstrings`: `-exportLocalizations` ile yeni metinler toplanir,
+  TR eklenir; commit edilmemis katalog degisikligi birakilmaz
+- DS denetimi; macOS 15 fallback yolu derleniyor; yeni dosyalar yedek kapsaminda
+- Gizlilik ozeti yeni ozellikleri listeliyor
+- Canli tur (tek kopya) → CHANGELOG (kullanici-odakli dil) → tag `vX.Y.Z` →
+  push → **CI release run'i izlenir**, DMG uretimi teyit edilir
