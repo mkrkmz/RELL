@@ -22,6 +22,11 @@ struct ReaderMenuCommands: Commands {
             }
             .keyboardShortcut("o", modifiers: [.command])
 
+            Button("Import Web Article…") {
+                NotificationCenter.default.post(name: .importWebArticleCommand, object: nil)
+            }
+            .keyboardShortcut("i", modifiers: [.command, .shift])
+
             openRecentMenu
 
             Divider()
@@ -136,6 +141,10 @@ struct ReaderMenuCommands: Commands {
 
             Button("Vocabulary Review") { openWindow(id: "review") }
                 .keyboardShortcut("v", modifiers: [.command, .option])
+
+            Button("Story From Your Words…") {
+                NotificationCenter.default.post(name: .wordStoryCommand, object: nil)
+            }
         }
 
         // ── Speech ────────────────────────────────────────────────────

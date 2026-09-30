@@ -49,6 +49,12 @@ final class ReaderWindowModel {
     var showWarmUp = false
     /// The passage being rewritten at the reader's level (v13 Sprint 3).
     var gradedRewriteSource: String?
+    /// File ▸ Import Web Article… sheet (v13 Sprint 4).
+    var showArticleImport = false
+    /// The passage being retold (v13 Sprint 4).
+    var retellSource: String?
+    /// "A story from your words" sheet (v13 Sprint 4).
+    var showWordStory = false
     var showReadingAppearance = false
 
     /// Focus mode hides the side panels and remembers what was visible.

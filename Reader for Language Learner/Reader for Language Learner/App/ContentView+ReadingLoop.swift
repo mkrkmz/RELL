@@ -37,6 +37,41 @@ extension ContentView {
                 else { return }
                 model.gradedRewriteSource = text
             }
+            .onReceive(NotificationCenter.default.publisher(for: .importWebArticleCommand)) { _ in
+                // With no window key (menu used from an empty desktop) the
+                // first window answers rather than none.
+                guard model.hostWindow?.isKeyWindow == true
+                        || NSApp.keyWindow == nil && model.hostWindow == NSApp.windows.first(where: \.isVisible)
+                else { return }
+                model.showArticleImport = true
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .retellSelectionCommand)) { note in
+                guard model.hostWindow?.isKeyWindow == true,
+                      let text = note.object as? String,
+                      GradedRewrite.isEligible(text)
+                else { return }
+                model.retellSource = text
+            }
+            .sheet(isPresented: Binding(
+                get: { model.retellSource != nil },
+                set: { if !$0 { model.retellSource = nil } }
+            )) {
+                if let source = model.retellSource {
+                    RetellSheet(source: source)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .wordStoryCommand)) { _ in
+                guard model.hostWindow?.isKeyWindow == true
+                        || NSApp.keyWindow == nil && model.hostWindow == NSApp.windows.first(where: \.isVisible)
+                else { return }
+                model.showWordStory = true
+            }
+            .sheet(isPresented: Bindable(model).showWordStory) {
+                WordStorySheet { book in openDocument(book) }
+            }
+            .sheet(isPresented: Bindable(model).showArticleImport) {
+                ArticleImportSheet { book in openDocument(book) }
+            }
             .sheet(isPresented: Binding(
                 get: { model.gradedRewriteSource != nil },
                 set: { if !$0 { model.gradedRewriteSource = nil } }

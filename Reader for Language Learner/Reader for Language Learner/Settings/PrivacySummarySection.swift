@@ -49,6 +49,8 @@ struct PrivacySummarySection: View {
             row("Ask AI and word levels", module: nil),
             row("Recaps and chapter warm-ups", module: nil),
             translationRow,
+            Row(feature: "Web article import",
+                destination: String(localized: "Only the site you import from"), onDevice: false),
         ]
     }
 

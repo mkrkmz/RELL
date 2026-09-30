@@ -550,6 +550,26 @@
         }
       }
     },
+    "A short story at your level that uses the words you're due to review. It opens as a book; reading it doesn't change when they come up again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar zamanı gelen kelimelerini kullanan, seviyene uygun kısa bir hikâye. Kitap olarak açılır; okuman kelimelerin ne zaman yeniden soracağını değiştirmez."
+          }
+        }
+      }
+    },
+    "A Story From Your Words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimelerinden Bir Hikâye"
+          }
+        }
+      }
+    },
     "Academic" : {
       "localizations" : {
         "tr" : {
@@ -2137,6 +2157,16 @@
         }
       }
     },
+    "Couldn't load the page: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa yüklenemedi: %@"
+          }
+        }
+      }
+    },
     "Couldn't translate — check your AI server." : {
       "localizations" : {
         "tr" : {
@@ -3083,6 +3113,22 @@
         }
       }
     },
+    "From %@, %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "From %1$@, %2$@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ adresinden, %2$@."
+          }
+        }
+      }
+    },
     "Front (Card Question)" : {
       "localizations" : {
         "tr" : {
@@ -3287,6 +3333,16 @@
         }
       }
     },
+    "Hide it to retell from memory" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hafızandan anlatmak için gizle"
+          }
+        }
+      }
+    },
     "Hide Sidebar" : {
       "localizations" : {
         "tr" : {
@@ -3408,12 +3464,55 @@
         }
       }
     },
+    "https://…" : {
+
+    },
+    "Import" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İçe Aktar"
+          }
+        }
+      }
+    },
+    "Import a Web Article" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir Web Makalesi İçe Aktar"
+          }
+        }
+      }
+    },
     "Import Backup…" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yedeği İçe Aktar…"
+          }
+        }
+      }
+    },
+    "Import Web Article…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web Makalesi İçe Aktar…"
+          }
+        }
+      }
+    },
+    "Importing…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İçe aktarılıyor…"
           }
         }
       }
@@ -4387,6 +4486,16 @@
         }
       }
     },
+    "No article text found on that page. It may be behind a paywall, or built by scripts RELL doesn't run." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu sayfada makale metni bulunamadı. Ücretli erişimin arkasında olabilir ya da RELL'in çalıştırmadığı betiklerle oluşturuluyor olabilir."
+          }
+        }
+      }
+    },
     "No Bookmarks" : {
       "localizations" : {
         "tr" : {
@@ -4816,6 +4925,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yalnızca seçilen kelime ya da cümle ve çevresindeki cümle gönderilir — asla kitabın tamamı değil. Özet, en son okuduğun bir iki sayfayı; bölüm hazırlığı ise bölümden bir kelime listesini gönderir. Apple'ın modeli yanıtlamayı reddederse özet ya da hazırlık yapay zekâ sağlayıcına gider."
+          }
+        }
+      }
+    },
+    "Only the site you import from" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnızca içe aktardığın site"
           }
         }
       }
@@ -5880,6 +5999,16 @@
         }
       }
     },
+    "RELL keeps the article's text and opens it as a book — hover, save and review work as usual." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL makalenin metnini alır ve kitap olarak açar — üzerine gelme, kaydetme ve tekrar her zamanki gibi çalışır."
+          }
+        }
+      }
+    },
     "RELL translates and explains %@ content into %@." : {
       "localizations" : {
         "en" : {
@@ -6203,6 +6332,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Konuşmaya devam et"
+          }
+        }
+      }
+    },
+    "Retell in Your Own Words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kendi Cümlelerinle Anlat"
           }
         }
       }
@@ -6564,6 +6703,16 @@
         }
       }
     },
+    "Save a few more words first — a story needs at least %lld." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önce birkaç kelime daha kaydet — bir hikâye için en az %lld gerekir."
+          }
+        }
+      }
+    },
     "Save a few more words with definitions to play a round." : {
       "localizations" : {
         "tr" : {
@@ -6642,6 +6791,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Okuyucudan kelime kaydedin, sonra vadesi gelenleri burada tekrar edin."
+          }
+        }
+      }
+    },
+    "Save word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimeyi kaydet"
           }
         }
       }
@@ -7084,6 +7243,16 @@
         }
       }
     },
+    "Show Passage" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasajı Göster"
+          }
+        }
+      }
+    },
     "Show Sidebar" : {
       "localizations" : {
         "tr" : {
@@ -7418,6 +7587,16 @@
         }
       }
     },
+    "Story From Your Words…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimelerinden Hikâye…"
+          }
+        }
+      }
+    },
     "Streak freezes — each automatically covers one missed day" : {
       "localizations" : {
         "tr" : {
@@ -7608,6 +7787,16 @@
         }
       }
     },
+    "That doesn't look like a web address. Paste a link that starts with http:// or https://." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu bir web adresine benzemiyor. http:// ya da https:// ile başlayan bir bağlantı yapıştır."
+          }
+        }
+      }
+    },
     "That folder doesn't contain a RELL backup." : {
       "localizations" : {
         "tr" : {
@@ -7618,12 +7807,42 @@
         }
       }
     },
+    "That link isn't a web page." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu bağlantı bir web sayfası değil."
+          }
+        }
+      }
+    },
     "The AI returned nothing to show. Try again." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yapay zekâ gösterilecek bir şey döndürmedi. Yeniden dene."
+          }
+        }
+      }
+    },
+    "The AI's answer couldn't be read. Try again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapay zekânın yanıtı okunamadı. Yeniden dene."
+          }
+        }
+      }
+    },
+    "The AI's story couldn't be read. Try again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapay zekânın hikâyesi okunamadı. Yeniden dene."
           }
         }
       }
@@ -7912,6 +8131,16 @@
         }
       }
     },
+    "Try Again" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Dene"
+          }
+        }
+      }
+    },
     "Turn on Apple Intelligence in System Settings to use it." : {
       "localizations" : {
         "tr" : {
@@ -8134,6 +8363,16 @@
         }
       }
     },
+    "Web article import" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web makalesi içe aktarma"
+          }
+        }
+      }
+    },
     "Week" : {
       "comment" : "Label for the x-axis in the review accuracy chart.",
       "isCommentAutoGenerated" : true,
@@ -8258,6 +8497,16 @@
         }
       }
     },
+    "WORDS FROM THE CORRECTION" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DÜZELTMEDEKİ KELİMELER"
+          }
+        }
+      }
+    },
     "Words in this chapter you may not know yet." : {
       "localizations" : {
         "tr" : {
@@ -8286,6 +8535,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bildiğin kelimeler"
+          }
+        }
+      }
+    },
+    "Write Story" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hikâyeyi Yaz"
+          }
+        }
+      }
+    },
+    "Writing your story…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hikâyen yazılıyor…"
+          }
+        }
+      }
+    },
+    "Written for you from %lld of your words." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelimenden senin için yazıldı."
+          }
+        }
+      }
+    },
+    "Written for you from your words. Not used: %@." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimelerinden senin için yazıldı. Kullanılmayanlar: %@."
           }
         }
       }
@@ -8346,6 +8635,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tekrar sıran boş. Ekstra çalışma için öğrenilen kelimeleri de dahil et."
+          }
+        }
+      }
+    },
+    "YOUR TEXT, CORRECTED" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "METNİN, DÜZELTİLMİŞ"
           }
         }
       }

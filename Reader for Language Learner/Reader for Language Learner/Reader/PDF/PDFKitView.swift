@@ -400,6 +400,9 @@ struct PDFKitView: NSViewRepresentable {
                 onSimplify: GradedRewrite.isEligible(term) ? {
                     NotificationCenter.default.post(name: .simplifySelectionCommand, object: term)
                 } : nil,
+                onRetell: GradedRewrite.isEligible(term) ? {
+                    NotificationCenter.default.post(name: .retellSelectionCommand, object: term)
+                } : nil,
                 isSaved: isSaved
             )
         }

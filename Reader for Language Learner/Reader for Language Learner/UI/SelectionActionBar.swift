@@ -23,6 +23,8 @@ struct SelectionActionBar: View {
     /// Rewrite the selection at the reader's level (v13 S3). Offered only
     /// for a passage, not a word — the host passes nil otherwise.
     var onSimplify: (() -> Void)? = nil
+    /// Retell the passage in your own words (v13 S4); passages only.
+    var onRetell: (() -> Void)? = nil
     /// When the current selection is already in the vocabulary, the save button
     /// reads as "saved" rather than inviting a duplicate.
     var isSaved: Bool = false
@@ -38,6 +40,9 @@ struct SelectionActionBar: View {
             barButton(icon: "sparkles", label: "Analyze", action: onAnalyze)
             if let onSimplify {
                 barButton(icon: "text.badge.checkmark", label: "Simplify to Your Level", action: onSimplify)
+            }
+            if let onRetell {
+                barButton(icon: "square.and.pencil", label: "Retell in Your Own Words", action: onRetell)
             }
             barButton(icon: "highlighter", label: "Highlight", action: onHighlight)
             barButton(icon: "speaker.wave.2", label: "Speak", action: onSpeak)

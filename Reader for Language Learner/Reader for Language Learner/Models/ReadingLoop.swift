@@ -349,3 +349,171 @@ nonisolated enum GradedRewrite {
         return text.isEmpty ? nil : text
     }
 }
+
+// MARK: - Retell
+
+/// "Retell it in your own words" (Roadmap v13 Sprint 4): the learner writes,
+/// the model corrects, and the difference is shown word by word.
+nonisolated enum Retell {
+
+    struct Feedback: Equatable {
+        let corrected: String
+        let note: String
+    }
+
+    static let maxTokens = 1_600
+    /// Parser-bound labels — English and fixed, whatever the languages.
+    static let correctedLabel = "CORRECTED:"
+    static let noteLabel = "NOTE:"
+
+    static func systemPrompt(target: Language, native: Language, level: CEFRLevel) -> String {
+        """
+        You are a kind \(target.rawValue) teacher. A CEFR \(level.rawValue) learner \
+        read the ORIGINAL passage and retold it in their own words. First correct \
+        their text: fix grammar, spelling and word choice, but keep their own words \
+        and ideas wherever they work. Then, in one or two short sentences in \
+        \(native.rawValue), say whether the retelling got the passage's meaning and \
+        name the most useful fix. Reply in exactly this format:
+        \(correctedLabel)
+        <the corrected text>
+        \(noteLabel)
+        <your note>
+        """
+    }
+
+    static func userPrompt(original: String, retelling: String) -> String {
+        "ORIGINAL:\n\(original)\n\nLEARNER'S RETELLING:\n\(retelling)"
+    }
+
+    /// Reads the two labelled parts; nil when the corrected text is missing.
+    static func parse(_ raw: String) -> Feedback? {
+        let text = raw.replacingOccurrences(of: "**", with: "")
+        guard let correctedRange = text.range(of: correctedLabel, options: .caseInsensitive) else { return nil }
+        let afterCorrected = text[correctedRange.upperBound...]
+        let noteRange = afterCorrected.range(of: noteLabel, options: .caseInsensitive)
+        let corrected = String(noteRange.map { afterCorrected[..<$0.lowerBound] } ?? afterCorrected)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let note = noteRange.map { String(afterCorrected[$0.upperBound...]) }?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !corrected.isEmpty else { return nil }
+        return Feedback(corrected: corrected, note: note)
+    }
+}
+
+/// Word-level difference between the learner's text and the correction.
+nonisolated enum WordDiff {
+
+    enum Kind: Equatable { case same, removed, added }
+
+    struct Segment: Equatable {
+        let kind: Kind
+        let text: String
+    }
+
+    /// Longest-common-subsequence over whitespace-separated words; runs of
+    /// the same kind are merged. Compared exactly — a fixed comma or capital
+    /// is a fix worth showing.
+    static func diff(_ old: String, _ new: String) -> [Segment] {
+        let a = old.split(whereSeparator: \.isWhitespace).map(String.init)
+        let b = new.split(whereSeparator: \.isWhitespace).map(String.init)
+        let n = a.count, m = b.count
+        var lcs = Array(repeating: Array(repeating: 0, count: m + 1), count: n + 1)
+        for i in stride(from: n - 1, through: 0, by: -1) {
+            for j in stride(from: m - 1, through: 0, by: -1) {
+                lcs[i][j] = a[i] == b[j] ? lcs[i + 1][j + 1] + 1 : max(lcs[i + 1][j], lcs[i][j + 1])
+            }
+        }
+        var words: [(Kind, String)] = []
+        var i = 0, j = 0
+        while i < n || j < m {
+            if i < n, j < m, a[i] == b[j] {
+                words.append((.same, a[i])); i += 1; j += 1
+            } else if j < m, i == n || lcs[i][j + 1] > lcs[i + 1][j] {
+                // Strictly greater: on a tie the old word goes first, so a
+                // substitution reads "struck-out old, then new".
+                words.append((.added, b[j])); j += 1
+            } else {
+                words.append((.removed, a[i])); i += 1
+            }
+        }
+        var segments: [Segment] = []
+        for (kind, word) in words {
+            if let last = segments.last, last.kind == kind {
+                segments[segments.count - 1] = Segment(kind: kind, text: last.text + " " + word)
+            } else {
+                segments.append(Segment(kind: kind, text: word))
+            }
+        }
+        return segments
+    }
+
+    /// Words the correction brought in — candidates to save. Letters only,
+    /// at least three, first occurrence, in order.
+    static func addedWords(_ segments: [Segment]) -> [String] {
+        var seen: Set<String> = []
+        return segments.filter { $0.kind == .added }
+            .flatMap { $0.text.split(separator: " ") }
+            .map { $0.trimmingCharacters(in: .punctuationCharacters) }
+            .filter { $0.count >= 3 && $0.allSatisfy(\.isLetter) && seen.insert($0.lowercased()).inserted }
+    }
+}
+
+// MARK: - Story from your words
+
+/// A short story built around the words due for review (Roadmap v13
+/// Sprint 4) — review by reading. It never touches the schedule.
+nonisolated enum WordStory {
+
+    struct Story: Equatable {
+        let title: String
+        let paragraphs: [String]
+    }
+
+    static let minimumWords = 4
+    static let maximumWords = 12
+    static let maxTokens = 2_000
+    static let titleLabel = "TITLE:"
+    static let storyLabel = "STORY:"
+
+    static func systemPrompt(target: Language, level: CEFRLevel) -> String {
+        """
+        You write short stories for language learners. Write a story of about \
+        300 words in simple \(target.rawValue) for a CEFR \(level.rawValue) learner. \
+        Use every word from the list at least once, naturally, in a form that fits \
+        the sentence. Keep everything else simple. Reply in exactly this format:
+        \(titleLabel) <a short title>
+        \(storyLabel)
+        <the story, in paragraphs>
+        """
+    }
+
+    static func userPrompt(words: [String]) -> String {
+        "Words: " + words.joined(separator: ", ")
+    }
+
+    static func parse(_ raw: String) -> Story? {
+        let text = raw.replacingOccurrences(of: "**", with: "")
+        guard let storyRange = text.range(of: storyLabel, options: .caseInsensitive) else { return nil }
+        var title = ""
+        if let titleRange = text.range(of: titleLabel, options: .caseInsensitive),
+           titleRange.upperBound <= storyRange.lowerBound {
+            title = text[titleRange.upperBound..<storyRange.lowerBound]
+                .trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "\"#")))
+        }
+        let paragraphs = text[storyRange.upperBound...]
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        guard !paragraphs.isEmpty else { return nil }
+        return Story(title: title.isEmpty ? String(localized: "A Story From Your Words") : title, paragraphs: paragraphs)
+    }
+
+    /// Which of the words the story actually used, inflections included.
+    static func usedWords(_ words: [String], in story: Story, language: Language?) -> [String] {
+        let entries = words.map { EncounterScanner.Entry(id: UUID(), term: $0) }
+        let hits = Set(EncounterScanner.scan(
+            text: story.paragraphs.joined(separator: "\n"), vocabulary: entries, language: language
+        ).map(\.wordID))
+        return zip(words, entries).filter { hits.contains($0.1.id) }.map(\.0)
+    }
+}

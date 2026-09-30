@@ -160,6 +160,12 @@ extension Notification.Name {
     /// Object: the selected passage. The key window rewrites it at the
     /// reader's level (v13 Sprint 3).
     static let simplifySelectionCommand = Notification.Name("simplifySelectionCommand")
+    /// File ▸ Import Web Article… — the key window shows the import sheet.
+    static let importWebArticleCommand = Notification.Name("importWebArticleCommand")
+    /// Object: the selected passage, to retell in the reader's own words.
+    static let retellSelectionCommand = Notification.Name("retellSelectionCommand")
+    /// Go ▸ Story From Your Words… — the key window shows the story sheet.
+    static let wordStoryCommand = Notification.Name("wordStoryCommand")
     /// Posted by SavedWordsStore.add with the new word's UUID as `object`.
     static let savedWordAdded = Notification.Name("savedWordAdded")
     /// Posted by LLM settings when the Keychain-backed API key changes.
