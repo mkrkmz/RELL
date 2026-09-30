@@ -44,6 +44,9 @@ final class StorageKeyTests: XCTestCase {
             (StorageKey.thumbnailSize, "thumbnailSize"),
             (StorageKey.typedAutoGrade, "typedAutoGrade"),
             (StorageKey.wordsSegment, "wordsSegment"),
+            (StorageKey.learnerLevel, "learnerLevel"),
+            (StorageKey.readingRecapEnabled, "readingRecapEnabled"),
+            (StorageKey.chapterWarmUpEnabled, "chapterWarmUpEnabled"),
         ]
         for (key, expected) in pinned {
             XCTAssertEqual(key, expected)

@@ -15,6 +15,7 @@
 //
 
 import Foundation
+import os
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
@@ -73,6 +74,31 @@ enum AppleOnDevice {
             if #available(macOS 26.0, *) { return AppleOnDeviceClient() }
             #endif
             return LLMConfiguration().makeProvider()
+        }
+    }
+
+    /// Free-form work that must not stop at a refusal: Apple's model first
+    /// when it's on, the configured provider if that fails. The v13 spike
+    /// found the on-device guardrail declining one recap in three for a
+    /// classic novel — dark scenes are ordinary in fiction.
+    @MainActor
+    static func chatWithFallback(
+        system: String,
+        user: String,
+        temperature: Double,
+        maxTokens: Int
+    ) async throws -> String {
+        let primary = provider(for: nil)
+        do {
+            return try await primary.chat(
+                system: system, user: user, temperature: temperature, maxTokens: maxTokens, topP: 0.9
+            )
+        } catch {
+            guard currentRoute(for: nil) == .appleOnDevice, !Task.isCancelled else { throw error }
+            AppLogger.llm.info("On-device request failed, using the configured provider: \(error.localizedDescription, privacy: .public)")
+            return try await LLMConfiguration().makeProvider().chat(
+                system: system, user: user, temperature: temperature, maxTokens: maxTokens, topP: 0.9
+            )
         }
     }
 

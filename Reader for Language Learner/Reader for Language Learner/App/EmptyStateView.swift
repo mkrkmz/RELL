@@ -105,19 +105,21 @@ struct EmptyStateView: View {
                 EmptyLibraryHero(onOpenPDF: onOpenPDF)
             }
 
+            // Today's work in the order it's usually done: pick the book
+            // back up, clear the reviews, then the reading goal.
+            if let savedWordsStore, hasSavedWords {
+                DashboardWordCard(
+                    store: savedWordsStore,
+                    onReviewAll: onReview
+                )
+            }
+
             if let sessionStore, heroDocument != nil {
                 DashboardActivityCard(
                     todayReadingTime: todayReadingTime,
                     last7Days: sessionStore.last7Days,
                     readingStreak: sessionStore.currentStreak,
                     streakAtRisk: sessionStore.isStreakAtRisk
-                )
-            }
-
-            if let savedWordsStore, hasSavedWords {
-                DashboardWordCard(
-                    store: savedWordsStore,
-                    onReviewAll: onReview
                 )
             }
 
@@ -165,9 +167,14 @@ private struct DashboardHeader: View {
 
     var body: some View {
         HStack(alignment: .center) {
-            Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
-                .font(DS.Typography.subhead)
-                .foregroundStyle(DS.Color.textTertiary)
+            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                Text("Today")
+                    .font(DS.Typography.title)
+                    .foregroundStyle(DS.Color.textPrimary)
+                Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
+                    .font(DS.Typography.subhead)
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
 
             Spacer()
 
@@ -189,6 +196,8 @@ private struct ContinueReadingHero: View {
     let todayReadingTime: Double
     var cover: NSImage?
     var onOpen: (() -> Void)?
+
+    @AppStorage(StorageKey.readingRecapEnabled) private var recapEnabled = true
 
     @State private var isHovered = false
 
@@ -215,6 +224,20 @@ private struct ContinueReadingHero: View {
                         .font(DS.Typography.caption)
                         .foregroundStyle(DS.Color.textTertiary)
                         .lineLimit(1)
+
+                    if recapEnabled, fileExists,
+                       let days = ReadingRecap.daysAway(
+                           lastOpenedAt: document.lastOpenedAt,
+                           hasProgress: (document.lastPageIndex ?? 0) > 0
+                       ) {
+                        Label(
+                            String(localized: "\(days) days away — you'll get a short recap when you open it"),
+                            systemImage: "clock.arrow.circlepath"
+                        )
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.accent)
+                        .lineLimit(1)
+                    }
                 }
 
                 Spacer(minLength: DS.Spacing.lg)

@@ -29,6 +29,7 @@ extension ContentView {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: DS.Spacing.xs) {
+                    warmUpChip
                     readerContextMetricChip(icon: "note.text", value: "\(currentNoteCount)", label: "notes")
                     readerContextMetricChip(icon: "star", value: "\(currentSavedWordCount)", label: "saved")
                     readerContextMetricChip(

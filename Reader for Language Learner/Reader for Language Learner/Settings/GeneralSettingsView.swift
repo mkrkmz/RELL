@@ -21,6 +21,18 @@ struct GeneralSettingsView: View {
         Form {
             Section {
                 languagePairSection
+                Picker(selection: $learnerLevelRaw) {
+                    ForEach(CEFRLevel.allCases) { level in
+                        Text(level.rawValue).tag(level.rawValue)
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Your Level")
+                        Text("Recaps and chapter warm-ups are written for this level.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
             } header: {
                 Text("Language Pair")
             } footer: {
@@ -78,10 +90,26 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(DS.Color.textTertiary)
                     }
                 }
+                Toggle(isOn: $readingRecapEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Recap When You Return")
+                        Text("After three days away from a book, sum up where you left off.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                Toggle(isOn: $chapterWarmUpEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Chapter Warm-Up")
+                        Text("Pick out the hard words of each book chapter before you read it.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
             } header: {
                 Text("Reading Aids")
             } footer: {
-                Text("Hover and pre-analysis use your AI provider, or Apple's on-device model where it's on. Apple Translation works offline once the language is downloaded, and falls back to your AI provider for pairs it doesn't support.")
+                Text("Hover, pre-analysis, recaps and warm-ups use your AI provider, or Apple's on-device model where it's on. Apple Translation works offline once the language is downloaded, and falls back to your AI provider for pairs it doesn't support.")
                     .foregroundStyle(DS.Color.textTertiary)
             }
 
@@ -180,6 +208,9 @@ struct GeneralSettingsView: View {
     @AppStorage(SentenceTranslationEngine.storageKey)
     private var sentenceTranslationEngineRaw = SentenceTranslationEngine.default.rawValue
     @AppStorage(StorageKey.pageAnalysisEnabled) private var pageAnalysisEnabled = false
+    @AppStorage(StorageKey.learnerLevel) private var learnerLevelRaw = CEFRLevel.defaultLearnerLevel.rawValue
+    @AppStorage(StorageKey.readingRecapEnabled) private var readingRecapEnabled = true
+    @AppStorage(StorageKey.chapterWarmUpEnabled) private var chapterWarmUpEnabled = true
     @AppStorage(StorageKey.speechRate) private var speechRate: Double = 0.5
     @AppStorage(StorageKey.menuBarExtraEnabled) private var menuBarExtraEnabled = true
 

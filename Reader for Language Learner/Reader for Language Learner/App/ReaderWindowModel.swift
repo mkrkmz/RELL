@@ -45,6 +45,8 @@ final class ReaderWindowModel {
     var isDropTargeted = false
     var showWorkspaceReview = false
     var showStats = false
+    /// The chapter warm-up popover (v13 Sprint 2).
+    var showWarmUp = false
     var showReadingAppearance = false
 
     /// Focus mode hides the side panels and remembers what was visible.

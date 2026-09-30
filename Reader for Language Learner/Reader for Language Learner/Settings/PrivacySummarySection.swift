@@ -36,7 +36,7 @@ struct PrivacySummarySection: View {
         } header: {
             Text("Where Your Text Goes")
         } footer: {
-            Text("Only the selected word or sentence and its surrounding sentence are sent — never the whole book.")
+            Text("Only the selected word or sentence and its surrounding sentence are sent — never the whole book. A recap sends the last page or two you read; a warm-up sends a list of words from the chapter. If Apple's model declines, a recap or warm-up goes to your AI provider.")
                 .foregroundStyle(DS.Color.textTertiary)
         }
     }
@@ -47,6 +47,7 @@ struct PrivacySummarySection: View {
             row("Definitions, meanings, examples", module: .definitionEN),
             row("Pronunciation, etymology, mnemonics", module: .etymologyEN),
             row("Ask AI and word levels", module: nil),
+            row("Recaps and chapter warm-ups", module: nil),
             translationRow,
         ]
     }

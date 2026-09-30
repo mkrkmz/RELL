@@ -201,11 +201,15 @@ final class WordEncounterTests: XCTestCase {
     func testClozeSentencesSkipTheSavedOneAndDuplicates() async throws {
         let store = try makeStore()
         let id = UUID()
+        // Explicit dates: with `Date()` the two spellings were created
+        // microseconds apart and which one came first varied run to run.
+        let base = Date(timeIntervalSince1970: 1_000_000)
         store.append([
-            encounter(id, location: 0, sentence: "Saved one."),
-            encounter(id, location: 1, sentence: "Another one."),
-            encounter(id, location: 2, sentence: "another one."),
+            encounter(id, location: 0, date: base, sentence: "Saved one."),
+            encounter(id, location: 1, date: base.addingTimeInterval(60), sentence: "another one."),
+            encounter(id, location: 2, date: base.addingTimeInterval(120), sentence: "Another one."),
         ])
+        // Newest first; the older spelling is the duplicate that drops out.
         XCTAssertEqual(store.sentences(for: id, excluding: "Saved one."), ["Another one."])
     }
 

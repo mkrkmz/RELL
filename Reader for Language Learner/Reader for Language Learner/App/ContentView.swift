@@ -18,6 +18,8 @@ struct ContentView: View {
     // Lives in ReaderWindowModel; the forwarding properties below keep the
     // view code reading as it did.
     @State var model = ReaderWindowModel()
+    /// Recap on return and chapter warm-up (v13 Sprint 2).
+    @State var readingLoop = ReadingLoopModel()
 
     var selectionState: SelectionState { model.selectionState }
     var searchManager: PDFSearchManager { model.searchManager }
@@ -139,7 +141,7 @@ struct ContentView: View {
     // (`the compiler is unable to type-check this expression in reasonable
     // time`) even though a warm local cache let it slide.
     var body: some View {
-        withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent))))))
+        withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))))))
             .dataRecoveryAlert()
     }
 
@@ -237,6 +239,12 @@ struct ContentView: View {
         content
             .onChange(of: selectionState.documentURL) { oldURL, newURL in
                 if let newURL {
+                    // Before `registerOpen` moves `lastOpenedAt` to now — the
+                    // recap needs to know how long the book sat unopened.
+                    readingLoop.documentOpened(
+                        url: newURL,
+                        previous: recentDocumentStore.documents.first { $0.path == newURL.path }
+                    )
                     recentDocumentStore.registerOpen(url: newURL)
                 }
                 // Multi-window session rule: the store tracks one active session;
@@ -503,6 +511,7 @@ struct ContentView: View {
                         readerContextStrip
                     }
 
+                    Group {
                     if isEPUBDocument {
                         EPUBReaderView(
                             documentURL: selectionState.documentURL,
@@ -569,6 +578,20 @@ struct ContentView: View {
                         restorePage(for: newURL.deletingPathExtension().lastPathComponent)
                     }
                     }
+                    }
+                    // Floats over the page rather than sitting above it: the
+                    // card appearing inside this stack resized the web view
+                    // under it, and the relayout loop crashed AppKit
+                    // ("more Update Constraints passes than views").
+                    .overlay(alignment: .top) {
+                        if !chromeHidden {
+                            readingRecapCard
+                                .frame(maxWidth: 560)
+                                .padding(DS.Spacing.md)
+                                .dsShadow(DS.Shadow.float)
+                        }
+                    }
+                    .animation(DS.Animation.standard, value: readingLoop.recap)
 
                     if sentenceTranslationEnabled, !chromeHidden, let sentence = translatableSentence {
                         SentenceTranslationStrip(

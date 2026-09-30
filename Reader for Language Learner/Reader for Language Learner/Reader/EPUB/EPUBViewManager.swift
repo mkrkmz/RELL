@@ -867,6 +867,11 @@ final class EPUBViewManager: NSObject {
         return (Int(entry["chapter"] ?? 0), entry["fraction"] ?? 0)
     }
 
+    /// Where the reader left the book at `url` — the recap reads up to here.
+    static func startPosition(for url: URL) -> (chapter: Int, fraction: Double) {
+        savedPosition(for: url.deletingPathExtension().lastPathComponent)
+    }
+
     /// Where the book at `url` opens next — the word page's jump to a
     /// chapter a word was met in, before the book's window exists.
     static func setStartPosition(chapter: Int, for url: URL) {

@@ -282,6 +282,16 @@
         }
       }
     },
+    "%lld days away — you'll get a short recap when you open it" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld gündür açmadın — açtığında kısa bir özet göreceksin"
+          }
+        }
+      }
+    },
     "%lld matches" : {
       "localizations" : {
         "tr" : {
@@ -422,6 +432,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld kelimenin zamanı hâlâ geldi"
+          }
+        }
+      }
+    },
+    "%lld words to warm up" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isınmak için %lld kelime"
           }
         }
       }
@@ -742,6 +762,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "RELL'e Kelime Ekle"
+          }
+        }
+      }
+    },
+    "After three days away from a book, sum up where you left off." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir kitaba üç gün ara verdiysen, kaldığın yeri özetle."
           }
         }
       }
@@ -1243,6 +1273,16 @@
         }
       }
     },
+    "Before chapter %lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld. bölümden önce"
+          }
+        }
+      }
+    },
     "Best" : {
       "localizations" : {
         "tr" : {
@@ -1446,6 +1486,16 @@
         }
       }
     },
+    "Catching you up on %@…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ için kaldığın yer özetleniyor…"
+          }
+        }
+      }
+    },
     "Category" : {
       "localizations" : {
         "tr" : {
@@ -1552,6 +1602,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bölüm %lld / %lld"
+          }
+        }
+      }
+    },
+    "Chapter Warm-Up" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bölüm Hazırlığı"
           }
         }
       }
@@ -3177,6 +3237,16 @@
         }
       }
     },
+    "Hard words in this chapter, before you read it" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu bölümün zor kelimeleri, okumadan önce"
+          }
+        }
+      }
+    },
     "Has output" : {
       "localizations" : {
         "tr" : {
@@ -3278,6 +3348,7 @@
       }
     },
     "Hover and pre-analysis use your AI provider, or Apple's on-device model where it's on. Apple Translation works offline once the language is downloaded, and falls back to your AI provider for pairs it doesn't support." : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -3303,6 +3374,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İmleç Sözlüğü"
+          }
+        }
+      }
+    },
+    "Hover, pre-analysis, recaps and warm-ups use your AI provider, or Apple's on-device model where it's on. Apple Translation works offline once the language is downloaded, and falls back to your AI provider for pairs it doesn't support." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Üzerine gelme sözlüğü, ön analiz, özetler ve bölüm hazırlığı yapay zekâ sağlayıcını ya da açıksa Apple'ın cihaz içi modelini kullanır. Apple Çeviri, dil indirildikten sonra çevrimdışı çalışır; desteklemediği dil çiftlerinde yapay zekâ sağlayıcına geçer."
           }
         }
       }
@@ -3984,12 +4065,32 @@
         }
       }
     },
+    "Met %lld times in one document" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir belgede %lld kez karşılaştın"
+          }
+        }
+      }
+    },
     "MET IN YOUR READING" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "OKUMALARINDA KARŞINA ÇIKTI"
+          }
+        }
+      }
+    },
+    "Met once" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir kez karşılaştın"
           }
         }
       }
@@ -4689,11 +4790,22 @@
       }
     },
     "Only the selected word or sentence and its surrounding sentence are sent — never the whole book." : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yalnızca seçilen kelime veya cümle ve çevresindeki cümle gönderilir — asla kitabın tamamı değil."
+          }
+        }
+      }
+    },
+    "Only the selected word or sentence and its surrounding sentence are sent — never the whole book. A recap sends the last page or two you read; a warm-up sends a list of words from the chapter. If Apple's model declines, a recap or warm-up goes to your AI provider." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnızca seçilen kelime ya da cümle ve çevresindeki cümle gönderilir — asla kitabın tamamı değil. Özet, en son okuduğun bir iki sayfayı; bölüm hazırlığı ise bölümden bir kelime listesini gönderir. Apple'ın modeli yanıtlamayı reddederse özet ya da hazırlık yapay zekâ sağlayıcına gider."
           }
         }
       }
@@ -5146,6 +5258,16 @@
         }
       }
     },
+    "Pick out the hard words of each book chapter before you read it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitaptaki her bölümün zor kelimelerini, okumadan önce seç."
+          }
+        }
+      }
+    },
     "Pick this meaning, then its word" : {
       "localizations" : {
         "tr" : {
@@ -5322,6 +5444,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Önceki Sayfa"
+          }
+        }
+      }
+    },
+    "Previously in %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ — önceki bölümde"
           }
         }
       }
@@ -5624,6 +5756,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hazır"
+          }
+        }
+      }
+    },
+    "Recap When You Return" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dönüşte Özet"
+          }
+        }
+      }
+    },
+    "Recaps and chapter warm-ups" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özetler ve bölüm hazırlığı"
+          }
+        }
+      }
+    },
+    "Recaps and chapter warm-ups are written for this level." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özetler ve bölüm hazırlıkları bu seviyeye göre yazılır."
           }
         }
       }
@@ -6378,6 +6540,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir tur oynamak için tanımı olan birkaç kelime daha kaydet."
+          }
+        }
+      }
+    },
+    "Save All" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tümünü Kaydet"
           }
         }
       }
@@ -7546,6 +7718,16 @@
         }
       }
     },
+    "Today" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bugün"
+          }
+        }
+      }
+    },
     "TODAY" : {
       "localizations" : {
         "tr" : {
@@ -7996,6 +8178,16 @@
         }
       }
     },
+    "Words in this chapter you may not know yet." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu bölümde henüz bilmiyor olabileceğin kelimeler."
+          }
+        }
+      }
+    },
     "Words saved" : {
       "comment" : "A label displayed in the reading stats grid.",
       "isCommentAutoGenerated" : true,
@@ -8018,6 +8210,16 @@
         }
       }
     },
+    "Written from the pages you read last — nothing after them." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En son okuduğun sayfalardan yazıldı — sonrasından hiçbir şey yok."
+          }
+        }
+      }
+    },
     "Yellow" : {
       "localizations" : {
         "tr" : {
@@ -8034,6 +8236,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu kitabın kelimelerinin %@ kadarını biliyorsun"
+          }
+        }
+      }
+    },
+    "Your Level" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seviyen"
           }
         }
       }
@@ -8104,26 +8316,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uzaklaştır (⌘-)"
-          }
-        }
-      }
-    },
-    "Met once" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir kez karşılaştın"
-          }
-        }
-      }
-    },
-    "Met %lld times in one document" : {
-      "localizations" : {
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir belgede %lld kez karşılaştın"
           }
         }
       }
