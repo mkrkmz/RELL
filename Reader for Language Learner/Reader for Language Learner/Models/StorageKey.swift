@@ -25,6 +25,7 @@ nonisolated enum StorageKey {
     static let dailyReminderTime = "dailyReminderTime"
     static let domainPreference = "domainPreference"
     static let epubFontSize = "epubFontSize"
+    static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     static let hoverDictionaryEnabled = "hoverDictionaryEnabled"
     static let interlinearGlossEnabled = "interlinearGlossEnabled"

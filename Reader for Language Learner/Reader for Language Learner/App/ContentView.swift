@@ -143,7 +143,7 @@ struct ContentView: View {
     // (`the compiler is unable to type-check this expression in reasonable
     // time`) even though a warm local cache let it slide.
     var body: some View {
-        withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))))))
+        withCommandPalette(withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent))))))))
             .dataRecoveryAlert()
     }
 

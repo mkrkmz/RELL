@@ -31,6 +31,7 @@ extension InspectorView {
                 wordCard
             } else {
                 phraseHeader
+                grammarLensSection
             }
 
             Divider()

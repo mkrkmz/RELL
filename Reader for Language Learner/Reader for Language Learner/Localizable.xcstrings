@@ -292,6 +292,16 @@
         }
       }
     },
+    "%lld due" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld bekliyor"
+          }
+        }
+      }
+    },
     "%lld matches" : {
       "localizations" : {
         "tr" : {
@@ -786,6 +796,48 @@
         }
       }
     },
+    "ADJ" : {
+      "comment" : "grammar tag: adjective",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SIF"
+          }
+        }
+      }
+    },
+    "Adjective" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sıfat"
+          }
+        }
+      }
+    },
+    "ADV" : {
+      "comment" : "grammar tag: adverb",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ZARF"
+          }
+        }
+      }
+    },
+    "Adverb" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zarf"
+          }
+        }
+      }
+    },
     "After three days away from a book, sum up where you left off." : {
       "localizations" : {
         "tr" : {
@@ -834,6 +886,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tümü"
+          }
+        }
+      }
+    },
+    "All caught up" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hepsi tamam"
           }
         }
       }
@@ -965,6 +1027,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İşaretler"
+          }
+        }
+      }
+    },
+    "Answer here, or open RELL to review the rest." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burada cevapla ya da kalanlar için RELL'i aç."
           }
         }
       }
@@ -1333,6 +1405,16 @@
         }
       }
     },
+    "Book" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitap"
+          }
+        }
+      }
+    },
     "BOOK COVERAGE" : {
       "localizations" : {
         "tr" : {
@@ -1602,6 +1684,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vurgu rengini değiştir"
+          }
+        }
+      }
+    },
+    "Chapter" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bölüm"
           }
         }
       }
@@ -1937,12 +2029,53 @@
         }
       }
     },
+    "Command" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komut"
+          }
+        }
+      }
+    },
+    "Command Palette…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komut Paleti…"
+          }
+        }
+      }
+    },
     "Confusion" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Karıştırılan"
+          }
+        }
+      }
+    },
+    "CONJ" : {
+      "comment" : "grammar tag: conjunction",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BAĞ"
+          }
+        }
+      }
+    },
+    "Conjunction" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bağlaç"
           }
         }
       }
@@ -2433,6 +2566,17 @@
         }
       }
     },
+    "DET" : {
+      "comment" : "grammar tag: determiner",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BELR"
+          }
+        }
+      }
+    },
     "Detailed" : {
       "localizations" : {
         "tr" : {
@@ -2449,6 +2593,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ayrıntılar"
+          }
+        }
+      }
+    },
+    "Determiner" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belirleyici"
+          }
+        }
+      }
+    },
+    "Do you remember “%@”?" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” kelimesini hatırlıyor musun?"
           }
         }
       }
@@ -2767,6 +2931,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tümünü Genişlet"
+          }
+        }
+      }
+    },
+    "Explain the Structure" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapıyı Açıkla"
           }
         }
       }
@@ -3209,6 +3383,26 @@
         }
       }
     },
+    "Go to Chapter %lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld. Bölüme Git"
+          }
+        }
+      }
+    },
+    "Go to Page %lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld. Sayfaya Git"
+          }
+        }
+      }
+    },
     "Goal" : {
       "localizations" : {
         "tr" : {
@@ -3257,6 +3451,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yanlış olarak notlandı — devam et"
+          }
+        }
+      }
+    },
+    "Grammar" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dilbilgisi"
           }
         }
       }
@@ -3466,6 +3670,16 @@
     },
     "https://…" : {
 
+    },
+    "I Knew It" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildim"
+          }
+        }
+      }
     },
     "Import" : {
       "localizations" : {
@@ -4294,6 +4508,17 @@
         }
       }
     },
+    "N" : {
+      "comment" : "grammar tag: noun",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İS"
+          }
+        }
+      }
+    },
     "Name" : {
       "localizations" : {
         "tr" : {
@@ -4472,6 +4697,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sonraki tekrar %@"
+          }
+        }
+      }
+    },
+    "NEXT UP" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SIRADAKİ"
           }
         }
       }
@@ -4794,6 +5029,16 @@
         }
       }
     },
+    "Not Yet" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz Değil"
+          }
+        }
+      }
+    },
     "Note" : {
       "localizations" : {
         "tr" : {
@@ -4844,12 +5089,43 @@
         }
       }
     },
+    "Noun" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İsim"
+          }
+        }
+      }
+    },
     "Now" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Şimdi"
+          }
+        }
+      }
+    },
+    "NUM" : {
+      "comment" : "grammar tag: number",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SAY"
+          }
+        }
+      }
+    },
+    "Number" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayı"
           }
         }
       }
@@ -5193,6 +5469,16 @@
         }
       }
     },
+    "Other" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer"
+          }
+        }
+      }
+    },
     "Output may be incomplete — try 'Detailed' mode or increase max tokens in Settings." : {
       "localizations" : {
         "tr" : {
@@ -5339,6 +5625,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kâğıt"
+          }
+        }
+      }
+    },
+    "PART" : {
+      "comment" : "grammar tag: particle",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EDAT"
+          }
+        }
+      }
+    },
+    "Particle" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parçacık"
           }
         }
       }
@@ -5507,6 +5814,27 @@
         }
       }
     },
+    "PREP" : {
+      "comment" : "grammar tag: preposition",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İLG"
+          }
+        }
+      }
+    },
+    "Preposition" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlgeç"
+          }
+        }
+      }
+    },
     "Press ⌘B to bookmark the current page." : {
       "localizations" : {
         "tr" : {
@@ -5603,6 +5931,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İstemler"
+          }
+        }
+      }
+    },
+    "PRON" : {
+      "comment" : "grammar tag: pronoun",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ZAM"
+          }
+        }
+      }
+    },
+    "Pronoun" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zamir"
           }
         }
       }
@@ -6673,6 +7022,16 @@
         }
       }
     },
+    "Run on the selection" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçimde çalıştır"
+          }
+        }
+      }
+    },
     "Run this module to generate an explanation." : {
       "localizations" : {
         "tr" : {
@@ -6917,6 +7276,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ara"
+          }
+        }
+      }
+    },
+    "Search commands, chapters, words, books…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komut, bölüm, kelime, kitap ara…"
           }
         }
       }
@@ -7219,6 +7588,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Denetçiyi Göster"
+          }
+        }
+      }
+    },
+    "Show Meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlamı Göster"
           }
         }
       }
@@ -8309,6 +8688,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tanımlar, anlamlar, örnekler, eş anlamlılar, kullanım notları, takip soruları ve kelime seviyeleri için kullanılır. Telaffuz, etimoloji, hatırlatıcılar, eşdizimler ve kelime ailesi her zaman aşağıdaki sağlayıcıyı kullanır — cihaz içi model bunlarda çok sık yanılıyor."
+          }
+        }
+      }
+    },
+    "V" : {
+      "comment" : "grammar tag: verb",
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FİİL"
+          }
+        }
+      }
+    },
+    "Verb" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fiil"
           }
         }
       }

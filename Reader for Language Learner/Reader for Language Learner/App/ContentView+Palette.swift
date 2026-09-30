@@ -1,0 +1,109 @@
+//
+//  ContentView+Palette.swift
+//  Reader for Language Learner
+//
+//  What ⌘K can reach from this window (Roadmap v13 Sprint 5).
+//
+
+import SwiftUI
+
+extension ContentView {
+
+    func withCommandPalette(_ content: some View) -> some View {
+        content
+            .onReceive(NotificationCenter.default.publisher(for: .commandPaletteCommand)) { _ in
+                guard model.hostWindow?.isKeyWindow == true else { return }
+                model.showCommandPalette = true
+            }
+            .sheet(isPresented: Bindable(model).showCommandPalette) {
+                CommandPaletteView(items: paletteItems, pageItem: pageJumpItem)
+            }
+    }
+
+    var paletteItems: [PaletteItem] {
+        let commands = readerCommands
+        let hasDocument = commands.hasDocument
+        let hasSelection = commands.hasSelection
+        var items: [PaletteItem] = []
+
+        func command(_ id: String, _ title: String, _ icon: String, enabled: Bool = true, _ action: @escaping () -> Void) {
+            items.append(PaletteItem(id: "cmd-\(id)", kind: .command, title: title, icon: icon, isEnabled: enabled, perform: action))
+        }
+        command("review", String(localized: "Vocabulary Review"), "rectangle.stack") { openWindow(id: "review") }
+        command("import", String(localized: "Import Web Article…"), "globe") {
+            NotificationCenter.default.post(name: .importWebArticleCommand, object: nil)
+        }
+        command("story", String(localized: "Story From Your Words…"), "text.book.closed") {
+            NotificationCenter.default.post(name: .wordStoryCommand, object: nil)
+        }
+        command("open", String(localized: "Open…"), "folder") { openPDF() }
+        command("sidebar", commands.isSidebarVisible ? String(localized: "Hide Sidebar") : String(localized: "Show Sidebar"),
+                "sidebar.left", enabled: hasDocument, commands.toggleSidebar)
+        command("inspector", commands.isInspectorVisible ? String(localized: "Hide Inspector") : String(localized: "Show Inspector"),
+                "sidebar.right", enabled: hasDocument, commands.toggleInspector)
+        command("focus", commands.focusMode ? String(localized: "Exit Focus Mode") : String(localized: "Enter Focus Mode"),
+                "rectangle.center.inset.filled", enabled: hasDocument, commands.toggleFocusMode)
+        command("zen", commands.zenMode ? String(localized: "Exit Zen Mode") : String(localized: "Enter Zen Mode"),
+                "moon", enabled: hasDocument, commands.toggleZenMode)
+        command("glosses", String(localized: "Show Meanings Above Words"), "character.textbox",
+                enabled: commands.isEPUBDocument) { glossEnabled.toggle() }
+        command("find", String(localized: "Find"), "magnifyingglass", enabled: hasDocument, commands.showFind)
+        command("bookmark", commands.isCurrentPageBookmarked ? String(localized: "Remove Bookmark") : String(localized: "Add Bookmark"),
+                "bookmark", enabled: hasDocument, commands.toggleBookmark)
+        command("read-aloud", String(localized: "Read Page Aloud"), "speaker.wave.2", enabled: hasDocument, commands.readAloud)
+        command("close", String(localized: "Close Document"), "xmark.square", enabled: hasDocument, commands.closeDocument)
+
+        for module in ModuleType.allCases {
+            items.append(PaletteItem(
+                id: "module-\(module.rawValue)", kind: .command, title: module.title,
+                subtitle: String(localized: "Run on the selection"), icon: "sparkles",
+                isEnabled: hasSelection, perform: { commands.runModule(module) }
+            ))
+        }
+
+        if isEPUBDocument, let document = epubManager.document {
+            for entry in document.tocEntries where entry.chapterPath != nil {
+                items.append(PaletteItem(
+                    id: "toc-\(entry.id)", kind: .chapter, title: entry.title, icon: "list.bullet",
+                    perform: { epubManager.open(tocEntry: entry) }
+                ))
+            }
+        }
+
+        if hasDocument {
+            let target = Language.storedTarget.rawValue
+            for word in savedWordsStore.words where word.language == nil || word.language == target {
+                items.append(PaletteItem(
+                    id: "word-\(word.id)", kind: .word, title: word.term,
+                    subtitle: word.masteryLevel.localizedTitle, icon: "character.book.closed",
+                    perform: {
+                        if !commands.isSidebarVisible { commands.toggleSidebar() }
+                        NotificationCenter.default.post(name: .revealSavedWordCommand, object: word.id)
+                    }
+                ))
+            }
+        }
+
+        for document in recentDocumentStore.documents {
+            items.append(PaletteItem(
+                id: "doc-\(document.path)", kind: .document, title: document.displayTitle,
+                subtitle: document.pageLabel, icon: document.isEPUB ? "book" : "doc.text",
+                isEnabled: FileManager.default.fileExists(atPath: document.path),
+                perform: { openDocument(document.url) }
+            ))
+        }
+        return items
+    }
+
+    /// "Go to page 42" for a PDF (or chapter 42 of a book) when in range.
+    func pageJumpItem(_ number: Int) -> PaletteItem? {
+        if isEPUBDocument {
+            guard number <= epubManager.chapterCount else { return nil }
+            return PaletteItem(id: "goto-\(number)", kind: .page, title: String(localized: "Go to Chapter \(number)"),
+                               icon: "arrow.right.circle", perform: { epubManager.openChapter(at: number - 1) })
+        }
+        guard selectionState.documentURL != nil, number <= pdfViewManager.pageCount else { return nil }
+        return PaletteItem(id: "goto-\(number)", kind: .page, title: String(localized: "Go to Page \(number)"),
+                           icon: "arrow.right.circle", perform: { pdfViewManager.goToPage(index: number - 1) })
+    }
+}

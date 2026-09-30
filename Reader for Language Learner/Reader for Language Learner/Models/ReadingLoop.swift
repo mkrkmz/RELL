@@ -517,3 +517,75 @@ nonisolated enum WordStory {
         return zip(words, entries).filter { hits.contains($0.1.id) }.map(\.0)
     }
 }
+
+// MARK: - Grammar lens
+
+/// Parts of speech in a sentence, from the system tagger — offline and
+/// instant (Roadmap v13 Sprint 5). The explanation of the structure is a
+/// separate, optional model call.
+nonisolated enum GrammarLens {
+
+    enum Kind: String, CaseIterable, Sendable {
+        case noun, verb, adjective, adverb, pronoun, determiner, preposition, conjunction, particle, number, other
+    }
+
+    struct Token: Equatable, Sendable {
+        let text: String
+        let kind: Kind
+    }
+
+    static let minimumWords = 3
+    static let maxWords = 60
+    static let maxTokens = 900
+
+    static func tokens(in sentence: String, language: Language?) -> [Token] {
+        let text = sentence.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return [] }
+        let tagger = NLTagger(tagSchemes: [.lexicalClass])
+        tagger.string = text
+        if let nl = LemmaMatcher.nlLanguage(for: language) {
+            tagger.setLanguage(nl, range: text.startIndex..<text.endIndex)
+        }
+        var tokens: [Token] = []
+        tagger.enumerateTags(
+            in: text.startIndex..<text.endIndex,
+            unit: .word,
+            scheme: .lexicalClass,
+            options: [.omitWhitespace, .omitPunctuation, .omitOther]
+        ) { tag, range in
+            tokens.append(Token(text: String(text[range]), kind: kind(for: tag)))
+            return tokens.count < maxWords
+        }
+        return tokens
+    }
+
+    static func kind(for tag: NLTag?) -> Kind {
+        switch tag {
+        case .noun?: return .noun
+        case .verb?: return .verb
+        case .adjective?: return .adjective
+        case .adverb?: return .adverb
+        case .pronoun?: return .pronoun
+        case .determiner?: return .determiner
+        case .preposition?: return .preposition
+        case .conjunction?: return .conjunction
+        case .particle?: return .particle
+        case .number?: return .number
+        default: return .other
+        }
+    }
+
+    static func isEligible(_ text: String) -> Bool {
+        let count = text.split(whereSeparator: \.isWhitespace).count
+        return count >= minimumWords && count <= maxWords
+    }
+
+    static func systemPrompt(target: Language, native: Language, level: CEFRLevel) -> String {
+        """
+        You explain \(target.rawValue) grammar to a CEFR \(level.rawValue) learner. \
+        In \(native.rawValue), in at most four short sentences, name the main \
+        grammatical structure of the sentence (tense, clause type, word order, a \
+        construction worth knowing) and why it is used here. No preamble, no list.
+        """
+    }
+}

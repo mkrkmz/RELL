@@ -14,6 +14,12 @@ import os
 /// Not actor-isolated — the notification delegate callbacks fire off the
 /// main actor, so this identifier needs to be reachable from there too.
 private nonisolated let dailyReminderRequestIdentifier = "dailyGoalReminder"
+/// A reminder that asks about one due word, answerable from the banner
+/// (v13 Sprint 5).
+private nonisolated let reviewWordCategory = "RELL_REVIEW_WORD"
+private nonisolated let knewItAction = "RELL_KNEW_IT"
+private nonisolated let notYetAction = "RELL_NOT_YET"
+private nonisolated let wordIDKey = "wordID"
 
 @MainActor
 final class DailyReminderManager: NSObject {
@@ -22,14 +28,30 @@ final class DailyReminderManager: NSObject {
     static let enabledKey = "dailyReminderEnabled"
     static let timeKey = StorageKey.dailyReminderTime
 
+    /// Where a word answered from the banner is reviewed. Weak: the store
+    /// belongs to the app.
+    private weak var savedWordsStore: SavedWordsStore?
+
     private override init() {
         super.init()
     }
 
     /// App-launch wiring: become the notification delegate and sync the
     /// scheduled request with the current preference.
-    func configure() {
-        UNUserNotificationCenter.current().delegate = self
+    func configure(savedWordsStore: SavedWordsStore? = nil) {
+        self.savedWordsStore = savedWordsStore
+        let center = UNUserNotificationCenter.current()
+        center.delegate = self
+        center.setNotificationCategories([
+            UNNotificationCategory(
+                identifier: reviewWordCategory,
+                actions: [
+                    UNNotificationAction(identifier: knewItAction, title: String(localized: "I Knew It")),
+                    UNNotificationAction(identifier: notYetAction, title: String(localized: "Not Yet")),
+                ],
+                intentIdentifiers: []
+            ),
+        ])
         if UserDefaults.standard.object(forKey: Self.enabledKey) as? Bool ?? false {
             Task { await requestAuthorizationAndSchedule() }
         }
@@ -64,8 +86,17 @@ final class DailyReminderManager: NSObject {
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
 
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "Time for your daily goal")
-        content.body = String(localized: "Review a few words or read a page to keep your streak going.")
+        if let word = savedWordsStore?.dueWords().first {
+            // A word to answer right from the banner. It's the word due when
+            // this was scheduled; answering reschedules with the next one.
+            content.title = String(localized: "Do you remember “\(word.term)”?")
+            content.body = String(localized: "Answer here, or open RELL to review the rest.")
+            content.categoryIdentifier = reviewWordCategory
+            content.userInfo = [wordIDKey: word.id.uuidString]
+        } else {
+            content.title = String(localized: "Time for your daily goal")
+            content.body = String(localized: "Review a few words or read a page to keep your streak going.")
+        }
         content.sound = .default
 
         let request = UNNotificationRequest(identifier: dailyReminderRequestIdentifier, content: content, trigger: trigger)
@@ -78,6 +109,17 @@ final class DailyReminderManager: NSObject {
             } catch {
                 AppLogger.notifications.error("Failed to schedule reminder: \(error.localizedDescription, privacy: .public)")
             }
+        }
+    }
+
+    /// A banner answer: recall, so it goes to the schedule like a flashcard's.
+    /// Then the next reminder is rebuilt around the next due word.
+    func answer(wordID: UUID, knew: Bool) {
+        if let store = savedWordsStore, let word = store.word(withID: wordID) {
+            _ = store.applyReview(knew ? .good : .again, to: word)
+        }
+        if UserDefaults.standard.object(forKey: Self.enabledKey) as? Bool ?? false {
+            schedule()
         }
     }
 
@@ -100,7 +142,19 @@ extension DailyReminderManager: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        if response.notification.request.identifier == dailyReminderRequestIdentifier {
+        guard response.notification.request.identifier == dailyReminderRequestIdentifier else {
+            completionHandler()
+            return
+        }
+        let action = response.actionIdentifier
+        let wordID = (response.notification.request.content.userInfo[wordIDKey] as? String)
+            .flatMap(UUID.init(uuidString:))
+        if action == knewItAction || action == notYetAction, let wordID {
+            let knew = action == knewItAction
+            Task { @MainActor in
+                DailyReminderManager.shared.answer(wordID: wordID, knew: knew)
+            }
+        } else {
             NotificationCenter.default.post(name: .openReviewWindowCommand, object: nil)
         }
         completionHandler()

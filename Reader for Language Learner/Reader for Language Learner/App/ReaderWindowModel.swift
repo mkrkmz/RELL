@@ -55,6 +55,8 @@ final class ReaderWindowModel {
     var retellSource: String?
     /// "A story from your words" sheet (v13 Sprint 4).
     var showWordStory = false
+    /// ⌘K (v13 Sprint 5).
+    var showCommandPalette = false
     var showReadingAppearance = false
 
     /// Focus mode hides the side panels and remembers what was visible.

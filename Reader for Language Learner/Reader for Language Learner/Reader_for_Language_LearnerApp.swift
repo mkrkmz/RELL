@@ -84,7 +84,7 @@ struct Reader_for_Language_LearnerApp: App {
 
         // Daily-goal reminder — becomes the UNUserNotificationCenter delegate
         // and re-schedules if the user already opted in on a previous launch.
-        DailyReminderManager.shared.configure()
+        DailyReminderManager.shared.configure(savedWordsStore: savedWords)
         // Once-a-day copy of every data file, newest seven kept. Every store
         // above has loaded by now, so a file that failed to load has already
         // been quarantined and can't displace yesterday's good copy.
@@ -154,9 +154,17 @@ struct Reader_for_Language_LearnerApp: App {
 /// Wraps the shared panel view so the menu bar window can dismiss itself.
 private struct MenuBarQuickLookupView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(SavedWordsStore.self) private var savedWordsStore
 
     var body: some View {
-        QuickLookupPanelView(style: .menuBar, onDismiss: { dismiss() })
+        VStack(spacing: 0) {
+            QuickLookupPanelView(style: .menuBar, onDismiss: { dismiss() })
+            // One due word, answerable without opening a window (v13 S5).
+            if !savedWordsStore.words.isEmpty {
+                Divider()
+                NextWordCard(store: savedWordsStore)
+            }
+        }
     }
 }
 
@@ -171,6 +179,8 @@ extension Notification.Name {
     static let retellSelectionCommand = Notification.Name("retellSelectionCommand")
     /// Go ▸ Story From Your Words… — the key window shows the story sheet.
     static let wordStoryCommand = Notification.Name("wordStoryCommand")
+    /// View ▸ Command Palette (⌘K).
+    static let commandPaletteCommand = Notification.Name("commandPaletteCommand")
     /// Posted by SavedWordsStore.add with the new word's UUID as `object`.
     static let savedWordAdded = Notification.Name("savedWordAdded")
     /// Posted by LLM settings when the Keychain-backed API key changes.

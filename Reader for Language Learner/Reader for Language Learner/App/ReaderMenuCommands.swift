@@ -55,6 +55,13 @@ struct ReaderMenuCommands: Commands {
 
         // ── View ──────────────────────────────────────────────────────
         CommandGroup(after: .sidebar) {
+            Button("Command Palette…") {
+                NotificationCenter.default.post(name: .commandPaletteCommand, object: nil)
+            }
+            .keyboardShortcut("k", modifiers: [.command])
+
+            Divider()
+
             Button(reader?.isSidebarVisible == true ? "Hide Sidebar" : "Show Sidebar") {
                 reader?.toggleSidebar()
             }
