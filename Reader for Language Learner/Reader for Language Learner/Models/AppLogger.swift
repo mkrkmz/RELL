@@ -69,10 +69,28 @@ enum RELLJSONStore {
 
 // MARK: - App Support Directory
 
+nonisolated enum RELLProcess {
+    /// True when this process is the host of a unit-test run. The test
+    /// target runs inside the app, so without this every `xcodebuild test`
+    /// started a second RELL on the user's real data — alongside their own
+    /// copy, if it was open (v13 Sprint 5).
+    static let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+
+    /// Per-run data folder for the test host.
+    static let testDataDirectory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("RELL-test-host-\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
+}
+
 extension FileManager {
     /// Returns the RELL Application Support directory, creating it if needed.
     /// Returns nil only if the system Application Support directory is unavailable.
+    /// Under a test host it's a throwaway folder instead (`RELLProcess`).
     func rellAppSupportDirectory() -> URL? {
+        if RELLProcess.isTestHost {
+            let folder = RELLProcess.testDataDirectory
+            try? createDirectory(at: folder, withIntermediateDirectories: true)
+            return folder
+        }
         guard let appSupport = urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             AppLogger.persistence.critical("Application Support directory not available")
             return nil

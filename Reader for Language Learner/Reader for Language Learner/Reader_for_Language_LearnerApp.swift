@@ -69,6 +69,11 @@ struct Reader_for_Language_LearnerApp: App {
         // App Intents (Shortcuts) resolve stores through this registry.
         AppDependencyManager.shared.add(dependency: savedWords)
 
+        // A unit-test host touches nothing outside its own process: no
+        // Spotlight index, no system-wide hotkey, no notifications, no
+        // backups. Its stores already live in a throwaway folder.
+        guard !RELLProcess.isTestHost else { return }
+
         // Launch-time Spotlight sync — catches edits/deletes made since the
         // last run that the per-mutation hooks may have missed.
         let wordsSnapshot = savedWords.words

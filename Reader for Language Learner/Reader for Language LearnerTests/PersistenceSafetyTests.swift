@@ -232,4 +232,17 @@ final class PersistenceSafetyTests: XCTestCase {
         XCTAssertTrue(PersistenceBackup.isBackupFolder(first))
         XCTAssertFalse(PersistenceBackup.isBackupFolder(parent))
     }
+
+    // MARK: - Test host isolation (v13 Sprint 5)
+
+    /// The tests run inside the app; the app must not be using the user's
+    /// real data folder while they do.
+    func testTestHostUsesAThrowawayDataFolder() async throws {
+        XCTAssertTrue(RELLProcess.isTestHost)
+        let folder = try XCTUnwrap(FileManager.default.rellAppSupportDirectory())
+        let real = try XCTUnwrap(FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first)
+            .appendingPathComponent("RELL")
+        XCTAssertNotEqual(folder.standardizedFileURL, real.standardizedFileURL)
+        XCTAssertTrue(folder.path.hasPrefix(FileManager.default.temporaryDirectory.path))
+    }
 }
