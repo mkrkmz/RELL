@@ -1,379 +1,190 @@
-# RELL Roadmap v13 — Okumak, Sadece Bakmak Degil (S0 + 4 sprint, v1.42 → v1.45)
+# RELL Roadmap v14 — Ayni Ozellikler, Cok Daha Iyi Bir Uygulama (S0 + 4 sprint)
 
-Olusturulma: 2026-09-30 (v1.41.0 sonrasi). Kullanici istegi: "tamamen taze
-fikirler, hem ozellik hem UI". Oneri onaylandi; sprint ici kapsam her sprint
-basinda yeniden teyit edilir.
+Olusturulma: 2026-10-01 (v1.42.0 sonrasi). Kullanici karari: **yeni ozellik
+yok** — mevcut ozellikleri daha kullanisli ve estetik bir arayuzle sunmak,
+deneyimi ust seviyeye cikarmak ve uygulamayi saglamlastirmak. Golgeleme v14'te
+yok (kullanici karari). v13 roadmap'i: `docs/archive/ROADMAP-v13.md`.
 
-v12 roadmap kapandi: S1 **v1.39.0 "Guven"** (bozuk dosya karantinasi, gunluk
-yedekler + disa/ice aktarma, nesil sirali `DebouncedFileWriter`, stream'de
-ilk tokendan sonra retry yok, hatali modul cache'lenmez, Anthropic istek
-sekli, EPUB JS kapali + `EPUBLinkPolicy`), S2 **v1.40.0 "Sifir kurulum"**
-(`AppleOnDevice.route` katmani, Translation framework cumle seridi, gizlilik
-ozeti) ve S3 **v1.41.0 "Pencere modeli"** (`ReaderWindowModel`, ContentView
-1504 → 669, Inspector yaris duzeltmesi, `StorageKey`, uyari 29 → 0). Uc surum
-tag'lendi, CI yesil, DMG'ler uretildi; 533 test. **Acik kalan:** uc sprintin
-canli turu kullanicida, Swift 6 dil modu bayragi — ikisi de S0'a devredildi.
+v13 kapandi: S0–S5 tek surum olarak **v1.42.0** (2026-10-01) — Swift 6 modu,
+karsilasma gunlugu + kelime sayfasi + baglam rotasyonlu cloze, donuste ozet,
+bolum hazirligi, Bugun ekrani, satir arasi anlamlar, seviyene gore
+sadelestirme, yeniden anlatma, web makalesi ice aktarma, kelimelerinden
+hikaye, komut paleti, dilbilgisi mercegi, menu cubugu/bildirim tekrari, test
+izolasyonu. 608 test. Surum notlari artik CHANGELOG'dan "What's new" ile
+basliyor; eski 42 surum geriye donuk guncellendi.
 
-Tani: 1.5 → 1.41 arasindaki neredeyse her ozellik **tek bir kelimeye tepki**
-veriyor (hover, Inspector modulleri, kaydet, tekrar et). Uygulamada eksik
-olan uc sey:
+**v13'un dersleri (bu roadmap'in sebebi):** ozellikler calisiyor ama
+kullanici bazilarini **bulamadi** (Sadelestir/Yeniden Anlat yalniz 6+
+kelimelik secimde 7 adsiz ikonlu bir cubukta); arayuz **kalabaliklasti**
+(baglam seridinde 8 oge, Inspector'da 6 katman); Inspector'in sabit bolgesi
+**iki kez cokme** uretti (AppKit constraint dongusu); kodun tamami ilk kez
+yayin push'unda CI'da derlendi ve **CI'in Xcode 26.3'u** yerelde gecen iki
+hatayi yakaladi; sprintlerin ucunde canli tur yapilamadi (ekran kilitli).
 
-1. **Okumadan once ve sonra** — bolume hazirlik yok, bolum sonunda anlama /
-   uretim yok.
-2. **Kelimenin hayati** — kaydedilen kelime tekrar ekrani disinda bir daha
-   gorunmuyor; kitaplarda kac kez karsilasildigi, hangi cumlelerde gectigi
-   kayboluyor.
-3. **Uretim** — uygulama hic yazdirmiyor, konusturmuyor.
+## Denetim (2026-10-01, kod + canli tur ekran goruntuleri)
+
+| Alan | Bulgu |
+|---|---|
+| Kesfedilebilirlik | Sadelestir/Yeniden Anlat yalniz secim cubugunda (sonradan ⌘K'ye eklendi). Zen/Odak/Anlamlar paletten ve bazi menulerden eksik. Onboarding v13 ozelliklerinin hicbirini tanitmiyor; uygulama icinde "Yenilikler" yok |
+| Okuyucu kabugu | Baglam seridi: belge, konum+sure, hazirlik cipi, not, kayit, bekleyen, bilinen %, secim ozeti — tek satirda, sag kenarda kesiliyor. Secim cubugu 5–7 adsiz ikon |
+| Inspector | Kart/baslik + kontrol seridi + son terimler + modul izgarasi + sonuc + Ask AI ust uste; yalniz sonuc paneli esniyor → sabit bolge kirilgan (v13'te 2 cokme) |
+| Araclar | Sadelestir, Yeniden Anlat, Hikaye, Ice Aktar dort ayri sheet + farkli menuler; ortak bir "araclar" yeri yok |
+| Gorsel tutarlilik | Koyu Inspector ile acik sayfa temasi yan yana; kartlarda karisik dolgu/gradyan; 41 sabit sayili padding, 3 ham font |
+| Ayarlar | Genel sekmesi 10 bolum, 8 anahtar — okuma, ogrenme, AI ve veri karisik |
+| Erisilebilirlik | 334 dugmeye karsilik 47 `accessibilityLabel`; ikon dugmelerinin bir kismi VoiceOver'da adsiz. Klavye ile gezinme denetlenmedi |
+| Kod sagligi | 1.000+ satirlik 4 dosya (EPUBViewManager 1076, EPUBReaderView 1035 — cogu gomulu JS, PDFKitView 1005, QuizView 937) |
+| Surec | CI ile yerel derleyici farki (26.3 / 27); surum notu is akisi uctan uca denenmedi; performans hic olculmedi |
 
 ## Teknik cerceve (tum sprintler icin gecerli)
 
-v12 cercevesi **aynen** devralinir (sifir dis bagimlilik; deployment target
-macOS 15, 26+ API'leri `#available` arkasinda; tam test paketi CI komutuyla;
-yeni testler async; makineye bagli test `XCTSkip`; bozuk dosyanin ustune
-yazilmaz; kismi LLM cevabi cache'e girmez; anlik katman "Yanit Dili"ne uyar;
-`Text(String)` katalogu atlar; parser etiketleri / raw value'lar / StorageKey
-degerleri yeniden adlandirilmaz; yeni `Codable` alan `decodeIfPresent` +
-default; DS token'lari; `project.pbxproj` elle duzenlenmez; bundle id ve
-sandbox'a dokunulmaz). Eklenenler:
+v13 cercevesi aynen devralinir (sifir dis bagimlilik, macOS 15 hedefi, tam
+test paketi, async testler, makineye bagli test `XCTSkip`, persistence ve LLM
+kurallari, `Text(String)` katalogu atlar, DS token'lari, bundle id/sandbox'a
+dokunulmaz). Eklenenler:
 
-- **FSRS'e yalniz hatirlama yazar.** Karsilasma, anlama kontrolu, hikaye,
-  eslestirme, yeniden anlatma → zamanlamaya dokunmaz. Cloze ve bildirimden
-  verilen cevap yazar (hatirlama sayilir).
-- **Yazma gurultusu kurali:** okuma sirasinda uretilen veri (karsilasmalar)
-  ayri dosyaya (`encounters.json`), `DebouncedFileWriter` ile, kelime basina
-  ust sinirla (son 50) yazilir; `saved_words.json` sismez. Her yeni dosya
-  `PersistenceBackup` kapsamina ve karantina yoluna eklenir.
-- **Gizlilik tablosu:** her yeni LLM ozelligi `PrivacySummarySection`'a satir
-  olarak girer; web ice aktarma ve mikrofon acikca listelenir.
-- **Cihaz-ici yonlendirme:** ozet / soru / yeniden yazma / hikaye icin spike
-  ile guvenilirlik olculur; guvenilmezse `AppleOnDevice.route` yapilandirilmis
-  saglayiciya duser (v1.40 deseni, modul bazinda karar).
-- **Her sprint bir spike ile baslar** (asagida); spike kapisi gecilmezse kalem
-  bir sonraki sprinte veya Won't'a gider — sessizce kucultulmez.
-- **Canli tur tek kopyayla:** kullanicinin Xcode'dan acik kopyasi varken ikinci
-  kopya calistirilmaz (ayni bundle id, ayni veri).
+- **Once tasarim, sonra kod.** Her UI sprinti, degisecek ekranlarin onceki/
+  sonraki halini gosteren bir **gorsel maket** (HTML artifact) ile baslar;
+  kullanici onaylamadan kod yazilmaz. Maket DS token'larinin gercek
+  degerleriyle cizilir.
+- **Yeni ozellik yok.** Bir ekran yeniden duzenlenirken davranis korunur;
+  ozellik ekleme/cikarma yalniz kullanici karariyla. Bir ozelligin yeri
+  degisirse eski yolu bir surum boyunca calismaya devam eder (menu, kisayol).
+- **Sutunlarda yerlesim kurali (v13 dersi):** Inspector, okuyucu ve kenar
+  cubugu gibi AppKit'in boyutlandirdigi sutunlarda yuksekligi degisen her
+  icerik ya esnek bolgede ya da `maxHeight`'li bir `ScrollView`'dadir;
+  genislige gore boyut degistiren ozel `Layout` yalniz sabit genislikli
+  sheet'lerde. Her yeniden duzenlenen yuzey icin **"pencereyi buyutmez"**
+  testi (S0'daki yardimci ile).
+- **Her sprint sonu:** `main` push edilir ve CI testi (Xcode 26.x) gecmeden
+  sprint kapanmaz; kullanici **canli turu** sprint icindeki bir kontrol
+  listesiyle yapar.
+- **Erisilebilirlik varsayilan:** yeni ya da yeniden duzenlenen her ikon
+  dugmesinin `accessibilityLabel`'i ve `.help`'i olur; renk tek bilgi
+  tasiyicisi degildir; ana akislar klavyeyle yapilabilir.
+- Yeni kullanici metinleri TR ile; surum notu CHANGELOG bolumunden uretilir —
+  CHANGELOG kullaniciya yazilir ve tag'den once commit'lenir.
 
-**Bilincli olarak v13 disinda:** `.apkg` export (Won't), sayfali EPUB,
-kapsama metriginin yeniden kalibrasyonu, embeddings/RAG, kisiye ozel FSRS
-agirlik optimizasyonu, AnkiConnect, iOS/iPadOS, PDF'te ruby gloss.
-Apple-Developer-kilitli kalemler (notarization, widget, App Group, CloudKit,
-sandbox/bundle id) uyelik gelene kadar Won't.
+**Bilincli olarak v14 disinda:** Golgeleme, cumle kaydetme, kelime haritasi,
+karakter rehberi, okuma cetveli ve diger yeni ozellikler (fikir havuzunda);
+iOS; Apple-Developer-kilitli kalemler (notarization, widget, App Group,
+CloudKit).
 
 ---
 
-## Sprint 0 — v1.41.1 "Borc" (Must, kisa)
+## Sprint 0 — "Zemin" (Must, kisa)
 
-- [ ] **Canli tur** (v1.39–v1.41'den kalan): Ayarlar ▸ Genel ▸ Yedekler; JS
-      kapali EPUB'da secim/hover/vurgu/karaoke; bir Claude modeliyle Inspector;
-      Ayarlar ▸ AI anahtar + ozet; tanim Apple'dan / etimoloji saglayicidan;
-      cumle seridinde dil paketi istemi; odak/zen giris-cikis; PDF'i yeniden
-      acinca son sayfa; calisan modulu yeniden baslatma. **Swift 6 icin
-      ekle:** gunluk hatirlatmayi ac/kaydet (bildirim zamanlama yolu),
-      ⌃⌥Space, TTS ile sayfa okuma. (2026-09-30: kullanici tam ekran bir
-      uygulamadaydi, pencere gorunur Space'e alinamadi — gorsel tur yapilamadi)
-- [x] **Swift 6 dil modu** (uygulama hedefi `SWIFT_VERSION = 6.0`, test
-      hedefleri 5'te): arka plan kuyrugunda cagrilan iki ObjC tamamlama
-      blogu ana-aktor izolasyonunu miras aliyordu — Swift 6'da calisma
-      zamani tuzagi. `SpotlightIndexer.reindexAllWords` `nonisolated`,
-      `DailyReminderManager.schedule` async `center.add` kullaniyor.
-      Delegate'ler (`UNUserNotificationCenter`, `AVSpeechSynthesizer`,
-      `WKNavigation`, `WKScriptMessage`) zaten `nonisolated`; `DispatchQueue`
-      closure'lari `@Sendable`. Swift 6 modulune karsi derlenen test
-      hedefinde `@MainActor` eksik 20 sinif desene cekildi (metotlar
-      `async`), bir `wait(for:)` → `await fulfillment`. Temiz derleme 0
-      uyari; **533 test, 0 hata, 1 atlanan**. Arka plan canli kontrolu:
-      acilis + Spotlight yeniden indeksleme, EPUB acma, normal cikis —
-      cokme yok
-- [ ] Hijyen devri: `open -g` ile pencere acilmamasi; test hedeflerinin
-      `MACOSX_DEPLOYMENT_TARGET = 26.2` farki
+Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
 
-## Sprint 1 — v1.42.0 "Kelimenin hayati" (Must)
+- [ ] **Yerlesim dongusu korumasi** — test yardimcisi: bir gorunumu kisa bir
+      `NSWindow`'da barindirip pencerenin buyumedigini dogrular (v13'teki
+      Dilbilgisi testinin genellestirilmisi). Mevcut kirilgan yuzeylere
+      uygulanir: Inspector sabit bolgesi (kelime karti, ifade basligi,
+      kontrol seridi), baglam seridi, ozet karti, secim cubugu
+- [ ] **Performans tabani** — `os_signpost` + olcum testleri: soguk acilis,
+      277 sayfalik PDF ve 40 bolumluk EPUB acma, bolum gecisi, Inspector'da
+      ilk sonuc (on-device), 1.000 kelimelik listeyi kaydirma. Sayilar
+      roadmap'e yazilir; sonraki sprintler bunlari kotulestiremez
+- [ ] **CI esitligi** — yerel `make ci-test` hedefi CI ile ayni komutu
+      calistirir; sprint sonu kurali (push + CI yesil). Xcode 26.x'te
+      reddedilen kaliplar (yakalanan closure, Logger'da `var`) CONTRIBUTING'e
+- [ ] **Surum notu is akisinin uctan uca denenmesi** — `workflow_dispatch`
+      yolu da `release_notes.md` uretip artifact olarak yukler; mevcut bir
+      tag uzerinde calistirilip cikti kontrol edilir
+- [ ] **Kod sagligi (UI isini kolaylastiran kadari)** — EPUBReaderView'in
+      gomulu JS'i `Resources/epub/*.js` dosyalarina (ayni icerik, mevcut
+      testler degismeden gecer); PDFKitView Coordinator'i ayri dosyaya.
+      Davranis degismez
 
-Amac: kaydedilen kelime, okudugun her yerde izini birakan bir nesneye donussun.
-Bu sprint S2–S4'un veri temelidir.
+## Sprint 1 — "Okuyucu kabugu" (Must)
 
-**Spike:** 277 sayfalik PDF ve uzun bir EPUB'da, sayfa/bolum basina eslesme +
-kayit maliyeti (ms) ve bir okuma oturumunun urettigi yazma sayisi. Kapi: sayfa
-cevirme hissedilir sekilde yavaslamaz (< 16 ms ana thread). **Sonuc:** tarama
-(lemma + cumle bolme) ve EPUB metin cikarma tamamen ana thread disinda;
-ana thread'de yalniz dwell sonrasi bir `page.string` + dizi ekleme. Sayfa
-cevirmede is yok — `.task(id:)` dwell'i pasaj degisince iptal ediyor.
-Yazma: okunan sayfa basina en fazla bir kez (ayni kelime/yer/gun tekillesir).
+Amac: sayfa disindaki her sey sakinlessin; okuyucu sayfaya odaklansin,
+araclar istenince bulunabilsin. **Maketle baslar.**
 
-- [x] **Karsilasma Gunlugu** — `WordEncounterStore` (`word_encounters.json`,
-      yedek + karantina kapsaminda) + saf `EncounterScanner`. Sayfa 8 sn,
-      bolum 15 sn ekranda kalinca okunmus sayilir (`ContentView+Encounters`,
-      `.task(id:)` ile — kaydirip gecilen sayfa sayilmaz). Cekimli bicimler
-      dahil; ayni kelime+yer+gun tek kayit; kelime basina son 50; silinen
-      kelimelerin kayitlari budanir; kelimenin kaydedildigi cumle sayilmaz.
-      FSRS'e yazmaz. **Canli turda bulunan:** PDF'te ilk gecis cogu zaman
-      sayfa basligi ("REM-Sleep Dreaming") — artik en az 6 kelimelik ilk
-      duzyazi cumlesi tercih ediliyor, yoksa ilk gecis
-- [x] **Kelime Sayfasi (UI)** — `SavedWordDetailSheet` yeniden tasarlandi
-      (520×680): ust bolum (kelime, ses, CEFR, ustalik, tanim), "su an
-      hatirlama olasiligin" gostergesi (FSRS retrievability) + sonraki tekrar,
-      "okumalarinda karsina cikti" listesi (cekimli bicim kalin; kaynak,
-      sayfa, ne zaman, ×adet), kaydettigin yer, Ayrintilar altinda
-      etiket/not/ciktilar. Cumleye tiklamak kitabi o sayfada acar
-      (`DocumentJump`: konum once okuma konumu olarak yazilir, sonra
-      `openWindow`; acik pencere bildirimle atlar). Tam sayfa pencere yerine
-      buyuk sheet: ayri pencere ortam/pencere yonetimini buyutuyordu
-- [x] **Cloze — bilincli sapma:** `QuizMode.cloze` eklenmedi, cunku mevcut
-      "Type" modu zaten kaydedilen cumleden cloze'du; ikinci mod ayni isi
-      yapardi. Yeni olan baglam cesitliligi: `ClozeContext` kart cumlesini
-      kaydedilen cumle + karsilasma cumleleri arasinda tekrar sayisina gore
-      dondurur, kaynagi kartta gosterir. Yalniz kelimenin kaydedildigi
-      bicimde gectigi cumleler — cevap o bicime gore notlaniyor. FSRS yolu
-      degismedi (Type zaten yaziyordu)
-- [ ] Should: **Cumle madenciligi** — ertelendi (kullanici karari bekliyor).
-      Etki alani genis: `SavedWord` cumle olunca vurgulama (butun cumle alti
-      cizili), kapsama/lemma anahtarlari, CEFR tahmini, coktan secmeli ve
-      eslestirme modlari, Anki disa aktarimi ayri ele alinmali
-- [x] Testler (25 yeni, `WordEncounterTests` + `WordPageTests`):
-      tekillestirme, ust sinir, budama, dil kapsami, kalicilik, bozuk dosya
-      karantinasi, yedek listesi, baslik yerine duzyazi, cekimli bicim,
-      cloze rotasyonu ve cekimli-bicim atlama, PDF atlama konumu, tekil
-      ozet. Mutation-check: tekillestirme, dil filtresi, cloze rotasyonu,
-      bicim atlama — geri alininca dusuyorlar
-- [x] Dogrulama: tam paket **558 test, 0 hata, 1 atlanan**; 0 uyari;
-      katalog 23 yeni TR metin. Canli: PDF'te dwell → kayit, Kelime
-      Sayfasi, s.145 → s.143 atlama
+- [ ] **Baglam seridi** — iki bolge: solda belge + konum (bolum/sayfa, %,
+      kalan sure), sagda tek bir "bu bolum" hapi (hazirlik, bilinen %,
+      bekleyen); tiklayinca hepsini gosteren bir panel. Sayaclar (not, kayit)
+      kenar cubuguna. Dar pencerede kesilmez
+- [ ] **Secim cubugu** — birincil eylemler etiketli (Kaydet, Analiz), digerleri
+      tek bir "Araclar" menusunde gruplu ve **adlariyla** (Sadelestir, Yeniden
+      Anlat, Vurgula ▸ renkler, Seslendir, Kopyala). Pasaj araclari kisa
+      secimde gorunur ama pasif ve nedenini soyler
+- [ ] **Sag tik menusu** — secim cubuguyla ayni eylemler, ayni sirada (bugun
+      PDF ve EPUB menuleri farkli)
+- [ ] **Odak/Zen/anlamlar tutarliligi** — Gorunum menusu, ⌘K ve Zen cubugu ayni
+      komut setini gosterir; eksikler tamamlanir
+- [ ] Testler: "pencereyi buyutmez" (serit, cubuk), menu/palet komut esitligi
 
-## Sprint 2 — v1.43.0 "Okuma dongusu" (Must)
+## Sprint 2 — "Inspector" (Must)
 
-Amac: okumanin oncesi ve sonrasi. Uygulamayi acinca "bugun ne yapacagim"
-sorusunun cevabi tek bakista.
+Amac: Inspector'u bir **calisma alani** yapmak: once kelime, sonra derinlik;
+cumle secildiginde o cumle icin araclar. **Maketle baslar.**
 
-**Spike:** "onceki bolumde" ozeti ve bolum hazirligi siralamasi icin
-cihaz-ici model vs saglayici; spoiler sizintisi (ozet, okunmamis sayfalari
-gormemeli — yalniz okunan metin gonderilir) ve CEFR seviyesine uyum.
-**Sonuc:** bir bolum ~28k karakter (~7k token) — cihaz-ici modelin 4096
-token'lik penceresine sigmaz; yer iminden onceki son ~6000 karakter yeterli.
-Cihaz-ici ~3 sn, dogru, sade B1; ama Suc ve Ceza'da 3 denemeden 1'i guardrail
-reddi → `AppleOnDevice.chatWithFallback` (cihaz-ici, olmazsa saglayici).
-LM Studio (gemma-4-e4b) 3–11 sn; dusunen model 300 token'da bos cevap
-dondu → 1200 token payi. Hazirlik: uygulama yalniz kayitli kelimeleri
-biliyor; siklik siralamasi kolay kelime veriyor (understand, moment) →
-adaylar nadir icerik lemmalari (≥6 harf, isim degil), zoru model seciyor.
-Kullanici karari: seviye ayari, varsayilan B1.
+- [ ] **Bilgi mimarisi** — kelime secimi: kelime karti (ust) → hizli eylemler
+      (kaydet, dinle, Anki) → "Aciklamalar" (modul cipleri + sonuc) → Ask AI.
+      Ifade/cumle secimi: cumle + ceviri → "Araclar" (Dilbilgisi, Sadelestir,
+      Yeniden Anlat) → modul sonucu
+- [ ] **Modul izgarasi** — sik kullanilan modullerin gorunur, digerlerinin
+      "Daha fazla" altinda olmasi; otomatik calistirma ayari ayni kalir
+      (v13'te kullanici kararina birakilmisti — maket asamasinda onaylanir)
+- [ ] **Sonuc okunabilirligi** — modul ciktilarinda baslik/govde tipografisi,
+      ornek cumlelerde kelime vurgusu, kopyala/kaydet eylemleri tek yerde
+- [ ] **Saglamlik** — tum sabit bolge yeni kurala gore (esnek ya da sinirli
+      ScrollView); her bolum icin "pencereyi buyutmez" testi
+- [ ] **Tema uyumu** — Inspector arka plani sayfa temasini izleyebilir (ayar;
+      varsayilan sistem gorunumu)
 
-- [x] **Seviyen** — Ayarlar ▸ Genel (`StorageKey.learnerLevel`, varsayilan
-      B1); ozet ve hazirlik bu seviyeye gore yazilir (S3 "Seviyeye Indir"
-      de kullanacak)
-- [x] **"Onceki bolumde…"** — kitap ≥ 3 gun sonra acilinca sayfanin
-      ustunde yuzen kart (`ReadingRecap` saf + `ReadingLoopModel`).
-      Metin: PDF'te yer imine kadar son 4 sayfa, EPUB'da bolumun kaydedilen
-      konuma kadarki kismi (+ bolum basindaysa onceki bolum), son 6000
-      karakter — yer iminden sonrasi hic gonderilmez (testli, mutation-check).
-      Onsoz satirlari ("I am a foundation model…") temizlenir; hata sessiz.
-      Ayarlardan kapatilir. **Canli turda bulunan cokme:** kart okuyucunun
-      ustundeki VStack'teydi; buyuyunce WKWebView'i yeniden boyutlandirip
-      AppKit yerlesim dongusune soktu ("more Update Constraints passes than
-      views" → SIGTRAP). Kart artik okuyucunun uzerinde overlay — okuyucu
-      cercevesi hic degismiyor; tekrar denemede cokme yok
-- [x] **Bolum Hazirligi** — EPUB bolumu acilinca baglam seridinde "N
-      kelimeyle isin" cipi; acilir listede tanim (hover sozlugunun cevap
-      dilinde), bolumdeki ilk cumle, Kaydet / Tumunu Kaydet. Kitap+bolum
-      basina bellekte onbellek; basarisiz istek onbellege girmez.
-      **Sapma:** yalniz EPUB — PDF'te bolum siniri yok (icindekiler
-      uzerinden ayrica bakilabilir). Roadmap "tamamen offline" diyordu;
-      siklik verisi olmadan zor kelime secilemiyor, secim modelde
-- [x] **"Bugun" ekrani (UI)** — hedefli degisiklik: dashboard zaten kaldigin
-      yer / tekrar / hedef / seri kartlarini tasiyordu, ayri plan karti ayni
-      sayilari ikinci kez gosterirdi. Baslik "Bugun", sira gunun isine gore
-      (kaldigin yer → tekrarlar → okuma hedefi), kaldigin yer kartinda "N
-      gundur acmadin — acinca kisa ozet goreceksin"
-- [ ] Should: **Karakter & Yer Rehberi** — S3'e devredildi
-- [ ] Could: **Kenar Notlari**, **Anlama Kontrolu** — alinmadi
-- [x] Gizlilik ozeti: "Ozetler ve bolum hazirligi" satiri; alt yazi ozetin
-      son bir iki sayfayi gonderdigini soyluyor. 19 yeni TR metin
-- [x] Testler (12 yeni, `ReadingLoopTests`): ozet esigi ve ilerleme sarti,
-      yer imi siniri (spoiler), kelimeden baslayan kuyruk, onsoz temizligi,
-      aday secimi (isim/kisa/kayitli disarida, alfabetik), siki parse,
-      cumle esleme. Mutation-check: spoiler siniri, kayitli kelime disleme.
-      S1'den kalan zamana bagli bir test (iki yazilis mikro saniye arayla)
-      aralikli dusuyordu — tarihler sabitlendi
-- [x] Dogrulama: tam paket **570 test, 0 hata, 1 atlanan** (iki kez); 0
-      uyari. Canli: Bugun ekrani, Why We Sleep EPUB'da ozet karti (dogru B1
-      ozet) + "5 kelime" cipi. **Dogrulanmadi:** hazirlik listesinin
-      gorunumu — pencere baska bir Space'teydi, popover acilmadi
+## Sprint 3 — "Ana ekran, kitaplik ve kelimeler" (Should)
 
-## Sprint 3 — v1.44.0 "Metni sana uydur" (Must)
+Amac: uygulamayi acinca ne yapilacagi, nereye gidilecegi tek bakista;
+araclar bir yerde. **Maketle baslar.**
 
-Amac: zor metni, onu birakmadan okunur kilmak. Sprintin en gorunur ozelligi.
+- [ ] **Bugun = merkez** — kaldigin yer, bugunun tekrarlari, okuma hedefi ve
+      bir **"Araclar"** satiri (Makale ice aktar, Kelimelerinden hikaye,
+      Tekrar penceresi) — daginik sheet'lere tek giris
+- [ ] **Kitaplik** — kapak izgarasi/liste gecisi, zorluk/kapsama rozeti,
+      koleksiyonlar daha gorunur; ice aktarilan makaleler ve hikayeler ayri
+      rafta ("Makaleler", "Hikayeler")
+- [ ] **Kelimeler** — liste satirlari sadelesir (durum, seviye, son
+      karsilasma), filtreler tek satirda; kelime sayfasi kenar cubugundan da
+      acilir
+- [ ] **Bos durumlar** — her bos ekran ne yapilacagini soyler ve tek eylem
+      sunar
+- [ ] **Yenilikler** — guncellemeden sonraki ilk acilista kisa bir "Bu
+      surumde" sayfasi (CHANGELOG ozetinden, TR)
 
-**Spike:** EPUB'da `<ruby>` enjeksiyonunun reflow, scroll konumu, bookmark
-yaklasikligi, karaoke ve saved-word vurgusuyla etkilesimi; 300 sayfalik
-kitapta bolum acilis suresi. Kapi: bolum acilisi +%20'den fazla uzamaz.
-**Sonuc:** gercek `<ruby><rt>` elenecek — `rt` metni `textContent`'e girer;
-vurgu capalari, arama ve karaoke karakter sayisina dayandigi icin hepsi
-kayar. Anlam CSS ile cizildi (`::after { content: attr(data-rell-gloss) }`):
-metin degismiyor (testli, mutation-check: `rt` eklenince test dusuyor).
-Bolum acilisi degismiyor — anlamlar bolum yuklendikten sonra ayri bir
-istekle gelir ve mevcut isaretleme gecisine katilir. Kayitli ciktilar
-uzun duzyazi ("A beverage is any liquid…") — ustune sigacak 1–3 kelime
-sezgiyle cikmiyor; bolum basina tek toplu istek (cihaz-ici ~1.5 sn,
-cikti bicimi temiz: `sleep | uyku`), oturum boyu onbellek.
+## Sprint 4 — "Cila: ayarlar, tanitim, erisilebilirlik" (Should)
 
-- [x] **Anlamlar kelimenin ustunde (EPUB)** — Gorunum ▸ "Anlamlari
-      Kelimelerin Ustunde Goster" (⌥⌘G, varsayilan kapali). Kapsam: bolumde
-      gecen ve hala ogrenilen kayitli kelimeler + bolum hazirligi kelimeleri
-      (bunlar alt cizgisiz). Cekimli bicim sozluk biciminin anlamini alir.
-      "Yanit Dili"ne uyar. Anlam acikken satir araligi 2.35. Canli: "sleep"
-      ustunde "uyku", 11 anlam ~2 sn. Acilip kapanirken okuma konumu oransal
-      korunuyor — **dogrulanmadi**: WebKit'in scroll anchoring'i test
-      ortaminda zaten koruyordu, test ayrim yapmadigi icin cikarildi; canlida
-      acilista hafif kayma goruldu
-- [x] **Seviyeye Indir** — secim cubugunda 6+ kelimelik secimde "Seviyene
-      gore sadelestir" → yan yana sheet (orijinal | seviyende), seviye
-      seciciyle yeniden yazma (secici genel ayari degistirir), kopyala,
-      sesli oku. PDF + EPUB. **Sapma:** sade metinde hover/kaydet yok —
-      sheet icinde okuyucu motoru yok; metin secilebilir. **Canli
-      dogrulanmadi:** sentetik cift tiklama WKWebView'da secim olusturmuyor
-- [x] **Inspector "Kelime Karti" (UI)** — tek kelimelik secimde baslik karta
-      donusur: buyuk kelime, ses, (kayitliysa) CEFR + durum ikonu,
-      hover sozlugunun onbellekli tek satirlik anlami ("Yanit Dili"ne uyar),
-      "N kez karsilastin". **Sapma:** modul izgarasi "daha fazla" altina
-      alinmadi — otomatik calistirma ayarini ve yerlesik akisi degistirir,
-      kullaniciyla konusulacak. **Canli dogrulanmadi** (ayni neden)
-- [ ] Should: **Dilbilgisi Mercegi**, **Komut Paleti (⌘K)**, S2'den
-      **Karakter & Yer Rehberi** — alinmadi
-- [ ] Could: **Okuma Cetveli** — alinmadi
-- [x] Testler (12 yeni: `InterlinearGlossTests` 8, `ReadingLoopTests` +4):
-      gloss parse/uzunluk/cekim, gercek okuyucu yapilandirmasinda cizim
-      (textContent sabit, `::after` icerigi, hazirlik kelimesi alt cizgisiz,
-      kapatinca temizlik, tirnakli anlam), cihaz-ici model hatti (model
-      yoksa XCTSkip), sadelestirme uygunlugu/kirpma/temizlik, kart ilk
-      cumlesi. 9 yeni TR metin
-- [x] Dogrulama: tam paket **582 test, 0 hata, 1 atlanan**; 0 uyari
-- Not: `defaults` komutu eski sandbox kapsayicisindaki tercih dosyasini
-  okuyup yaziyor; uygulama `~/Library/Preferences` altindakini kullaniyor
-  (canli testte yanlis dosyaya yazilan anahtar geri alindi)
+Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
 
-## Sprint 4 — v1.45.0 "Uretim ve disarisi" (Should)
+- [ ] **Ayarlar** — Genel bolunur: Okuma, Ogrenme (seviye, ozet, hazirlik,
+      anlamlar), AI (saglayici, cihaz-ici, gizlilik), Veri (yedekler);
+      `@AppStorage` anahtarlari degismez
+- [ ] **Tanitim** — onboarding'e okuma dongusunu gosteren kisa tur (sec →
+      anla → kaydet → tekrar), atlanabilir; Yardim menusunden tekrar acilir
+- [ ] **Erisilebilirlik turu** — tum ikon dugmeleri etiketli; VoiceOver ile ana
+      akis (belge ac → kelime sec → kaydet → tekrar) bastan sona; klavye
+      odagi Inspector ve sheet'lerde; kontrast (tum sayfa temalari)
+- [ ] **Gorsel tutarlilik** — kart stilleri ve vurgu gradyani tek kaliba;
+      sabit padding'ler ve ham fontlar DS token'larina; acik/koyu ve 6 sayfa
+      temasinda ekran gorselleriyle kontrol
+- [ ] **Turkce metin turu** — gorunen tum metinlerin TR karsiligi gozden
+      gecirilir (kisa, tutarli terimler)
+- [ ] Kapanis: tam test, performans tabanina gore karsilastirma, canli tur,
+      CHANGELOG; tek surum ya da sprint basina surum — kullanici karari
 
-Amac: yazdirmak, konusturmak, kitaplik disindaki metni iceri almak. En
-riskli kalemler bilincli olarak sonda.
+---
 
-**Spike:** (a) mikrofon: sandbox'ta `com.apple.security.device.audio-input`
-entitlement'i + `NSMicrophoneUsageDescription` / `NSSpeechRecognitionUsageDescription`
-ile `SFSpeechRecognizer` on-device calisiyor mu — bundle id ve sandbox
-degismeden. (b) web: 10 haber/blog sitesinde basit readability sezgisinin
-basari orani. Kapi: (a) izin akisi calisir, (b) ≥ 7/10 okunur cikti.
-**Sonuc (b):** ilk surum 2/10 — iki hata: tidy XHTML ad alaninda
-`elements(forLocalName:uri: nil)` hicbir sey eslestirmiyordu; BBC gibi
-siteler her paragrafi ayri div'e sariyor. Readability puanlamasi (paragraf
-uzunlugu ebeveyne, ½ buyuk ebeveyne, ⅓ ustune), bagalanti yogunlugu, HTTP/
-meta karakter seti (tidy bayttan Latin-1 okuyup "â€™" uretiyordu), cift
-gizli etiket kurali → **8/10** (BBC, Guardian, NPR, DW, Verge, Aeon, Le Monde,
-El Pais; Ars ve Spiegel JS/ucretli). **(a) yapilmadi** — asagiya bakin.
+## Fikir havuzu (v14'e alinmadi)
 
-- [x] **Yeniden Anlat (Retell)** — secim cubugunda 6+ kelimede "Kendi
-      cumlelerinle anlat" → sheet: pasaj (gizlenebilir), editor, "Kontrol
-      et" → duzeltilmis metin kelime duzeyinde fark (silinen kirmizi+ustu
-      cizili, eklenen yesil+kalin — yalniz renk degil) + ana dilde kisa not;
-      duzeltmedeki yeni kelimeler tek tikla kaydedilir. `CORRECTED:`/`NOTE:`
-      etiketleri parser-bagli, Ingilizce sabit. FSRS'e yazmaz. Esitlikte
-      once silinen sonra eklenen kelime (test buldu)
-- [x] **Web makalesi ice aktarma** — Dosya ▸ Web Makalesi Ice Aktar… (⇧⌘I),
-      panodaki baglanti onerilir. `ArticleExtractor` (saf) → `MiniEPUB`
-      (EPUB 3) → `ZIPWriter` (stored + gercek CRC-32; baska okuyucular da
-      acar) → Application Support/RELL/Articles, ayni sayfa ikinci kez
-      alininca "-2". Yalniz sayfanin kendisi cekilir; resim/betik yok, AI'ya
-      bir sey gitmez (gizlilik tablosunda ayri satir). **Canli turda
-      bulunan:** paulgraham.com gibi `<p>`'siz, `<br><br>`'li sayfalar
-      reddediliyordu → geri donus yolu (dogrudan metni en cok olan oge,
-      cift br'den bolunur; `<br>` iceren satir ici `<font>` kapsayici sayilir)
-- [ ] Should: **Golgeleme** — alinmadi. Spike (a) proje yapi ayarlarina
-      (Info.plist izin aciklamalari) ve macOS izin istemlerine dokunuyor;
-      ustune kayit + cihaz-ici transkript + hizalama arayuzu. Kullanici
-      karariyla ayri ele alinacak
-- [x] Should: **Kelimelerinden Hikaye** — Git ▸ Kelimelerinden Hikaye…:
-      tekrar zamani gelen (sonra kuyruktaki) 4–12 kelime, seviyende ~300
-      kelimelik oyku → mini EPUB (Application Support/RELL/Stories), RELL'de
-      acilir; sonda hangi kelimelerin kullanilmadigi yazar (lemma esleme).
-      FSRS'e yazmaz
-- [ ] Could: **Bildirimden tekrar**, **Menu cubugunda siradaki kelime**,
-      **Kelime Takimyildizi** — alinmadi
-- [x] Testler (15 yeni, `OutputAndImportTests`, ag yok — yerel HTML):
-      sarili paragraflar, bagalanti/cift etiket, meta karakter seti, br
-      geri donusu, kisa sayfa, adres ayristirma, CRC-32 kontrol degeri,
-      ZIP gidis-donus, mini EPUB acilir + kacis, dosya adi, Retell parse,
-      kelime farki, hikaye parse + kullanilan kelimeler. Mutation-check:
-      ata puanlamasi, bagalanti yogunlugu. 29 yeni TR metin
-- [x] Dogrulama: tam paket **597 test, 0 hata, 1 atlanan**; 0 uyari.
-      **Canli dogrulanmadi:** ice aktarma ve hikaye akislari (ekran kilitli/
-      pencere baska Space'te; ilk deneme PG sayfasinda duzgun hata verdi),
-      Retell (sentetik cift tiklama WKWebView'da secim olusturmuyor).
-      Canli denemeler kutuphaneye ya da diske iz birakmadi
-
-## Sprint 5 — kapanis (kullanici karari: S5 bitince tek surum)
-
-Kapsam (kullanici secimi, 2026-09-30): test izolasyonu + canli tur, Komut
-Paleti + Dilbilgisi Mercegi, bildirim/menu cubugu tekrari. Golgeleme, cumle
-kaydetme ve modul izgarasini gizleme **v14'e ertelendi**; Karakter Rehberi
-ve Okuma Cetveli alinmadi.
-
-- [x] **Test izolasyonu** — `RELLProcess.isTestHost`: test host'unda veri
-      klasoru surece ozel gecici klasor; Spotlight, kisayol, bildirim ve
-      gunluk yedek atlanir. Dogrulama: tam kosuda gercek veri dosyalarinin
-      degisiklik zamanlari ve yedek sayisi degismedi. Regresyon testi
-- [x] **Komut Paleti (⌘K)** — Gorunum ▸ Komut Paleti: komutlar, moduller,
-      acik kitabin bolumleri, kayitli kelimeler, kutuphane; sayi → o sayfa/
-      bolum. Buyuk/kucuk harf ve aksan duyarsiz; siralama saf (`PaletteMatcher`)
-- [x] **Dilbilgisi Mercegi** — Inspector'da ifade/cumle seciminde acilir
-      "Dilbilgisi": `NLTagger` sozcuk turleri, renk + kelimenin altinda
-      etiket (yalniz renk degil); istege bagli "Yapiyi acikla"
-- [x] **Bildirimden tekrar** — gunluk hatirlatma, zamani gelen bir kelimeyi
-      sorar; banner'da "Bildim / Henuz Degil" → FSRS (hatirlama); cevaptan
-      sonra bildirim siradaki kelimeyle yeniden kurulur
-- [x] **Menu cubugunda siradaki kelime** — Hizli Arama penceresinin altinda
-      kart: anlami goster, "Henuz Degil / Bildim" → FSRS
-- [x] Testler: 598 → **604**, 0 hata, 0 uyari; 39 yeni TR metin
-- [x] **Canli tur (kullanici, 2026-09-30 → 10-01)** — tum S1–S5 ozellikleri
-      calisiyor. Turda bulunan ve yayindan once duzeltilenler:
-      - Dilbilgisi Mercegi uygulamayi cokertti (iki kez). Ilk teshis
-        (FlowLayout) yanlisti; gercek neden: Inspector'in sabit bolgesindeki
-        kuculmeyen icerik sutunun en az yuksekligini pencereninkinden buyuk
-        yapiyordu → AppKit constraint dongusu. Deneyle kanitlandi (serbest
-        pencere 69.161 pt'ye buyudu), mercek 160 pt'lik ScrollView'da;
-        regresyon testi mutasyonla ayrim yapiyor
-      - Dilbilgisi aciklamasi zamanlari yanlis adlandiriyordu (geniş zaman →
-        "simdiki zaman"). 10 cumlelik olcum: cihaz-ici model cogu yanlis,
-        yapilandirilmis saglayici 10/10 → aciklama yalniz saglayicida,
-        fiil-temelli istemle
-      - Kelimelerinden Hikaye iki kez gorunuyordu (model istemdeki
-        `<a short title>` yer tutucusunu kopyalayip hikayeyi baslik satirina
-        yazdi) → yalniz baslik satiri, yeni istem; 6/6 olcum temiz
-      - Sadelestir/Yeniden Anlat zor bulunuyordu → ⌘K'ye eklendi
-- [x] **Yayin 1.42.0** (2026-10-01, kullanici onayiyla) — ilk release run'i
-      CI'in Xcode 26.3 derleyicisinde iki Swift 6 veri yarisi hatasiyla dustu
-      (`ReadingLoopModel`: yakalanan cache-key closure'i ve logger
-      interpolation'indaki `var`; Xcode 27 kabul ediyordu). Duzeltme
-      `d9c4bb0`, CI testleri 608/0; tag bu commit'e tasindi (v1.38'deki gibi).
-      Release yayinda, Latest; DMG 6,5 MB + ZIP. **Ders:** v13 kodunun
-      tamami ilk kez yayin push'unda CI'da derlendi — sprint sonlarinda
-      `main`'i push edip test CI'ini calistirmak bunu erken yakalardi
-- [x] Testler: **608 test, 0 hata, 1 atlanan**; 0 uyari
-
-**v14'e devreden:** Golgeleme (mikrofon/konusma izinleri), cumle kaydetme,
-Inspector modul izgarasini gizleme, Karakter & Yer Rehberi, Okuma Cetveli,
-Kelime Takimyildizi, PDF icin bolum hazirligi (icindekiler uzerinden).
-
-## Fikir havuzu (sprinte alinmadi)
-
-- **Seviye testi (ilk acilis)** — 3 dakikalik LexTALE-tarzi evet/hayir kelime
-  testi → baslangic "bilinen" kumesi; kapsama *hesabi* degismez (onceki karar)
-- **Tekrar ekrani: surukleyici mod** — tam ekran kart, arka plan kelimenin
-  geldigi kitabin kapak renginden degrade, tamamen klavye (Space / 1–4)
+Golgeleme (mikrofon/konusma izni), cumle kaydetme, kelime haritasi, karakter
+& yer rehberi, okuma cetveli, PDF icin bolum hazirligi (icindekilerden),
+anlama kontrolu, kenar notlari, seviye testi.
 
 ## Genel dogrulama (her sprint sonu)
 
-- Build + **tam birim test paketi** (UI testleri haric), CI ile birebir komut;
-  her regresyon testi mutation-check (duzeltme geri alininca duser)
-- `Localizable.xcstrings`: `-exportLocalizations` ile yeni metinler toplanir,
-  TR eklenir; commit edilmemis katalog degisikligi birakilmaz
-- DS denetimi; macOS 15 fallback yolu derleniyor; yeni dosyalar yedek kapsaminda
-- Gizlilik ozeti yeni ozellikleri listeliyor
-- Canli tur (tek kopya) → CHANGELOG (kullanici-odakli dil) → tag `vX.Y.Z` →
-  push → **CI release run'i izlenir**, DMG uretimi teyit edilir
+- Tam birim test paketi + "pencereyi buyutmez" testleri; performans tabani
+  kotulesmez
+- `main` push, CI testi yesil (Xcode 26.x)
+- Maketle karsilastirmali ekran gorselleri (acik/koyu)
+- Kullanici canli turu (kontrol listesiyle)
+- `Localizable.xcstrings`: yeni metinler TR ile
