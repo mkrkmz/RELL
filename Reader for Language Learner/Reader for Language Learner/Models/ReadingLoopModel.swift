@@ -229,6 +229,12 @@ final class ReadingLoopModel {
     /// window and chapter for the session, so a word is asked about once.
     @ObservationIgnored private static var glossCache: [String: String] = [:]
 
+    /// Cache key for a gloss. A function, not a captured closure: CI's
+    /// compiler (Xcode 26.3) flagged the closure as a data-race risk.
+    nonisolated static func glossKey(term: String, answerIn: Language, level: CEFRLevel) -> String {
+        "\(answerIn.rawValue)|\(level.rawValue)|\(term)"
+    }
+
     /// Works out which words in the chapter need a meaning above them — saved
     /// words still being learned that occur here, and the warm-up words —
     /// fetches the ones not cached in one request, and publishes the lot.
@@ -268,8 +274,7 @@ final class ReadingLoopModel {
             guard !Task.isCancelled else { return }
 
             let wanted = Array(Set((present + warmUpTerms).map { $0.lowercased() })).sorted()
-            let cacheKey = { (term: String) in "\(answerIn.rawValue)|\(level.rawValue)|\(term)" }
-            let missing = wanted.filter { Self.glossCache[cacheKey($0)] == nil }
+            let missing = wanted.filter { Self.glossCache[Self.glossKey(term: $0, answerIn: answerIn, level: level)] == nil }
 
             for batch in stride(from: 0, to: missing.count, by: InterlinearGloss.maxBatch) {
                 let words = Array(missing[batch..<min(batch + InterlinearGloss.maxBatch, missing.count)])
@@ -281,7 +286,7 @@ final class ReadingLoopModel {
                         maxTokens: InterlinearGloss.maxTokens
                     )
                     for (term, gloss) in InterlinearGloss.parse(raw, requested: words) {
-                        Self.glossCache[cacheKey(term)] = gloss
+                        Self.glossCache[Self.glossKey(term: term, answerIn: answerIn, level: level)] = gloss
                     }
                 } catch {
                     AppLogger.llm.info("Glosses failed: \(error.localizedDescription, privacy: .public)")
@@ -291,9 +296,15 @@ final class ReadingLoopModel {
 
             var result: [String: String] = [:]
             for term in wanted {
-                if let gloss = Self.glossCache[cacheKey(term)] { result[term] = gloss }
+                if let gloss = Self.glossCache[Self.glossKey(term: term, answerIn: answerIn, level: level)] {
+                    result[term] = gloss
+                }
             }
-            AppLogger.llm.notice("Glosses: \(result.count, privacy: .public) of \(wanted.count, privacy: .public) words (\(missing.count, privacy: .public) fetched)")
+            // Plain lets for the log: the logger's interpolation is an
+            // escaping closure, and Xcode 26.3's compiler (CI) rejected
+            // capturing the `var` — "sending 'result' risks causing data races".
+            let found = result.count, asked = wanted.count, fetched = missing.count
+            AppLogger.llm.notice("Glosses: \(found, privacy: .public) of \(asked, privacy: .public) words (\(fetched, privacy: .public) fetched)")
             guard let self, !Task.isCancelled else { return }
             self.glosses = result
             self.glossOnlyTerms = warmUpTerms.filter { result[$0.lowercased()] != nil }
