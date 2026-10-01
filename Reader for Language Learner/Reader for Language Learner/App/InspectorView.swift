@@ -272,7 +272,26 @@ struct InspectorView: View {
 
     // MARK: - Selection Content
 
+    /// The inspector as it's laid out when it fits, and — when the window is
+    /// too short for it — the same content in one scroll view with the
+    /// result panel at a fixed height. Without the fallback the top zone
+    /// (word card, controls, module grid) set a minimum height taller than a
+    /// minimum-size window allows (638 pt against ~548), and AppKit looped
+    /// on its constraints — the crash v13's live pass hit. Guarded by
+    /// `LayoutGuardTests` (v14 Sprint 0).
     var selectionContent: some View {
+        ViewThatFits(in: .vertical) {
+            selectionStack(resultHeight: nil)
+            ScrollView {
+                selectionStack(resultHeight: Self.compactResultHeight)
+            }
+        }
+    }
+
+    /// Result panel height when the whole inspector scrolls.
+    static let compactResultHeight: CGFloat = 260
+
+    private func selectionStack(resultHeight: CGFloat?) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.lg) {
             // ── Zone 1: word + actions + how-to-explain (one cohesive block) ──
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
@@ -285,6 +304,7 @@ struct InspectorView: View {
 
             // ── Zone 3: result ────────────────────────────────────────────────
             resultPanel
+                .frame(height: resultHeight)
 
             // ── Zone 4: ask a follow-up ───────────────────────────────────────
             askAISection

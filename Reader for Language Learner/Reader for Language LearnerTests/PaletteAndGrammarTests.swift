@@ -82,35 +82,4 @@ final class PaletteAndGrammarTests: XCTestCase {
         XCTAssertTrue(GrammarLens.isEligible("The old cat sleeps."))
         XCTAssertFalse(GrammarLens.isEligible(String(repeating: "word ", count: 80)))
     }
-
-    // MARK: - Grammar lens layout (crashed twice in the live pass)
-
-    /// The inspector column doesn't scroll as a whole. Content in it that
-    /// refuses to shrink raises the window's minimum height; in the app the
-    /// window can't grow, and AppKit looped on its constraints until it
-    /// crashed. Here a free window shows the same pressure by growing.
-    func testExpandedGrammarLensDoesNotGrowTheWindow() async throws {
-        let defaults = UserDefaults.standard
-        let previous = defaults.object(forKey: StorageKey.grammarLensExpanded)
-        defaults.set(true, forKey: StorageKey.grammarLensExpanded)
-        defer { defaults.set(previous, forKey: StorageKey.grammarLensExpanded) }
-
-        let sentence = String(repeating: "The old cat sleeps quietly near the warm window. ", count: 6)
-        let column = VStack(alignment: .leading) {
-            GrammarLensView(sentence: sentence, language: .english)
-            Color.clear.frame(maxHeight: .infinity)
-        }
-        .frame(width: 180)
-        .frame(maxHeight: .infinity)
-        let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 180, height: 220),
-                              styleMask: [.titled, .resizable], backing: .buffered, defer: false)
-        window.contentView = NSHostingView(rootView: column)
-        window.orderFrontRegardless()
-        defer { window.orderOut(nil) }
-        for _ in 0..<10 {
-            window.layoutIfNeeded()
-            try await Task.sleep(for: .milliseconds(20))
-        }
-        XCTAssertLessThan(window.frame.height, 400, "the lens forced a minimum height of \(window.frame.height)")
-    }
 }
