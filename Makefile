@@ -4,7 +4,7 @@ DESTINATION = platform=macOS
 CONFIG = Debug
 SIGNING = CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-.PHONY: build test ui-test clean lint format open
+.PHONY: build test ci-test ui-test clean lint format open
 
 ## Derleme
 build:
@@ -23,6 +23,23 @@ test:
 		-destination '$(DESTINATION)' \
 		-configuration $(CONFIG) \
 		$(SIGNING) \
+		-only-testing:"Reader for Language LearnerTests" \
+		-skip-testing:"Reader for Language LearnerUITests" \
+		-parallel-testing-enabled NO
+
+## CI'daki test komutunun aynisi (test.yml): macOS 15 hedefi, temiz derleme
+## klasoru. Sprint sonunda push'tan once calistir. Fark kalir: CI en yeni
+## kurulu Xcode'u (bugun 26.x) kullanir; bkz. CONTRIBUTING "Xcode 26 uyumu".
+ci-test:
+	rm -rf build/ci
+	xcodebuild test \
+		-project "$(PROJECT)" \
+		-scheme "$(SCHEME)" \
+		-destination '$(DESTINATION)' \
+		-configuration Debug \
+		-derivedDataPath build/ci \
+		$(SIGNING) \
+		MACOSX_DEPLOYMENT_TARGET=15.0 \
 		-only-testing:"Reader for Language LearnerTests" \
 		-skip-testing:"Reader for Language LearnerUITests" \
 		-parallel-testing-enabled NO

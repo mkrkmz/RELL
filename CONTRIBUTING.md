@@ -106,6 +106,31 @@ make clean
 
 Veya dogrudan Xcode ile: `Cmd + B` (derle), `Cmd + U` (secilen scheme testleri).
 
+Push'tan once `make ci-test` — CI'daki test komutunun aynisi (macOS 15
+hedefi, temiz derleme klasoru). Her sprint sonunda `main` push edilir ve CI
+testi gecmeden sprint kapanmaz.
+
+### Xcode 26 uyumu
+
+CI en yeni kurulu Xcode'u kullanir (2026-10'da **26.3**); yerelde daha yeni bir
+Xcode (27) Swift 6 veri yarisi denetiminde daha hosgorulu olabilir. v1.42.0'in
+ilk yayin derlemesini dusuren iki kalip — yerelde gecip CI'da hata verir:
+
+- Disaridaki bir degeri yakalayan **closure'i** bir `async` gorev icinde
+  baska bir closure'a (`filter`, `map`) vermek → saf bir `static` fonksiyon
+  kullan.
+- `os.Logger` mesajinda bir **`var`** interpolasyonu (`"\(result.count)"`) →
+  once `let` ile kopyala, onu yaz.
+
+### Sutunlarda yerlesim (v13 cokmeleri)
+
+Inspector, okuyucu ve kenar cubugu sutunlarini AppKit boyutlandirir. Bunlarda
+yuksekligi degisen icerik ya esnek bolgede ya da `maxHeight`'li bir
+`ScrollView`'da olmali; kuculmeyen icerik pencerenin en az yuksekligini
+yukseltir ve AppKit constraint dongusuyle cokertir. Yeni bir yuzeyi
+`LayoutGuardTests`'teki `LayoutGuard.settledHeight` ile test et: kisa bir
+pencerede pencere buyumemeli.
+
 ## Pull Request Sureci
 
 1. Ilgili branch'ten yeni bir branch olusturun
