@@ -20,6 +20,8 @@ final class Reader_for_Language_LearnerUITestsLaunchTests: XCTestCase {
     @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
+        // Throwaway data — see Reader_for_Language_LearnerUITests.
+        app.launchArguments += ["-RELLTestHost"]
         app.launch()
 
         // Insert steps here to perform after app launch but before taking a screenshot,

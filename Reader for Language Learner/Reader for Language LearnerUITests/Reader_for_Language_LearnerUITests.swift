@@ -4,38 +4,37 @@
 //
 //  Created by Muhammet Korkmaz on 10.02.2026.
 //
+//  Every launch passes -RELLTestHost: a UI test starts the real app, and
+//  without the flag it would open the user's own data — alongside their own
+//  copy if it's running (v14 Sprint 0).
+//
 
 import XCTest
 
 final class Reader_for_Language_LearnerUITests: XCTestCase {
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    private func makeApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += ["-RELLTestHost"]
+        return app
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
+    func testLaunchShowsTheHomeScreen() throws {
+        let app = makeApp()
         app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10))
     }
 
+    /// Cold-launch time — part of the v14 performance baseline.
     @MainActor
     func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+            makeApp().launch()
         }
     }
 }

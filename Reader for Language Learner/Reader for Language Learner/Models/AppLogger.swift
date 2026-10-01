@@ -74,7 +74,10 @@ nonisolated enum RELLProcess {
     /// target runs inside the app, so without this every `xcodebuild test`
     /// started a second RELL on the user's real data — alongside their own
     /// copy, if it was open (v13 Sprint 5).
+    /// UI tests launch the app itself, not as a test host; they pass
+    /// `-RELLTestHost` so it gets the same throwaway data (v14 Sprint 0).
     static let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        || ProcessInfo.processInfo.arguments.contains("-RELLTestHost")
 
     /// Per-run data folder for the test host.
     static let testDataDirectory = FileManager.default.temporaryDirectory

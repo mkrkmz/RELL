@@ -75,18 +75,38 @@ CloudKit).
 
 Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
 
-- [ ] **Yerlesim dongusu korumasi** — test yardimcisi: bir gorunumu kisa bir
-      `NSWindow`'da barindirip pencerenin buyumedigini dogrular (v13'teki
-      Dilbilgisi testinin genellestirilmisi). Mevcut kirilgan yuzeylere
-      uygulanir: Inspector sabit bolgesi (kelime karti, ifade basligi,
-      kontrol seridi), baglam seridi, ozet karti, secim cubugu
-- [ ] **Performans tabani** — `os_signpost` + olcum testleri: soguk acilis,
-      277 sayfalik PDF ve 40 bolumluk EPUB acma, bolum gecisi, Inspector'da
-      ilk sonuc (on-device), 1.000 kelimelik listeyi kaydirma. Sayilar
-      roadmap'e yazilir; sonraki sprintler bunlari kotulestiremez
-- [ ] **CI esitligi** — yerel `make ci-test` hedefi CI ile ayni komutu
-      calistirir; sprint sonu kurali (push + CI yesil). Xcode 26.x'te
-      reddedilen kaliplar (yakalanan closure, Logger'da `var`) CONTRIBUTING'e
+- [x] **Yerlesim dongusu korumasi** — `LayoutGuard.settledHeight`: gorunumu
+      sabit boyutlu bir pencerede barindirir, pencerenin buyuyup buyumedigini
+      olcer. **Ilk uygulamada gizli bir cokme buldu:** Inspector'in tamami
+      cumle seciliyken en az 638 pt, kelimede 492 pt istiyordu; en kucuk
+      pencere (600 pt) sutuna ~548 birakir → pencere kucultulunce cokme.
+      Duzeltme: `ViewThatFits` — sigarsa bugunku duzen, sigmazsa ayni icerik
+      tek ScrollView'da (sonuc paneli 260 pt). Testler: Inspector (cumle,
+      kelime), Dilbilgisi; duzeltmeden once dusuyorlardi. Baglam seridi ve
+      secim cubugu S1'de yeniden yapilirken eklenecek
+- [x] **Performans tabani** — `PerformanceBaselineTests` (olcer, esik
+      koymaz; fixture'lar kodda uretilir). Taban (2026-10-01, Debug, gelistirici
+      Mac'i, 5 tekrar ortalamasi):
+
+      | Is | Sure |
+      |---|---|
+      | 40 bolumluk EPUB'i ac + her bolumun metni | 21 ms (tepe bellek ~91 MB) |
+      | 277 sayfalik PDF'i ac + 20 sayfa metni | 17 ms |
+      | Bir bolumu 1.000 kayitli kelimeye karsi tara (karsilasma) | 140 ms ¹ |
+      | Bolum kapsama profili | 10 ms |
+      | Bolum hazirligi adaylari | 14 ms |
+      | 1.000 kelimelik kelime deposunu yukle | 5 ms |
+      | Uzun bir makaleyi ayikla | 31 ms |
+      | Soguk acilis (UI testi) | olculmedi ² |
+
+      ¹ Ana thread disinda, okunan sayfa basina bir kez — sorun degil; maliyet
+      her taramada kelimelerin kok anahtarlarinin yeniden hesaplanmasi
+      (onbellege alinabilir). ² XCUITest, ayni bundle id'li calisan
+      uygulamayi kapatir — kullanicinin acik RELL'i varken kosulmaz. UI
+      testleri artik `-RELLTestHost` ile acilir (gecici veri)
+- [x] **CI esitligi** — `make ci-test` CI'daki komutun aynisi (macOS 15 hedefi,
+      temiz derleme klasoru). CONTRIBUTING: sprint sonu kurali, Xcode 26.3'un
+      reddettigi iki kalip, sutun yerlesim kurali
 - [ ] **Surum notu is akisinin uctan uca denenmesi** — `workflow_dispatch`
       yolu da `release_notes.md` uretip artifact olarak yukler; mevcut bir
       tag uzerinde calistirilip cikti kontrol edilir
