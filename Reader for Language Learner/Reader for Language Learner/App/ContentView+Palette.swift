@@ -47,6 +47,15 @@ extension ContentView {
                 "moon", enabled: hasDocument, commands.toggleZenMode)
         command("glosses", String(localized: "Show Meanings Above Words"), "character.textbox",
                 enabled: commands.isEPUBDocument) { glossEnabled.toggle() }
+        // The selection bar's passage tools, reachable from ⌘K too (asked
+        // for in the live pass — the bar shows them only on a 6+ word
+        // selection, which made them hard to find).
+        let passage = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isPassage = GradedRewrite.isEligible(passage)
+        command("simplify", String(localized: "Simplify Selection to Your Level"), "text.badge.checkmark",
+                enabled: isPassage) { model.gradedRewriteSource = passage }
+        command("retell", String(localized: "Retell Selection in Your Own Words"), "square.and.pencil",
+                enabled: isPassage) { model.retellSource = passage }
         command("find", String(localized: "Find"), "magnifyingglass", enabled: hasDocument, commands.showFind)
         command("bookmark", commands.isCurrentPageBookmarked ? String(localized: "Remove Bookmark") : String(localized: "Add Bookmark"),
                 "bookmark", enabled: hasDocument, commands.toggleBookmark)
