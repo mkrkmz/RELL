@@ -330,14 +330,29 @@ ve Okuma Cetveli alinmadi.
 - [x] **Menu cubugunda siradaki kelime** — Hizli Arama penceresinin altinda
       kart: anlami goster, "Henuz Degil / Bildim" → FSRS
 - [x] Testler: 598 → **604**, 0 hata, 0 uyari; 39 yeni TR metin
-- [ ] **Canli tur (yayin oncesi, kullanici gerekli)** — ekran kilitliydi.
-      Kontrol listesi: ⌘K; Dilbilgisi; menu cubugu karti; hatirlatmayi
-      acip banner eylemleri; kelime karti; Sadelestir; Yeniden Anlat; web
-      ice aktarma (⇧⌘I); Kelimelerinden Hikaye; hazirlik listesi; ⌥⌘G'de
-      sayfa kaymasi
-- [ ] **Yayin** — CHANGELOG "Unreleased — planned as 1.42.0" hazir; canli
-      tur + kullanici onayindan sonra baslik → `[1.42.0]`, tag, push, CI
-      release run'i izlenir
+- [x] **Canli tur (kullanici, 2026-09-30 → 10-01)** — tum S1–S5 ozellikleri
+      calisiyor. Turda bulunan ve yayindan once duzeltilenler:
+      - Dilbilgisi Mercegi uygulamayi cokertti (iki kez). Ilk teshis
+        (FlowLayout) yanlisti; gercek neden: Inspector'in sabit bolgesindeki
+        kuculmeyen icerik sutunun en az yuksekligini pencereninkinden buyuk
+        yapiyordu → AppKit constraint dongusu. Deneyle kanitlandi (serbest
+        pencere 69.161 pt'ye buyudu), mercek 160 pt'lik ScrollView'da;
+        regresyon testi mutasyonla ayrim yapiyor
+      - Dilbilgisi aciklamasi zamanlari yanlis adlandiriyordu (geniş zaman →
+        "simdiki zaman"). 10 cumlelik olcum: cihaz-ici model cogu yanlis,
+        yapilandirilmis saglayici 10/10 → aciklama yalniz saglayicida,
+        fiil-temelli istemle
+      - Kelimelerinden Hikaye iki kez gorunuyordu (model istemdeki
+        `<a short title>` yer tutucusunu kopyalayip hikayeyi baslik satirina
+        yazdi) → yalniz baslik satiri, yeni istem; 6/6 olcum temiz
+      - Sadelestir/Yeniden Anlat zor bulunuyordu → ⌘K'ye eklendi
+- [ ] **Yayin 1.42.0** — CHANGELOG basligi `[1.42.0] - 2026-10-01`; tag +
+      push kullanici onayi bekliyor, sonra CI release run'i izlenir
+- [x] Testler: **608 test, 0 hata, 1 atlanan**; 0 uyari
+
+**v14'e devreden:** Golgeleme (mikrofon/konusma izinleri), cumle kaydetme,
+Inspector modul izgarasini gizleme, Karakter & Yer Rehberi, Okuma Cetveli,
+Kelime Takimyildizi, PDF icin bolum hazirligi (icindekiler uzerinden).
 
 ## Fikir havuzu (sprinte alinmadi)
 

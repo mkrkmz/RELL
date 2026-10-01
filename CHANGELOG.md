@@ -4,7 +4,7 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
-## [Unreleased] — planned as 1.42.0
+## [1.42.0] - 2026-10-01
 
 Reading, not just looking things up. Roadmap v13 (Sprints 0–5), released
 together.
@@ -29,10 +29,10 @@ together.
   (⌥⌘G) writes a one-to-three-word meaning above the words you're still
   learning and the chapter's hard words.
 - **Simplify to your level.** Select a passage and rewrite it at your level,
-  side by side with the original.
+  side by side with the original — from the selection bar or from ⌘K.
 - **Retell in your own words.** Select a passage, write it from memory, and
   see every correction word by word; words from the correction save in one
-  click.
+  click. On the selection bar and in ⌘K.
 - **Import web articles.** File ▸ Import Web Article… (⇧⌘I) keeps a page's
   text and opens it as a book, with everything RELL does for books.
 - **A story from your words.** Go ▸ Story From Your Words… writes a short
@@ -40,7 +40,8 @@ together.
 - **Command palette.** ⌘K finds commands, modules, chapters, saved words and
   books; type a number to jump to that page.
 - **Grammar lens.** Select a sentence and the inspector tags each word's part
-  of speech, and can explain the structure.
+  of speech, and can explain the structure. The explanation always comes from
+  your AI provider: Apple's on-device model named tenses wrong too often.
 - **A word card in the inspector**: a single word shown large, with its
   sound, level, a one-line meaning and how often you've met it.
 - **Review without opening a window.** The menu bar window shows your next
