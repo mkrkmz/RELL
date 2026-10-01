@@ -4,6 +4,30 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Changed
+
+- **A calmer strip above the page.** It shows where you are on the left and
+  one "This chapter" button on the right: how much of the passage you know,
+  the warm-up words and the reviews due. Click it for the details and the
+  warm-up list. The strip no longer cuts things off in a narrow window.
+- **The selection bar says what it does.** Save and Analyze are labelled
+  buttons; Simplify, Retell, Highlight (now in any color), Speak and Copy
+  are in a Tools menu. For a single word, Simplify and Retell show greyed
+  out with the reason instead of disappearing.
+- **One right-click menu.** PDFs and books now offer the same actions in
+  the same order as the selection bar, including Simplify and Retell.
+  "Look Up in Inspector" is now called "Analyze".
+- **⌘K reaches the View menu.** Zoom, page layout and page theme are in the
+  command palette, and Zen mode's bar has meanings, page theme and read
+  aloud, so you can change them without leaving Zen mode.
+
+### Fixed
+
+- The app no longer crashes when the reader window is made as small as it
+  goes.
+
 ## [1.42.0] - 2026-10-01
 
 Reading, not just looking things up. Roadmap v13 (Sprints 0–5), released

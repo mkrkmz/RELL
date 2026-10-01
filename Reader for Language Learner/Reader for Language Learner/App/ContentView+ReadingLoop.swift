@@ -135,32 +135,88 @@ extension ContentView {
         }
     }
 
-    // MARK: - Warm-up chip
+    // MARK: - "This chapter" pill
 
-    @ViewBuilder
-    var warmUpChip: some View {
-        if case .ready(let words) = readingLoop.warmUp {
-            Button {
-                model.showWarmUp.toggle()
-            } label: {
-                Label(String(localized: "\(words.count) words to warm up"), systemImage: "sparkles")
-                    .font(DS.Typography.caption.weight(.semibold))
-                    .foregroundStyle(DS.Color.accent)
-                    .padding(.horizontal, DS.Spacing.sm)
-                    .padding(.vertical, DS.Spacing.xxs)
-                    .background(DS.Color.accent.opacity(0.1), in: Capsule())
+    /// The context strip's right side (v14 S1): one pill for what concerns
+    /// the passage — how much of it the reader knows, the warm-up words, the
+    /// reviews due from this book — with everything in a panel on click.
+    /// Before, five chips that the strip cut off at narrow widths.
+    func chapterPill(compact: Bool) -> some View {
+        let known = lexicalProfileService.current.flatMap { $0.totalTokens > 0 ? $0 : nil }
+        let warmUpCount = warmUpWords.count
+        let due = currentDueWordCount
+        let needsAttention = warmUpCount > 0 || due > 0
+        let scope = isEPUBDocument ? String(localized: "This chapter") : String(localized: "This page")
+
+        return Button {
+            model.showWarmUp.toggle()
+        } label: {
+            HStack(spacing: DS.Spacing.xs) {
+                if needsAttention {
+                    Circle()
+                        .fill(DS.Color.warning)
+                        .frame(width: 6, height: 6)
+                        .accessibilityHidden(true)
+                }
+                if !compact || known == nil {
+                    Text(scope)
+                }
+                if let known {
+                    if !compact { pillSeparator }
+                    Text("\(Int((known.knownShare * 100).rounded()))%")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(DS.Color.coverageTint(for: known.difficulty))
+                }
+                if !compact, warmUpCount > 0 {
+                    pillSeparator
+                    Text("\(warmUpCount) warm-up")
+                }
+                if !compact, due > 0 {
+                    pillSeparator
+                    Text("\(due) due")
+                }
+                Image(systemName: "chevron.down")
+                    .font(DS.Typography.icon(8, weight: .semibold))
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .accessibilityHidden(true)
             }
-            .buttonStyle(.plain)
-            .help(Text("Hard words in this chapter, before you read it"))
-            .popover(isPresented: Bindable(model).showWarmUp, arrowEdge: .bottom) {
-                WarmUpList(
-                    words: words,
-                    chapterNumber: epubManager.chapterIndex + 1,
-                    isSaved: { term in savedWordsStore.lemmaMatchedWord(for: term) != nil },
-                    onSave: saveWarmUpWord
-                )
-            }
+            .font(DS.Typography.caption.weight(.medium))
+            .foregroundStyle(DS.Color.textPrimary)
+            .lineLimit(1)
+            .padding(.horizontal, DS.Spacing.sm)
+            .padding(.vertical, 3)
+            .background(DS.Color.surface, in: Capsule())
+            .overlay(Capsule().strokeBorder(DS.Color.hairline, lineWidth: 0.6))
+            .contentShape(Capsule())
         }
+        .buttonStyle(.plain)
+        .fixedSize()
+        .help(Text("What you know here, words to warm up, and reviews due"))
+        .accessibilityLabel(scope)
+        .popover(isPresented: Bindable(model).showWarmUp, arrowEdge: .bottom) {
+            ChapterPanel(
+                title: isEPUBDocument
+                    ? String(localized: "Chapter \(epubManager.chapterIndex + 1)")
+                    : pageStatusText,
+                known: known,
+                warmUpWords: warmUpWords,
+                chapterNumber: epubManager.chapterIndex + 1,
+                due: due,
+                notes: currentNoteCount,
+                saved: currentSavedWordCount,
+                isSaved: { term in savedWordsStore.lemmaMatchedWord(for: term) != nil },
+                onSave: saveWarmUpWord
+            )
+        }
+    }
+
+    private var warmUpWords: [ChapterWarmUp.Word] {
+        if case .ready(let words) = readingLoop.warmUp { return words }
+        return []
+    }
+
+    private var pillSeparator: some View {
+        Text("·").foregroundStyle(DS.Color.textTertiary).accessibilityHidden(true)
     }
 
     private func saveWarmUpWord(_ word: ChapterWarmUp.Word) {
@@ -229,7 +285,7 @@ private struct RecapCard: View {
 }
 
 /// The chapter's hard words, each with its first sentence in the chapter.
-private struct WarmUpList: View {
+struct WarmUpList: View {
     let words: [ChapterWarmUp.Word]
     let chapterNumber: Int
     let isSaved: (String) -> Bool
@@ -298,5 +354,89 @@ private struct WarmUpList: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(DS.Color.surfaceInset)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+    }
+}
+
+/// The panel behind the "This chapter" pill: every number the strip used to
+/// show, and the warm-up list one click further.
+private struct ChapterPanel: View {
+    let title: String
+    let known: LexicalProfile?
+    let warmUpWords: [ChapterWarmUp.Word]
+    let chapterNumber: Int
+    let due: Int
+    let notes: Int
+    let saved: Int
+    let isSaved: (String) -> Bool
+    let onSave: (ChapterWarmUp.Word) -> Void
+
+    @State private var showingWords = false
+
+    var body: some View {
+        if showingWords {
+            VStack(alignment: .leading, spacing: 0) {
+                Button {
+                    showingWords = false
+                } label: {
+                    Label("Back to Overview", systemImage: "chevron.left")
+                        .font(DS.Typography.caption)
+                }
+                .buttonStyle(.borderless)
+                .padding([.top, .horizontal], DS.Spacing.md)
+                WarmUpList(words: warmUpWords, chapterNumber: chapterNumber, isSaved: isSaved, onSave: onSave)
+            }
+        } else {
+            summary
+        }
+    }
+
+    private var summary: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.md) {
+            Text(title)
+                .font(DS.Typography.headline)
+
+            if let known {
+                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    row("Words you know") {
+                        Text("\(Int((known.knownShare * 100).rounded()))%")
+                            .foregroundStyle(DS.Color.coverageTint(for: known.difficulty))
+                    }
+                    ProgressView(value: known.knownShare)
+                        .tint(DS.Color.coverageTint(for: known.difficulty))
+                }
+            }
+
+            if !warmUpWords.isEmpty {
+                row("Warm-up: hard words here") {
+                    Button("See \(warmUpWords.count) words") { showingWords = true }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                }
+            }
+
+            row("Reviews due from this book") {
+                Text("\(due)")
+                    .foregroundStyle(due > 0 ? DS.Color.warning : DS.Color.textSecondary)
+            }
+
+            Divider()
+
+            row("Notes") { Text("\(notes)") }
+            row("Saved words") { Text("\(saved)") }
+        }
+        .font(DS.Typography.callout)
+        .padding(DS.Spacing.lg)
+        .frame(width: 300)
+    }
+
+    private func row(_ label: LocalizedStringKey, @ViewBuilder value: () -> some View) -> some View {
+        HStack {
+            Text(label)
+                .foregroundStyle(DS.Color.textSecondary)
+            Spacer(minLength: DS.Spacing.sm)
+            value()
+                .fontWeight(.semibold)
+                .monospacedDigit()
+        }
     }
 }

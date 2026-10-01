@@ -320,15 +320,16 @@ extension PDFKitView {
                     // ContentView listens too and unhides the Inspector first.
                     NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
                 },
-                onHighlight: { [weak self] in self?.contextHighlight(.yellow) },
+                onHighlight: { [weak self] color in self?.contextHighlight(color) },
                 onSpeak: { [weak self] in self?.contextSpeak() },
                 onCopy: { [weak self] in self?.contextCopy() },
-                onSimplify: GradedRewrite.isEligible(term) ? {
+                onSimplify: {
                     NotificationCenter.default.post(name: .simplifySelectionCommand, object: term)
-                } : nil,
-                onRetell: GradedRewrite.isEligible(term) ? {
+                },
+                onRetell: {
                     NotificationCenter.default.post(name: .retellSelectionCommand, object: term)
-                } : nil,
+                },
+                isPassage: GradedRewrite.isEligible(term),
                 isSaved: isSaved
             )
         }

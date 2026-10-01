@@ -426,7 +426,18 @@
         }
       }
     },
+    "%lld warm-up" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ısınma"
+          }
+        }
+      }
+    },
     "%lld words selected" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -447,6 +458,7 @@
       }
     },
     "%lld words to warm up" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -480,7 +492,14 @@
 
     },
     "%lld%%" : {
-
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%%%lld"
+          }
+        }
+      }
     },
     "%lld%% · %lld min left" : {
       "comment" : "A string that shows the current page number and the percentage of the book that has been read, optionally including the time left to finish reading the book.",
@@ -521,6 +540,7 @@
       }
     },
     "1 word selected" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -981,6 +1001,16 @@
         }
       }
     },
+    "Analyze in the Inspector" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspector'da analiz et"
+          }
+        }
+      }
+    },
     "Analyze With" : {
       "localizations" : {
         "tr" : {
@@ -1335,6 +1365,16 @@
         }
       }
     },
+    "Back to Overview" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özete dön"
+          }
+        }
+      }
+    },
     "Back: " : {
       "localizations" : {
         "tr" : {
@@ -1664,6 +1704,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CEFR Seviyesi"
+          }
+        }
+      }
+    },
+    "Ch. %lld/%lld · %lld%%" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Böl. %lld/%lld · %%%lld"
           }
         }
       }
@@ -2366,6 +2416,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yaratıcılık (Sıcaklık)"
+          }
+        }
+      }
+    },
+    "Current" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli"
           }
         }
       }
@@ -3508,6 +3568,7 @@
       }
     },
     "Hard words in this chapter, before you read it" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -4173,6 +4234,7 @@
       }
     },
     "Look Up in Inspector" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -5579,6 +5641,16 @@
         }
       }
     },
+    "Page Layout: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa Düzeni: %@"
+          }
+        }
+      }
+    },
     "Page Pre-Analysis" : {
       "localizations" : {
         "tr" : {
@@ -5595,6 +5667,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sayfa Teması"
+          }
+        }
+      }
+    },
+    "Page Theme: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa Teması: %@"
           }
         }
       }
@@ -6695,6 +6777,16 @@
         }
       }
     },
+    "Retell" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Anlat"
+          }
+        }
+      }
+    },
     "Retell in Your Own Words" : {
       "localizations" : {
         "tr" : {
@@ -6958,6 +7050,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bugün tekrar edilen"
+          }
+        }
+      }
+    },
+    "Reviews due from this book" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitaptan bekleyen tekrarlar"
           }
         }
       }
@@ -7350,6 +7452,16 @@
         }
       }
     },
+    "See %lld words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelimeyi gör"
+          }
+        }
+      }
+    },
     "Select" : {
       "localizations" : {
         "tr" : {
@@ -7368,6 +7480,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir bölüm seç, not ekle, sonra işine yarayan fikirleri kayıtlı kelimeye ya da tekrar öğesine dönüştür."
+          }
+        }
+      }
+    },
+    "Select a sentence or paragraph" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir cümle ya da paragraf seçin"
           }
         }
       }
@@ -7473,6 +7595,7 @@
       }
     },
     "Sentence selection ready" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7702,6 +7825,16 @@
         }
       }
     },
+    "Simplify" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sadeleştir"
+          }
+        }
+      }
+    },
     "Simplify Selection to Your Level" : {
       "localizations" : {
         "tr" : {
@@ -7713,11 +7846,22 @@
       }
     },
     "Simplify to Your Level" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seviyene Göre Sadeleştir"
+          }
+        }
+      }
+    },
+    "Simplify, retell, highlight, speak, copy" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sadeleştir, yeniden anlat, vurgula, seslendir, kopyala"
           }
         }
       }
@@ -8326,6 +8470,16 @@
         }
       }
     },
+    "This chapter" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu bölüm"
+          }
+        }
+      }
+    },
     "This Document" : {
       "localizations" : {
         "tr" : {
@@ -8382,6 +8536,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu Mac Apple Intelligence'ı desteklemiyor."
+          }
+        }
+      }
+    },
+    "This page" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu sayfa"
           }
         }
       }
@@ -8472,6 +8636,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Denetçiyi aç/kapat (⌘⌥I)"
+          }
+        }
+      }
+    },
+    "Tools" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Araçlar"
           }
         }
       }
@@ -8783,6 +8957,16 @@
         }
       }
     },
+    "Warm-up: hard words here" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isınma: buradaki zor kelimeler"
+          }
+        }
+      }
+    },
     "Warning: output may be incomplete due to token limit" : {
       "localizations" : {
         "tr" : {
@@ -8821,6 +9005,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "RELL'e hoş geldin"
+          }
+        }
+      }
+    },
+    "What you know here, words to warm up, and reviews due" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burada bildiklerin, ısınma kelimeleri ve bekleyen tekrarlar"
           }
         }
       }

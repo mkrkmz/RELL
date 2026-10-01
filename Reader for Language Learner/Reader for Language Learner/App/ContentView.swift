@@ -443,7 +443,8 @@ struct ContentView: View {
                             onExit: { toggleZenMode() },
                             currentPageIndex: isEPUBDocument ? nil : pdfViewManager.currentPageIndex,
                             pageCount: isEPUBDocument ? 0 : pdfViewManager.pageCount,
-                            onNavigate: isEPUBDocument ? nil : { pdfViewManager.goToPage(index: $0) }
+                            onNavigate: isEPUBDocument ? nil : { pdfViewManager.goToPage(index: $0) },
+                            controls: zenControls
                         )
                     }
                 }

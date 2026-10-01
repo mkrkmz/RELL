@@ -20,6 +20,18 @@ struct ZenModeBar: View {
     var currentPageIndex: Int? = nil
     var pageCount: Int = 0
     var onNavigate: ((Int) -> Void)? = nil
+    /// Reading controls that are useful without leaving zen mode (v14 S1):
+    /// the same commands as the View menu and ⌘K.
+    var controls: Controls? = nil
+
+    struct Controls {
+        /// Nil where meanings can't show (PDF).
+        var glossesOn: Bool?
+        var toggleGlosses: () -> Void
+        var pageTheme: PageTheme
+        var setPageTheme: (PageTheme) -> Void
+        var readAloud: () -> Void
+    }
 
     @State private var revealed = false
     @State private var monitor: Any?
@@ -129,6 +141,11 @@ struct ZenModeBar: View {
                     .monospacedDigit()
             }
 
+            if let controls {
+                readingControls(controls)
+                Divider().frame(height: 18)
+            }
+
             Button(action: onExit) {
                 Image(systemName: "arrow.down.right.and.arrow.up.left")
                     .font(DS.Typography.icon(15, weight: .medium))
@@ -155,5 +172,55 @@ struct ZenModeBar: View {
                 withAnimation(DS.Animation.standard) { revealed = false }
             }
         }
+    }
+
+    private func readingControls(_ controls: Controls) -> some View {
+        HStack(spacing: DS.Spacing.xs) {
+            if let glossesOn = controls.glossesOn {
+                Button(action: controls.toggleGlosses) {
+                    controlIcon("character.textbox", active: glossesOn)
+                }
+                .buttonStyle(.plain)
+                .help("Show Meanings Above Words")
+                .accessibilityLabel("Show Meanings Above Words")
+                .accessibilityValue(glossesOn ? Text("On") : Text("Off"))
+            }
+
+            Menu {
+                ForEach(PageTheme.allCases) { theme in
+                    Button {
+                        controls.setPageTheme(theme)
+                    } label: {
+                        if controls.pageTheme == theme {
+                            Label(theme.localizedTitle, systemImage: "checkmark")
+                        } else {
+                            Text(theme.localizedTitle)
+                        }
+                    }
+                }
+            } label: {
+                controlIcon("circle.lefthalf.filled", active: false)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Page Theme")
+            .accessibilityLabel("Page Theme")
+
+            Button(action: controls.readAloud) {
+                controlIcon("speaker.wave.2", active: false)
+            }
+            .buttonStyle(.plain)
+            .help("Read Page Aloud")
+            .accessibilityLabel("Read Page Aloud")
+        }
+    }
+
+    private func controlIcon(_ name: String, active: Bool) -> some View {
+        Image(systemName: name)
+            .font(DS.Typography.icon(14, weight: .medium))
+            .foregroundStyle(active ? DS.Color.accent : DS.Color.textPrimary)
+            .frame(width: 26, height: 24)
+            .contentShape(Rectangle())
     }
 }

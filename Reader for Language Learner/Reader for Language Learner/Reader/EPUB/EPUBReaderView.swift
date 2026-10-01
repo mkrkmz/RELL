@@ -97,98 +97,18 @@ final class RELLEPUBWebView: WKWebView {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !selection.isEmpty else { return }
 
-        let preview = selection.count > 40 ? String(selection.prefix(40)) + "…" : selection
-        var items: [NSMenuItem] = []
-
-        let saveItem = NSMenuItem(
-            title: String(localized: "Save \(preview)"),
-            action: #selector(fireSaveWord),
-            keyEquivalent: ""
+        // Same lines, same order as the PDF reader and the selection bar;
+        // WebKit's own items (Copy, Look Up, Share) stay below.
+        let actions = SelectionMenu.Actions(
+            save: { [weak self] in self?.onContextSaveWord?() },
+            analyze: { [weak self] in self?.onContextLookUp?() },
+            analyzeWith: { [weak self] module in self?.onContextAnalyze?(module) },
+            highlight: { [weak self] color in self?.onContextHighlight?(color) },
+            speak: { [weak self] in self?.onContextSpeak?() }
         )
-        saveItem.target = self
-        items.append(saveItem)
-
-        let lookUpItem = NSMenuItem(
-            title: String(localized: "Look Up in Inspector"),
-            action: #selector(fireLookUp),
-            keyEquivalent: ""
-        )
-        lookUpItem.target = self
-        items.append(lookUpItem)
-
-        let highlightItem = NSMenuItem(title: String(localized: "Highlight"), action: nil, keyEquivalent: "")
-        let highlightSubmenu = NSMenu()
-        highlightSubmenu.autoenablesItems = false
-        for color in HighlightColor.allCases {
-            let item = NSMenuItem(
-                title: color.label,
-                action: #selector(fireHighlight(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.isEnabled = true
-            item.representedObject = color.rawValue
-            item.image = Self.swatchImage(for: color.nsColor)
-            highlightSubmenu.addItem(item)
-        }
-        highlightItem.submenu = highlightSubmenu
-        items.append(highlightItem)
-
-        let analyzeItem = NSMenuItem(title: String(localized: "Analyze With"), action: nil, keyEquivalent: "")
-        let analyzeSubmenu = NSMenu()
-        analyzeSubmenu.autoenablesItems = false
-        for module in ModuleType.menuOrder {
-            let item = NSMenuItem(
-                title: module.title,
-                action: #selector(fireAnalyze(_:)),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.isEnabled = true
-            item.representedObject = module.rawValue
-            item.image = NSImage(systemSymbolName: module.iconName, accessibilityDescription: module.title)
-            analyzeSubmenu.addItem(item)
-        }
-        analyzeItem.submenu = analyzeSubmenu
-        items.append(analyzeItem)
-
-        let speakItem = NSMenuItem(
-            title: String(localized: "Speak"),
-            action: #selector(fireSpeak),
-            keyEquivalent: ""
-        )
-        speakItem.target = self
-        items.append(speakItem)
-
+        var items = SelectionMenu.items(for: selection, actions: actions)
         items.append(.separator())
         menu.items.insert(contentsOf: items, at: 0)
-    }
-
-    @objc private func fireSaveWord() { onContextSaveWord?() }
-    @objc private func fireLookUp()   { onContextLookUp?()   }
-    @objc private func fireSpeak()    { onContextSpeak?()    }
-
-    @objc private func fireAnalyze(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String,
-              let module = ModuleType(rawValue: raw) else { return }
-        onContextAnalyze?(module)
-    }
-
-    @objc private func fireHighlight(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String,
-              let color = HighlightColor(rawValue: raw) else { return }
-        onContextHighlight?(color)
-    }
-
-    /// Small filled-circle swatch for the color submenu items.
-    private static func swatchImage(for color: NSColor) -> NSImage {
-        let size = NSSize(width: 12, height: 12)
-        let image = NSImage(size: size)
-        image.lockFocus()
-        color.setFill()
-        NSBezierPath(ovalIn: NSRect(origin: .zero, size: size)).fill()
-        image.unlockFocus()
-        return image
     }
 }
 

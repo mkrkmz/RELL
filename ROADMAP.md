@@ -141,19 +141,36 @@ Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
 Amac: sayfa disindaki her sey sakinlessin; okuyucu sayfaya odaklansin,
 araclar istenince bulunabilsin. **Maketle baslar.**
 
-- [ ] **Baglam seridi** — iki bolge: solda belge + konum (bolum/sayfa, %,
+- [x] **Baglam seridi** — iki bolge: solda belge + konum (bolum/sayfa, %,
       kalan sure), sagda tek bir "bu bolum" hapi (hazirlik, bilinen %,
       bekleyen); tiklayinca hepsini gosteren bir panel. Sayaclar (not, kayit)
       kenar cubuguna. Dar pencerede kesilmez
-- [ ] **Secim cubugu** — birincil eylemler etiketli (Kaydet, Analiz), digerleri
+- [x] **Secim cubugu** — birincil eylemler etiketli (Kaydet, Analiz), digerleri
       tek bir "Araclar" menusunde gruplu ve **adlariyla** (Sadelestir, Yeniden
       Anlat, Vurgula ▸ renkler, Seslendir, Kopyala). Pasaj araclari kisa
       secimde gorunur ama pasif ve nedenini soyler
-- [ ] **Sag tik menusu** — secim cubuguyla ayni eylemler, ayni sirada (bugun
+- [x] **Sag tik menusu** — secim cubuguyla ayni eylemler, ayni sirada (bugun
       PDF ve EPUB menuleri farkli)
-- [ ] **Odak/Zen/anlamlar tutarliligi** — Gorunum menusu, ⌘K ve Zen cubugu ayni
+- [x] **Odak/Zen/anlamlar tutarliligi** — Gorunum menusu, ⌘K ve Zen cubugu ayni
       komut setini gosterir; eksikler tamamlanir
-- [ ] Testler: "pencereyi buyutmez" (serit, cubuk), menu/palet komut esitligi
+- [x] Testler: "pencereyi buyutmez" (serit, cubuk), menu/palet komut esitligi
+- [x] Uygulama (maket onayi 2026-10-01; kararlar: secim ozeti cipi kalkti,
+      Not Ekle yalniz PDF, Zen cubugunda uc ikon). Serit: sag tarafta tek
+      "Bu bolum" hapi (`chapterPill`) + panel (`ChapterPanel`, isinma listesi
+      icinde); sayaclar kenar cubugu rozetlerinde zaten vardi. Menuler tek
+      kaynaktan: `SelectionMenu` (PDF+EPUB ayni sira; pasif oge `subtitle` ile
+      nedenini soyler, WebKit'in otomatik etkinlestirmesine karsi
+      `validateMenuItem`). Cubuk: Kaydet/Analiz etiketli + Seslendir + Araclar
+      menusu (vurgu rengi secilebilir). ⌘K: yakinlastirma, sayfa duzeni, tema
+      (`viewPaletteItems`). Zen cubugu: anlamlar, tema, seslendir.
+      `ReaderShellTests` (7 test; mutation-check: sira degisimi ve pasif oge
+      dogrulamasi yakalaniyor). `make ci-test` 627 test, 0 hata
+- [ ] **Canli tur (kullanici)** — (1) serit: genis ve dar pencerede "Bu
+      bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
+      (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif
+      ogelerin altindaki neden), Vurgula ▸ renkler; (3) sag tik PDF ve EPUB'da
+      ayni sira; (4) ⌘K'de "Sayfa Temasi:", "Sayfa Duzeni:", "Yakinlastir";
+      (5) Zen cubugu ikonlari
 
 ## Sprint 2 — "Inspector" (Must)
 

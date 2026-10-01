@@ -20,6 +20,42 @@ extension ContentView {
             }
     }
 
+    /// The View menu's page commands — zoom, layout, theme — so ⌘K reaches
+    /// everything the menu does (v14 S1; before, only the menu had them).
+    static func viewPaletteItems(_ commands: ReaderCommands) -> [PaletteItem] {
+        let hasDocument = commands.hasDocument
+        var items: [PaletteItem] = [
+            PaletteItem(id: "cmd-zoom-in", kind: .command, title: String(localized: "Zoom In"),
+                        icon: "plus.magnifyingglass", isEnabled: hasDocument, perform: commands.zoomIn),
+            PaletteItem(id: "cmd-zoom-out", kind: .command, title: String(localized: "Zoom Out"),
+                        icon: "minus.magnifyingglass", isEnabled: hasDocument, perform: commands.zoomOut),
+            PaletteItem(id: "cmd-actual-size", kind: .command, title: String(localized: "Actual Size"),
+                        icon: "1.magnifyingglass", isEnabled: hasDocument, perform: commands.actualSize),
+            PaletteItem(id: "cmd-fit-width", kind: .command, title: String(localized: "Fit to Width"),
+                        icon: "arrow.left.and.right", isEnabled: hasDocument && !commands.isEPUBDocument,
+                        perform: commands.fitToWidth),
+        ]
+        for mode in PDFLayoutMode.allCases {
+            items.append(PaletteItem(
+                id: "cmd-layout-\(mode.rawValue)", kind: .command,
+                title: String(localized: "Page Layout: \(mode.localizedTitle)"), icon: mode.iconName,
+                isEnabled: hasDocument && !commands.isEPUBDocument,
+                perform: { commands.setPDFDisplayMode(mode) }
+            ))
+        }
+        for theme in PageTheme.allCases {
+            items.append(PaletteItem(
+                id: "cmd-theme-\(theme.rawValue)", kind: .command,
+                title: String(localized: "Page Theme: \(theme.localizedTitle)"),
+                subtitle: commands.pageTheme == theme ? String(localized: "Current") : "",
+                icon: theme.iconName,
+                isEnabled: hasDocument,
+                perform: { commands.setPageTheme(theme) }
+            ))
+        }
+        return items
+    }
+
     var paletteItems: [PaletteItem] {
         let commands = readerCommands
         let hasDocument = commands.hasDocument
@@ -56,6 +92,7 @@ extension ContentView {
                 enabled: isPassage) { model.gradedRewriteSource = passage }
         command("retell", String(localized: "Retell Selection in Your Own Words"), "square.and.pencil",
                 enabled: isPassage) { model.retellSource = passage }
+        items += Self.viewPaletteItems(commands)
         command("find", String(localized: "Find"), "magnifyingglass", enabled: hasDocument, commands.showFind)
         command("bookmark", commands.isCurrentPageBookmarked ? String(localized: "Remove Bookmark") : String(localized: "Add Bookmark"),
                 "bookmark", enabled: hasDocument, commands.toggleBookmark)

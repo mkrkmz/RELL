@@ -18,8 +18,8 @@ extension ContentView {
     /// horizontal scroll view, then a ViewThatFits, renegotiated with the
     /// truncating chips at narrow widths — AppKit's update-constraints loop,
     /// a crash when the window was made small (v14 S0, WindowLayoutTests).
-    /// The strip's width comes from its column; how many chips show is a
-    /// plain function of that width.
+    /// The strip's width comes from its column; how much the page status and
+    /// the chapter pill show is a plain function of that width.
     var readerContextStrip: some View {
         Color.clear
             .frame(maxWidth: .infinity)
@@ -49,63 +49,14 @@ extension ContentView {
             readerContextDivider
             readerContextChip(
                 icon: "book.pages",
-                text: pageStatusText
+                text: pageStatusText(short: width < 520)
             )
 
             Spacer(minLength: DS.Spacing.sm)
 
-            if width >= 760 {
-                fullMetrics.fixedSize()
-            } else if width >= 460 {
-                compactMetrics.fixedSize()
-            }
+            chapterPill(compact: width < 620)
         }
         .padding(.horizontal, DS.Spacing.md)
-    }
-
-    private var fullMetrics: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            warmUpChip
-            readerContextMetricChip(icon: "note.text", value: "\(currentNoteCount)", label: "notes")
-            readerContextMetricChip(icon: "star", value: "\(currentSavedWordCount)", label: "saved")
-            readerContextMetricChip(
-                icon: currentDueWordCount > 0 ? "clock.badge.exclamationmark" : "checkmark.seal",
-                value: "\(currentDueWordCount)",
-                label: "due",
-                tint: currentDueWordCount > 0 ? DS.Color.warning : DS.Color.success
-            )
-            if let profile = lexicalProfileService.current, profile.totalTokens > 0 {
-                // How much of what's on screen the reader already knows
-                // — comprehensible-input coverage (L3).
-                readerContextMetricChip(
-                    icon: "percent",
-                    value: "\(Int((profile.knownShare * 100).rounded()))",
-                    label: "known",
-                    tint: DS.Color.coverageTint(for: profile.difficulty)
-                )
-            }
-            readerContextChip(
-                icon: selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    ? "cursorarrow.click"
-                    : "text.cursor",
-                text: selectionSummaryText
-            )
-            .frame(maxWidth: 160, alignment: .leading)
-        }
-    }
-
-    /// The strip's right side when the full set doesn't fit: the warm-up and
-    /// what's due — the two that ask for something.
-    private var compactMetrics: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            warmUpChip
-            readerContextMetricChip(
-                icon: currentDueWordCount > 0 ? "clock.badge.exclamationmark" : "checkmark.seal",
-                value: "\(currentDueWordCount)",
-                label: "due",
-                tint: currentDueWordCount > 0 ? DS.Color.warning : DS.Color.success
-            )
-        }
     }
 
     /// Profiles the whole open book against the reader's vocabulary, unless
@@ -161,7 +112,10 @@ extension ContentView {
         }
     }
 
-    var pageStatusText: String {
+    var pageStatusText: String { pageStatusText(short: false) }
+
+    /// `short` drops the time left and abbreviates, for a narrow strip.
+    func pageStatusText(short: Bool) -> String {
         if isEPUBDocument {
             guard epubManager.chapterCount > 0 else { return String(localized: "Opening book…") }
             let chapter = String(localized: "Chapter \(epubManager.chapterIndex + 1) / \(epubManager.chapterCount)")
@@ -169,6 +123,9 @@ extension ContentView {
             // honest than the in-chapter scroll percentage this used to show.
             let percent = Int((epubManager.bookProgress * 100).rounded())
             let minutes = epubManager.minutesRemaining
+            if short {
+                return String(localized: "Ch. \(epubManager.chapterIndex + 1)/\(epubManager.chapterCount) · \(percent)%")
+            }
             let tail = minutes > 0 ? String(localized: "\(percent)% · \(minutes) min left") : "\(percent)%"
             return "\(chapter) · \(tail)"
         }
@@ -179,22 +136,8 @@ extension ContentView {
         return String(localized: "\(pdfViewManager.pageCount) pages")
     }
 
-    var selectionSummaryText: String {
-        let trimmedSelection = selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedSelection.isEmpty else { return String(localized: "Select text to analyze") }
-
-        let wordCount = trimmedSelection.split(whereSeparator: \.isWhitespace).count
-        if wordCount <= 1 {
-            return String(localized: "1 word selected")
-        }
-        if wordCount <= 8 {
-            return String(localized: "\(wordCount) words selected")
-        }
-        return String(localized: "Sentence selection ready")
-    }
-
     var currentNoteCount: Int {
-        noteStore.count(for: currentDocumentName)
+        isEPUBDocument ? epubNoteStore.count(for: currentDocumentName) : noteStore.count(for: currentDocumentName)
     }
 
     var currentSavedWordCount: Int {
@@ -222,30 +165,5 @@ extension ContentView {
         }
         .font(DS.Typography.caption)
         .foregroundStyle(DS.Color.textSecondary)
-    }
-
-    func readerContextMetricChip(
-        icon: String,
-        value: String,
-        label: String,
-        tint: Color = DS.Color.accent
-    ) -> some View {
-        HStack(spacing: DS.Spacing.xs) {
-            Image(systemName: icon)
-                .font(DS.Typography.icon(10, weight: .semibold))
-                .foregroundStyle(tint)
-                // The adjacent text already names the metric; the glyph would
-                // otherwise be announced as a second, meaningless element.
-                .accessibilityHidden(true)
-            Text("\(value) \(label)")
-                .lineLimit(1)
-        }
-        .font(DS.Typography.caption)
-        .foregroundStyle(DS.Color.textSecondary)
-        .padding(.horizontal, DS.Spacing.xs)
-        .padding(.vertical, 3)
-        .background(tint.opacity(0.08))
-        .clipShape(Capsule())
-        .accessibilityElement(children: .combine)
     }
 }

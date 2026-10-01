@@ -590,8 +590,8 @@ final class EPUBViewManager: NSObject {
             onAnalyze: {
                 NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)
             },
-            onHighlight: { [weak self] in
-                (self?.webView as? RELLEPUBWebView)?.onContextHighlight?(.yellow)
+            onHighlight: { [weak self] color in
+                (self?.webView as? RELLEPUBWebView)?.onContextHighlight?(color)
             },
             onSpeak: { [weak self] in
                 (self?.webView as? RELLEPUBWebView)?.onContextSpeak?()
@@ -603,12 +603,13 @@ final class EPUBViewManager: NSObject {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(text, forType: .string)
             },
-            onSimplify: GradedRewrite.isEligible(term) ? {
+            onSimplify: {
                 NotificationCenter.default.post(name: .simplifySelectionCommand, object: term)
-            } : nil,
-            onRetell: GradedRewrite.isEligible(term) ? {
+            },
+            onRetell: {
                 NotificationCenter.default.post(name: .retellSelectionCommand, object: term)
-            } : nil,
+            },
+            isPassage: GradedRewrite.isEligible(term),
             isSaved: isSaved
         )
     }

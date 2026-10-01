@@ -8,8 +8,8 @@
 //  Shared by the PDF and EPUB readers; each host positions it and supplies the
 //  action closures, which route into the reader's existing selection handlers.
 //
-//  Chrome, not content: a single neutral glass capsule with plain icon buttons
-//  (per the "glass is chrome" rule and the calm single-accent design taste).
+//  Chrome, not content: a single neutral glass capsule (per the "glass is
+//  chrome" rule and the calm single-accent design taste).
 //
 
 import SwiftUI
@@ -17,36 +17,50 @@ import SwiftUI
 struct SelectionActionBar: View {
     let onSave: () -> Void
     let onAnalyze: () -> Void
-    let onHighlight: () -> Void
+    let onHighlight: (HighlightColor) -> Void
     let onSpeak: () -> Void
     let onCopy: () -> Void
-    /// Rewrite the selection at the reader's level (v13 S3). Offered only
-    /// for a passage, not a word — the host passes nil otherwise.
-    var onSimplify: (() -> Void)? = nil
-    /// Retell the passage in your own words (v13 S4); passages only.
-    var onRetell: (() -> Void)? = nil
+    /// Rewrite the selection at the reader's level (v13 S3).
+    let onSimplify: () -> Void
+    /// Retell the passage in your own words (v13 S4).
+    let onRetell: () -> Void
+    /// Simplify and Retell take a passage; for a word they show disabled,
+    /// with the reason, rather than disappearing (v14 S1).
+    var isPassage: Bool = false
     /// When the current selection is already in the vocabulary, the save button
     /// reads as "saved" rather than inviting a duplicate.
     var isSaved: Bool = false
 
+    // v14 S1: the two actions used most are labelled; the rest are named in
+    // a Tools menu, in the same order as the right-click menu
+    // (`SelectionMenu`). Before, seven unlabelled icons.
     var body: some View {
         HStack(spacing: 2) {
-            barButton(
+            labelledButton(
+                isSaved ? "Saved" : "Save",
                 icon: isSaved ? "bookmark.fill" : "bookmark",
-                label: isSaved ? "Saved" : "Save Word",
-                tint: isSaved ? DS.Color.accent : nil,
+                prominent: !isSaved,
+                help: isSaved ? "Saved" : "Save Word",
                 action: onSave
             )
-            barButton(icon: "sparkles", label: "Analyze", action: onAnalyze)
-            if let onSimplify {
-                barButton(icon: "text.badge.checkmark", label: "Simplify to Your Level", action: onSimplify)
+            labelledButton("Analyze", icon: "sparkles", prominent: false, help: "Analyze in the Inspector", action: onAnalyze)
+
+            Divider()
+                .frame(height: 16)
+                .padding(.horizontal, 2)
+
+            Button(action: onSpeak) {
+                Image(systemName: "speaker.wave.2")
+                    .font(DS.Typography.icon(13, weight: .medium))
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .frame(width: 30, height: 26)
+                    .contentShape(Rectangle())
             }
-            if let onRetell {
-                barButton(icon: "square.and.pencil", label: "Retell in Your Own Words", action: onRetell)
-            }
-            barButton(icon: "highlighter", label: "Highlight", action: onHighlight)
-            barButton(icon: "speaker.wave.2", label: "Speak", action: onSpeak)
-            barButton(icon: "doc.on.doc", label: "Copy", action: onCopy)
+            .buttonStyle(.plain)
+            .help("Speak")
+            .accessibilityLabel("Speak")
+
+            toolsMenu
         }
         .padding(.horizontal, DS.Spacing.xxs)
         .padding(.vertical, DS.Spacing.xxs)
@@ -54,21 +68,66 @@ struct SelectionActionBar: View {
         .fixedSize()
     }
 
-    private func barButton(
+    private var toolsMenu: some View {
+        Menu {
+            Button(action: onSimplify) {
+                Text("Simplify")
+                if !isPassage { Text(SelectionMenu.passageOnlyReason) }
+            }
+            .disabled(!isPassage)
+            Button(action: onRetell) {
+                Text("Retell")
+                if !isPassage { Text(SelectionMenu.passageOnlyReason) }
+            }
+            .disabled(!isPassage)
+
+            Divider()
+
+            Menu("Highlight") {
+                ForEach(HighlightColor.allCases) { color in
+                    Button {
+                        onHighlight(color)
+                    } label: {
+                        Label {
+                            Text(color.label)
+                        } icon: {
+                            Image(nsImage: SelectionMenu.swatchImage(for: color.nsColor))
+                        }
+                    }
+                }
+            }
+            Button("Speak", action: onSpeak)
+            Button("Copy", action: onCopy)
+        } label: {
+            Text("Tools")
+                .font(DS.Typography.caption.weight(.medium))
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.visible)
+        .fixedSize()
+        .padding(.horizontal, DS.Spacing.sm)
+        .frame(height: 26)
+        .help("Simplify, retell, highlight, speak, copy")
+        .accessibilityLabel("Tools")
+    }
+
+    private func labelledButton(
+        _ title: LocalizedStringKey,
         icon: String,
-        label: LocalizedStringKey,
-        tint: SwiftUI.Color? = nil,
+        prominent: Bool,
+        help: LocalizedStringKey,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Image(systemName: icon)
-                .font(DS.Typography.icon(14, weight: .medium))
-                .foregroundStyle(tint ?? DS.Color.textPrimary)
-                .frame(width: 30, height: 26)
-                .contentShape(Rectangle())
+            Label(title, systemImage: icon)
+                .font(DS.Typography.caption.weight(.semibold))
+                .foregroundStyle(prominent ? SwiftUI.Color.white : DS.Color.accent)
+                .padding(.horizontal, DS.Spacing.sm + 2)
+                .frame(height: 26)
+                .background(prominent ? DS.Color.accent : DS.Color.accentSubtle, in: Capsule())
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
-        .help(label)
-        .accessibilityLabel(label)
+        .help(help)
     }
 }
