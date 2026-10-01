@@ -181,6 +181,28 @@ final class OutputAndImportTests: XCTestCase {
         XCTAssertNil(WordStory.parse("Once upon a time"))
     }
 
+    /// The answer behind the live bug: the placeholder copied, the story run
+    /// on after the title, then written again under STORY:. The book showed
+    /// it twice — once as a giant heading.
+    func testStoryTitleIsOnlyTheTitle() async {
+        let raw = """
+        TITLE: <a strange night> The landlady found the flats in a strange state. The story was not over.
+        STORY:
+        The landlady found the flats in a strange state.
+        The story was not over.
+        """
+        let story = WordStory.parse(raw)
+        XCTAssertEqual(story?.title, "A strange night")
+        XCTAssertEqual(story?.paragraphs.count, 2)
+    }
+
+    func testOverlongTitleLineFallsBackToTheDefault() async {
+        let line = String(repeating: "The landlady found the flats in a strange state. ", count: 3)
+        let story = WordStory.parse("TITLE: \(line)\nSTORY:\nOne paragraph.")
+        XCTAssertEqual(story?.title, String(localized: "A Story From Your Words"))
+        XCTAssertEqual(story?.paragraphs, ["One paragraph."])
+    }
+
     func testStoryReportsWhichWordsItUsed() async {
         let story = WordStory.Story(title: "T", paragraphs: ["She ran to the harbour and felt drowsy."])
         let used = WordStory.usedWords(["run", "drowsy", "beverage"], in: story, language: .english)

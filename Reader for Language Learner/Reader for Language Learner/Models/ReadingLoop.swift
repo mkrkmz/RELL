@@ -480,10 +480,10 @@ nonisolated enum WordStory {
         You write short stories for language learners. Write a story of about \
         300 words in simple \(target.rawValue) for a CEFR \(level.rawValue) learner. \
         Use every word from the list at least once, naturally, in a form that fits \
-        the sentence. Keep everything else simple. Reply in exactly this format:
-        \(titleLabel) <a short title>
-        \(storyLabel)
-        <the story, in paragraphs>
+        the sentence. Keep everything else simple.
+        Reply in this layout: the first line is \(titleLabel) followed by a title \
+        of at most six words and nothing else; the second line is \(storyLabel) \
+        on its own; then the story, in paragraphs. Write the story only once.
         """
     }
 
@@ -491,14 +491,22 @@ nonisolated enum WordStory {
         "Words: " + words.joined(separator: ", ")
     }
 
+    /// Longest title kept; past it, the "title" is really the story.
+    static let maxTitleLength = 70
+
     static func parse(_ raw: String) -> Story? {
         let text = raw.replacingOccurrences(of: "**", with: "")
         guard let storyRange = text.range(of: storyLabel, options: .caseInsensitive) else { return nil }
         var title = ""
         if let titleRange = text.range(of: titleLabel, options: .caseInsensitive),
            titleRange.upperBound <= storyRange.lowerBound {
-            title = text[titleRange.upperBound..<storyRange.lowerBound]
-                .trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "\"#")))
+            // Only the title line. Seen live: the model copied the old
+            // "<a short title>" placeholder and ran the whole story on after
+            // it, then wrote it again under STORY: — the book showed it twice.
+            let firstLine = text[titleRange.upperBound..<storyRange.lowerBound]
+                .components(separatedBy: .newlines)
+                .first { !$0.trimmingCharacters(in: .whitespaces).isEmpty } ?? ""
+            title = cleanTitle(firstLine)
         }
         let paragraphs = text[storyRange.upperBound...]
             .components(separatedBy: .newlines)
@@ -506,6 +514,19 @@ nonisolated enum WordStory {
             .filter { !$0.isEmpty }
         guard !paragraphs.isEmpty else { return nil }
         return Story(title: title.isEmpty ? String(localized: "A Story From Your Words") : title, paragraphs: paragraphs)
+    }
+
+    /// A title from its line: "<a strange night> The landlady found…" →
+    /// "A strange night". Bracketed text wins; otherwise the line, unless it
+    /// is too long to be a title.
+    static func cleanTitle(_ line: String) -> String {
+        var title = line.trimmingCharacters(in: .whitespaces)
+        if title.hasPrefix("<"), let close = title.firstIndex(of: ">") {
+            title = String(title[title.index(after: title.startIndex)..<close])
+        }
+        title = title.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: "\"'#<>*")))
+        guard !title.isEmpty, title.count <= maxTitleLength else { return "" }
+        return title.prefix(1).uppercased() + title.dropFirst()
     }
 
     /// Which of the words the story actually used, inflections included.
