@@ -52,11 +52,14 @@ struct GrammarLensView: View {
 
     var body: some View {
         DisclosureGroup(isExpanded: $expanded) {
+            // Scrolls inside a capped height. The inspector column doesn't
+            // scroll as a whole — only the result panel flexes — so content
+            // here that refused to shrink raised the column's minimum height
+            // past the window's, and AppKit looped on the constraints until
+            // it crashed (seen twice in v13 S5's live pass). A ScrollView's
+            // minimum height is near zero; it can't do that.
+            ScrollView {
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                // One wrapping Text, not a custom layout: in the inspector
-                // (an AppKit-hosted column) a flow layout whose size depended
-                // on the proposed width fed an update-constraints loop that
-                // crashed the app (seen live in v13 S5).
                 Text(taggedSentence)
                     .lineSpacing(4)
                     .textSelection(.enabled)
@@ -87,7 +90,10 @@ struct GrammarLensView: View {
                     .disabled(isExplaining)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, DS.Spacing.xs)
+            }
+            .frame(maxHeight: 160)
         } label: {
             Label("Grammar", systemImage: "textformat.abc")
                 .font(DS.Typography.caption.weight(.semibold))
