@@ -97,13 +97,14 @@ Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
       | Bolum hazirligi adaylari | 14 ms |
       | 1.000 kelimelik kelime deposunu yukle | 5 ms |
       | Uzun bir makaleyi ayikla | 31 ms |
-      | Soguk acilis (UI testi) | olculmedi ² |
+      | Soguk acilis (UI testi, 5 acilis) | 549 ms (519–575, sapma %3,3) |
 
       ¹ Ana thread disinda, okunan sayfa basina bir kez — sorun degil; maliyet
       her taramada kelimelerin kok anahtarlarinin yeniden hesaplanmasi
-      (onbellege alinabilir). ² XCUITest, ayni bundle id'li calisan
-      uygulamayi kapatir — kullanicinin acik RELL'i varken kosulmaz. UI
-      testleri artik `-RELLTestHost` ile acilir (gecici veri)
+      (onbellege alinabilir). XCUITest, ayni bundle id'li calisan uygulamayi
+      kapatir — `make ui-test` kullanicinin RELL'i kapaliyken kosulur
+      (ad-hoc imzayla; imzasiz calistirici macOS'ta baslatilamiyor). UI
+      testleri `-RELLTestHost` ile acilir (gecici veri)
 - [x] **CI esitligi** — `make ci-test` CI'daki komutun aynisi (macOS 15 hedefi,
       temiz derleme klasoru). CONTRIBUTING: sprint sonu kurali, Xcode 26.3'un
       reddettigi iki kalip, sutun yerlesim kurali
@@ -125,7 +126,8 @@ Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
       gorunum degismemeli. (2) EPUB'da betik tasimasinin etkiledigi her sey:
       kayitli kelime alt cizgisi, vurgular, uzerine gelme sozlugu, secim
       cubugu, karaoke (Seslendir), ⌥⌘G anlamlar
-- [ ] Soguk acilis olcumu — kullanicinin RELL'i kapaliyken `make ui-test`
+- [x] Soguk acilis olcumu — 549 ms (kullanicinin RELL'i kapaliyken; gercek
+      veri dosyalarina dokunulmadi)
 
 ## Sprint 1 — "Okuyucu kabugu" (Must)
 

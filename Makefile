@@ -44,14 +44,16 @@ ci-test:
 		-skip-testing:"Reader for Language LearnerUITests" \
 		-parallel-testing-enabled NO
 
-## UI testleri calistir
+## UI testleri (acilis suresi dahil). XCUITest calistiricisi imzasiz
+## baslatilamaz, bu yuzden ad-hoc imza ("-"). Uyari: XCUITest ayni bundle
+## id'li calisan RELL'i kapatir — kendi kopyan aciksa calistirma.
 ui-test:
 	xcodebuild test \
 		-project "$(PROJECT)" \
 		-scheme "$(SCHEME)" \
 		-destination '$(DESTINATION)' \
 		-configuration $(CONFIG) \
-		$(SIGNING) \
+		CODE_SIGN_IDENTITY="-" CODE_SIGNING_ALLOWED=YES \
 		-skip-testing:"Reader for Language LearnerTests" \
 		-only-testing:"Reader for Language LearnerUITests" \
 		-parallel-testing-enabled NO
