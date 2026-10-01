@@ -346,8 +346,14 @@ ve Okuma Cetveli alinmadi.
         `<a short title>` yer tutucusunu kopyalayip hikayeyi baslik satirina
         yazdi) → yalniz baslik satiri, yeni istem; 6/6 olcum temiz
       - Sadelestir/Yeniden Anlat zor bulunuyordu → ⌘K'ye eklendi
-- [ ] **Yayin 1.42.0** — CHANGELOG basligi `[1.42.0] - 2026-10-01`; tag +
-      push kullanici onayi bekliyor, sonra CI release run'i izlenir
+- [x] **Yayin 1.42.0** (2026-10-01, kullanici onayiyla) — ilk release run'i
+      CI'in Xcode 26.3 derleyicisinde iki Swift 6 veri yarisi hatasiyla dustu
+      (`ReadingLoopModel`: yakalanan cache-key closure'i ve logger
+      interpolation'indaki `var`; Xcode 27 kabul ediyordu). Duzeltme
+      `d9c4bb0`, CI testleri 608/0; tag bu commit'e tasindi (v1.38'deki gibi).
+      Release yayinda, Latest; DMG 6,5 MB + ZIP. **Ders:** v13 kodunun
+      tamami ilk kez yayin push'unda CI'da derlendi — sprint sonlarinda
+      `main`'i push edip test CI'ini calistirmak bunu erken yakalardi
 - [x] Testler: **608 test, 0 hata, 1 atlanan**; 0 uyari
 
 **v14'e devreden:** Golgeleme (mikrofon/konusma izinleri), cumle kaydetme,
