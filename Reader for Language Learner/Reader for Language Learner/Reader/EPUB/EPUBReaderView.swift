@@ -10,6 +10,7 @@
 //
 
 import SwiftUI
+import os
 import WebKit
 
 // MARK: - Context-menu WebView
@@ -384,6 +385,20 @@ struct EPUBReaderView: NSViewRepresentable {
 
     // MARK: Injected scripts
 
+    /// Reads one of the reader's scripts from the app bundle
+    /// (`Reader/EPUB/Scripts/*.js`, moved out of this file in v14 Sprint 0 —
+    /// byte for byte what the Swift literals produced at runtime).
+    static func bundledScript(_ name: String) -> String {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "js"),
+              let source = try? String(contentsOf: url, encoding: .utf8)
+        else {
+            AppLogger.ui.error("Reader script \(name, privacy: .public).js is missing from the app bundle")
+            assertionFailure("missing \(name).js")
+            return ""
+        }
+        return source
+    }
+
     /// Defines the shared text-offset walk plus anchor/render/unwrap
     /// functions used both to capture a new highlight's anchor (in
     /// selectionScript) and to re-render marks from the store (called by
@@ -392,385 +407,14 @@ struct EPUBReaderView: NSViewRepresentable {
     /// text offsets stay valid across repeated re-renders and reflow
     /// (font-size change, window resize).
     private static let highlightScript = WKUserScript(
-        source: """
-        (function() {
-            function rellWalkTextNodes(root) {
-                var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-                    acceptNode: function(node) {
-                        var p = node.parentElement;
-                        if (!p) { return NodeFilter.FILTER_REJECT; }
-                        var tag = p.tagName;
-                        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT') {
-                            return NodeFilter.FILTER_REJECT;
-                        }
-                        return NodeFilter.FILTER_ACCEPT;
-                    }
-                });
-                var nodes = [];
-                var n;
-                while ((n = walker.nextNode())) { nodes.push(n); }
-                return nodes;
-            }
-
-            function rellFullText(nodes) {
-                var text = '';
-                var spans = [];
-                for (var i = 0; i < nodes.length; i++) {
-                    var t = nodes[i].textContent;
-                    spans.push({ start: text.length, end: text.length + t.length, node: nodes[i] });
-                    text += t;
-                }
-                return { text: text, spans: spans };
-            }
-
-            function rellUnwrapHighlights() {
-                var marks = document.querySelectorAll('mark[data-rell-highlight-id]');
-                marks.forEach(function(mark) {
-                    var parent = mark.parentNode;
-                    if (!parent) { return; }
-                    while (mark.firstChild) { parent.insertBefore(mark.firstChild, mark); }
-                    parent.removeChild(mark);
-                    parent.normalize();
-                });
-            }
-
-            /// Computes a text-quote anchor for a live Range — the DOM is
-            /// read as-is (existing marks don't skew offsets; see above).
-            function rellComputeAnchor(range) {
-                var walked = rellFullText(rellWalkTextNodes(document.body));
-
-                function offsetOf(container, localOffset) {
-                    for (var i = 0; i < walked.spans.length; i++) {
-                        if (walked.spans[i].node === container) {
-                            return walked.spans[i].start + localOffset;
-                        }
-                    }
-                    return -1;
-                }
-
-                var start = offsetOf(range.startContainer, range.startOffset);
-                var end = offsetOf(range.endContainer, range.endOffset);
-                if (start < 0 || end < 0 || end <= start) { return null; }
-
-                var CTX = 24;
-                return {
-                    quote: walked.text.substring(start, end),
-                    prefix: walked.text.substring(Math.max(0, start - CTX), start),
-                    suffix: walked.text.substring(end, Math.min(walked.text.length, end + CTX)),
-                    startOffset: start
-                };
-            }
-
-            /// Resolves a stored anchor to a live [start, end) offset pair:
-            /// try the saved offset first (fast path, valid unless the
-            /// chapter content itself changed), then prefix+quote+suffix,
-            /// then the bare quote as a last resort.
-            function rellResolvePosition(fullText, entry) {
-                if (entry.startOffset >= 0) {
-                    var atOffset = fullText.substr(entry.startOffset, entry.quote.length);
-                    if (atOffset === entry.quote) {
-                        return { start: entry.startOffset, end: entry.startOffset + entry.quote.length };
-                    }
-                }
-                if (entry.prefix || entry.suffix) {
-                    var needle = entry.prefix + entry.quote + entry.suffix;
-                    var idx = fullText.indexOf(needle);
-                    if (idx >= 0) {
-                        var start = idx + entry.prefix.length;
-                        return { start: start, end: start + entry.quote.length };
-                    }
-                }
-                var bare = fullText.indexOf(entry.quote);
-                if (bare >= 0) { return { start: bare, end: bare + entry.quote.length }; }
-                return null;
-            }
-
-            function rellNodeOffsetFor(spans, globalOffset) {
-                for (var i = 0; i < spans.length; i++) {
-                    if (globalOffset >= spans[i].start && globalOffset <= spans[i].end) {
-                        return { node: spans[i].node, offset: globalOffset - spans[i].start };
-                    }
-                }
-                return null;
-            }
-
-            function rellWrapRange(spans, start, end, id, color, ink) {
-                var startPos = rellNodeOffsetFor(spans, start);
-                var endPos = rellNodeOffsetFor(spans, end);
-                if (!startPos || !endPos) { return; }
-                var range = document.createRange();
-                range.setStart(startPos.node, startPos.offset);
-                range.setEnd(endPos.node, endPos.offset);
-
-                var mark = document.createElement('mark');
-                mark.setAttribute('data-rell-highlight-id', id);
-                mark.style.backgroundColor = color;
-                mark.style.color = ink || '#1d1d1f';
-                mark.style.borderRadius = '2px';
-                mark.style.padding = '0 1px';
-                // extractContents+insertNode (rather than surroundContents)
-                // handles ranges that span multiple elements or partial
-                // inline tags (e.g. a quote crossing into a <b>) uniformly.
-                var frag = range.extractContents();
-                mark.appendChild(frag);
-                range.insertNode(mark);
-            }
-
-            window.rellRenderHighlights = function(entries, ink) {
-                rellUnwrapHighlights();
-                if (!entries || !entries.length) { return; }
-
-                // Resolve every entry against one pristine pre-wrap walk —
-                // resolution must happen before any wrapping mutates the DOM.
-                var walked0 = rellFullText(rellWalkTextNodes(document.body));
-                var resolved = [];
-                entries.forEach(function(e) {
-                    var pos = rellResolvePosition(walked0.text, e);
-                    if (pos) { resolved.push({ id: e.id, color: e.color, start: pos.start, end: pos.end }); }
-                });
-                resolved.sort(function(a, b) { return a.start - b.start; });
-
-                // Wrap one at a time, re-walking the (now-mutated) DOM
-                // before each wrap so node references are always fresh —
-                // chapters are small, so this is cheap and sidesteps any
-                // node-identity invalidation from the previous wrap.
-                var lastEnd = -1;
-                resolved.forEach(function(r) {
-                    if (r.start < lastEnd) { return; } // overlapping highlight — skip
-                    var walked = rellFullText(rellWalkTextNodes(document.body));
-                    rellWrapRange(walked.spans, r.start, r.end, r.id, r.color, ink);
-                    lastEnd = r.end;
-                });
-            };
-
-            window.__rellComputeAnchor = rellComputeAnchor;
-
-            // ── Saved-word marks ────────────────────────────────────────
-            // Dotted underline, no background — stays visually distinct
-            // from a user highlight's colored fill. Click selects the
-            // word's text so the existing selectionchange listener below
-            // (selectionScript) picks it up exactly like a manual
-            // selection, feeding the same lookup path with no separate
-            // message channel.
-
-            var rellSavedWordClickBound = false;
-            function rellBindSavedWordClicks() {
-                if (rellSavedWordClickBound) { return; }
-                rellSavedWordClickBound = true;
-                document.body.addEventListener('click', function(event) {
-                    var target = event.target;
-                    var span = target && target.closest
-                        ? target.closest('span[data-rell-saved-word]') : null;
-                    if (!span) { return; }
-                    var range = document.createRange();
-                    range.selectNodeContents(span);
-                    var sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                });
-            }
-
-            function rellUnmarkSavedWords() {
-                var marks = document.querySelectorAll('span[data-rell-saved-word]');
-                marks.forEach(function(span) {
-                    var parent = span.parentNode;
-                    if (!parent) { return; }
-                    while (span.firstChild) { parent.insertBefore(span.firstChild, span); }
-                    parent.removeChild(span);
-                    parent.normalize();
-                });
-            }
-
-            // CJK scripts have no whitespace word segmentation, so a
-            // letter-boundary check would reject every real match (the
-            // character before/after is itself a letter). Terms in these
-            // scripts use a plain substring scan instead — everything else
-            // gets Unicode-aware whole-word matching.
-            var rellCJK = /[぀-ヿ㐀-鿿가-힯]/;
-
-            function rellSubstringRanges(term, text, cap) {
-                var lower = text.toLowerCase();
-                var needle = term.toLowerCase();
-                var ranges = [];
-                var idx = 0;
-                while (ranges.length < cap && (idx = lower.indexOf(needle, idx)) >= 0) {
-                    ranges.push({ start: idx, end: idx + needle.length });
-                    idx += needle.length;
-                }
-                return ranges;
-            }
-
-            function rellFindTermRanges(term, text, cap) {
-                if (rellCJK.test(term)) { return rellSubstringRanges(term, text, cap); }
-
-                var escaped = term.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
-                var regex;
-                try {
-                    regex = new RegExp('(?<![\\\\p{L}\\\\p{N}])' + escaped + '(?![\\\\p{L}\\\\p{N}])', 'giu');
-                } catch (e) {
-                    // Defensive fallback for a term whose regex failed to compile.
-                    return rellSubstringRanges(term, text, cap);
-                }
-                var ranges = [];
-                var m;
-                while (ranges.length < cap && (m = regex.exec(text))) {
-                    ranges.push({ start: m.index, end: m.index + m[0].length });
-                    if (m[0].length === 0) { regex.lastIndex++; }
-                }
-                return ranges;
-            }
-
-            function rellAcceptableSavedWordNode(node) {
-                var p = node.parentElement;
-                while (p) {
-                    if (p.tagName === 'MARK' || (p.dataset && p.dataset.rellSavedWord)) {
-                        return false;
-                    }
-                    p = p.parentElement;
-                }
-                return true;
-            }
-
-            function rellMarkRangesInNode(node, ranges, color, gloss, underline) {
-                var text = node.textContent;
-                var frag = document.createDocumentFragment();
-                var last = 0;
-                ranges.forEach(function(r) {
-                    if (r.start > last) {
-                        frag.appendChild(document.createTextNode(text.substring(last, r.start)));
-                    }
-                    var span = document.createElement('span');
-                    span.setAttribute('data-rell-saved-word', underline ? '1' : 'gloss');
-                    // The meaning is drawn by CSS (::after, attr()) — a
-                    // pseudo-element adds nothing to textContent, so text
-                    // offsets for highlights, search and karaoke stay valid.
-                    if (gloss) { span.setAttribute('data-rell-gloss', gloss); }
-                    if (underline) {
-                        span.style.textDecorationLine = 'underline';
-                        span.style.textDecorationStyle = 'dotted';
-                        span.style.textDecorationColor = color;
-                        span.style.textUnderlineOffset = '2px';
-                    }
-                    span.style.cursor = 'pointer';
-                    span.textContent = text.substring(r.start, r.end);
-                    frag.appendChild(span);
-                    last = r.end;
-                });
-                if (last < text.length) {
-                    frag.appendChild(document.createTextNode(text.substring(last)));
-                }
-                node.parentNode.replaceChild(frag, node);
-            }
-
-            /// Underlines every occurrence of a saved word. Case-insensitive;
-            /// Unicode-aware letter/number boundaries give correct whole-word
-            /// matching for accented Latin, Cyrillic, and Arabic scripts,
-            /// while CJK terms use plain substring matching (no boundary
-            /// concept applies there — see `rellFindTermRanges`).
-            function rellSetGlossStyle(on, glossColor) {
-                var root = document.documentElement;
-                var was = root.classList.contains('rell-glossing');
-                // Turning glosses on or off changes the line height, which
-                // moves every line; keep the reader at the same place in
-                // the chapter rather than the same pixel offset.
-                var fraction = was === on ? null
-                    : window.scrollY / Math.max(1, root.scrollHeight - window.innerHeight);
-                rellApplyGlossStyle(on, glossColor);
-                if (fraction !== null && fraction > 0) {
-                    window.scrollTo(0, fraction * Math.max(0, root.scrollHeight - window.innerHeight));
-                }
-            }
-
-            function rellApplyGlossStyle(on, glossColor) {
-                var style = document.getElementById('rell-gloss-style');
-                if (!on) {
-                    if (style) { style.remove(); }
-                    document.documentElement.classList.remove('rell-glossing');
-                    return;
-                }
-                if (!style) {
-                    style = document.createElement('style');
-                    style.id = 'rell-gloss-style';
-                    document.documentElement.appendChild(style);
-                }
-                // Room above each line for the meaning; more specific than
-                // the appearance rules, so it wins while glosses are on.
-                style.textContent =
-                    'html.rell-glossing body, html.rell-glossing body p, html.rell-glossing body li, ' +
-                    'html.rell-glossing body blockquote { line-height: 2.35 !important; }' +
-                    'span[data-rell-gloss] { position: relative; }' +
-                    'span[data-rell-gloss]::after { content: attr(data-rell-gloss); position: absolute; ' +
-                    'left: 50%; bottom: 88%; transform: translateX(-50%); font-size: 0.56em; ' +
-                    'line-height: 1; white-space: nowrap; font-style: normal; font-weight: 500; ' +
-                    'letter-spacing: 0; text-indent: 0; text-transform: none; pointer-events: none; ' +
-                    '-webkit-user-select: none; user-select: none; color: ' + glossColor + '; }';
-                document.documentElement.classList.add('rell-glossing');
-            }
-
-            /// `glosses`: lowercased term → short meaning shown above it.
-            /// `glossOnly`: terms that get a meaning but aren't saved words
-            /// (the chapter warm-up), so no saved-word underline.
-            window.rellMarkSavedWords = function(terms, color, glosses, glossOnly, glossColor) {
-                rellUnmarkSavedWords();
-                glosses = glosses || {};
-                glossOnly = glossOnly || [];
-                var glossing = Object.keys(glosses).length > 0;
-                rellSetGlossStyle(glossing, glossColor);
-                var onlySet = {};
-                glossOnly.forEach(function(t) { onlySet[t.toLowerCase()] = true; });
-                // Warm-up words first: there are only a handful, and the
-                // 500-term cap below shouldn't be able to crowd them out.
-                terms = glossOnly.filter(function(t) {
-                    return glosses[t.toLowerCase()];
-                }).concat(terms || []);
-                if (!terms.length) { return; }
-                rellBindSavedWordClicks();
-
-                // Bounds: at most 500 terms and 50 matches per term per
-                // chapter — a saved vocabulary can grow into the thousands,
-                // and a single common word could otherwise match hundreds
-                // of times in one chapter.
-                terms.slice(0, 500).forEach(function(term) {
-                    if (!term) { return; }
-                    var matched = 0;
-                    // Re-walk fresh for each term — the previous term's
-                    // wraps mutated the DOM, invalidating old node refs.
-                    var nodes = rellWalkTextNodes(document.body).filter(rellAcceptableSavedWordNode);
-                    for (var i = 0; i < nodes.length && matched < 50; i++) {
-                        var node = nodes[i];
-                        var ranges = rellFindTermRanges(term, node.textContent, 50 - matched);
-                        if (ranges.length) {
-                            var key = term.toLowerCase();
-                            rellMarkRangesInNode(node, ranges, color, glosses[key], !onlySet[key]);
-                            matched += ranges.length;
-                        }
-                    }
-                });
-            };
-        })();
-        """,
+        source: bundledScript("rell-highlight"),
         injectionTime: .atDocumentEnd,
         forMainFrameOnly: true
     )
 
     /// Throttled scroll reporting for reading-position persistence.
     private static let scrollScript = WKUserScript(
-        source: """
-        (function() {
-            var pending = false;
-            window.addEventListener('scroll', function() {
-                if (pending) { return; }
-                pending = true;
-                setTimeout(function() {
-                    pending = false;
-                    var max = document.body.scrollHeight - window.innerHeight;
-                    var fraction = max > 0 ? window.scrollY / max : 0;
-                    window.webkit.messageHandlers.\(EPUBViewManager.scrollMessageName)
-                        .postMessage(fraction);
-                }, 250);
-            }, { passive: true });
-        })();
-        """,
+        source: bundledScript("rell-scroll"),
         injectionTime: .atDocumentEnd,
         forMainFrameOnly: true
     )
@@ -779,47 +423,7 @@ struct EPUBReaderView: NSViewRepresentable {
     /// word (and nothing is selected), report the word + its viewport rect.
     /// An empty word means "hover ended" and closes the popover.
     private static let hoverScript = WKUserScript(
-        source: """
-        (function() {
-            var timer = null;
-            var WORD = /[A-Za-zÀ-ÖØ-öø-ÿĀ-ſ'’-]/;
-
-            function post(word, r) {
-                window.webkit.messageHandlers.\(EPUBViewManager.hoverMessageName).postMessage({
-                    word: word,
-                    x: r ? r.left : 0, y: r ? r.top : 0,
-                    w: r ? r.width : 0, h: r ? r.height : 0
-                });
-            }
-
-            document.addEventListener('mousemove', function(event) {
-                if (timer) { clearTimeout(timer); }
-                timer = setTimeout(function() {
-                    var sel = window.getSelection();
-                    if (sel && sel.toString().trim().length > 0) { return; }
-                    var range = document.caretRangeFromPoint(event.clientX, event.clientY);
-                    if (!range || !range.startContainer || range.startContainer.nodeType !== 3) {
-                        post('', null); return;
-                    }
-                    var node = range.startContainer;
-                    var text = node.textContent;
-                    var offset = range.startOffset;
-                    if (offset >= text.length || !WORD.test(text[offset])) { post('', null); return; }
-                    var start = offset; while (start > 0 && WORD.test(text[start - 1])) { start--; }
-                    var end = offset; while (end < text.length && WORD.test(text[end])) { end++; }
-                    var wordRange = document.createRange();
-                    wordRange.setStart(node, start);
-                    wordRange.setEnd(node, end);
-                    post(text.substring(start, end), wordRange.getBoundingClientRect());
-                }, 500);
-            }, { passive: true });
-
-            document.addEventListener('mouseleave', function() {
-                if (timer) { clearTimeout(timer); }
-                post('', null);
-            });
-        })();
-        """,
+        source: bundledScript("rell-hover"),
         injectionTime: .atDocumentEnd,
         forMainFrameOnly: true
     )
@@ -828,98 +432,7 @@ struct EPUBReaderView: NSViewRepresentable {
     /// The sentence is cut from the enclosing block's text at sentence
     /// punctuation — the web counterpart of the PDF side's NLTokenizer pass.
     private static let selectionScript = WKUserScript(
-        source: """
-        (function() {
-            var timer = null;
-            var BOUNDARIES = /[.!?…]/;
-
-            function enclosingBlock(node) {
-                var el = node && node.nodeType === 3 ? node.parentElement : node;
-                while (el && el.tagName &&
-                       !/^(P|DIV|LI|BLOCKQUOTE|TD|DD|DT|FIGCAPTION|H[1-6]|BODY)$/i.test(el.tagName)) {
-                    el = el.parentElement;
-                }
-                return el;
-            }
-
-            function sentenceAround(blockText, selected) {
-                if (!blockText || !selected) { return ''; }
-                var index = blockText.indexOf(selected);
-                if (index < 0) { return ''; }
-                var start = 0;
-                for (var i = index - 1; i >= 0; i--) {
-                    if (BOUNDARIES.test(blockText[i])) { start = i + 1; break; }
-                }
-                var end = blockText.length;
-                for (var j = index + selected.length; j < blockText.length; j++) {
-                    if (BOUNDARIES.test(blockText[j])) { end = j + 1; break; }
-                }
-                return blockText.substring(start, end).trim();
-            }
-
-            // Selection bounds in viewport (CSS) coordinates for the native
-            // floating action bar. WKWebView is flipped, so these map straight
-            // to the web view's subview coordinate space. -1 width = no rect.
-            function selRect(sel) {
-                if (sel && sel.rangeCount > 0) {
-                    var r = sel.getRangeAt(0).getBoundingClientRect();
-                    if (r && (r.width > 0 || r.height > 0)) {
-                        return { x: r.left, y: r.top, w: r.width, h: r.height };
-                    }
-                }
-                return { x: -1, y: -1, w: 0, h: 0 };
-            }
-
-            document.addEventListener('selectionchange', function() {
-                if (timer) { clearTimeout(timer); }
-                timer = setTimeout(function() {
-                    var sel = window.getSelection();
-                    var text = sel ? sel.toString().trim() : '';
-                    var sentence = '';
-                    var anchor = null;
-                    var rect = { x: -1, y: -1, w: 0, h: 0 };
-                    if (text.length > 0 && sel.anchorNode) {
-                        var block = enclosingBlock(sel.anchorNode);
-                        sentence = sentenceAround(block ? block.innerText : '', text);
-                        if (sel.rangeCount > 0 && window.__rellComputeAnchor) {
-                            anchor = window.__rellComputeAnchor(sel.getRangeAt(0));
-                        }
-                        rect = selRect(sel);
-                    }
-                    window.webkit.messageHandlers.\(EPUBViewManager.selectionMessageName)
-                        .postMessage({
-                            text: text, sentence: sentence,
-                            quote: anchor ? anchor.quote : '',
-                            prefix: anchor ? anchor.prefix : '',
-                            suffix: anchor ? anchor.suffix : '',
-                            startOffset: anchor ? anchor.startOffset : -1,
-                            rectX: rect.x, rectY: rect.y, rectW: rect.w, rectH: rect.h
-                        });
-                }, 120);
-            });
-
-            // Keep the action bar pinned above its selection while the chapter
-            // scrolls under it. One post per animation frame; reposition-only.
-            var scrollPending = false;
-            window.addEventListener('scroll', function() {
-                if (scrollPending) { return; }
-                scrollPending = true;
-                requestAnimationFrame(function() {
-                    scrollPending = false;
-                    var sel = window.getSelection();
-                    var text = sel ? sel.toString().trim() : '';
-                    var rect = (text.length > 0)
-                        ? selRect(sel)
-                        : { x: -1, y: -1, w: 0, h: 0 };
-                    window.webkit.messageHandlers.\(EPUBViewManager.selectionMessageName)
-                        .postMessage({
-                            reposition: true,
-                            rectX: rect.x, rectY: rect.y, rectW: rect.w, rectH: rect.h
-                        });
-                });
-            }, true);
-        })();
-        """,
+        source: bundledScript("rell-selection"),
         injectionTime: .atDocumentEnd,
         forMainFrameOnly: true
     )
@@ -931,104 +444,7 @@ struct EPUBReaderView: NSViewRepresentable {
     /// Returns false (and highlights nothing) when the sentence isn't found,
     /// which is the agreed "silently skip" behaviour.
     static let karaokeScript = WKUserScript(
-        source: """
-        (function() {
-            var STYLE_ID = 'rell-karaoke-style';
-            // ONE Highlight object, registered once and mutated in place.
-            // Re-registering (delete + set) leaves the previous run's painted
-            // ranges on screen in WebKit, so every spoken sentence would pile
-            // up another stripe. A Highlight is Set-like: clear() then add().
-            var highlight = null;
-
-            function ensureStyle() {
-                if (document.getElementById(STYLE_ID)) { return; }
-                var style = document.createElement('style');
-                style.id = STYLE_ID;
-                style.textContent =
-                    '::highlight(rell-karaoke) {' +
-                    '  background-color: var(--rell-karaoke-bg, rgba(255, 205, 90, 0.55));' +
-                    '}';
-                document.head.appendChild(style);
-            }
-
-            function registry() {
-                if (!window.CSS || !CSS.highlights || typeof Highlight === 'undefined') { return null; }
-                if (!highlight) {
-                    highlight = new Highlight();
-                    CSS.highlights.set('rell-karaoke', highlight);
-                }
-                return highlight;
-            }
-
-            function clear() {
-                if (highlight) { highlight.clear(); }
-            }
-
-            window.rellKaraoke = function(sentence, background) {
-                try {
-                    var hl = registry();
-                    if (!hl) { return false; }
-                    hl.clear();
-                    if (!sentence) { return false; }
-                    ensureStyle();
-                    if (background) {
-                        document.documentElement.style.setProperty('--rell-karaoke-bg', background);
-                    }
-
-                    var target = sentence.replace(/\\s+/g, ' ').trim().toLowerCase();
-                    if (target.length < 2) { return false; }
-
-                    // Flatten the chapter's text nodes into one whitespace-
-                    // collapsed string, remembering where each character came
-                    // from so a match can be turned back into a DOM Range.
-                    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-                    var flat = '';
-                    var origin = [];
-                    var node;
-                    while ((node = walker.nextNode())) {
-                        var raw = node.nodeValue;
-                        if (!raw) { continue; }
-                        for (var i = 0; i < raw.length; i++) {
-                            var ch = raw[i];
-                            if (/\\s/.test(ch)) {
-                                if (flat.length && flat[flat.length - 1] !== ' ') {
-                                    flat += ' ';
-                                    origin.push([node, i]);
-                                }
-                            } else {
-                                flat += ch.toLowerCase();
-                                origin.push([node, i]);
-                            }
-                        }
-                    }
-
-                    var index = flat.indexOf(target);
-                    if (index < 0) { return false; }
-                    var start = origin[index];
-                    var end = origin[Math.min(index + target.length - 1, origin.length - 1)];
-                    if (!start || !end) { return false; }
-
-                    var range = document.createRange();
-                    range.setStart(start[0], start[1]);
-                    range.setEnd(end[0], end[1] + 1);
-                    hl.add(range);
-
-                    var host = start[0].parentElement;
-                    if (host && host.getBoundingClientRect) {
-                        var box = host.getBoundingClientRect();
-                        // Only scroll when it has drifted out of comfortable view.
-                        if (box.top < 0 || box.bottom > window.innerHeight) {
-                            host.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                        }
-                    }
-                    return true;
-                } catch (e) {
-                    clear();
-                    return false;
-                }
-            };
-        })();
-        """,
+        source: bundledScript("rell-karaoke"),
         injectionTime: .atDocumentEnd,
         forMainFrameOnly: true
     )

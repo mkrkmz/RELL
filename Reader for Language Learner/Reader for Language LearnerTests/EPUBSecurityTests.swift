@@ -110,4 +110,23 @@ final class EPUBSecurityTests: XCTestCase {
         """, in: webView) as? Bool
         XCTAssertEqual(listenerFired, true)
     }
+
+    // MARK: Bundled reader scripts (v14 Sprint 0)
+
+    /// The reader's scripts moved from Swift literals to Reader/EPUB/Scripts.
+    /// Each must ship in the app bundle and define what Swift calls.
+    func testReaderScriptsShipInTheBundleAndLoad() async throws {
+        for name in ["rell-highlight", "rell-scroll", "rell-hover", "rell-selection", "rell-karaoke"] {
+            XCTAssertFalse(EPUBReaderView.bundledScript(name).isEmpty, "\(name).js missing")
+        }
+        let manager = EPUBViewManager()
+        Self.retained.append(manager)
+        let webView = WKWebView(frame: .zero, configuration: EPUBReaderView.makeConfiguration(for: manager))
+        Self.retained.append(webView)
+        try await load("<html><body><p>Text</p></body></html>", in: webView)
+        let types = try await evaluate("""
+        [typeof window.rellMarkSavedWords, typeof window.rellRenderHighlights, typeof window.rellKaraoke].join(',')
+        """, in: webView) as? String
+        XCTAssertEqual(types, "function,function,function")
+    }
 }
