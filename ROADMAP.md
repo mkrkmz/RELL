@@ -121,7 +121,14 @@ Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
       tanimliyor
 - [x] Dogrulama: `make ci-test` 618 test, 0 hata; CI (Xcode 26.x) 618 test,
       0 hata, 7 atlanan (makineye bagli)
-- [ ] **Canli tur (kullanici)** — (1) pencereyi en kucuk boyuta getirip uzun
+- [x] **Canli tur (kullanici)** — tamam (2026-10-01). Ilk turda okuyucu
+      penceresi en kucuk boyutta coktu: baglam seridinin sag tarafi dar
+      genislikte kesilen ciplerle yeniden pazarlik ediyordu + 900 pt sabit
+      minimum bolunmus gorunumun kendi minimumunun altindaydi. Duzeltme
+      (545b725): serit sabit yukseklik, icerik overlay'de, cip sayisi
+      genislikten; okuyucu minimumu bolunmus gorunumden. `WindowLayoutTests`
+      gercek pencereyi en kucuge indirir (ara cozum ViewThatFits de bu
+      testte coktu). Ikinci tur temiz. Kontrol listesi: (1) pencereyi en kucuk boyuta getirip uzun
       bir cumle sec: Inspector cokmeden kaydirilabilir olmali; normal boyutta
       gorunum degismemeli. (2) EPUB'da betik tasimasinin etkiledigi her sey:
       kayitli kelime alt cizgisi, vurgular, uzerine gelme sozlugu, secim
