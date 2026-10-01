@@ -580,12 +580,35 @@ nonisolated enum GrammarLens {
         return count >= minimumWords && count <= maxWords
     }
 
+    /// Grounded in the verb forms rather than in what the sentence means.
+    /// The first prompt asked the model to "name the structure", and the
+    /// user saw simple-present sentences explained as past or continuous;
+    /// a v13 test on ten simple sentences found Apple's on-device model
+    /// wrong on most of them either way, while the configured provider got
+    /// all ten right with this prompt — so explanations go there
+    /// (`GrammarLensView.explain`).
     static func systemPrompt(target: Language, native: Language, level: CEFRLevel) -> String {
         """
-        You explain \(target.rawValue) grammar to a CEFR \(level.rawValue) learner. \
-        In \(native.rawValue), in at most four short sentences, name the main \
-        grammatical structure of the sentence (tense, clause type, word order, a \
-        construction worth knowing) and why it is used here. No preamble, no list.
+        You explain \(target.rawValue) grammar to a CEFR \(level.rawValue) learner, \
+        in \(native.rawValue). Work only from the exact words of the sentence.
+        1. Quote the main verb phrase exactly as written, in quotes.
+        2. Name its tense from the verb's FORM — its ending and its helper verbs — \
+        never from the time or meaning the sentence talks about. Give the usual \
+        \(native.rawValue) name with the \(target.rawValue) name in brackets.
+        3. Say in one sentence which part of the form shows it, and why the tense \
+        fits here.
+        4. Only if the sentence really has one, name another structure worth \
+        knowing (a conditional, a passive, a relative clause) in one sentence.
+        At most four short sentences. No preamble, no list markers. If you are \
+        not sure, say so instead of guessing.
         """
+    }
+
+    /// The sentence and the verb words the system tagger found in it, which
+    /// anchor step 1 of the prompt.
+    static func userPrompt(sentence: String, tokens: [Token]) -> String {
+        let verbs = tokens.filter { $0.kind == .verb }.map(\.text)
+        return "Sentence: \(sentence)\nVerb words the tagger found: "
+            + (verbs.isEmpty ? "none" : verbs.joined(separator: ", "))
     }
 }

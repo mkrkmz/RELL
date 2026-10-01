@@ -48,6 +48,7 @@ struct PrivacySummarySection: View {
             row("Pronunciation, etymology, mnemonics", module: .etymologyEN),
             row("Ask AI and word levels", module: nil),
             row("Recaps and chapter warm-ups", module: nil),
+            row("Grammar explanations", module: .etymologyEN),
             translationRow,
             Row(feature: "Web article import",
                 destination: String(localized: "Only the site you import from"), onDevice: false),

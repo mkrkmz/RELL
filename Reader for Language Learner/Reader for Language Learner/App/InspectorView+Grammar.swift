@@ -107,13 +107,18 @@ struct GrammarLensView: View {
         failure = nil
         Task {
             do {
-                let raw = try await AppleOnDevice.chatWithFallback(
+                // The configured provider, never Apple's on-device model: it
+                // named simple-present sentences as past or continuous (see
+                // `GrammarLens.systemPrompt`). No fallback to it either — a
+                // wrong grammar explanation is worse than none.
+                let raw = try await LLMConfiguration().makeProvider().chat(
                     system: GrammarLens.systemPrompt(
                         target: language, native: Language.storedNative, level: CEFRLevel.storedLearnerLevel
                     ),
-                    user: sentence,
-                    temperature: 0.2,
-                    maxTokens: GrammarLens.maxTokens
+                    user: GrammarLens.userPrompt(sentence: sentence, tokens: tokens),
+                    temperature: 0,
+                    maxTokens: GrammarLens.maxTokens,
+                    topP: 0.9
                 )
                 explanation = ReadingRecap.clean(raw)
                 if explanation == nil { failure = String(localized: "The AI returned nothing to show. Try again.") }

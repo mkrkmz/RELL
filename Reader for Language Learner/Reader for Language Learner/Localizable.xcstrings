@@ -9108,6 +9108,16 @@
           }
         }
       }
+    },
+    "Grammar explanations" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dilbilgisi açıklamaları"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

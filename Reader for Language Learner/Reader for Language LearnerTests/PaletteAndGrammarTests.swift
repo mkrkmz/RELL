@@ -64,6 +64,19 @@ final class PaletteAndGrammarTests: XCTestCase {
         XCTAssertEqual(tokens.map(\.kind), [.determiner, .adjective, .noun, .verb, .adverb])
     }
 
+    /// The user saw simple-present sentences explained as past or
+    /// continuous. The prompt now hands the model the verbs and asks for the
+    /// tense from their form, in the reader's language.
+    func testExplanationPromptIsGroundedInTheVerbs() async {
+        let tokens = GrammarLens.tokens(in: "She drinks coffee every morning.", language: .english)
+        let user = GrammarLens.userPrompt(sentence: "She drinks coffee every morning.", tokens: tokens)
+        XCTAssertTrue(user.contains("Verb words the tagger found: drinks"), user)
+        let system = GrammarLens.systemPrompt(target: .english, native: .turkish, level: .b1)
+        XCTAssertTrue(system.contains("FORM"))
+        XCTAssertTrue(system.contains("in Turkish"))
+        XCTAssertTrue(system.contains("never from the time or meaning"))
+    }
+
     func testLensIsForSentencesNotWordsOrPages() async {
         XCTAssertFalse(GrammarLens.isEligible("old cat"))
         XCTAssertTrue(GrammarLens.isEligible("The old cat sleeps."))
