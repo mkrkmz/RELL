@@ -202,7 +202,15 @@ struct ContentView: View {
             }
         }
         .focusedSceneValue(\.readerCommands, readerCommands)
-        .frame(minWidth: DS.Layout.windowMin.width, minHeight: DS.Layout.windowMin.height)
+        // The reader's width minimum is the split view's own (sidebar +
+        // reader + inspector minimums, ~950 pt). A fixed 900 under it let the
+        // window shrink below what the columns can take, and AppKit looped
+        // on the constraints — a crash at small sizes (v14 S0,
+        // WindowLayoutTests). The home screen has no split view; it keeps one.
+        .frame(
+            minWidth: selectionState.documentURL == nil ? DS.Layout.windowMin.width : nil,
+            minHeight: DS.Layout.windowMin.height
+        )
         .onDrop(
             of: [.pdf, .epub],
             isTargeted: selectionState.documentURL != nil ? Bindable(model).isDropTargeted : nil,

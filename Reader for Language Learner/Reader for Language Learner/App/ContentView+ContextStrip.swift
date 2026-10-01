@@ -13,7 +13,34 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 extension ContentView {
+    /// The strip's height is fixed and its content sits in an overlay, so
+    /// nothing in it takes part in sizing the window. Twice it did: a
+    /// horizontal scroll view, then a ViewThatFits, renegotiated with the
+    /// truncating chips at narrow widths — AppKit's update-constraints loop,
+    /// a crash when the window was made small (v14 S0, WindowLayoutTests).
+    /// The strip's width comes from its column; how many chips show is a
+    /// plain function of that width.
     var readerContextStrip: some View {
+        Color.clear
+            .frame(maxWidth: .infinity)
+            .frame(height: Self.contextStripHeight)
+            .overlay {
+                GeometryReader { proxy in
+                    readerContextStripContent(width: proxy.size.width)
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                }
+            }
+            .background(DS.Color.surfaceElevated.opacity(0.94))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.sm)
+                    .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
+            )
+    }
+
+    private static let contextStripHeight: CGFloat = 30
+
+    private func readerContextStripContent(width: CGFloat) -> some View {
         HStack(spacing: DS.Spacing.sm) {
             readerContextChip(
                 icon: "doc.text",
@@ -27,45 +54,58 @@ extension ContentView {
 
             Spacer(minLength: DS.Spacing.sm)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: DS.Spacing.xs) {
-                    warmUpChip
-                    readerContextMetricChip(icon: "note.text", value: "\(currentNoteCount)", label: "notes")
-                    readerContextMetricChip(icon: "star", value: "\(currentSavedWordCount)", label: "saved")
-                    readerContextMetricChip(
-                        icon: currentDueWordCount > 0 ? "clock.badge.exclamationmark" : "checkmark.seal",
-                        value: "\(currentDueWordCount)",
-                        label: "due",
-                        tint: currentDueWordCount > 0 ? DS.Color.warning : DS.Color.success
-                    )
-                    if let profile = lexicalProfileService.current, profile.totalTokens > 0 {
-                        // How much of what's on screen the reader already knows
-                        // — comprehensible-input coverage (L3).
-                        readerContextMetricChip(
-                            icon: "percent",
-                            value: "\(Int((profile.knownShare * 100).rounded()))",
-                            label: "known",
-                            tint: DS.Color.coverageTint(for: profile.difficulty)
-                        )
-                    }
-                    readerContextChip(
-                        icon: selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            ? "cursorarrow.click"
-                            : "text.cursor",
-                        text: selectionSummaryText
-                    )
-                }
+            if width >= 760 {
+                fullMetrics.fixedSize()
+            } else if width >= 460 {
+                compactMetrics.fixedSize()
             }
-            .frame(maxWidth: 360)
         }
         .padding(.horizontal, DS.Spacing.md)
-        .padding(.vertical, 6)
-        .background(DS.Color.surfaceElevated.opacity(0.94))
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
-        )
+    }
+
+    private var fullMetrics: some View {
+        HStack(spacing: DS.Spacing.xs) {
+            warmUpChip
+            readerContextMetricChip(icon: "note.text", value: "\(currentNoteCount)", label: "notes")
+            readerContextMetricChip(icon: "star", value: "\(currentSavedWordCount)", label: "saved")
+            readerContextMetricChip(
+                icon: currentDueWordCount > 0 ? "clock.badge.exclamationmark" : "checkmark.seal",
+                value: "\(currentDueWordCount)",
+                label: "due",
+                tint: currentDueWordCount > 0 ? DS.Color.warning : DS.Color.success
+            )
+            if let profile = lexicalProfileService.current, profile.totalTokens > 0 {
+                // How much of what's on screen the reader already knows
+                // — comprehensible-input coverage (L3).
+                readerContextMetricChip(
+                    icon: "percent",
+                    value: "\(Int((profile.knownShare * 100).rounded()))",
+                    label: "known",
+                    tint: DS.Color.coverageTint(for: profile.difficulty)
+                )
+            }
+            readerContextChip(
+                icon: selectionState.selectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? "cursorarrow.click"
+                    : "text.cursor",
+                text: selectionSummaryText
+            )
+            .frame(maxWidth: 160, alignment: .leading)
+        }
+    }
+
+    /// The strip's right side when the full set doesn't fit: the warm-up and
+    /// what's due — the two that ask for something.
+    private var compactMetrics: some View {
+        HStack(spacing: DS.Spacing.xs) {
+            warmUpChip
+            readerContextMetricChip(
+                icon: currentDueWordCount > 0 ? "clock.badge.exclamationmark" : "checkmark.seal",
+                value: "\(currentDueWordCount)",
+                label: "due",
+                tint: currentDueWordCount > 0 ? DS.Color.warning : DS.Color.success
+            )
+        }
     }
 
     /// Profiles the whole open book against the reader's vocabulary, unless
