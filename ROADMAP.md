@@ -107,13 +107,25 @@ Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
 - [x] **CI esitligi** — `make ci-test` CI'daki komutun aynisi (macOS 15 hedefi,
       temiz derleme klasoru). CONTRIBUTING: sprint sonu kurali, Xcode 26.3'un
       reddettigi iki kalip, sutun yerlesim kurali
-- [ ] **Surum notu is akisinin uctan uca denenmesi** — `workflow_dispatch`
-      yolu da `release_notes.md` uretip artifact olarak yukler; mevcut bir
-      tag uzerinde calistirilip cikti kontrol edilir
-- [ ] **Kod sagligi (UI isini kolaylastiran kadari)** — EPUBReaderView'in
-      gomulu JS'i `Resources/epub/*.js` dosyalarina (ayni icerik, mevcut
-      testler degismeden gecer); PDFKitView Coordinator'i ayri dosyaya.
-      Davranis degismez
+- [x] **Surum notu is akisinin uctan uca denenmesi** — elle tetiklenen
+      calisma da `release_notes.md` uretip artifact olarak yukluyor (adim
+      artifact yuklemesinin onune alindi). v1.42.0 uzerinde denendi: not
+      "What's new in RELL 1.42.0" ile basliyor, DMG derlendi, surum sayfasi
+      degismedi
+- [x] **Kod sagligi** — okuyucunun 5 betigi `Reader/EPUB/Scripts/*.js`'e
+      tasindi: her betigin calisma zamanindaki metni dokulup paketteki
+      dosyayla bayt bayt karsilastirildi (kacis degismedi); EPUBReaderView
+      1.035 → 451 satir. PDFKitView Coordinator'i ayri dosyada (1.005 → 91 +
+      931). Yeni test: betikler pakette ve Swift'in cagirdigi fonksiyonlari
+      tanimliyor
+- [x] Dogrulama: `make ci-test` 618 test, 0 hata; CI (Xcode 26.x) 618 test,
+      0 hata, 7 atlanan (makineye bagli)
+- [ ] **Canli tur (kullanici)** — (1) pencereyi en kucuk boyuta getirip uzun
+      bir cumle sec: Inspector cokmeden kaydirilabilir olmali; normal boyutta
+      gorunum degismemeli. (2) EPUB'da betik tasimasinin etkiledigi her sey:
+      kayitli kelime alt cizgisi, vurgular, uzerine gelme sozlugu, secim
+      cubugu, karaoke (Seslendir), ⌥⌘G anlamlar
+- [ ] Soguk acilis olcumu — kullanicinin RELL'i kapaliyken `make ui-test`
 
 ## Sprint 1 — "Okuyucu kabugu" (Must)
 
