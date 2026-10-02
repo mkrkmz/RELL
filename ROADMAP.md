@@ -199,7 +199,8 @@ araclar istenince bulunabilsin. **Maketle baslar.**
       arac cubugu gizlenmiyor, icerigi Zen kontrolleriyle degisiyor
       (`ZenToolbar.swift`, `windowToolbarContent`), tam ekranda
       `.onHover` — Safari gibi menu cubuguyla birlikte iner
-- [ ] **Canli tur (kullanici)** — (1) serit: genis ve dar pencerede "Bu
+- [x] **Canli tur (kullanici)** — tamam (2026-10-02; bulgular yukarida: cam
+      ustu metin, Zen boslugu, Zen dugmeleri). Kontrol listesi: (1) serit: genis ve dar pencerede "Bu
       bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
       (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif
       ogelerin altindaki neden), Vurgula ▸ renkler; (3) sag tik PDF ve EPUB'da
