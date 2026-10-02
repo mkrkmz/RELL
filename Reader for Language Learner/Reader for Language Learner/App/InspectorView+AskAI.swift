@@ -118,7 +118,7 @@ extension InspectorView {
                 .font(DS.Typography.icon(11))
                 .foregroundStyle(DS.Color.accent)
 
-            TextField("Ask a follow-up…", text: $followUpQuestion, axis: .vertical)
+            TextField(isSingleWordSelection ? String(localized: "Ask about this word…") : String(localized: "Ask about this sentence…"), text: $followUpQuestion, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(DS.Typography.caption)
                 .lineLimit(1...3)

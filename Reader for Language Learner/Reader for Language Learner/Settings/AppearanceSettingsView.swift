@@ -15,6 +15,7 @@ struct AppearanceSettingsView: View {
     // never influenced anything, so there is nothing worth migrating).
     @AppStorage(StorageKey.pageTheme) private var pageThemeRaw = PageTheme.original.rawValue
     @AppStorage(StorageKey.appTheme)  private var appThemeRaw = AppTheme.system.rawValue
+    @AppStorage(StorageKey.inspectorFollowsPageTheme) private var inspectorFollowsPageTheme = false
     @AppStorage(AccentChoice.storageKey) private var accentRaw = AccentChoice.system.rawValue
     @AppStorage(StorageKey.inspectorWidth)   private var inspectorWidth: Double = Double(DS.Layout.inspectorDefault)
     @AppStorage(StorageKey.sidebarWidth)     private var sidebarWidth:   Double = Double(DS.Layout.sidebarDefault)
@@ -37,6 +38,10 @@ struct AppearanceSettingsView: View {
 
             Section("Page Theme") {
                 pageThemeGrid
+                Toggle("Inspector follows the page theme", isOn: $inspectorFollowsPageTheme)
+                Text("With Paper, Sepia, Gray, Dark or Night, the inspector takes the page's tones instead of the system appearance.")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
             }
 
             Section("Panel Widths") {

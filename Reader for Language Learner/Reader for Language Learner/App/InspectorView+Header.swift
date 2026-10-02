@@ -2,7 +2,8 @@
 //  InspectorView+Header.swift
 //  Reader for Language Learner
 //
-//  Compact selection header + inline action bar + control strip.
+//  The selection card's shared parts: quick actions, recent terms, the
+//  overflow menu (v14 S2).
 //
 
 import SwiftUI
@@ -23,205 +24,147 @@ extension InspectorView {
         }
     }
 
-    // MARK: - Compact Selection Header
+    // MARK: - Selection Header
 
+    /// The top of the inspector (v14 S2): what is selected and what you can
+    /// do with it, in one card. A word gets the word card; a phrase or
+    /// sentence gets the sentence card, then its tools.
+    @ViewBuilder
     var selectionHeader: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+        if isSingleWordSelection {
+            wordCard
+        } else {
+            sentenceCard
+        }
+    }
+
+    // MARK: - Quick Actions (inside the card)
+
+    /// Save, listen, Anki and the rest — labelled, inside the card. Before
+    /// v14 S2 these were unlabelled icons in a row of their own.
+    var quickActions: some View {
+        HStack(spacing: DS.Spacing.xs) {
             if isSingleWordSelection {
-                wordCard
-            } else {
-                phraseHeader
-                grammarLensSection
+                Button(action: toggleSaveWord) {
+                    Label(isCurrentlySaved ? "Saved" : "Save", systemImage: isCurrentlySaved ? "star.fill" : "star")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(isCurrentlySaved ? DS.Color.star : DS.Color.accent)
+                .keyboardShortcut("d", modifiers: [.command])
+                .help(isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)")
             }
 
-            Divider()
-
-            actionBar
-        }
-        .padding(.horizontal, DS.Spacing.xs)
-        .padding(.top, DS.Spacing.xxs)
-    }
-
-    /// A phrase or sentence: the text itself and its saved state.
-    private var phraseHeader: some View {
-            HStack(alignment: .top, spacing: DS.Spacing.sm) {
-                Text(trimmedSelection)
-                    .font(DS.Typography.headline)
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(2)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityLabel("Selected text: \(trimmedSelection)")
-
-                if let savedWord = currentlySavedWord {
-                    Label("Saved · \(savedWord.reviewStatus.label)", systemImage: savedWord.reviewStatus.icon)
-                        .font(DS.Typography.caption2.weight(.semibold))
-                        .foregroundStyle(savedWord.reviewStatus.color)
-                        .padding(.horizontal, DS.Spacing.sm)
-                        .padding(.vertical, 5)
-                        .background(savedWord.reviewStatus.color.opacity(0.10))
-                        .clipShape(Capsule())
-                        .transition(.scale(scale: 0.8).combined(with: .opacity))
-                        .accessibilityLabel("Word is saved to vocabulary. Review status: \(savedWord.reviewStatus.label)")
-                }
+            Button {
+                if speechManager.isSpeaking { speechManager.stop() } else { speakSelection() }
+            } label: {
+                Label(speechManager.isSpeaking ? "Stop" : "Listen",
+                      systemImage: speechManager.isSpeaking ? "stop.fill" : "play.fill")
             }
-            .animation(DS.Animation.springFast, value: isCurrentlySaved)
-    }
+            .buttonStyle(.bordered)
+            .keyboardShortcut("s", modifiers: [.command, .shift])
+            .help(speechManager.isSpeaking ? "Stop speaking (⇧⌘X)" : "Speak selected text (⇧⌘S)")
 
-    // MARK: - Control Strip (Mode + Detail + Recent Terms)
-
-    var controlStrip: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-            // Primary row: explain mode + detail level
-            HStack(spacing: DS.Spacing.xs) {
-                HStack(spacing: DS.Spacing.xxs) {
-                    ForEach(ExplainMode.allCases) { mode in
-                        Button { explainMode = mode } label: {
-                            Text(mode.localizedTitle)
-                                .font(DS.Typography.caption2.weight(explainMode == mode ? .bold : .regular))
-                                .foregroundStyle(explainMode == mode ? DS.Color.accent : DS.Color.textTertiary)
-                                .padding(.horizontal, DS.Spacing.sm)
-                                .padding(.vertical, DS.Spacing.xxs + 1)
-                                .background {
-                                    if explainMode == mode {
-                                        Capsule()
-                                            .fill(DS.Color.accentSubtle)
-                                            .matchedGeometryEffect(id: "modeBackground", in: moduleNamespace)
-                                    }
-                                }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
+            if isSingleWordSelection {
                 Button {
-                    explainDetail = explainDetail == .short ? .detailed : .short
+                    Task { await quickExport() }
                 } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: explainDetail == .short ? "text.alignleft" : "text.alignjustify")
-                            .font(DS.Typography.icon(10, weight: .medium))
-                        Text(explainDetail == .short ? "Short" : "Detailed")
-                            .font(DS.Typography.caption2)
-                    }
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .padding(.horizontal, DS.Spacing.sm)
-                    .padding(.vertical, DS.Spacing.xxs + 1)
-                    .background(DS.Color.cardSoft)
-                    .clipShape(Capsule())
-                    .overlay(Capsule().strokeBorder(DS.Color.hairline, lineWidth: 0.5))
+                    Label("Anki", systemImage: "square.and.arrow.up")
                 }
-                .buttonStyle(.plain)
-                .help(explainDetail == .short ? "Switch to Detailed" : "Switch to Short")
-
-                Spacer(minLength: 0)
+                .buttonStyle(.bordered)
+                .help("Quick Export to Anki")
+            } else {
+                Button {
+                    copyToClipboard(trimmedSelection, showFeedback: true)
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(.bordered)
+                .help("Copy Text")
             }
 
-            // Secondary row: recent terms (de-emphasized subline)
-            recentTermsRow
+            Spacer(minLength: 0)
+
+            overflowMenu
         }
-        .padding(.horizontal, DS.Spacing.xs)
-        .animation(DS.Animation.springFast, value: explainMode)
+        .controlSize(.small)
+        .font(DS.Typography.caption.weight(.medium))
+        .lineLimit(1)
+        // Keeps ⌘E (export) and ⇧⌘X (stop) working while their menu is closed.
+        .background(exportShortcutButton)
+        .background(stopShortcutButton)
     }
 
-    // MARK: - Recent Terms (secondary subline)
+    /// The selection is saved — the save button lives in the overflow menu
+    /// for a phrase or sentence, so its state shows here.
+    @ViewBuilder
+    var savedBadge: some View {
+        if let savedWord = currentlySavedWord {
+            Label(savedWord.reviewStatus.label, systemImage: savedWord.reviewStatus.icon)
+                .labelStyle(.iconOnly)
+                .foregroundStyle(savedWord.reviewStatus.color)
+                .help(Text("Saved · \(savedWord.reviewStatus.label)"))
+                .accessibilityLabel("Word is saved to vocabulary. Review status: \(savedWord.reviewStatus.label)")
+        }
+    }
+
+    // MARK: - Recent Terms (menu in the card's corner)
 
     @ViewBuilder
-    private var recentTermsRow: some View {
+    var recentTermsMenu: some View {
         let recents = viewModel.recentTerms.filter {
             $0.lowercased() != trimmedSelection.lowercased()
-        }.prefix(4)
+        }.prefix(8)
 
         if !recents.isEmpty {
-            HStack(spacing: DS.Spacing.xs) {
-                Image(systemName: "clock.arrow.circlepath")
-                    .font(DS.Typography.icon(9, weight: .medium))
-                    .foregroundStyle(DS.Color.textTertiary)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: DS.Spacing.xxs) {
-                        ForEach(Array(recents), id: \.self) { term in
-                            Button {
-                                NotificationCenter.default.post(
-                                    name: .inspectorRecentTermSelected,
-                                    object: term
-                                )
-                            } label: {
-                                Text(term)
-                                    .font(DS.Typography.caption2)
-                                    .foregroundStyle(DS.Color.textTertiary)
-                                    .padding(.horizontal, DS.Spacing.xs)
-                                    .padding(.vertical, DS.Spacing.xxs)
-                                    .background(DS.Color.cardSoft)
-                                    .clipShape(Capsule())
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Recent: \(term)")
+            Menu {
+                Section("Recent") {
+                    ForEach(Array(recents), id: \.self) { term in
+                        Button(term) {
+                            NotificationCenter.default.post(name: .inspectorRecentTermSelected, object: term)
                         }
                     }
                 }
+            } label: {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(DS.Typography.icon(11, weight: .medium))
+                    .foregroundStyle(DS.Color.textTertiary)
             }
-            .accessibilityElement(children: .contain)
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Recent terms")
             .accessibilityLabel("Recent terms")
         }
     }
 
-    // MARK: - Action Bar (compact inline)
-
-    var actionBar: some View {
-        // One glass container so the button chips sample a shared region
-        // (glass cannot sample other glass). Spacing matches the layout.
-        DSGlassGroup(spacing: DS.Spacing.xs) {
-            HStack(spacing: DS.Spacing.xs) {
-                // Left cluster: playback
-                actionGroup {
-                    iconButton(
-                        systemImage: speechManager.isSpeaking ? "speaker.wave.2.fill" : "play.fill",
-                        help: speechManager.isSpeaking ? "Speaking selected text…" : "Speak selected text (⇧⌘S)",
-                        action: speakSelection
-                    )
-                    .keyboardShortcut("s", modifiers: [.command, .shift])
-                    .disabled(!hasSelection)
-
-                    iconButton(
-                        systemImage: "stop.fill",
-                        help: "Stop speaking (⇧⌘X)",
-                        action: speechManager.stop
-                    )
-                    .keyboardShortcut("x", modifiers: [.command, .shift])
-                    .disabled(!speechManager.isSpeaking)
-                }
-
-                Spacer(minLength: DS.Spacing.sm)
-
-                // Right cluster: save + more
-                actionGroup {
-                    iconButton(
-                        systemImage: isCurrentlySaved ? "star.fill" : "star",
-                        help: isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)",
-                        action: toggleSaveWord
-                    )
-                    .keyboardShortcut("d", modifiers: [.command])
-                    .foregroundStyle(isCurrentlySaved ? DS.Color.star : DS.Color.textPrimary)
-
-                    overflowMenu
-                }
-            }
-        }
-        .controlSize(.mini)
-        // Keeps ⌘E working even while the overflow menu is closed.
-        .background(exportShortcutButton)
-    }
-
     // MARK: - Overflow Menu
 
-    private var overflowMenu: some View {
+    var overflowMenu: some View {
         Menu {
+            if !isSingleWordSelection {
+                Button(action: toggleSaveWord) {
+                    Label(isCurrentlySaved ? "Remove from Saved" : "Save to Vocabulary",
+                          systemImage: isCurrentlySaved ? "star.slash" : "star")
+                }
+                .disabled(!hasSelection)
+            }
+
             Button {
                 copyToClipboard(trimmedSelection, showFeedback: true)
             } label: {
                 Label("Copy Text", systemImage: "doc.on.doc")
             }
             .disabled(!hasSelection)
+
+            // Chosen from the selection now (one word: word, more: sentence);
+            // still yours to override for this selection.
+            Picker(selection: $explainMode) {
+                ForEach(ExplainMode.allCases) { mode in
+                    Text(mode.localizedTitle).tag(mode)
+                }
+            } label: {
+                Label("Explain As", systemImage: "text.magnifyingglass")
+            }
 
             Section("Anki") {
                 Button {
@@ -249,9 +192,8 @@ extension InspectorView {
             .disabled(isAnyLoading)
         } label: {
             Image(systemName: "ellipsis.circle")
-                .font(DS.Typography.icon(12, weight: .medium))
-                .frame(width: 28, height: 28)
-                .dsGlassInteractive(cornerRadius: DS.Radius.sm)
+                .font(DS.Typography.icon(13, weight: .medium))
+                .foregroundStyle(DS.Color.textSecondary)
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.hidden)
@@ -270,10 +212,12 @@ extension InspectorView {
             .accessibilityHidden(true)
     }
 
-    @ViewBuilder
-    private func actionGroup<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
-        HStack(spacing: DS.Spacing.xxs) {
-            content()
-        }
+    private var stopShortcutButton: some View {
+        Button { speechManager.stop() } label: { Color.clear }
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .keyboardShortcut("x", modifiers: [.command, .shift])
+            .disabled(!speechManager.isSpeaking)
+            .accessibilityHidden(true)
     }
 }

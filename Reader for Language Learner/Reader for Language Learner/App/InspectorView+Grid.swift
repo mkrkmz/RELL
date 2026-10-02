@@ -2,117 +2,120 @@
 //  InspectorView+Grid.swift
 //  Reader for Language Learner
 //
-//  Module grid — primary row + overflow row, compact layout.
+//  Explanations: four module chips and a "More" menu (v14 S2).
 //
 
 import SwiftUI
 
 extension InspectorView {
 
-    // MARK: - Module Grid
+    // MARK: - Explanations (module chips)
 
+    /// v14 S2: the four modules used most as chips, the rest — with Run All —
+    /// in a "More" menu that takes the place of a fifth chip. One row of a
+    /// fixed count, so its height never depends on the column's width.
     var moduleGrid: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            DSSectionHeader("Modules") {
-                runAllButton
+            DSSectionHeader(String(localized: "Explanations")) {
+                detailPicker
             }
             .padding(.horizontal, DS.Spacing.xxs)
 
-            VStack(spacing: DS.Spacing.xs) {
-                // Each row is one glass container so the module chips sample a
-                // shared region (glass cannot sample other glass); spacing
-                // matches the HStack's own spacing.
-                DSGlassGroup(spacing: DS.Spacing.xxs) {
-                    HStack(spacing: DS.Spacing.xxs) {
-                        // ⌘1-⌘9 shortcuts live in the Modules main menu now.
-                        ForEach(primaryModules, id: \.self) { module in
-                            moduleButton(for: module, shortcut: nil)
-                        }
+            DSGlassGroup(spacing: DS.Spacing.xxs) {
+                HStack(spacing: DS.Spacing.xxs) {
+                    ForEach(ModuleType.inspectorFront, id: \.self) { module in
+                        moduleButton(for: module, shortcut: nil)
                     }
+                    moreModulesMenu
                 }
-                .padding(.horizontal, DS.Spacing.xxs)
-
-                if showMoreModules {
-                    DSGlassGroup(spacing: DS.Spacing.xxs) {
-                        HStack(spacing: DS.Spacing.xxs) {
-                            ForEach(overflowModules, id: \.self) { module in
-                                moduleButton(for: module, shortcut: nil)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, DS.Spacing.xxs)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-
-                moreModulesToggle
             }
+            .padding(.horizontal, DS.Spacing.xxs)
         }
         .animation(DS.Animation.snappy, value: explainMode)
-        .animation(DS.Animation.snappy, value: showMoreModules)
+        // ⇧⌘R (Run All) keeps working with its menu closed.
+        .background(runAllShortcutButton)
     }
 
-    // MARK: - Run All (section-header action)
-
-    private var runAllButton: some View {
-        Button {
-            runAllPrimaryModules()
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "play.fill")
-                    .font(DS.Typography.icon(8, weight: .bold))
-                Text("Run All")
-                    .font(DS.Typography.caption2.weight(.semibold))
-            }
-            .foregroundStyle(hasSelection ? DS.Color.accent : DS.Color.textDisabled)
-            .padding(.horizontal, DS.Spacing.sm)
-            .padding(.vertical, DS.Spacing.xxs + 1)
-            .background(hasSelection ? DS.Color.accentSubtle : DS.Color.cardSoft)
-            .clipShape(Capsule())
-            .overlay(
-                Capsule().strokeBorder(
-                    hasSelection ? DS.Color.accentMuted.opacity(0.45) : DS.Color.hairline,
-                    lineWidth: 0.6
-                )
-            )
+    private var detailPicker: some View {
+        Picker("Detail", selection: $explainDetail) {
+            Text("Short").tag(ExplainDetail.short)
+            Text("Detailed").tag(ExplainDetail.detailed)
         }
-        .buttonStyle(.plain)
-        .disabled(!hasSelection)
-        .keyboardShortcut("r", modifiers: [.command, .shift])
-        .help("Run All (⇧⌘R)")
-        .accessibilityLabel("Run All Modules")
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .controlSize(.mini)
+        .fixedSize()
+        .help("How much the explanations say")
     }
 
-    // MARK: - More Modules Disclosure
+    // MARK: - More (menu chip)
 
-    private var moreModulesToggle: some View {
-        Button {
-            withAnimation(DS.Animation.snappy) { showMoreModules.toggle() }
-        } label: {
-            HStack(spacing: DS.Spacing.xs) {
-                Image(systemName: showMoreModules ? "chevron.up" : "chevron.down")
-                    .font(DS.Typography.icon(8, weight: .bold))
-                Text(showMoreModules ? "Fewer modules" : "More modules")
-                if !showMoreModules && overflowHasOutput {
-                    Circle()
-                        .fill(DS.Color.accent.opacity(0.8))
-                        .frame(width: 5, height: 5)
-                }
-                Spacer(minLength: 0)
-            }
-            .font(DS.Typography.caption2)
-            .foregroundStyle(DS.Color.textTertiary)
-            .padding(.vertical, 3)
-            .padding(.horizontal, DS.Spacing.xxs)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(showMoreModules ? "Hide extra modules" : "Show \(overflowModules.count) more modules")
-    }
-
-    private var overflowHasOutput: Bool {
-        overflowModules.contains { module in
+    /// Shows the module it holds when that one is open, so the active result
+    /// always has a lit chip above it.
+    private var moreModulesMenu: some View {
+        let menuModules = ModuleType.inspectorMore
+        let activeInMenu = activeModule.flatMap { menuModules.contains($0) ? $0 : nil }
+        let hasOutput = menuModules.contains { module in
             !(viewModel.outputs[module] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
+
+        return Menu {
+            ForEach(menuModules, id: \.self) { module in
+                Button {
+                    toggleModule(module)
+                } label: {
+                    Label(module.title(nativeLanguage: nativeLanguage), systemImage: module.iconName)
+                }
+                .disabled(!isModuleEnabled(module) && viewModel.loading[module] != true)
+            }
+            Divider()
+            Button {
+                runAllPrimaryModules()
+            } label: {
+                Label("Run All", systemImage: "play.fill")
+            }
+            .disabled(!hasSelection)
+        } label: {
+            VStack(spacing: DS.Spacing.xxs) {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: activeInMenu?.iconName ?? "ellipsis")
+                        .font(DS.Typography.icon(14, weight: .medium))
+                        .frame(width: 18, height: 18)
+                    if hasOutput && activeInMenu == nil {
+                        statusDot(DS.Color.accent)
+                    }
+                }
+                Text(activeInMenu?.shortTitle ?? String(localized: "More"))
+                    .font(DS.Typography.caption2)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, minHeight: 40)
+            .foregroundStyle(activeInMenu.map { $0.accentColor } ?? DS.Color.textSecondary)
+            .contentShape(Rectangle())
+        }
+        // .button + .plain draws the label as built (icon over title, like
+        // the chips); .borderlessButton flattened it into one line.
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .frame(maxWidth: .infinity)
+        .dsGlassInteractive(
+            cornerRadius: DS.Radius.sm,
+            tint: nil,
+            fallback: AnyShapeStyle(activeInMenu.map { $0.accentColor.opacity(0.12) } ?? DS.Color.surfaceInset),
+            fallbackStroke: .none
+        )
+        .help("More explanations and Run All (⇧⌘R)")
+        .accessibilityLabel("More explanations")
+    }
+
+    private var runAllShortcutButton: some View {
+        Button { runAllPrimaryModules() } label: { Color.clear }
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .keyboardShortcut("r", modifiers: [.command, .shift])
+            .disabled(!hasSelection)
+            .accessibilityHidden(true)
     }
 
     // MARK: - Module Button
@@ -204,7 +207,7 @@ extension InspectorView {
     }
 
     /// Small corner dot marking a module that has produced output.
-    private func statusDot(_ color: Color) -> some View {
+    func statusDot(_ color: Color) -> some View {
         Circle()
             .fill(color)
             .frame(width: 5, height: 5)

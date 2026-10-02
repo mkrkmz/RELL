@@ -1244,11 +1244,32 @@
       }
     },
     "Ask a follow-up…" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir şey daha sor…"
+          }
+        }
+      }
+    },
+    "Ask about this sentence…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu cümle hakkında sor…"
+          }
+        }
+      }
+    },
+    "Ask about this word…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kelime hakkında sor…"
           }
         }
       }
@@ -2637,6 +2658,16 @@
         }
       }
     },
+    "Detail" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayrıntı"
+          }
+        }
+      }
+    },
     "Detailed" : {
       "localizations" : {
         "tr" : {
@@ -2995,12 +3026,32 @@
         }
       }
     },
+    "Explain As" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şöyle Açıkla"
+          }
+        }
+      }
+    },
     "Explain the Structure" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yapıyı Açıkla"
+          }
+        }
+      }
+    },
+    "Explanations" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Açıklamalar"
           }
         }
       }
@@ -3087,6 +3138,7 @@
       }
     },
     "Fewer modules" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -3589,6 +3641,7 @@
       }
     },
     "Hide extra modules" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -3729,6 +3782,16 @@
         }
       }
     },
+    "How much the explanations say" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Açıklamaların ne kadar ayrıntılı olacağı"
+          }
+        }
+      }
+    },
     "How RELL works" : {
       "localizations" : {
         "tr" : {
@@ -3848,6 +3911,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fikir"
+          }
+        }
+      }
+    },
+    "Inspector follows the page theme" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspector sayfa temasını izlesin"
           }
         }
       }
@@ -4560,6 +4633,16 @@
         }
       }
     },
+    "More" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha fazla"
+          }
+        }
+      }
+    },
     "More actions" : {
       "localizations" : {
         "tr" : {
@@ -4570,7 +4653,28 @@
         }
       }
     },
+    "More explanations" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer açıklamalar"
+          }
+        }
+      }
+    },
+    "More explanations and Run All (⇧⌘R)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer açıklamalar ve Tümünü Çalıştır (⇧⌘R)"
+          }
+        }
+      }
+    },
     "More modules" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -6381,6 +6485,7 @@
       }
     },
     "Recent: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -6562,6 +6667,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kayıtlılardan Kaldır"
+          }
+        }
+      }
+    },
+    "Remove from saved vocabulary (⌘D)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlı kelimelerden çıkar (⌘D)"
           }
         }
       }
@@ -7115,6 +7230,7 @@
       }
     },
     "Run All (⇧⌘R)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7125,6 +7241,7 @@
       }
     },
     "Run All Modules" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7230,6 +7347,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İşine yarayanları kaydet"
+          }
+        }
+      }
+    },
+    "Save to Vocabulary" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimelere Kaydet"
+          }
+        }
+      }
+    },
+    "Save to vocabulary (⌘D)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimelere kaydet (⌘D)"
           }
         }
       }
@@ -7676,6 +7813,7 @@
       }
     },
     "Show %lld more modules" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7856,6 +7994,16 @@
         }
       }
     },
+    "Simplify to your level, or retell it in your own words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seviyene göre sadeleştir ya da kendi cümlelerinle anlat"
+          }
+        }
+      }
+    },
     "Simplify, retell, highlight, speak, copy" : {
       "localizations" : {
         "tr" : {
@@ -7994,6 +8142,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seslendir"
+          }
+        }
+      }
+    },
+    "Speak selected text (⇧⌘S)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili metni seslendir (⇧⌘S)"
           }
         }
       }
@@ -8140,6 +8298,16 @@
         }
       }
     },
+    "Stop speaking (⇧⌘X)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seslendirmeyi durdur (⇧⌘X)"
+          }
+        }
+      }
+    },
     "Story From Your Words…" : {
       "localizations" : {
         "tr" : {
@@ -8181,6 +8349,7 @@
       }
     },
     "Switch to Detailed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -8191,6 +8360,7 @@
       }
     },
     "Switch to Short" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -9065,6 +9235,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genişlik"
+          }
+        }
+      }
+    },
+    "With Paper, Sepia, Gray, Dark or Night, the inspector takes the page's tones instead of the system appearance." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kâğıt, Sepya, Gri, Koyu ya da Gece temasında Inspector sistem görünümü yerine sayfanın tonlarını alır."
           }
         }
       }

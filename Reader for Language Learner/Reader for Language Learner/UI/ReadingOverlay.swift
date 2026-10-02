@@ -33,6 +33,19 @@ extension PageTheme {
 }
 
 extension PageTheme {
+    /// The inspector's background when it follows the page theme (v14 S2),
+    /// and whether it's dark. Nil for `.original`: the system look stays.
+    var inspectorSurface: (fill: SwiftUI.Color, isDark: Bool)? {
+        switch self {
+        case .original: return nil
+        case .paper: return (SwiftUI.Color(red: 0.969, green: 0.949, blue: 0.902), false)  // #f7f2e6
+        case .sepia: return (SwiftUI.Color(red: 0.945, green: 0.910, blue: 0.827), false)  // #f1e8d3
+        case .gray: return (SwiftUI.Color(red: 0.247, green: 0.247, blue: 0.263), true)    // #3f3f43
+        case .dark: return (SwiftUI.Color(red: 0.110, green: 0.110, blue: 0.110), true)    // #1c1c1c
+        case .night: return (SwiftUI.Color(red: 0.086, green: 0.078, blue: 0.071), true)   // #161412
+        }
+    }
+
     /// The stored page theme — for AppKit hosts (popovers) that set their
     /// appearance before SwiftUI draws.
     static var stored: PageTheme {

@@ -18,6 +18,9 @@ final class QuickLookupService {
     @ObservationIgnored private var definitionCache = LRUCache<String, String>(capacity: 60)
     @ObservationIgnored private var nativeMeaningCache = LRUCache<String, String>(capacity: 60)
     @ObservationIgnored private var translationCache = LRUCache<String, String>(capacity: 40)
+    /// Bumped whenever a translation is cached, so views that read the cache
+    /// (the inspector's sentence card) update when the strip finishes.
+    private(set) var translationRevision = 0
     @ObservationIgnored private let gate = AsyncLimiter(limit: 1)
     /// System-dictionary hits and misses alike — a miss is worth remembering
     /// too, so a word the dictionaries don't cover isn't looked up on every
@@ -189,6 +192,7 @@ final class QuickLookupService {
     func storeTranslation(_ translation: String, for sentence: String) {
         guard !normalize(sentence).isEmpty else { return }
         translationCache.set(cacheKey(sentence, language: Language.storedNative), translation)
+        translationRevision += 1
     }
 
     func translate(sentence: String) async throws -> String {
@@ -206,6 +210,7 @@ final class QuickLookupService {
         let text = try await run(system: system, user: user, maxTokens: 240, temperature: 0.1, module: nil)
         let cleaned = MarkdownUtils.sanitizeLLMOutput(text)
         translationCache.set(key, cleaned)
+        translationRevision += 1
         return cleaned
     }
 

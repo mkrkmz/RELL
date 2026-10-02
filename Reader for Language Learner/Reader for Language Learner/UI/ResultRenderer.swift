@@ -99,7 +99,9 @@ struct ContextAwareResultView: View {
                 .font(DS.Typography.caption2.weight(.bold))
                 .foregroundStyle(tint)
 
-            Text(body)
+            // Markdown, like every other result: as plain text the model's
+            // **bold** showed its asterisks (v14 S2).
+            Text(AttributedResultView.markdown(body))
                 .font(DS.Typography.body)
                 .foregroundStyle(DS.Color.textPrimary)
                 .lineSpacing(5)
@@ -181,16 +183,16 @@ struct StreamingResultView: View {
 struct AttributedResultView: View {
     let content: String
 
-    private var attributed: AttributedString {
+    static func markdown(_ text: String) -> AttributedString {
         let opts = AttributedString.MarkdownParsingOptions(
             interpretedSyntax: .inlineOnlyPreservingWhitespace
         )
-        return (try? AttributedString(markdown: content, options: opts))
-            ?? AttributedString(content)
+        return (try? AttributedString(markdown: text, options: opts))
+            ?? AttributedString(text)
     }
 
     var body: some View {
-        Text(attributed)
+        Text(Self.markdown(content))
             .font(DS.Typography.body)
             .foregroundStyle(DS.Color.textPrimary)
             .lineSpacing(5)

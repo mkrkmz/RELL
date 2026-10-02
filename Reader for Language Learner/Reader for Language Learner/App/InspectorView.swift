@@ -22,6 +22,10 @@ struct InspectorView: View {
     @State var viewModel = InspectorViewModel()
     @State var explainMode: ExplainMode = .word
     @State var explainDetail: ExplainDetail = .short
+    /// Set when the mode changed with the selection (`adoptAutomaticMode`):
+    /// the selection handler reloads the cache itself, and a second reload
+    /// from the mode's onChange would cancel the auto-run it just started.
+    @State var modeChangedWithSelection = false
     @AppStorage(StorageKey.domainPreference) var domainRaw: String = DomainPreference.general.rawValue
     var domainPreference: DomainPreference {
         DomainPreference(rawValue: domainRaw) ?? .general
@@ -38,7 +42,9 @@ struct InspectorView: View {
     /// Last auto-scroll during streaming — throttles scroll-to-bottom to ~6/s.
     @State var lastStreamScrollAt: Date = .distantPast
     @AppStorage(StorageKey.autoRunEnabled) var autoRunEnabled: Bool = true
-    @AppStorage(StorageKey.inspectorShowMoreModules) var showMoreModules: Bool = false
+    @AppStorage(StorageKey.inspectorFollowsPageTheme) var inspectorFollowsPageTheme = false
+    @AppStorage(StorageKey.pageTheme) var pageThemeRaw = PageTheme.original.rawValue
+    @Environment(\.colorScheme) private var systemColorScheme
 
     @Namespace var moduleNamespace
 
@@ -59,7 +65,6 @@ struct InspectorView: View {
     var speechManager: SpeechManager { SpeechManager.shared }
 
     let primaryModules:  [ModuleType] = ModuleType.primary
-    let overflowModules: [ModuleType] = ModuleType.overflow
 
     var nativeLanguage: Language {
         Language(rawValue: nativeLanguageRaw) ?? .turkish
@@ -103,10 +108,27 @@ struct InspectorView: View {
         withSheets(withPreferenceSync(withNotifications(withSelectionLifecycle(baseContent))))
     }
 
-    private var baseContent: some View {
-        ZStack {
+    /// The page theme's tones when "follows the page theme" is on (v14 S2).
+    private var followedPageSurface: (fill: SwiftUI.Color, isDark: Bool)? {
+        guard inspectorFollowsPageTheme else { return nil }
+        return (PageTheme(rawValue: pageThemeRaw) ?? .original).inspectorSurface
+    }
+
+    @ViewBuilder
+    private var inspectorBackground: some View {
+        if let surface = followedPageSurface {
+            surface.fill.ignoresSafeArea()
+        } else {
             VisualEffectView(material: .contentBackground, blendingMode: .behindWindow)
                 .ignoresSafeArea()
+        }
+    }
+
+    // One tree whatever the setting — only the background and the colour
+    // scheme change, so toggling it keeps the panel's state.
+    private var baseContent: some View {
+        ZStack {
+            inspectorBackground
 
             VStack(spacing: 0) {
                 if circuitBreaker.state == .open {
@@ -123,6 +145,7 @@ struct InspectorView: View {
             }
         }
         .animation(DS.Animation.standard, value: hasSelection)
+        .environment(\.colorScheme, followedPageSurface.map { $0.isDark ? .dark : .light } ?? systemColorScheme)
     }
 
     private func withSelectionLifecycle(_ content: some View) -> some View {
@@ -133,7 +156,10 @@ struct InspectorView: View {
                 // and menu-driven module runs can proceed.
                 displayedText = selectedText
                 let trimmed = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty { refreshCache(term: trimmed) }
+                if !trimmed.isEmpty {
+                    adoptAutomaticMode(for: trimmed)
+                    refreshCache(term: trimmed)
+                }
             }
             .onExitCommand { activeModule = nil }
             .onChange(of: selectedText) { _, newText in
@@ -146,6 +172,7 @@ struct InspectorView: View {
                     viewModel.resetAll()
                     let trimmed = newText.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !trimmed.isEmpty {
+                        adoptAutomaticMode(for: trimmed)
                         refreshCache(term: trimmed)
                         viewModel.addToRecents(trimmed)
                         // Auto-run: if cache missed (no outputs loaded) and feature is on, trigger last module
@@ -185,6 +212,7 @@ struct InspectorView: View {
                 guard let term = note.object as? String else { return }
                 displayedText = term
                 viewModel.resetAll()
+                adoptAutomaticMode(for: term)
                 refreshCache(term: term)
                 viewModel.addToRecents(term)
                 if autoRunEnabled && viewModel.outputs.isEmpty {
@@ -202,7 +230,13 @@ struct InspectorView: View {
 
     private func withPreferenceSync(_ content: some View) -> some View {
         content
-            .onChange(of: explainMode)  { _, _ in refreshCache(term: trimmedSelection) }
+            .onChange(of: explainMode)  { _, _ in
+                if modeChangedWithSelection {
+                    modeChangedWithSelection = false
+                    return
+                }
+                refreshCache(term: trimmedSelection)
+            }
             .onChange(of: explainDetail){ _, _ in refreshCache(term: trimmedSelection) }
             .onChange(of: domainRaw)    { _, _ in
                 viewModel.outputs[.collocations] = nil
@@ -293,28 +327,29 @@ struct InspectorView: View {
 
     private func selectionStack(resultHeight: CGFloat?) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.lg) {
-            // ── Zone 1: word + actions + how-to-explain (one cohesive block) ──
-            VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                selectionHeader
-                controlStrip
+            // v14 S2 — first the selection and what you can do with it, then
+            // depth. ── Zone 1: word or sentence card, with its actions ──────
+            selectionHeader
+
+            // ── Zone 2: passage tools (phrase or sentence only) ──────────────
+            if !isSingleWordSelection {
+                sentenceTools
             }
 
-            // ── Zone 2: modules ───────────────────────────────────────────────
+            // ── Zone 3: explanations ─────────────────────────────────────────
             moduleGrid
 
-            // ── Zone 3: result ────────────────────────────────────────────────
+            // ── Zone 4: result — the one zone that stretches ─────────────────
             resultPanel
                 .frame(height: resultHeight)
 
-            // ── Zone 4: ask a follow-up ───────────────────────────────────────
+            // ── Zone 5: ask a follow-up ──────────────────────────────────────
             askAISection
         }
         .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .dsToast(isPresented: $showToast, message: toastMessage)
     }
-
-    // MARK: - Mode Bar (moved to controlStrip in InspectorView+Header.swift)
 
     // MARK: - Connection Warning
 
@@ -464,6 +499,17 @@ struct InspectorView: View {
     var configuredProviderIsLocal: Bool {
         llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
             || llmProviderTypeRaw == LLMProviderType.ollama.rawValue
+    }
+
+    /// Word or sentence from the selection itself (v14 S2; before, a
+    /// switch the reader flipped by hand — still in the overflow menu).
+    /// Call before the caller's own cache reload; the mode's onChange then
+    /// skips its reload (see `modeChangedWithSelection`).
+    func adoptAutomaticMode(for selection: String) {
+        let mode = ExplainMode.automatic(for: selection)
+        guard explainMode != mode else { return }
+        modeChangedWithSelection = true
+        explainMode = mode
     }
 
     func runAllPrimaryModules() {

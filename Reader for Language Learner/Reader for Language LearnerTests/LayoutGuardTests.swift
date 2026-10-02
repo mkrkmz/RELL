@@ -65,6 +65,29 @@ final class LayoutGuardTests: XCTestCase {
         }
     }
 
+    /// v14 S2: a sentence with its translation in the card and the Tools
+    /// section, in the shortest column.
+    func testInspectorWithASentenceTranslationAndToolsFitsAShortColumn() async throws {
+        try await withDefaults([StorageKey.grammarLensExpanded: true, StorageKey.autoRunEnabled: false]) {
+            let sentence = "He was hopelessly in debt to his landlady and was afraid of meeting her on the stairs."
+            let lookup = QuickLookupService()
+            lookup.storeTranslation(String(repeating: "Ev sahibesine umutsuzca borçluydu ve onunla karşılaşmaktan korkuyordu. ", count: 3), for: sentence)
+            let height = try await LayoutGuard.settledHeight(of: inspector(selecting: sentence, lookup: lookup), width: 300, height: 460)
+            XCTAssertLessThanOrEqual(height, 460 + 1, "the inspector forced the window to \(height) pt")
+        }
+    }
+
+    /// v14 S2: the inspector in the page theme's tones fits like the default.
+    func testInspectorFollowingThePageThemeFitsAShortColumn() async throws {
+        try await withDefaults([StorageKey.inspectorFollowsPageTheme: true, StorageKey.autoRunEnabled: false]) {
+            let previous = UserDefaults.standard.string(forKey: StorageKey.pageTheme)
+            UserDefaults.standard.set(PageTheme.sepia.rawValue, forKey: StorageKey.pageTheme)
+            defer { UserDefaults.standard.set(previous, forKey: StorageKey.pageTheme) }
+            let height = try await LayoutGuard.settledHeight(of: inspector(selecting: "melancholy"), width: 300, height: 420)
+            XCTAssertLessThanOrEqual(height, 420 + 1, "the inspector forced the window to \(height) pt")
+        }
+    }
+
     func testExpandedGrammarLensFitsAShortColumn() async throws {
         try await withDefaults([StorageKey.grammarLensExpanded: true]) {
             let sentence = String(repeating: "The old cat sleeps quietly near the warm window. ", count: 6)
@@ -77,13 +100,13 @@ final class LayoutGuardTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func inspector(selecting text: String) -> some View {
+    private func inspector(selecting text: String, lookup given: QuickLookupService? = nil) -> some View {
+        let lookup = given ?? QuickLookupService()
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         addTeardownBlock { try? FileManager.default.removeItem(at: folder) }
         let words = SavedWordsStore(fileURL: folder.appendingPathComponent("saved_words.json"))
         let encounters = WordEncounterStore(fileURL: folder.appendingPathComponent("word_encounters.json"))
-        let lookup = QuickLookupService()
         let anki = AnkiModulePreferences()
         Self.retained += [words, encounters, lookup, anki]
         return InspectorView(

@@ -30,8 +30,25 @@ project follows [Semantic Versioning](https://semver.org).
   paper, sepia, gray, dark or night), so they read cleanly and fit the page.
   The word popup you get by hovering is filled the same way.
 
+- **The Inspector puts the word first.** Selecting a word shows its card
+  with Save, Listen and Anki as labelled buttons; the explanations come
+  next, then Ask AI. Recent words are in a menu in the card's corner.
+- **Word or sentence is chosen for you.** One word is explained as a word,
+  anything longer as a sentence. You can still switch in the ••• menu.
+- **Four explanation buttons and a More menu.** Definition, your language,
+  collocations and examples are always shown; pronunciation, etymology,
+  memory aid, synonyms, word family, usage notes and Run All (⇧⌘R) are
+  under More.
+- **Sentences get their own tools.** Selecting a sentence shows it with its
+  translation (from the translation strip), then Grammar, Simplify and
+  Retell in one place.
+- **The Inspector can match the page.** A new setting in Appearance lets it
+  take the paper, sepia, gray, dark or night tones. It's off by default.
+
 ### Fixed
 
+- "In this context" and "General meaning" cards no longer show the
+  model's ** marks.
 - The app no longer crashes when the reader window is made as small as it
   goes.
 - Zen mode no longer leaves an empty band at the top of the screen where the

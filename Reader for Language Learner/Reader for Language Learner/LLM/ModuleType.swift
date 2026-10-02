@@ -20,6 +20,15 @@ enum ExplainMode: String, CaseIterable, Identifiable {
         case .sentence: return String(localized: "Sentence")
         }
     }
+
+    /// The mode a selection is explained in unless the reader overrides it
+    /// (v14 S2): one word is a word, anything longer a sentence — the same
+    /// test the inspector uses to show the word card.
+    static func automatic(for selection: String) -> ExplainMode {
+        let trimmed = selection.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isWord = !trimmed.isEmpty && trimmed.count <= 40 && !trimmed.contains(where: \.isWhitespace)
+        return isWord ? .word : .sentence
+    }
 }
 
 enum ExplainDetail: String, CaseIterable, Identifiable {
@@ -82,6 +91,13 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
 
     /// The overflow set shown behind "more modules".
     static let overflow: [ModuleType] = [.etymologyEN, .mnemonicEN, .synonymsEN, .wordFamilyEN, .usageNotesEN]
+
+    /// The inspector's chips (v14 S2): the primary set less Pronunciation,
+    /// which the word card's speaker button covers.
+    static let inspectorFront: [ModuleType] = [.definitionEN, .meaningTR, .collocations, .examplesEN]
+
+    /// Behind the inspector's "More" menu, in menu (⌘5–⌘9) order.
+    static var inspectorMore: [ModuleType] { menuOrder.filter { !inspectorFront.contains($0) } }
 
     /// Canonical ordering for menus: primary first, then overflow.
     static var menuOrder: [ModuleType] { primary + overflow }

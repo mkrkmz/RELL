@@ -46,6 +46,7 @@ extension InspectorView {
                         .foregroundStyle(savedWord.reviewStatus.color)
                         .help(Text("Saved · \(savedWord.reviewStatus.label)"))
                 }
+                recentTermsMenu
             }
 
             Group {
@@ -67,6 +68,9 @@ extension InspectorView {
                     .font(DS.Typography.caption)
                     .foregroundStyle(DS.Color.textTertiary)
             }
+
+            quickActions
+                .padding(.top, DS.Spacing.xs)
         }
         .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -212,19 +212,41 @@ araclar istenince bulunabilsin. **Maketle baslar.**
 Amac: Inspector'u bir **calisma alani** yapmak: once kelime, sonra derinlik;
 cumle secildiginde o cumle icin araclar. **Maketle baslar.**
 
-- [ ] **Bilgi mimarisi** — kelime secimi: kelime karti (ust) → hizli eylemler
+- [x] **Bilgi mimarisi** — kelime secimi: kelime karti (ust) → hizli eylemler
       (kaydet, dinle, Anki) → "Aciklamalar" (modul cipleri + sonuc) → Ask AI.
       Ifade/cumle secimi: cumle + ceviri → "Araclar" (Dilbilgisi, Sadelestir,
       Yeniden Anlat) → modul sonucu
-- [ ] **Modul izgarasi** — sik kullanilan modullerin gorunur, digerlerinin
+- [x] **Modul izgarasi** — sik kullanilan modullerin gorunur, digerlerinin
       "Daha fazla" altinda olmasi; otomatik calistirma ayari ayni kalir
       (v13'te kullanici kararina birakilmisti — maket asamasinda onaylanir)
-- [ ] **Sonuc okunabilirligi** — modul ciktilarinda baslik/govde tipografisi,
+- [x] **Sonuc okunabilirligi** — modul ciktilarinda baslik/govde tipografisi,
       ornek cumlelerde kelime vurgusu, kopyala/kaydet eylemleri tek yerde
-- [ ] **Saglamlik** — tum sabit bolge yeni kurala gore (esnek ya da sinirli
+- [x] **Saglamlik** — tum sabit bolge yeni kurala gore (esnek ya da sinirli
       ScrollView); her bolum icin "pencereyi buyutmez" testi
-- [ ] **Tema uyumu** — Inspector arka plani sayfa temasini izleyebilir (ayar;
+- [x] **Tema uyumu** — Inspector arka plani sayfa temasini izleyebilir (ayar;
       varsayilan sistem gorunumu)
+- [x] Uygulama (maket onayi 2026-10-02; kararlar: otomatik calistirma kalir,
+      Kelime/Cumle secimden otomatik — `ExplainMode.automatic(for:)`, elle
+      ⋯ menusunde; Telaffuz "Daha fazla"ya; cumle kartinda ceviri seridin
+      onbelleginden — `QuickLookupService.translationRevision` ile, ikinci
+      istek yok; tema uyumu varsayilan kapali). Kart: yazili Kaydet/Dinle/
+      Anki + son terimler menusu; cumle: kart + "Araclar" (mercek,
+      Sadelestir, Yeniden Anlat); "Aciklamalar": 4 cip + "Daha fazla"
+      menusu (`ModuleType.inspectorFront/inspectorMore`, ⇧⌘R gizli dugme).
+      Yaris: otomatik mod degisimi onChange ile ikinci kez onbellek
+      yukleyip `resetAll()` ile otomatik calistirmayi iptal ediyordu →
+      `modeChangedWithSelection`. Baglam kartlari markdown. Sonuc
+      basligindaki "kelimenin kaydina ekle" (makette) eklenmedi — yeni
+      davranis olurdu; kaydet karttan. Testler: `InspectorLayoutTests` (3),
+      LayoutGuard +2 (cumle+ceviri+araclar, tema uyumu). Gorsel kontrol
+      gecici render ile. `make ci-test` 632 test, 0 hata
+- [ ] **Canli tur (kullanici)** — (1) kelime sec: kart dugmeleri (Kaydet ⌘D,
+      Dinle/Durdur ⇧⌘S/⇧⌘X, Anki), saat menusu (son terimler), ⋯ menusu
+      ("Soyle Acikla"); (2) cumle sec: ceviri kartta (serit aciksa),
+      Araclar: Dilbilgisi, Sadelestir, Yeniden Anlat; (3) 4 cip + Daha fazla
+      menusu (aktif modul cipte gorunur, ⇧⌘R); otomatik calistirma kelimeden
+      cumleye gecince calisiyor mu; (4) Ayarlar ▸ Gorunum ▸ "Inspector sayfa
+      temasini izlesin" + sepya/gece; (5) en kucuk pencerede Inspector
 
 ## Sprint 3 — "Ana ekran, kitaplik ve kelimeler" (Should)
 

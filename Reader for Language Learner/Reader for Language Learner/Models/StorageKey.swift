@@ -29,7 +29,9 @@ nonisolated enum StorageKey {
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     static let hoverDictionaryEnabled = "hoverDictionaryEnabled"
     static let interlinearGlossEnabled = "interlinearGlossEnabled"
-    static let inspectorShowMoreModules = "inspectorShowMoreModules"
+    static let inspectorShowMoreModules = "inspectorShowMoreModules"   // unused since v14 S2 (More is a menu)
+    /// The inspector takes the page theme's tones (v14 S2). Off by default.
+    static let inspectorFollowsPageTheme = "inspectorFollowsPageTheme"
     static let inspectorWidth = "inspectorWidth"
     static let karaokeEnabled = "karaokeEnabled"
     static let learnerLevel = "learnerLevel"
