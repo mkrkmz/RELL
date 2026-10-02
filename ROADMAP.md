@@ -182,7 +182,11 @@ araclar istenince bulunabilsin. **Maketle baslar.**
       gorunuyor) → Zen'de okuma sutunu `.ignoresSafeArea(.container, .top)`.
       Ayni turda: orijinal temada okuma yuzeyi her zaman beyaz (koyu sistemde
       beyaz sayfa ustunde koyu cubuk delik gibi duruyordu); sozluk kutusu
-      (NSPopover) icerigi `.dsReadingOverlayFill()` + temaya uygun gorunum
+      (NSPopover) icerigi `.dsReadingOverlayFill()` + temaya uygun gorunum. Ucuncu deneme: guvenli
+      alani tumden yok saymak sayfayi kamera centiginin arkasina tasidi ve
+      Zen cubugu eski yerinde kaldi → Zen cubugu okuma sutununa overlay,
+      ikisi birlikte `padding(.top, screen.safeAreaInsets.top)` (centik
+      yuksekligi; centiksiz ekranda 0) + ust guvenli alan yok sayilir
 - [ ] **Canli tur (kullanici)** — (1) serit: genis ve dar pencerede "Bu
       bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
       (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif

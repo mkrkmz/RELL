@@ -74,6 +74,11 @@ struct ContentView: View {
     var focusMode: Bool { model.focusMode }
     var zenMode: Bool { model.zenMode }
     var showSidebar: Bool { model.showSidebar }
+    /// The camera housing's height on this window's screen; zero on a
+    /// display without one.
+    var zenCameraHousingInset: CGFloat {
+        (model.hostWindow?.screen ?? NSScreen.main)?.safeAreaInsets.top ?? 0
+    }
     var chromeHidden: Bool { model.chromeHidden }
 
     @AppStorage(StorageKey.appTheme)       var appThemeRaw:    String = AppTheme.system.rawValue
@@ -435,10 +440,6 @@ struct ContentView: View {
             )
         } detail: {
             pdfColumn
-                // In full screen the window keeps a title-bar-high safe area
-                // at the top even with the toolbar hidden — an empty band
-                // above the page (v14 S1 live pass). Zen gives it to the page.
-                .ignoresSafeArea(.container, edges: zenMode ? .top : [])
                 .overlay(alignment: .top) {
                     if zenMode {
                         ZenModeBar(
@@ -452,6 +453,13 @@ struct ContentView: View {
                         )
                     }
                 }
+                // In full screen the window keeps a title-bar-high safe area
+                // at the top even with the toolbar hidden — an empty band
+                // above the page (v14 S1 live pass). Zen takes the whole top
+                // safe area back, then steps down past the camera housing
+                // only, so the page and the Zen bar start just under it.
+                .padding(.top, zenMode ? zenCameraHousingInset : 0)
+                .ignoresSafeArea(.container, edges: zenMode ? .top : [])
                 .inspector(isPresented: Bindable(model).showInspector) {
                     InspectorView(
                         selectedText: selectionState.selectedText,
