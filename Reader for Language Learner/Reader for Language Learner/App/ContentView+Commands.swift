@@ -17,14 +17,15 @@ extension ContentView {
 
     /// Snapshot of window state + actions published to the main menu
     /// (`ReaderMenuCommands`) through FocusedValues.
-    /// The Zen bar's reading controls — the View menu's commands.
-    var zenControls: ZenModeBar.Controls {
-        ZenModeBar.Controls(
+    /// Zen's toolbar controls — the View menu's commands.
+    var zenControls: ZenControls {
+        ZenControls(
             glossesOn: isEPUBDocument ? glossEnabled : nil,
             toggleGlosses: { glossEnabled.toggle() },
             pageTheme: pageTheme,
             setPageTheme: { pageThemeRaw = $0.rawValue },
-            readAloud: { readCurrentPageAloud() }
+            readAloud: { readCurrentPageAloud() },
+            exit: { toggleZenMode() }
         )
     }
 

@@ -435,24 +435,12 @@ struct ContentView: View {
             )
         } detail: {
             pdfColumn
-                .overlay(alignment: .top) {
-                    if zenMode {
-                        ZenModeBar(
-                            title: windowTitle,
-                            subtitle: "",
-                            onExit: { toggleZenMode() },
-                            currentPageIndex: isEPUBDocument ? nil : pdfViewManager.currentPageIndex,
-                            pageCount: isEPUBDocument ? 0 : pdfViewManager.pageCount,
-                            onNavigate: isEPUBDocument ? nil : { pdfViewManager.goToPage(index: $0) },
-                            controls: zenControls
-                        )
-                    }
-                }
                 // In full screen the window keeps a 52 pt title-bar safe area
                 // at the top even with the toolbar hidden — an empty band
                 // above the page (v14 S1 live pass, measured). Zen gives it
-                // to the page and the Zen bar. The camera housing is not in
-                // that inset: a full-screen window already starts below it.
+                // to the page; the toolbar slides over it with the menu bar.
+                // The camera housing is not in that inset: a full-screen
+                // window already starts below it.
                 .ignoresSafeArea(.container, edges: zenMode ? .top : [])
                 .inspector(isPresented: Bindable(model).showInspector) {
                     InspectorView(
@@ -469,10 +457,10 @@ struct ContentView: View {
                         max: 640
                     )
                 }
-                .toolbar { toolbarContent }
-                .toolbar(zenMode ? .hidden : .automatic, for: .windowToolbar)
-                // In Zen full screen the (hidden) toolbar shows only with the
-                // menu bar; the space it kept is handled by ignoresSafeArea.
+                .toolbar { windowToolbarContent }
+                .toolbar(removing: zenMode ? .sidebarToggle : nil)
+                // Zen: the toolbar (Zen's controls) shows only with the menu
+                // bar — see ZenToolbar.swift.
                 .windowToolbarFullScreenVisibility(zenMode ? .onHover : .automatic)
                 .navigationTitle(windowTitle)
                 .onExitCommand { closeFindBar() }

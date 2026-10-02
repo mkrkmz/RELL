@@ -192,7 +192,13 @@ araclar istenince bulunabilsin. **Maketle baslar.**
       guvenli alani 52 pt (gizli arac cubugu). Yani centik boslugu cift
       sayiliyordu → kaldirildi; son hal: Zen cubugu overlay + yalniz
       `.ignoresSafeArea(.container, .top)`. Ders: tam ekran geometrisinde
-      tahmin yerine ilk denemede olc
+      tahmin yerine ilk denemede olc. Sonra: Zen cubugunun dugmeleri tiklanmiyordu —
+      tam ekranda imlec ustteyken macOS baslik cubugunu (52 pt) sayfanin
+      ustune indiriyor, ozel cubuk onun altinda kaliyordu (hit-test olcumu:
+      pencere icinde engel yok). Cozum: ozel `ZenModeBar` kaldirildi; Zen'de
+      arac cubugu gizlenmiyor, icerigi Zen kontrolleriyle degisiyor
+      (`ZenToolbar.swift`, `windowToolbarContent`), tam ekranda
+      `.onHover` — Safari gibi menu cubuguyla birlikte iner
 - [ ] **Canli tur (kullanici)** — (1) serit: genis ve dar pencerede "Bu
       bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
       (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif

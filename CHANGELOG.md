@@ -20,10 +20,11 @@ project follows [Semantic Versioning](https://semver.org).
   the same order as the selection bar, including Simplify and Retell.
   "Look Up in Inspector" is now called "Analyze".
 - **⌘K reaches the View menu.** Zoom, page layout and page theme are in the
-  command palette, and Zen mode's bar has meanings, page theme and read
-  aloud, so you can change them without leaving Zen mode.
+  command palette. In Zen mode, moving the pointer to the top of the screen
+  shows the menu bar together with Zen's controls: meanings, page theme,
+  read aloud and exit, so you can change them without leaving Zen mode.
 - **Bars over the page are easy to read on every theme.** The selection
-  bar, the speech bar and the Zen bar used a see-through glass that let the
+  bar and the speech bar used a see-through glass that let the
   text behind them show through their labels. They now have a solid
   background in a shade of the page theme (white on original pages, then
   paper, sepia, gray, dark or night), so they read cleanly and fit the page.
