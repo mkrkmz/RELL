@@ -74,11 +74,6 @@ struct ContentView: View {
     var focusMode: Bool { model.focusMode }
     var zenMode: Bool { model.zenMode }
     var showSidebar: Bool { model.showSidebar }
-    /// The camera housing's height on this window's screen; zero on a
-    /// display without one.
-    var zenCameraHousingInset: CGFloat {
-        (model.hostWindow?.screen ?? NSScreen.main)?.safeAreaInsets.top ?? 0
-    }
     var chromeHidden: Bool { model.chromeHidden }
 
     @AppStorage(StorageKey.appTheme)       var appThemeRaw:    String = AppTheme.system.rawValue
@@ -453,12 +448,11 @@ struct ContentView: View {
                         )
                     }
                 }
-                // In full screen the window keeps a title-bar-high safe area
+                // In full screen the window keeps a 52 pt title-bar safe area
                 // at the top even with the toolbar hidden — an empty band
-                // above the page (v14 S1 live pass). Zen takes the whole top
-                // safe area back, then steps down past the camera housing
-                // only, so the page and the Zen bar start just under it.
-                .padding(.top, zenMode ? zenCameraHousingInset : 0)
+                // above the page (v14 S1 live pass, measured). Zen gives it
+                // to the page and the Zen bar. The camera housing is not in
+                // that inset: a full-screen window already starts below it.
                 .ignoresSafeArea(.container, edges: zenMode ? .top : [])
                 .inspector(isPresented: Bindable(model).showInspector) {
                     InspectorView(
@@ -477,10 +471,8 @@ struct ContentView: View {
                 }
                 .toolbar { toolbarContent }
                 .toolbar(zenMode ? .hidden : .automatic, for: .windowToolbar)
-                // Hiding the toolbar isn't enough in full screen: the window
-                // kept its toolbar's height as an empty black band above the
-                // page (v14 S1 live pass). `.onHover` gives that space to the
-                // content and shows the toolbar only with the menu bar.
+                // In Zen full screen the (hidden) toolbar shows only with the
+                // menu bar; the space it kept is handled by ignoresSafeArea.
                 .windowToolbarFullScreenVisibility(zenMode ? .onHover : .automatic)
                 .navigationTitle(windowTitle)
                 .onExitCommand { closeFindBar() }

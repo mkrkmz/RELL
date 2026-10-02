@@ -186,7 +186,13 @@ araclar istenince bulunabilsin. **Maketle baslar.**
       alani tumden yok saymak sayfayi kamera centiginin arkasina tasidi ve
       Zen cubugu eski yerinde kaldi → Zen cubugu okuma sutununa overlay,
       ikisi birlikte `padding(.top, screen.safeAreaInsets.top)` (centik
-      yuksekligi; centiksiz ekranda 0) + ust guvenli alan yok sayilir
+      yuksekligi; centiksiz ekranda 0) + ust guvenli alan yok sayilir.
+      Olcum (gecici NSLog, kullanicinin Zen'i, 1512x982 ekran): tam ekran
+      pencere 949 pt — centigin (32 pt) altindan basliyor; contentView ust
+      guvenli alani 52 pt (gizli arac cubugu). Yani centik boslugu cift
+      sayiliyordu → kaldirildi; son hal: Zen cubugu overlay + yalniz
+      `.ignoresSafeArea(.container, .top)`. Ders: tam ekran geometrisinde
+      tahmin yerine ilk denemede olc
 - [ ] **Canli tur (kullanici)** — (1) serit: genis ve dar pencerede "Bu
       bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
       (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif
