@@ -332,6 +332,15 @@ Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
       133,6 (140) · profil 9,5 (10) · hazirlik 13,4 (14) · depo 5,0 (5) ·
       makale 28,5 (31). Gerileme yok. Soguk acilis olculmedi (kullanicinin
       RELL'i acikti — UI testi onu kapatir)
+- [x] CI duzeltmesi: Test is akisi 545b725'ten (WindowLayoutTests eklendi)
+      beri kirmiziydi ve sprint sonlarinda kontrol edilmedi — "CI gecmeden
+      sprint kapanmaz" kurali ihlal edildi. Neden: CI'in macOS 15.7'sinde
+      okuyucu penceresi testi test surecini cokertiyor ("malloc: pointer
+      being freed was not allocated", oncesinde "Cannot use Scene methods …
+      without SwiftUI Lifecycle") — sahne SwiftUI yasam dongusu disinda elle
+      kurulan NSWindow'da; korudugu kisit dongusu degil. Test macOS 15'te
+      gerekceli XCTSkip, macOS 26+'da calisir. Ders: her push'tan sonra
+      `gh run list` ile Test is akisi kontrol edilir
 - [ ] Kapanis: canli tur, soguk acilis olcumu, tek surum 1.43.0 (onayli;
       tag oncesi kullaniciya sorulur)
 
