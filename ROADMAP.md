@@ -350,7 +350,7 @@ Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
       kurulan NSWindow'da; korudugu kisit dongusu degil. Test macOS 15'te
       gerekceli XCTSkip, macOS 26+'da calisir. Ders: her push'tan sonra
       `gh run list` ile Test is akisi kontrol edilir
-- [ ] Kapanis: canli tur, tek surum 1.43.0 (onayli;
+- [x] Kapanis (2026-10-02): canli tur temiz, CI yesil (433e067), tek surum 1.43.0 (onayli;
       tag oncesi kullaniciya sorulur)
 
 ---

@@ -4,7 +4,11 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
-## [Unreleased]
+## [1.43.0] - 2026-10-02
+
+Calmer to read, easier to find your way. Roadmap v14 (Sprints 0–4): no new
+features — the reader, the Inspector, home, library, settings and
+accessibility, reworked and made sturdier.
 
 ### Changed
 
@@ -29,7 +33,6 @@ project follows [Semantic Versioning](https://semver.org).
   background in a shade of the page theme (white on original pages, then
   paper, sepia, gray, dark or night), so they read cleanly and fit the page.
   The word popup you get by hovering is filled the same way.
-
 - **The Inspector puts the word first.** Selecting a word shows its card
   with Save, Listen and Anki as labelled buttons; the explanations come
   next, then Ask AI. Recent words are in a menu in the card's corner.
@@ -44,7 +47,6 @@ project follows [Semantic Versioning](https://semver.org).
   Retell in one place.
 - **The Inspector can match the page.** A new setting in Appearance lets it
   take the paper, sepia, gray, dark or night tones. It's off by default.
-
 - **Home puts today first.** "Continue" on the book you're reading, then
   today's reviews and your reading goal side by side, and a Tools row:
   Import Web Article, Story From Your Words and the Review window.
@@ -59,7 +61,6 @@ project follows [Semantic Versioning](https://semver.org).
   article.
 - **What's New.** After an update, a short page shows what changed. It's
   also in Help ▸ What's New in RELL.
-
 - **Settings in six tabs.** Reading, Study, AI, Prompts, Appearance and
   Data, instead of one long General tab. Your settings are unchanged. The
   daily reading goal can now be set in Study too.
