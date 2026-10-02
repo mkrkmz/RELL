@@ -688,6 +688,7 @@ extension PDFKitView {
                 popover.contentViewController = NSHostingController(rootView: HoverDefinitionPopover(model: hoverModel))
                 hoverPopover = popover
             }
+            popover.appearance = PageTheme.stored.overlayAppearance   // arrow matches the fill
             popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
         }
 

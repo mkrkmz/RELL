@@ -435,6 +435,10 @@ struct ContentView: View {
             )
         } detail: {
             pdfColumn
+                // In full screen the window keeps a title-bar-high safe area
+                // at the top even with the toolbar hidden — an empty band
+                // above the page (v14 S1 live pass). Zen gives it to the page.
+                .ignoresSafeArea(.container, edges: zenMode ? .top : [])
                 .overlay(alignment: .top) {
                     if zenMode {
                         ZenModeBar(

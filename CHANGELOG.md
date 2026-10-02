@@ -25,8 +25,9 @@ project follows [Semantic Versioning](https://semver.org).
 - **Bars over the page are easy to read on every theme.** The selection
   bar, the speech bar and the Zen bar used a see-through glass that let the
   text behind them show through their labels. They now have a solid
-  background in a shade of the page theme (paper, sepia, gray, dark, night
-  or the system look), so they read cleanly and fit the page.
+  background in a shade of the page theme (white on original pages, then
+  paper, sepia, gray, dark or night), so they read cleanly and fit the page.
+  The word popup you get by hovering is filled the same way.
 
 ### Fixed
 

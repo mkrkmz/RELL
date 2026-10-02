@@ -177,7 +177,12 @@ araclar istenince bulunabilsin. **Maketle baslar.**
 - [x] Canli tur bulgusu: Zen'de (tam ekran) gizli arac cubugunun yuksekligi
       ustte bos siyah bant olarak kaliyordu → `.windowToolbarFullScreenVisibility(.onHover)`
       yalniz Zen'de; okuma sutununun 8 pt kenar boslugu Zen'de 0. Centik
-      seridi (kamera) sistem davranisi, degismez
+      seridi (kamera) sistem davranisi, degismez. Ikinci deneme: `.onHover` bandi
+      kaldirmadi (bant pencerenin kendi ust guvenli alani, imlecle gri
+      gorunuyor) → Zen'de okuma sutunu `.ignoresSafeArea(.container, .top)`.
+      Ayni turda: orijinal temada okuma yuzeyi her zaman beyaz (koyu sistemde
+      beyaz sayfa ustunde koyu cubuk delik gibi duruyordu); sozluk kutusu
+      (NSPopover) icerigi `.dsReadingOverlayFill()` + temaya uygun gorunum
 - [ ] **Canli tur (kullanici)** — (1) serit: genis ve dar pencerede "Bu
       bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
       (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif

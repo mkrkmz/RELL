@@ -35,6 +35,8 @@ struct HoverDefinitionPopover: View {
         }
         .padding(DS.Spacing.md)
         .frame(width: 264, alignment: .leading)
+        // Shown over the text: opaque and page-themed, not glass (v14 S1).
+        .dsReadingOverlayFill()
     }
 
     @ViewBuilder

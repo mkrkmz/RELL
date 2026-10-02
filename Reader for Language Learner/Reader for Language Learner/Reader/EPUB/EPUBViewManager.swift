@@ -858,6 +858,7 @@ final class EPUBViewManager: NSObject {
         // WKWebView is flipped, so JS viewport coordinates map straight
         // onto the view's coordinate space.
         let positioning = rect.width > 0 ? rect : CGRect(x: rect.minX, y: rect.minY, width: 1, height: 1)
+        popover.appearance = PageTheme.stored.overlayAppearance   // arrow matches the fill
         popover.show(relativeTo: positioning, of: webView, preferredEdge: .maxY)
     }
 
