@@ -165,6 +165,15 @@ araclar istenince bulunabilsin. **Maketle baslar.**
       (`viewPaletteItems`). Zen cubugu: anlamlar, tema, seslendir.
       `ReaderShellTests` (7 test; mutation-check: sira degisimi ve pasif oge
       dogrulamasi yakalaniyor). `make ci-test` 627 test, 0 hata
+- [x] Canli tur bulgusu (2026-10-02): metnin ustunde yuzen cam cubuklar
+      (secim, seslendirme, Zen) arkadaki satirlari kirip etiketlere
+      karistiriyordu, her temada. Kural: cam yalniz arkasinda okunan metin
+      olmayan kabukta; metin ustunde yuzen kontroller `.dsReadingOverlay()`
+      — ayni kapsul/cizgi/golge, opak dolgu sayfa temasindan
+      (`PageTheme.overlaySurface`), yazilar temaya gore acik/koyu. Gri temada
+      dolgu sayfadan koyu (#333336) ki ayrissin. Alti temada render ile
+      kontrol edildi. Arama cubuklari ve ceviri seridi metnin ustunde degil,
+      camda kaldi
 - [ ] **Canli tur (kullanici)** — (1) serit: genis ve dar pencerede "Bu
       bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
       (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif

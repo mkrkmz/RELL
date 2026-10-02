@@ -84,11 +84,9 @@ struct SpeechPlaybackBar: View {
         }
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.vertical, DS.Spacing.sm)
-        // One glass capsule for the whole bar; the play/pause/stop buttons stay
-        // plain (glass-on-glass needs a shared container — deferred to the
-        // inspector's grouped controls in Sprint 2). Glass drops the float
-        // shadow on macOS 26; the macOS 15 fallback keeps it.
-        .dsGlassCapsule()
+        // Floats over the page's text: an opaque, page-themed capsule rather
+        // than glass (v14 S1 — see ReadingOverlay.swift).
+        .dsReadingOverlay(Capsule())
         .accessibilityElement(children: .contain)
     }
 

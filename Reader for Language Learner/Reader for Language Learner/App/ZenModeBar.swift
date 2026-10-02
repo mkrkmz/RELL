@@ -4,7 +4,7 @@
 //
 //  The only chrome shown in zen mode: a slim strip at the top of the reader
 //  that stays out of the way until the pointer approaches, then reveals a
-//  minimal glass bar with the document title, reading position, and an exit
+//  minimal bar with the document title, reading position, and an exit
 //  control. Keeps immersive reading immersive while leaving a way back.
 //
 
@@ -160,7 +160,7 @@ struct ZenModeBar: View {
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.vertical, DS.Spacing.sm)
         .frame(maxWidth: .infinity)
-        .dsGlassCard(radius: 0, fallback: AnyShapeStyle(.regularMaterial), fallbackShadow: DS.Shadow.float)
+        .dsReadingOverlay(Rectangle())
         .onHover { hovering in
             if hovering {
                 barHovered = true

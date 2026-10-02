@@ -8,8 +8,8 @@
 //  Shared by the PDF and EPUB readers; each host positions it and supplies the
 //  action closures, which route into the reader's existing selection handlers.
 //
-//  Chrome, not content: a single neutral glass capsule (per the "glass is
-//  chrome" rule and the calm single-accent design taste).
+//  It floats over the text, so it's an opaque, page-themed capsule rather
+//  than glass (v14 S1 — see ReadingOverlay.swift).
 //
 
 import SwiftUI
@@ -64,7 +64,7 @@ struct SelectionActionBar: View {
         }
         .padding(.horizontal, DS.Spacing.xxs)
         .padding(.vertical, DS.Spacing.xxs)
-        .dsGlassCapsule(fallback: AnyShapeStyle(.regularMaterial))
+        .dsReadingOverlay(Capsule())
         .fixedSize()
     }
 
