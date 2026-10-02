@@ -763,7 +763,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Burada görmek için bir belgeyi koleksiyona ekleyin."
+            "value" : "Burada görmek için bir belgeyi koleksiyona ekle."
           }
         }
       }
@@ -1042,7 +1042,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Üçü de yapay zeka sağlayıcınızı kullanır. Ek istek istemiyorsanız kapatın."
+            "value" : "Üçü de yapay zekâ sağlayıcını kullanır. Ek istek istemiyorsan kapat."
           }
         }
       }
@@ -1740,7 +1740,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İkisi de yapay zeka sağlayıcınızı kullanır. Ek istek istemiyorsanız kapatın."
+            "value" : "İkisi de yapay zekâ sağlayıcını kullanır. Ek istek istemiyorsan kapat."
           }
         }
       }
@@ -2201,7 +2201,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Görmek için tıklayın"
+            "value" : "Görmek için tıkla"
           }
         }
       }
@@ -3041,7 +3041,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bir kelimeye çift tıklayın veya\ncümle seçmek için sürükleyin."
+            "value" : "Bir kelimeye çift tıkla ya da\ncümle seçmek için sürükle."
           }
         }
       }
@@ -3092,7 +3092,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Açmak için bir PDF veya EPUB'ı herhangi bir yere bırakın"
+            "value" : "Açmak için bir PDF ya da EPUB'ı herhangi bir yere bırak"
           }
         }
       }
@@ -4741,7 +4741,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bir kelime arayın…"
+            "value" : "Bir kelime ara…"
           }
         }
       }
@@ -4774,7 +4774,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pencere açık olmasa bile menü çubuğundan kelime arayın."
+            "value" : "Pencere açık olmasa bile menü çubuğundan kelime ara."
           }
         }
       }
@@ -5150,7 +5150,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu koleksiyona bir ad verin."
+            "value" : "Bu koleksiyona bir ad ver."
           }
         }
       }
@@ -5611,7 +5611,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu belgeden henüz kaydedilmiş kelime yok. Metin seçip Inspector'dan kaydedin."
+            "value" : "Bu belgeden henüz kaydedilmiş kelime yok. Metin seç ve Inspector'dan kaydet."
           }
         }
       }
@@ -5751,7 +5751,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Şu anda tekrar bekleyen kelime yok. Okumaya devam edin ya da tüm kaydedilmiş kelimeleri Tekrar'a dahil edin."
+            "value" : "Şu anda tekrar bekleyen kelime yok. Okumaya devam et ya da tüm kayıtlı kelimeleri Tekrar'a dahil et."
           }
         }
       }
@@ -5943,7 +5943,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vurgulamaya başlamak için bir kitap açın."
+            "value" : "Vurgulamaya başlamak için bir kitap aç."
           }
         }
       }
@@ -5963,7 +5963,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bir belge açın, okurken kelimeleri seçin\nve kelime dağarcığınızı oluşturun."
+            "value" : "Bir belge aç, okurken kelimeleri seç\nve kelime dağarcığını oluştur."
           }
         }
       }
@@ -6067,7 +6067,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hızlı Arama panelini her uygulamadan açın."
+            "value" : "Hızlı Arama panelini her uygulamadan aç."
           }
         }
       }
@@ -6841,7 +6841,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Her gün biraz okuyun"
+            "value" : "Her gün biraz oku"
           }
         }
       }
@@ -6861,7 +6861,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Öğrendiğiniz dildeki kitapları ve PDF'leri okuyun; yapay zeka her kelimeyi bağlamı içinde açıklasın."
+            "value" : "Öğrendiğin dildeki kitapları ve PDF'leri oku; yapay zekâ her kelimeyi bağlamı içinde açıklasın."
           }
         }
       }
@@ -8137,7 +8137,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Okuyucudan kelime kaydedin, sonra tekrar bekleyenleri burada çalışın."
+            "value" : "Okurken kelime kaydet, sonra tekrar bekleyenleri burada çalış."
           }
         }
       }
@@ -8403,7 +8403,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bir cümle ya da paragraf seçin"
+            "value" : "Bir cümle ya da paragraf seç"
           }
         }
       }
@@ -8433,7 +8433,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toplu deste atama veya silme için birden çok kelime seçin"
+            "value" : "Toplu deste atamak ya da silmek için birden çok kelime seç"
           }
         }
       }
@@ -8453,7 +8453,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "İncelemek için metin seçin"
+            "value" : "İncelemek için metin seç"
           }
         }
       }
@@ -8464,7 +8464,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metin seçin, sağ tıklayın ve pasajları işaretlemek için Vurgula'yı seçin."
+            "value" : "Metin seç, sağ tıkla ve pasajları işaretlemek için Vurgula'yı seç."
           }
         }
       }
@@ -9062,7 +9062,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bir Kitap veya PDF ile Başlayın"
+            "value" : "Bir Kitap ya da PDF ile Başla"
           }
         }
       }
@@ -9494,7 +9494,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Model boş yanıt döndürdü. Yeniden deneyin veya Ayarlar'dan modeli kontrol edin."
+            "value" : "Model boş yanıt döndürdü. Yeniden dene ya da Ayarlar'dan modeli kontrol et."
           }
         }
       }
@@ -9809,7 +9809,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Farklı bir arama terimi deneyin."
+            "value" : "Farklı bir arama terimi dene."
           }
         }
       }

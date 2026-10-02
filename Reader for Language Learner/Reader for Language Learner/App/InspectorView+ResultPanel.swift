@@ -46,12 +46,7 @@ extension InspectorView {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DS.Color.cardInset)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.lg)
-                .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
-        )
+        .dsPanel(surface: DS.Color.cardInset)
     }
 
     // MARK: - Active Result
@@ -286,12 +281,7 @@ extension InspectorView {
             }
         }
         .padding(DS.Spacing.md)
-        .background(DS.Color.panel)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.md)
-                .strokeBorder(DS.Color.hairline, lineWidth: 0.8)
-        )
+        .dsCard(padding: nil, surface: DS.Color.panel, radius: DS.Radius.md)
     }
 
     var sourceLabel: String? {

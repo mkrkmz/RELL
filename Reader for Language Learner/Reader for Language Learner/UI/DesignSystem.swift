@@ -345,7 +345,9 @@ extension DS {
             }
         }
 
-        var lineWidth: CGFloat { 1 }
+        /// One hairline weight for every card and panel (v14 S4) — cards
+        /// drew 1 pt and panels 0.6, with hand-made ones between.
+        var lineWidth: CGFloat { 0.6 }
     }
 }
 
@@ -411,7 +413,7 @@ extension View {
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
+                    .strokeBorder(DS.Color.hairline, lineWidth: DS.CardStroke.hairline.lineWidth)
             )
     }
 }

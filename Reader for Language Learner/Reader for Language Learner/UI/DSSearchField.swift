@@ -49,12 +49,7 @@ struct DSSearchField: View {
         }
         .padding(.horizontal, DS.Spacing.sm)
         .padding(.vertical, 5)
-        .background(DS.Color.surfaceInset)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-        .overlay(
-            RoundedRectangle(cornerRadius: DS.Radius.sm)
-                .strokeBorder(DS.Color.hairline, lineWidth: 0.7)
-        )
+        .dsCard(padding: nil, surface: DS.Color.surfaceInset, radius: DS.Radius.sm)
         .animation(DS.Animation.fast, value: text.isEmpty)
     }
 }

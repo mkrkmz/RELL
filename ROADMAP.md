@@ -306,12 +306,19 @@ Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
       temasinda ekran gorselleriyle kontrol
 - [x] **Turkce metin turu** — gorunen tum metinlerin TR karsiligi gozden
       gecirilir (kisa, tutarli terimler)
-- [ ] **Gorsel tutarlilik** — kismen: tam karsiligi olan sayisal padding'ler
-      (2/4/8 → xxs/xs/sm, 12 yer) token'a gecti; 1/3/5/6/7 rozet ici optik
-      ayar ve 14/18/22 liste girintisi bilerek kaldi; ham font yok (tek
-      cagri zaten DS-exempt). Kart stillerinin tek kaliba indirilmesi ve
-      6 tema × acik/koyu ekran goruntusu kontrolu yapilmadi (kullaniciya
-      soruldu)
+- [x] **Gorsel tutarlilik** — tam karsiligi olan sayisal padding'ler (2/4/8 →
+      xxs/xs/sm, 12 yer) token'a gecti; 1/3/5/6/7 rozet ici optik ayar ve
+      14/18/22 liste girintisi bilerek kaldi; ham font yok (tek cagri zaten
+      DS-exempt). Kart cizgisi tek kalinlik (`CardStroke.lineWidth` 0.6;
+      kartlar 1, paneller 0.6, elle yapilanlar 0.5–0.8 idi); elle yazilmis 5
+      kart `dsCard`/`dsPanel`'e gecti; gradyanlar zaten DS'te. 6 tema × acik/
+      koyu matrisi gecici render ile kontrol edildi: okuma yuzeyi ve tema
+      izleyen Inspector tutarli. Supheli: koyu temalarda modul ciplerinin
+      yazisi soluk — cipler cam efektli, render cami gercek pencere gibi
+      cizmiyor olabilir; canli turda bakilacak
+- [x] **Hitap** (kullanici karari "sen"): "siz" kalibindaki 24 TR metin
+      "sen"e cevrildi (emir ve -iniz ekleri taranarak; iyelik ekli
+      yanlis alarmlar elendi)
 - [x] Uygulama (maket onayi 2026-10-02; kararlar: 6 sekme, tur yeni
       kullaniciya + Yardim menusu, "Inspector", "tekrar bekleyen", tek
       surum 1.43.0). Ayarlar: `ReadingSettingsView` (eski Genel dosyasi,
@@ -330,8 +337,10 @@ Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
 - [x] Performans tabanina gore (2026-10-02, ayni Mac, Debug, 5 tekrar):
       EPUB 20,6 ms (21) · tepe bellek ~80 MB (~91) · PDF 17,1 (17) · tarama
       133,6 (140) · profil 9,5 (10) · hazirlik 13,4 (14) · depo 5,0 (5) ·
-      makale 28,5 (31). Gerileme yok. Soguk acilis olculmedi (kullanicinin
-      RELL'i acikti — UI testi onu kapatir)
+      makale 28,5 (31). Gerileme yok. Soguk acilis (RELL kapaliyken, iki tur
+      × 5): ilk acilis her turda aykiri (680, 807 ms); ortanca 549 → 576 ms
+      (+%5). Ana ekran artik daha fazla ciziyor (araclar, yan yana kartlar);
+      kucuk ama gercek olabilecek bir artis, esik koyulmadi
 - [x] CI duzeltmesi: Test is akisi 545b725'ten (WindowLayoutTests eklendi)
       beri kirmiziydi ve sprint sonlarinda kontrol edilmedi — "CI gecmeden
       sprint kapanmaz" kurali ihlal edildi. Neden: CI'in macOS 15.7'sinde
@@ -341,7 +350,7 @@ Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
       kurulan NSWindow'da; korudugu kisit dongusu degil. Test macOS 15'te
       gerekceli XCTSkip, macOS 26+'da calisir. Ders: her push'tan sonra
       `gh run list` ile Test is akisi kontrol edilir
-- [ ] Kapanis: canli tur, soguk acilis olcumu, tek surum 1.43.0 (onayli;
+- [ ] Kapanis: canli tur, tek surum 1.43.0 (onayli;
       tag oncesi kullaniciya sorulur)
 
 ---

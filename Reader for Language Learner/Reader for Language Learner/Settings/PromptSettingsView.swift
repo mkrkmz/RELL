@@ -89,12 +89,7 @@ struct PromptSettingsView: View {
                 .frame(minHeight: 80, maxHeight: 120)
                 .scrollContentBackground(.hidden)
                 .padding(DS.Spacing.sm)
-                .background(DS.Color.surfaceInset)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.8)
-                )
+                .dsCard(padding: nil, surface: DS.Color.surfaceInset, radius: DS.Radius.sm, stroke: .hairlineStrong)
 
             HStack {
                 Text("\(customPreamble.count) characters")

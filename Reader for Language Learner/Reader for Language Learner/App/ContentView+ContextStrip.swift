@@ -30,12 +30,7 @@ extension ContentView {
                         .frame(width: proxy.size.width, height: proxy.size.height)
                 }
             }
-            .background(DS.Color.surfaceElevated.opacity(0.94))
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.sm)
-                    .strokeBorder(DS.Color.hairline, lineWidth: 0.6)
-            )
+            .dsCard(padding: nil, surface: DS.Color.surfaceElevated.opacity(0.94), radius: DS.Radius.sm)
     }
 
     private static let contextStripHeight: CGFloat = 30

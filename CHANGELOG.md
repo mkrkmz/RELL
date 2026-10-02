@@ -69,7 +69,8 @@ project follows [Semantic Versioning](https://semver.org).
 - **Better with VoiceOver and the keyboard.** Every icon-only button has a
   name, and more windows close with Esc.
 - **Consistent Turkish.** "Inspector" and "tekrar bekleyen" are used
-  everywhere.
+  everywhere, and the app speaks to you the same informal way throughout.
+- **Calmer cards.** Cards and panels share one thin border.
 
 ### Fixed
 
