@@ -465,6 +465,11 @@ struct ContentView: View {
                 }
                 .toolbar { toolbarContent }
                 .toolbar(zenMode ? .hidden : .automatic, for: .windowToolbar)
+                // Hiding the toolbar isn't enough in full screen: the window
+                // kept its toolbar's height as an empty black band above the
+                // page (v14 S1 live pass). `.onHover` gives that space to the
+                // content and shows the toolbar only with the menu bar.
+                .windowToolbarFullScreenVisibility(zenMode ? .onHover : .automatic)
                 .navigationTitle(windowTitle)
                 .onExitCommand { closeFindBar() }
         }
@@ -614,8 +619,9 @@ struct ContentView: View {
                     }
                 }
         .animation(DS.Animation.standard, value: translatableSentence)
-        .padding(.top, DS.Spacing.sm)
-        .padding(.horizontal, DS.Spacing.sm)
+        // Zen is edge to edge: the page meets the screen's edges.
+        .padding(.top, zenMode ? 0 : DS.Spacing.sm)
+        .padding(.horizontal, zenMode ? 0 : DS.Spacing.sm)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: pageTheme.backgroundColor))
     }

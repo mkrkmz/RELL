@@ -32,6 +32,8 @@ project follows [Semantic Versioning](https://semver.org).
 
 - The app no longer crashes when the reader window is made as small as it
   goes.
+- Zen mode no longer leaves an empty band at the top of the screen where the
+  hidden toolbar used to be; the page now reaches the screen's edges.
 
 ## [1.42.0] - 2026-10-01
 

@@ -174,6 +174,10 @@ araclar istenince bulunabilsin. **Maketle baslar.**
       dolgu sayfadan koyu (#333336) ki ayrissin. Alti temada render ile
       kontrol edildi. Arama cubuklari ve ceviri seridi metnin ustunde degil,
       camda kaldi
+- [x] Canli tur bulgusu: Zen'de (tam ekran) gizli arac cubugunun yuksekligi
+      ustte bos siyah bant olarak kaliyordu → `.windowToolbarFullScreenVisibility(.onHover)`
+      yalniz Zen'de; okuma sutununun 8 pt kenar boslugu Zen'de 0. Centik
+      seridi (kamera) sistem davranisi, degismez
 - [ ] **Canli tur (kullanici)** — (1) serit: genis ve dar pencerede "Bu
       bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
       (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif
