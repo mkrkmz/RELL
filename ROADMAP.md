@@ -240,7 +240,7 @@ cumle secildiginde o cumle icin araclar. **Maketle baslar.**
       davranis olurdu; kaydet karttan. Testler: `InspectorLayoutTests` (3),
       LayoutGuard +2 (cumle+ceviri+araclar, tema uyumu). Gorsel kontrol
       gecici render ile. `make ci-test` 632 test, 0 hata
-- [ ] **Canli tur (kullanici)** — (1) kelime sec: kart dugmeleri (Kaydet ⌘D,
+- [x] **Canli tur (kullanici)** — tamam (2026-10-02, sorunsuz). (1) kelime sec: kart dugmeleri (Kaydet ⌘D,
       Dinle/Durdur ⇧⌘S/⇧⌘X, Anki), saat menusu (son terimler), ⋯ menusu
       ("Soyle Acikla"); (2) cumle sec: ceviri kartta (serit aciksa),
       Araclar: Dilbilgisi, Sadelestir, Yeniden Anlat; (3) 4 cip + Daha fazla
