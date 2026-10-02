@@ -54,5 +54,6 @@ struct WhatsNewSheet: View {
         }
         .padding(DS.Spacing.xl)
         .frame(width: 440)
+        .onExitCommand(perform: onDone)
     }
 }

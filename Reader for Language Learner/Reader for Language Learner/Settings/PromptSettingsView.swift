@@ -152,6 +152,7 @@ struct PromptSettingsView: View {
                     }
                     .buttonStyle(.plain)
                     .help("Reset to default (\(String(format: "%.2f", defaultTemp)))")
+                    .accessibilityLabel("Reset to default")
                 } else {
                     Color.clear.frame(width: 16)
                 }

@@ -387,24 +387,6 @@ struct InspectorView: View {
 
     // MARK: - Helpers
 
-    func iconButton(
-        systemImage: String,
-        help: String,
-        role: ButtonRole? = nil,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(role: role, action: action) {
-            Image(systemName: systemImage)
-                .font(DS.Typography.icon(12, weight: .medium))
-                .frame(width: 28, height: 28)
-                .dsGlassInteractive(cornerRadius: DS.Radius.sm)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(help)
-        .opacity(role == .destructive ? 0.94 : 1)
-    }
-
     var isAnyLoading: Bool {
         viewModel.loading.values.contains(true)
     }

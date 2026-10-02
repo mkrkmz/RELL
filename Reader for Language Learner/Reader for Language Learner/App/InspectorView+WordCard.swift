@@ -38,7 +38,7 @@ extension InspectorView {
                             .font(DS.Typography.caption2.weight(.bold))
                             .foregroundStyle(level.badgeColor)
                             .padding(.horizontal, DS.Spacing.xs)
-                            .padding(.vertical, 2)
+                            .padding(.vertical, DS.Spacing.xxs)
                             .background(level.badgeColor.opacity(0.12), in: Capsule())
                     }
                     Label(savedWord.reviewStatus.label, systemImage: savedWord.reviewStatus.icon)

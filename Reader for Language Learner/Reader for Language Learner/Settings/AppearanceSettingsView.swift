@@ -149,7 +149,7 @@ struct AppearanceSettingsView: View {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
                                 .foregroundStyle(DS.Color.accent)
-                                .padding(4)
+                                .padding(DS.Spacing.xs)
                                 .transition(.scale.combined(with: .opacity))
                         }
                     }
@@ -167,6 +167,7 @@ struct AppearanceSettingsView: View {
             .contentShape(RoundedRectangle(cornerRadius: DS.Radius.md))
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
         .animation(DS.Animation.springFast, value: isSelected)
     }
 
@@ -194,6 +195,7 @@ struct AppearanceSettingsView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Reset to default")
+                .accessibilityLabel("Reset to default")
             }
         }
     }

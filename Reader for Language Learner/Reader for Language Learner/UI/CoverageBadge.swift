@@ -21,7 +21,7 @@ struct CoverageBadge: View {
             .monospacedDigit()
             .foregroundStyle(filled ? SwiftUI.Color.white : tint)
             .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+            .padding(.vertical, DS.Spacing.xxs)
             .background(filled ? tint.opacity(0.85) : tint.opacity(0.12), in: Capsule())
             .help(Text("You know \(Int(profile.knownShare * 100))% of this book's words"))
             .accessibilityLabel(Text("You know \(Int(profile.knownShare * 100))% of this book's words"))

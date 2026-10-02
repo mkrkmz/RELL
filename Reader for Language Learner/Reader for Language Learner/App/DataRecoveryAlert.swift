@@ -34,7 +34,7 @@ private struct DataRecoveryAlert: ViewModifier {
             }
             .alert("Some of your data couldn't be read", isPresented: isPresented) {
                 Button("Restore from Backup…") {
-                    settingsSelectedTab = SettingsTab.general.rawValue
+                    settingsSelectedTab = SettingsTab.data.rawValue
                     openSettings()
                     files = []
                 }

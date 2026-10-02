@@ -109,14 +109,14 @@ extension InspectorView {
 
                 DSGlassGroup(spacing: DS.Spacing.xxs) {
                     HStack(spacing: DS.Spacing.xxs) {
-                        resultToolbarButton(systemImage: "arrow.clockwise") {
+                        resultToolbarButton(systemImage: "arrow.clockwise", label: "Refresh") {
                             Task { await runModule(module, forceRefresh: true) }
                         }
                         .help("Refresh (⌘R)")
                         .keyboardShortcut("r", modifiers: [.command])
                         .disabled(isLoading || !isModuleEnabled(module))
 
-                        resultToolbarButton(systemImage: "doc.on.doc") {
+                        resultToolbarButton(systemImage: "doc.on.doc", label: "Copy result") {
                             copyToClipboard(renderedOutput, showFeedback: true)
                         }
                         .help("Copy result (⇧⌘C)")
@@ -124,13 +124,13 @@ extension InspectorView {
                         .disabled(renderedOutput.isEmpty)
 
                         if isLoading {
-                            resultToolbarButton(systemImage: "xmark.circle.fill") {
+                            resultToolbarButton(systemImage: "xmark.circle.fill", label: "Cancel") {
                                 viewModel.cancel(module: module)
                             }
                             .foregroundStyle(DS.Color.danger.opacity(0.78))
                             .help("Cancel")
                         } else {
-                            resultToolbarButton(systemImage: "xmark.circle.fill") {
+                            resultToolbarButton(systemImage: "xmark.circle.fill", label: "Close") {
                                 activeModule = nil
                             }
                             .help("Close (Esc)")
@@ -162,6 +162,7 @@ extension InspectorView {
 
     private func resultToolbarButton(
         systemImage: String,
+        label: LocalizedStringKey,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -171,6 +172,7 @@ extension InspectorView {
                 .dsGlassInteractive(cornerRadius: DS.Radius.sm)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     // MARK: - Result Body

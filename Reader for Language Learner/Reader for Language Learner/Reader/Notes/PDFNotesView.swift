@@ -94,7 +94,7 @@ struct PDFNotesView: View {
                 Text("\(count)")
                     .font(DS.Typography.caption2.weight(.bold))
                     .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
+                    .padding(.vertical, DS.Spacing.xxs)
                     .background(isSelected ? .white.opacity(0.18) : DS.Color.surfaceInset)
                     .clipShape(Capsule())
             }
@@ -321,11 +321,12 @@ struct PDFNoteEditorSheet: View {
                     .font(DS.Typography.headline)
                     .foregroundStyle(DS.Color.textPrimary)
                 Spacer()
-                Button("", systemImage: "xmark.circle.fill") {
+                Button("Close", systemImage: "xmark.circle.fill") {
                     onCancel()
                     dismiss()
                 }
                 .buttonStyle(.plain)
+                .labelStyle(.iconOnly)
                 .foregroundStyle(DS.Color.textTertiary)
             }
             .padding(DS.Spacing.lg)

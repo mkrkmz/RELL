@@ -163,6 +163,8 @@ private struct EPUBBookmarkRow: View {
                         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
                 }
                 .buttonStyle(.plain)
+                .help("Edit bookmark note")
+                .accessibilityLabel("Edit bookmark note")
                 .transition(.opacity.combined(with: .scale))
             } else {
                 Image(systemName: "chevron.right")
@@ -196,8 +198,9 @@ private struct EPUBBookmarkNoteSheet: View {
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
                 Spacer()
-                Button("", systemImage: "xmark.circle.fill") { dismiss() }
+                Button("Close", systemImage: "xmark.circle.fill") { dismiss() }
                     .buttonStyle(.plain)
+                    .labelStyle(.iconOnly)
                     .foregroundStyle(DS.Color.textTertiary)
             }
             .padding(DS.Spacing.lg)

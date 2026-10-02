@@ -172,6 +172,8 @@ extension Notification.Name {
     static let openPDFCommand = Notification.Name("openPDFCommand")
     /// Help ▸ What's New in RELL — the key window shows the page.
     static let whatsNewCommand = Notification.Name("whatsNewCommand")
+    /// Help ▸ Reading Tour — the key window shows the four-page tour.
+    static let readingTourCommand = Notification.Name("readingTourCommand")
     /// An empty Bookmarks list's button — the key window toggles a bookmark
     /// at the current page or position, as ⌘B does (v14 S3).
     static let toggleBookmarkCommand = Notification.Name("toggleBookmarkCommand")

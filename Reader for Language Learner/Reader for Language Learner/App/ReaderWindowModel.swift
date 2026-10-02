@@ -49,6 +49,8 @@ final class ReaderWindowModel {
     var showWarmUp = false
     /// The What's New page on screen, if any (v14 S3).
     var whatsNewPage: WhatsNew?
+    /// Help ▸ Reading Tour on screen (v14 S4).
+    var showReadingTour = false
     /// The passage being rewritten at the reader's level (v13 Sprint 3).
     var gradedRewriteSource: String?
     /// File ▸ Import Web Article… sheet (v13 Sprint 4).

@@ -133,12 +133,12 @@ struct AnkiExportView: View {
                     Text("[\(domain.localizedTitle)]")
                         .font(.caption2)
                         .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
+                        .padding(.vertical, DS.Spacing.xxs)
                         .background(.tint.opacity(0.15))
                         .clipShape(Capsule())
                 }
             }
-            .padding(8)
+            .padding(DS.Spacing.sm)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(nsColor: .textBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 8))

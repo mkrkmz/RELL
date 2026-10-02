@@ -165,6 +165,7 @@ private struct HighlightRow: View {
                     }
                     .buttonStyle(.plain)
                     .help(highlight.note.isEmpty ? "Add a note" : "Edit note")
+                    .accessibilityLabel(highlight.note.isEmpty ? "Add a note" : "Edit note")
 
                     recolorMenu
                 }

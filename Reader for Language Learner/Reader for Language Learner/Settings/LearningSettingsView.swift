@@ -1,13 +1,15 @@
 //
-//  GeneralSettingsView.swift
+//  LearningSettingsView.swift
 //  Reader for Language Learner
 //
-//  Language-pair picker + domain preference.
+//  Settings ▸ Learning (v14 S4): your languages and level, the reading
+//  loop's recaps and warm-ups, the daily goal and reminder. Split from the
+//  old General tab; the stored keys are unchanged.
 //
 
 import SwiftUI
 
-struct GeneralSettingsView: View {
+struct LearningSettingsView: View {
 
     @AppStorage(Language.nativeLanguageKey) private var nativeRaw = Language.defaultNative.rawValue
     @AppStorage(Language.targetLanguageKey) private var targetRaw = Language.defaultTarget.rawValue
@@ -16,6 +18,12 @@ struct GeneralSettingsView: View {
     private var target: Language { Language(rawValue: targetRaw) ?? .english }
 
     @AppStorage(StorageKey.domainPreference) private var domainRaw = DomainPreference.general.rawValue
+    @AppStorage(StorageKey.learnerLevel) private var learnerLevelRaw = CEFRLevel.defaultLearnerLevel.rawValue
+    @AppStorage(StorageKey.readingRecapEnabled) private var readingRecapEnabled = true
+    @AppStorage(StorageKey.chapterWarmUpEnabled) private var chapterWarmUpEnabled = true
+    @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
+    @AppStorage(DailyReminderManager.enabledKey) private var dailyReminderEnabled = false
+    @AppStorage(DailyReminderManager.timeKey) private var dailyReminderTime = DailyReminderManager.storedTime()
 
     var body: some View {
         Form {
@@ -45,51 +53,6 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Toggle(isOn: $hoverDictionaryEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Hover Dictionary")
-                        Text("Show a quick definition when you hover over a word.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
-
-                Picker(selection: $hoverDictionaryLanguageRaw) {
-                    ForEach(HoverDictionaryLanguage.allCases) { choice in
-                        Text(choice.localizedTitle(target: target, native: native))
-                            .tag(choice.rawValue)
-                    }
-                } label: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Answer In")
-                        Text("Stay immersed in the language you're studying, or get the meaning in your own.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
-                .disabled(!hoverDictionaryEnabled)
-                Toggle(isOn: $sentenceTranslationEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Sentence Translation")
-                        Text("Translate the selected sentence below the page.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
-                Picker("Translate With", selection: $sentenceTranslationEngineRaw) {
-                    ForEach(SentenceTranslationEngine.allCases) { engine in
-                        Text(engine.localizedTitle).tag(engine.rawValue)
-                    }
-                }
-                .disabled(!sentenceTranslationEnabled)
-                Toggle(isOn: $pageAnalysisEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Page Pre-Analysis")
-                        Text("Pre-fetch definitions for likely-unfamiliar words on the current page, so lookups are instant.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
                 Toggle(isOn: $readingRecapEnabled) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Recap When You Return")
@@ -107,55 +70,23 @@ struct GeneralSettingsView: View {
                     }
                 }
             } header: {
-                Text("Reading Aids")
+                Text("Reading Loop")
             } footer: {
-                Text("Hover, pre-analysis, recaps and warm-ups use your AI provider, or Apple's on-device model where it's on. Apple Translation works offline once the language is downloaded, and falls back to your AI provider for pairs it doesn't support.")
+                Text("Recaps and warm-ups use your AI provider, or Apple's on-device model where it's on.")
                     .foregroundStyle(DS.Color.textTertiary)
             }
 
             Section {
-                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                    HStack {
-                        Text("Speaking Rate")
-                        Spacer()
-                        Text(speechRateLabel)
-                            .foregroundStyle(DS.Color.textTertiary)
+                Picker("Daily Reading Goal", selection: $goalMinutes) {
+                    ForEach(DashboardActivityCard.goalChoices, id: \.self) { minutes in
+                        Text("\(minutes) minutes").tag(minutes)
                     }
-                    Slider(value: $speechRate, in: 0.35...0.65)
                 }
             } header: {
-                Text("Speech")
+                Text("Goal")
             } footer: {
-                Text("Used by pronounce buttons and Read Page Aloud (Speech menu).")
+                Text("Shown on the home screen's reading card. You can also right-click that card to change it.")
                     .foregroundStyle(DS.Color.textTertiary)
-            }
-
-            Section {
-                Toggle(isOn: $menuBarExtraEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Menu Bar Icon")
-                        Text("Look up words from the menu bar, even when no window is open.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
-                Toggle(isOn: $hotkeyEnabled) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Global Shortcut  ⌃⌥Space")
-                        Text("Open the Quick Lookup panel from any app.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
-                .onChange(of: hotkeyEnabled) { _, enabled in
-                    if enabled {
-                        GlobalHotKeyManager.shared.register()
-                    } else {
-                        GlobalHotKeyManager.shared.unregister()
-                    }
-                }
-            } header: {
-                Text("Quick Lookup")
             }
 
             Section {
@@ -188,42 +119,9 @@ struct GeneralSettingsView: View {
                 Text("Reminders")
             }
 
-            BackupSettingsSection()
-
-            Section {
-                Button("Show Welcome Tour Again") {
-                    hasCompletedOnboarding = false
-                }
-                .help("Reopens the first-run setup: language pair, AI connection, and quick tour")
-            }
         }
         .formStyle(.grouped)
     }
-
-    @AppStorage(StorageKey.hasCompletedOnboarding) private var hasCompletedOnboarding = true
-    @AppStorage(StorageKey.hoverDictionaryEnabled) private var hoverDictionaryEnabled = true
-    @AppStorage(HoverDictionaryLanguage.storageKey)
-    private var hoverDictionaryLanguageRaw = HoverDictionaryLanguage.default.rawValue
-    @AppStorage(StorageKey.sentenceTranslationEnabled) private var sentenceTranslationEnabled = true
-    @AppStorage(SentenceTranslationEngine.storageKey)
-    private var sentenceTranslationEngineRaw = SentenceTranslationEngine.default.rawValue
-    @AppStorage(StorageKey.pageAnalysisEnabled) private var pageAnalysisEnabled = false
-    @AppStorage(StorageKey.learnerLevel) private var learnerLevelRaw = CEFRLevel.defaultLearnerLevel.rawValue
-    @AppStorage(StorageKey.readingRecapEnabled) private var readingRecapEnabled = true
-    @AppStorage(StorageKey.chapterWarmUpEnabled) private var chapterWarmUpEnabled = true
-    @AppStorage(StorageKey.speechRate) private var speechRate: Double = 0.5
-    @AppStorage(StorageKey.menuBarExtraEnabled) private var menuBarExtraEnabled = true
-
-    private var speechRateLabel: LocalizedStringKey {
-        switch speechRate {
-        case ..<0.45: return "Slow"
-        case 0.45..<0.55: return "Normal"
-        default: return "Fast"
-        }
-    }
-    @AppStorage(GlobalHotKeyManager.enabledKey) private var hotkeyEnabled = true
-    @AppStorage(DailyReminderManager.enabledKey) private var dailyReminderEnabled = false
-    @AppStorage(DailyReminderManager.timeKey) private var dailyReminderTime = DailyReminderManager.storedTime()
 
     // MARK: - Language Pair
 
@@ -308,5 +206,5 @@ struct GeneralSettingsView: View {
 }
 
 #Preview {
-    GeneralSettingsView()
+    LearningSettingsView()
 }

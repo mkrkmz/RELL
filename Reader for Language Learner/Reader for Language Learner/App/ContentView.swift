@@ -430,6 +430,15 @@ struct ContentView: View {
                 defaults.set(page.version, forKey: StorageKey.whatsNewLastSeen)
                 model.whatsNewPage = page
             }
+            .sheet(isPresented: Bindable(model).showReadingTour) {
+                ReadingLoopTourSheet { model.showReadingTour = false }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .readingTourCommand)) { _ in
+                guard model.hostWindow?.isKeyWindow == true
+                        || NSApp.keyWindow == nil && model.hostWindow == NSApp.windows.first(where: \.isVisible)
+                else { return }
+                model.showReadingTour = true
+            }
             .onReceive(NotificationCenter.default.publisher(for: .whatsNewCommand)) { _ in
                 guard model.hostWindow?.isKeyWindow == true
                         || NSApp.keyWindow == nil && model.hostWindow == NSApp.windows.first(where: \.isVisible)

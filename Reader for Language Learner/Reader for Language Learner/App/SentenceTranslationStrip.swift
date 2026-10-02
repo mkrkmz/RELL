@@ -44,6 +44,7 @@ struct SentenceTranslationStrip: View {
             }
             .buttonStyle(.plain)
             .help("Hide translation")
+            .accessibilityLabel("Hide translation")
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, DS.Spacing.sm)

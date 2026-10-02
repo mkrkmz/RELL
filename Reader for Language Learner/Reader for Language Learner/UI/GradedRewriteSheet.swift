@@ -57,6 +57,7 @@ struct GradedRewriteSheet: View {
         }
         .padding(DS.Spacing.lg)
         .frame(width: 760, height: 480)
+        .onExitCommand { dismiss() }   // Esc, like the other sheets (v14 S4)
         .task(id: levelRaw) { await rewrite() }
     }
 

@@ -47,7 +47,7 @@ struct SelectionActionBar: View {
 
             Divider()
                 .frame(height: 16)
-                .padding(.horizontal, 2)
+                .padding(.horizontal, DS.Spacing.xxs)
 
             Button(action: onSpeak) {
                 Image(systemName: "speaker.wave.2")

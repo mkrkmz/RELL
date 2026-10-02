@@ -288,7 +288,7 @@ struct BulkAnkiExportView: View {
                     .lineLimit(1)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, DS.Spacing.xs)
         .padding(.horizontal, 6)
         .contentShape(Rectangle())
         .onTapGesture {
@@ -354,7 +354,7 @@ struct BulkAnkiExportView: View {
                     Text("Tags: ").font(.caption.weight(.semibold)) + Text(note.tags).font(.caption)
                 }
             }
-            .padding(8)
+            .padding(DS.Spacing.sm)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(nsColor: .textBackgroundColor))
             .clipShape(RoundedRectangle(cornerRadius: 6))

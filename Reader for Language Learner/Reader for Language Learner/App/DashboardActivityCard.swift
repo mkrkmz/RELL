@@ -17,7 +17,7 @@ struct DashboardActivityCard: View {
 
     @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
 
-    private static let goalChoices = [10, 15, 20, 30, 45, 60]
+    static let goalChoices = [10, 15, 20, 30, 45, 60]
 
     private var todayMinutes: Int {
         Int(todayReadingTime / 60)

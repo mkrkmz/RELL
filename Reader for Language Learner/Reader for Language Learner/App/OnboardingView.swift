@@ -2,8 +2,9 @@
 //  OnboardingView.swift
 //  Reader for Language Learner
 //
-//  Three-step first-run flow: language pair → AI server check → quick tour.
-//  Skippable at any point; can be reopened from Settings → General.
+//  First-run flow: language pair → AI server check → the reading-loop tour
+//  (four pages, v14 S4). Skippable at any point; can be reopened from
+//  Settings ▸ Data, and the tour alone from Help ▸ Reading Tour.
 //
 
 import SwiftUI
@@ -25,7 +26,7 @@ struct OnboardingView: View {
     private var target: Language { Language(rawValue: targetRaw) ?? .english }
     private var native: Language { Language(rawValue: nativeRaw) ?? .turkish }
 
-    private static let stepCount = 3
+    private static let stepCount = 2 + ReadingLoopTour.pageCount
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,7 +34,7 @@ struct OnboardingView: View {
                 switch step {
                 case 0:  languageStep
                 case 1:  serverStep
-                default: tourStep
+                default: ReadingLoopTourPage(index: step - 2)
                 }
             }
             .id(step)
@@ -207,61 +208,6 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 3: Quick Tour
-
-    private var tourStep: some View {
-        VStack(spacing: DS.Spacing.xl) {
-            stepHeader(
-                icon: "sparkles",
-                title: "How RELL works",
-                subtitle: "Three habits that build your vocabulary while you read."
-            )
-
-            VStack(spacing: DS.Spacing.md) {
-                tourRow(
-                    icon: "text.cursor",
-                    title: "Select while reading",
-                    detail: "Double-click any word for instant definitions, translations, and collocations."
-                )
-                tourRow(
-                    icon: "star",
-                    title: "Save the good ones",
-                    detail: "Saved words enter a spaced-repetition queue with everything the AI explained."
-                )
-                tourRow(
-                    icon: "flame",
-                    title: "Review on the dashboard",
-                    detail: "Flip the daily word card, keep your streak, and watch the goal ring fill."
-                )
-            }
-        }
-    }
-
-    private func tourRow(icon: String, title: LocalizedStringKey, detail: LocalizedStringKey) -> some View {
-        HStack(alignment: .top, spacing: DS.Spacing.md) {
-            Image(systemName: icon)
-                .font(DS.Typography.icon(15, weight: .medium))
-                .foregroundStyle(DS.Color.accent)
-                .frame(width: 30, height: 30)
-                .background(DS.Color.accentSubtle)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-
-            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                Text(title)
-                    .font(DS.Typography.label)
-                    .foregroundStyle(DS.Color.textPrimary)
-                Text(detail)
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(DS.Spacing.md)
-        .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairlineStrong)
-    }
-
     // MARK: - Shared
 
     private func stepHeader(icon: String, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
@@ -299,13 +245,7 @@ struct OnboardingView: View {
 
             Spacer()
 
-            HStack(spacing: DS.Spacing.xs) {
-                ForEach(0..<Self.stepCount, id: \.self) { index in
-                    Circle()
-                        .fill(index == step ? DS.Color.accent : DS.Color.hairlineStrong)
-                        .frame(width: 6, height: 6)
-                }
-            }
+            ReadingLoopTourDots(current: step, count: Self.stepCount)
 
             Spacer()
 

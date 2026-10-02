@@ -32,6 +32,7 @@ struct FindBarView: View {
             .disabled(searchManager.totalCount == 0)
             .keyboardShortcut(.return, modifiers: [.shift])
             .help("Previous Match (⇧↩)")
+            .accessibilityLabel("Previous Match")
 
             Button { searchManager.next() } label: {
                 Image(systemName: "chevron.down")
@@ -40,6 +41,7 @@ struct FindBarView: View {
             .keyboardShortcut(.return, modifiers: [])
             .keyboardShortcut("g", modifiers: [.command])
             .help("Next Match (↩)")
+            .accessibilityLabel("Next Match")
 
             Text(searchManager.currentPositionLabel)
                 .font(DS.Typography.mono)
@@ -55,6 +57,7 @@ struct FindBarView: View {
             }
             .buttonStyle(.plain)
             .help("Close Find (Esc)")
+            .accessibilityLabel("Close Find")
         }
         .padding(.horizontal, DS.Spacing.sm + DS.Spacing.xs)
         .padding(.vertical, DS.Spacing.sm)

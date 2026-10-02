@@ -78,10 +78,12 @@ struct TagChip: View {
                         .foregroundStyle(DS.Color.textTertiary)
                 }
                 .buttonStyle(.plain)
+                .help("Remove this deck")
+                .accessibilityLabel("Remove this deck")
             }
         }
         .padding(.horizontal, DS.Spacing.xs)
-        .padding(.vertical, 2)
+        .padding(.vertical, DS.Spacing.xxs)
         .background(DS.Color.accentSubtle)
         .clipShape(Capsule())
         .overlay(Capsule().strokeBorder(DS.Color.accentMuted.opacity(0.4), lineWidth: 0.5))

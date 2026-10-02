@@ -214,6 +214,7 @@ struct LLMSettingsView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Reset to default (30s)")
+                .accessibilityLabel("Reset to default")
             }
         }
     }

@@ -293,21 +293,47 @@ araclar bir yerde. **Maketle baslar.**
 
 Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
 
-- [ ] **Ayarlar** — Genel bolunur: Okuma, Ogrenme (seviye, ozet, hazirlik,
+- [x] **Ayarlar** — Genel bolunur: Okuma, Ogrenme (seviye, ozet, hazirlik,
       anlamlar), AI (saglayici, cihaz-ici, gizlilik), Veri (yedekler);
       `@AppStorage` anahtarlari degismez
-- [ ] **Tanitim** — onboarding'e okuma dongusunu gosteren kisa tur (sec →
+- [x] **Tanitim** — onboarding'e okuma dongusunu gosteren kisa tur (sec →
       anla → kaydet → tekrar), atlanabilir; Yardim menusunden tekrar acilir
-- [ ] **Erisilebilirlik turu** — tum ikon dugmeleri etiketli; VoiceOver ile ana
+- [x] **Erisilebilirlik turu** — tum ikon dugmeleri etiketli; VoiceOver ile ana
       akis (belge ac → kelime sec → kaydet → tekrar) bastan sona; klavye
       odagi Inspector ve sheet'lerde; kontrast (tum sayfa temalari)
 - [ ] **Gorsel tutarlilik** — kart stilleri ve vurgu gradyani tek kaliba;
       sabit padding'ler ve ham fontlar DS token'larina; acik/koyu ve 6 sayfa
       temasinda ekran gorselleriyle kontrol
-- [ ] **Turkce metin turu** — gorunen tum metinlerin TR karsiligi gozden
+- [x] **Turkce metin turu** — gorunen tum metinlerin TR karsiligi gozden
       gecirilir (kisa, tutarli terimler)
-- [ ] Kapanis: tam test, performans tabanina gore karsilastirma, canli tur,
-      CHANGELOG; tek surum ya da sprint basina surum — kullanici karari
+- [ ] **Gorsel tutarlilik** — kismen: tam karsiligi olan sayisal padding'ler
+      (2/4/8 → xxs/xs/sm, 12 yer) token'a gecti; 1/3/5/6/7 rozet ici optik
+      ayar ve 14/18/22 liste girintisi bilerek kaldi; ham font yok (tek
+      cagri zaten DS-exempt). Kart stillerinin tek kaliba indirilmesi ve
+      6 tema × acik/koyu ekran goruntusu kontrolu yapilmadi (kullaniciya
+      soruldu)
+- [x] Uygulama (maket onayi 2026-10-02; kararlar: 6 sekme, tur yeni
+      kullaniciya + Yardim menusu, "Inspector", "tekrar bekleyen", tek
+      surum 1.43.0). Ayarlar: `ReadingSettingsView` (eski Genel dosyasi,
+      `SettingsTab.general` ham degeri korundu), `LearningSettingsView`
+      (sekme adi "Study" — "Learning" anahtari kelime durumu
+      "Ogreniliyor"), `DataSettingsView`; okuma hedefi Ogrenme'de; veri
+      kurtarma uyarisi Veri'ye gider. Tur: `ReadingLoopTour` (4 sayfa,
+      resimli), onboarding'in son adimi + Yardim ▸ Tanitim Turu. A11y:
+      adsiz ikon dugmeleri etiketlendi (20+), bos baslikli `Button("",
+      systemImage:)` 5 yer → "Close", `AccessibilityAuditTests` kaynaklari
+      tarar (mutation-check: etiket silinince kirildi); Esc: kitaplik
+      sheet'leri, Sadelestir, Yenilikler. Olu `InspectorView.iconButton`
+      silindi. TR: Denetci → Inspector, vadesi gelen → tekrar bekleyen.
+      Testler +4 (`SettingsAndTourTests`, `AccessibilityAuditTests`).
+      `make ci-test` 642 test, 0 hata
+- [x] Performans tabanina gore (2026-10-02, ayni Mac, Debug, 5 tekrar):
+      EPUB 20,6 ms (21) · tepe bellek ~80 MB (~91) · PDF 17,1 (17) · tarama
+      133,6 (140) · profil 9,5 (10) · hazirlik 13,4 (14) · depo 5,0 (5) ·
+      makale 28,5 (31). Gerileme yok. Soguk acilis olculmedi (kullanicinin
+      RELL'i acikti — UI testi onu kapatir)
+- [ ] Kapanis: canli tur, soguk acilis olcumu, tek surum 1.43.0 (onayli;
+      tag oncesi kullaniciya sorulur)
 
 ---
 

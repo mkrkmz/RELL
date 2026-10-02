@@ -42,7 +42,7 @@ extension InspectorView {
                     Image(systemName: "person.fill")
                         .font(DS.Typography.icon(9))
                         .foregroundStyle(DS.Color.textTertiary)
-                        .padding(.top, 2)
+                        .padding(.top, DS.Spacing.xxs)
                     Text(exchange.question)
                         .font(DS.Typography.caption.weight(.semibold))
                         .foregroundStyle(DS.Color.textPrimary)
@@ -53,7 +53,7 @@ extension InspectorView {
                     Image(systemName: "sparkles")
                         .font(DS.Typography.icon(9))
                         .foregroundStyle(DS.Color.accent)
-                        .padding(.top, 2)
+                        .padding(.top, DS.Spacing.xxs)
                     Group {
                         if let error = exchange.error {
                             Text(error)
@@ -133,6 +133,7 @@ extension InspectorView {
                 }
                 .buttonStyle(.plain)
                 .help("Stop")
+                .accessibilityLabel("Stop")
             } else {
                 Button(action: submitFollowUp) {
                     Image(systemName: "arrow.up.circle.fill")
@@ -141,6 +142,7 @@ extension InspectorView {
                 .buttonStyle(.plain)
                 .disabled(!canSubmitFollowUp)
                 .help("Ask (↩)")
+                .accessibilityLabel("Ask")
             }
         }
         .padding(.horizontal, DS.Spacing.sm)

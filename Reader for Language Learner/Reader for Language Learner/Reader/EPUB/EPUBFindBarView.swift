@@ -50,6 +50,7 @@ struct EPUBFindBarView: View {
             .disabled(searchManager.query.isEmpty)
             .keyboardShortcut(.return, modifiers: [.shift])
             .help("Previous Match (⇧↩)")
+            .accessibilityLabel("Previous Match")
 
             Button { epubManager.findInPage(searchManager.query) } label: {
                 Image(systemName: "chevron.down")
@@ -57,6 +58,7 @@ struct EPUBFindBarView: View {
             .disabled(searchManager.query.isEmpty)
             .keyboardShortcut("g", modifiers: [.command])
             .help("Next Match (⌘G)")
+            .accessibilityLabel("Next Match")
 
             Text(matchLabel)
                 .font(DS.Typography.mono)
@@ -68,6 +70,7 @@ struct EPUBFindBarView: View {
             }
             .buttonStyle(.plain)
             .help("Close Find (Esc)")
+            .accessibilityLabel("Close Find")
         }
         .padding(.horizontal, DS.Spacing.sm + DS.Spacing.xs)
         .padding(.vertical, DS.Spacing.sm)

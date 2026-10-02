@@ -20,6 +20,9 @@ struct ReaderMenuCommands: Commands {
             Button("What's New in RELL") {
                 NotificationCenter.default.post(name: .whatsNewCommand, object: nil)
             }
+            Button("Reading Tour") {
+                NotificationCenter.default.post(name: .readingTourCommand, object: nil)
+            }
         }
 
         // ── File ──────────────────────────────────────────────────────

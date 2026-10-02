@@ -385,6 +385,7 @@ struct SavedWordsListView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Clear all saved words")
+                .accessibilityLabel("Clear all saved words")
             }
         }
         .controlSize(.small)
@@ -416,6 +417,7 @@ struct SavedWordsListView: View {
             }
             .buttonStyle(.plain)
             .help("Select or deselect all visible words")
+            .accessibilityLabel("Select or deselect all visible words")
 
             Menu {
                 Section("Add to Deck") {
@@ -442,6 +444,7 @@ struct SavedWordsListView: View {
                 Image(systemName: "tag")
                     .font(DS.Typography.caption)
             }
+            .accessibilityLabel("Decks for the selected words")
             .menuStyle(.borderlessButton)
             .frame(width: 34)
             .disabled(multiSelection.isEmpty)
@@ -477,6 +480,7 @@ struct SavedWordsListView: View {
                 Image(systemName: "slider.horizontal.3")
                     .font(DS.Typography.caption)
             }
+            .accessibilityLabel("Change level or language of the selected words")
             .menuStyle(.borderlessButton)
             .frame(width: 34)
             .disabled(multiSelection.isEmpty)
@@ -492,6 +496,7 @@ struct SavedWordsListView: View {
             .buttonStyle(.plain)
             .disabled(multiSelection.isEmpty)
             .help("Delete the selected words")
+            .accessibilityLabel("Delete the selected words")
         }
         .controlSize(.small)
         .padding(.horizontal, DS.Spacing.sm)

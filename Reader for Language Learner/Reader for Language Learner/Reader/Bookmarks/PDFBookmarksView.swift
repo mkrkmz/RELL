@@ -150,6 +150,8 @@ private struct BookmarkRow: View {
                         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
                 }
                 .buttonStyle(.plain)
+                .help("Edit bookmark note")
+                .accessibilityLabel("Edit bookmark note")
                 .transition(.opacity.combined(with: .scale))
             } else {
                 Image(systemName: "chevron.right")
@@ -182,8 +184,9 @@ private struct BookmarkNoteSheet: View {
                     .font(DS.Typography.headline)
                     .foregroundStyle(DS.Color.textPrimary)
                 Spacer()
-                Button("", systemImage: "xmark.circle.fill") { dismiss() }
+                Button("Close", systemImage: "xmark.circle.fill") { dismiss() }
                     .buttonStyle(.plain)
+                    .labelStyle(.iconOnly)
                     .foregroundStyle(DS.Color.textTertiary)
             }
             .padding(DS.Spacing.lg)

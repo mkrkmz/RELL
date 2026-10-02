@@ -618,8 +618,10 @@ private struct DocumentStatsSheet: View {
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
                 Spacer()
-                Button("", systemImage: "xmark.circle.fill") { dismiss() }
+                Button("Close", systemImage: "xmark.circle.fill") { dismiss() }
                     .buttonStyle(.plain)
+                    .labelStyle(.iconOnly)
+                    .keyboardShortcut(.cancelAction)
                     .foregroundStyle(DS.Color.textTertiary)
             }
             .padding(DS.Spacing.lg)
@@ -715,8 +717,10 @@ private struct ManageCollectionsSheet: View {
                     .font(DS.Typography.headline)
                     .foregroundStyle(DS.Color.textPrimary)
                 Spacer()
-                Button("", systemImage: "xmark.circle.fill") { dismiss() }
+                Button("Close", systemImage: "xmark.circle.fill") { dismiss() }
                     .buttonStyle(.plain)
+                    .labelStyle(.iconOnly)
+                    .keyboardShortcut(.cancelAction)
                     .foregroundStyle(DS.Color.textTertiary)
             }
             .padding(DS.Spacing.lg)
@@ -766,6 +770,8 @@ private struct ManageCollectionsSheet: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(DS.Color.textSecondary)
+                .help("Rename collection")
+                .accessibilityLabel("Rename collection")
                 Button(role: .destructive) {
                     store.deleteCollection(id: collection.id)
                 } label: {
@@ -773,6 +779,8 @@ private struct ManageCollectionsSheet: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(DS.Color.danger)
+                .help("Delete collection")
+                .accessibilityLabel("Delete collection")
             }
         }
         .padding(.vertical, DS.Spacing.xxs)

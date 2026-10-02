@@ -60,6 +60,17 @@ project follows [Semantic Versioning](https://semver.org).
 - **What's New.** After an update, a short page shows what changed. It's
   also in Help ▸ What's New in RELL.
 
+- **Settings in six tabs.** Reading, Study, AI, Prompts, Appearance and
+  Data, instead of one long General tab. Your settings are unchanged. The
+  daily reading goal can now be set in Study too.
+- **A tour of the reading loop.** New users see four short pages after
+  setup — select, understand, save, review — and anyone can open them
+  again from Help ▸ Reading Tour.
+- **Better with VoiceOver and the keyboard.** Every icon-only button has a
+  name, and more windows close with Esc.
+- **Consistent Turkish.** "Inspector" and "tekrar bekleyen" are used
+  everywhere.
+
 ### Fixed
 
 - "In this context" and "General meaning" cards no longer show the
