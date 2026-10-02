@@ -282,7 +282,7 @@ araclar bir yerde. **Maketle baslar.**
       `WhatsNewSheet`. xcstrings: kacisli tirnakli anahtarlar icin bos nesne
       deseni duzeltildi. Testler `HomeLibraryWordsTests` (6). Gorsel kontrol
       gecici render ile. `make ci-test` 638 test, 0 hata
-- [ ] **Canli tur (kullanici)** — (1) ana ekran: Devam, tekrar + hedef yan
+- [x] **Canli tur (kullanici)** — tamam (2026-10-02, sorunsuz). (1) ana ekran: Devam, tekrar + hedef yan
       yana, Araclar satiri (uc dugme); (2) kitaplik: Tumunu gor ›, izgara/
       liste, raflar (Makaleler, Hikayeler; bos raf dugmesi); (3) kelimeler:
       satir, Filtre menusu, etkin filtre cipi kaldirma, bos liste dugmeleri;
