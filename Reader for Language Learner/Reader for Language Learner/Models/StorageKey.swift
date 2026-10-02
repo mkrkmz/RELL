@@ -27,6 +27,8 @@ nonisolated enum StorageKey {
     static let epubFontSize = "epubFontSize"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
+    /// The "major.minor" whose What's New page was last shown (v14 S3).
+    static let whatsNewLastSeen = "whatsNewLastSeen"
     static let hoverDictionaryEnabled = "hoverDictionaryEnabled"
     static let interlinearGlossEnabled = "interlinearGlossEnabled"
     static let inspectorShowMoreModules = "inspectorShowMoreModules"   // unused since v14 S2 (More is a menu)
@@ -36,6 +38,8 @@ nonisolated enum StorageKey {
     static let karaokeEnabled = "karaokeEnabled"
     static let learnerLevel = "learnerLevel"
     static let librarySortOrder = "librarySortOrder"
+    /// Library as covers or as a list (v14 S3).
+    static let libraryViewStyle = "libraryViewStyle"
     static let menuBarExtraEnabled = "menuBarExtraEnabled"
     static let pageAnalysisEnabled = "pageAnalysisEnabled"
     static let pageTheme = "pageTheme"

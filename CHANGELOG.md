@@ -45,6 +45,21 @@ project follows [Semantic Versioning](https://semver.org).
 - **The Inspector can match the page.** A new setting in Appearance lets it
   take the paper, sepia, gray, dark or night tones. It's off by default.
 
+- **Home puts today first.** "Continue" on the book you're reading, then
+  today's reviews and your reading goal side by side, and a Tools row:
+  Import Web Article, Story From Your Words and the Review window.
+- **Library shelves and a list view.** Articles and stories have their own
+  shelves next to Books and PDFs, and the library can show a list with
+  where you are, saved words, how much you know and your progress.
+- **Simpler word list.** Each word shows its level and status, its meaning
+  in one line and where you last met it. Deck, level and language are in
+  one Filter menu, and the filters in use can be removed with one click.
+- **Empty screens say what to do,** and offer the button that does it
+  where there is one: bookmark this page, clear the search, import an
+  article.
+- **What's New.** After an update, a short page shows what changed. It's
+  also in Help ▸ What's New in RELL.
+
 ### Fixed
 
 - "In this context" and "General meaning" cards no longer show the

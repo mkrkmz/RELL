@@ -27,6 +27,8 @@ struct LibraryView: View {
     @State private var newCollectionName = ""
     @State private var showingManageCollections = false
     @AppStorage(StorageKey.librarySortOrder) private var sortOrderRaw: String = LibrarySortOrder.lastOpened.rawValue
+    @AppStorage(StorageKey.libraryViewStyle) private var viewStyleRaw: String = LibraryCard.Style.grid.rawValue
+    private var viewStyle: LibraryCard.Style { LibraryCard.Style(rawValue: viewStyleRaw) ?? .grid }
     @FocusState private var searchFocused: Bool
 
     private var sortOrder: LibrarySortOrder {
@@ -43,7 +45,9 @@ struct LibraryView: View {
         case .all: break
         case .pinned: matching = matching.filter(\.isPinned)
         case .pdf: matching = matching.filter { !$0.isEPUB }
-        case .epub: matching = matching.filter(\.isEPUB)
+        case .epub: matching = matching.filter { $0.isEPUB && $0.shelf == .books }
+        case .articles: matching = matching.filter { $0.shelf == .articles }
+        case .stories: matching = matching.filter { $0.shelf == .stories }
         case .collection(let id): matching = matching.filter { $0.collectionID == id }
         }
 
@@ -72,6 +76,12 @@ struct LibraryView: View {
 
             if filteredDocuments.isEmpty {
                 emptyResult
+            } else if viewStyle == .list {
+                LazyVStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    ForEach(filteredDocuments) { document in
+                        card(for: document, style: .list)
+                    }
+                }
             } else {
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 150, maximum: 190), spacing: DS.Spacing.lg)],
@@ -79,18 +89,7 @@ struct LibraryView: View {
                     spacing: DS.Spacing.lg
                 ) {
                     ForEach(filteredDocuments) { document in
-                        LibraryCard(
-                            document: document,
-                            cover: cover(for: document),
-                            collections: recentDocumentStore.collections,
-                            onOpen: onOpen.map { open in { open(document) } },
-                            onRemove: onRemove.map { remove in { remove(document) } },
-                            onShowStats: statsProvider != nil ? { statsDocument = document } : nil,
-                            onTogglePin: { recentDocumentStore.setPinned(!document.isPinned, id: document.id) },
-                            onAssignToCollection: { recentDocumentStore.assign(id: document.id, to: $0) },
-                            onRequestNewCollection: { pendingCollectionAssignment = document },
-                            onManageCollections: { showingManageCollections = true }
-                        )
+                        card(for: document, style: .grid)
                     }
                 }
             }
@@ -140,6 +139,23 @@ struct LibraryView: View {
         return coverStore.cover(for: document.path)
     }
 
+    private func card(for document: RecentDocument, style: LibraryCard.Style) -> some View {
+        LibraryCard(
+            document: document,
+            style: style,
+            cover: cover(for: document),
+            savedWords: style == .list ? statsProvider?(document).savedWords : nil,
+            collections: recentDocumentStore.collections,
+            onOpen: onOpen.map { open in { open(document) } },
+            onRemove: onRemove.map { remove in { remove(document) } },
+            onShowStats: statsProvider != nil ? { statsDocument = document } : nil,
+            onTogglePin: { recentDocumentStore.setPinned(!document.isPinned, id: document.id) },
+            onAssignToCollection: { recentDocumentStore.assign(id: document.id, to: $0) },
+            onRequestNewCollection: { pendingCollectionAssignment = document },
+            onManageCollections: { showingManageCollections = true }
+        )
+    }
+
     // MARK: - Header
 
     private var header: some View {
@@ -166,6 +182,17 @@ struct LibraryView: View {
                     .help("Search the library (⇧⌘F)")
             }
 
+            Picker("View", selection: $viewStyleRaw) {
+                Image(systemName: "square.grid.2x2").tag(LibraryCard.Style.grid.rawValue)
+                    .accessibilityLabel("Covers")
+                Image(systemName: "list.bullet").tag(LibraryCard.Style.list.rawValue)
+                    .accessibilityLabel("List")
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .help("Show covers or a list")
+
             Picker("Sort", selection: $sortOrderRaw) {
                 ForEach(LibrarySortOrder.allCases) { order in
                     Text(order.label).tag(order.rawValue)
@@ -189,12 +216,43 @@ struct LibraryView: View {
             .accessibilityHidden(true)
     }
 
+    /// Says why the shelf is empty and offers the one thing that fills it
+    /// (v14 S3).
+    @ViewBuilder
     private var emptyResult: some View {
-        DSEmptyState(
-            icon: "magnifyingglass",
-            title: "No Results",
-            message: "No documents match \u{201C}\(searchText)\u{201D}."
-        )
+        if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            DSEmptyState(
+                icon: "magnifyingglass",
+                title: "No Results",
+                message: "No documents match \u{201C}\(searchText)\u{201D}.",
+                action: { searchText = "" },
+                actionLabel: "Clear Search"
+            )
+        } else if activeFilter == .articles {
+            DSEmptyState(
+                icon: "globe",
+                title: "No Articles Yet",
+                message: "Import a web page and read it here like a book.",
+                action: { NotificationCenter.default.post(name: .importWebArticleCommand, object: nil) },
+                actionLabel: "Import Web Article…"
+            )
+        } else if activeFilter == .stories {
+            DSEmptyState(
+                icon: "text.book.closed",
+                title: "No Stories Yet",
+                message: "RELL can write a short story with the words you're learning.",
+                action: { NotificationCenter.default.post(name: .wordStoryCommand, object: nil) },
+                actionLabel: "Story From Your Words…"
+            )
+        } else {
+            DSEmptyState(
+                icon: "books.vertical",
+                title: "Nothing Here",
+                message: "No documents on this shelf.",
+                action: { activeFilter = .all },
+                actionLabel: "Show All"
+            )
+        }
     }
 
     // MARK: - Filter Chips
@@ -204,8 +262,10 @@ struct LibraryView: View {
             HStack(spacing: DS.Spacing.xs) {
                 filterChip(.all, title: String(localized: "All"), systemImage: nil)
                 filterChip(.pinned, title: String(localized: "Pinned"), systemImage: "pin.fill")
-                filterChip(.pdf, title: "PDF", systemImage: nil)
-                filterChip(.epub, title: "EPUB", systemImage: nil)
+                filterChip(.epub, title: String(localized: "Books"), systemImage: nil)
+                filterChip(.pdf, title: String(localized: "PDFs"), systemImage: nil)
+                filterChip(.articles, title: String(localized: "Articles"), systemImage: "globe")
+                filterChip(.stories, title: String(localized: "Stories"), systemImage: "text.book.closed")
                 ForEach(recentDocumentStore.collections) { collection in
                     filterChip(.collection(collection.id), title: collection.name, systemImage: "folder")
                 }
@@ -244,7 +304,10 @@ enum LibraryFilter: Hashable {
     case all
     case pinned
     case pdf
+    /// Books: EPUBs you opened, not articles or stories RELL made.
     case epub
+    case articles
+    case stories
     case collection(UUID)
 }
 
@@ -267,9 +330,14 @@ enum LibrarySortOrder: String, CaseIterable, Identifiable {
 
 // MARK: - Library Card
 
-private struct LibraryCard: View {
+struct LibraryCard: View {
+    enum Style: String { case grid, list }
+
     let document: RecentDocument
+    var style: Style = .grid
     var cover: NSImage?
+    /// Saved words from this document — shown in the list style.
+    var savedWords: Int? = nil
     var collections: [DocumentCollection] = []
     var onOpen: (() -> Void)?
     var onRemove: (() -> Void)?
@@ -290,6 +358,86 @@ private struct LibraryCard: View {
         Button {
             onOpen?()
         } label: {
+            if style == .list {
+                listLabel
+            } else {
+                gridLabel
+            }
+        }
+        .buttonStyle(.plain)
+        .disabled(onOpen == nil || !fileExists)
+        .opacity(fileExists ? 1 : 0.55)
+        .animation(DS.Animation.fast, value: isHovered)
+        .onHover { isHovered = $0 }
+        .contextMenu { documentMenu }
+        .accessibilityLabel("Open \(displayTitle), \(document.pageLabel)")
+    }
+
+    // MARK: List style (v14 S3)
+
+    private var listLabel: some View {
+        HStack(spacing: DS.Spacing.md) {
+            Group {
+                if let cover {
+                    Image(nsImage: cover).resizable().aspectRatio(contentMode: .fill)
+                } else {
+                    DS.Color.surfaceInset
+                        .overlay(Image(systemName: document.isEPUB ? "book" : "doc.text").foregroundStyle(DS.Color.textTertiary))
+                }
+            }
+            .frame(width: DS.Layout.coverMini.width, height: DS.Layout.coverMini.height)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
+
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: DS.Spacing.xs) {
+                    if document.isPinned {
+                        Image(systemName: "pin.fill")
+                            .font(DS.Typography.icon(9, weight: .semibold))
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                    Text(displayTitle)
+                        .font(DS.Typography.label)
+                        .foregroundStyle(fileExists ? DS.Color.textPrimary : DS.Color.textTertiary)
+                        .lineLimit(1)
+                }
+                Text(listSubtitle)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: DS.Spacing.md)
+
+            if let coverage = document.coverage?.profile, coverage.totalTokens > 0 {
+                CoverageBadge(profile: coverage)
+            }
+            if let progress = document.readingProgress {
+                Text("\(Int((progress * 100).rounded()))%")
+                    .font(DS.Typography.caption)
+                    .monospacedDigit()
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .frame(width: 40, alignment: .trailing)
+            }
+        }
+        .padding(.horizontal, DS.Spacing.md)
+        .padding(.vertical, DS.Spacing.sm)
+        .background(isHovered ? DS.Color.hoverOverlay : DS.Color.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+        .contentShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+    }
+
+    /// Kind · where you are · saved words.
+    private var listSubtitle: String {
+        guard fileExists else { return String(localized: "File not found") }
+        var parts: [String] = [document.shelf.localizedKind(isEPUB: document.isEPUB)]
+        if document.lastPageIndex != nil { parts.append(document.pageLabel) }
+        if let savedWords, savedWords > 0 { parts.append(String(localized: "\(savedWords) saved")) }
+        return parts.joined(separator: " · ")
+    }
+
+    // MARK: Grid style
+
+    private var gridLabel: some View {
             VStack(alignment: .leading, spacing: DS.Spacing.sm) {
                 coverArea
 
@@ -308,13 +456,10 @@ private struct LibraryCard: View {
                 }
             }
             .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(onOpen == nil || !fileExists)
-        .opacity(fileExists ? 1 : 0.55)
-        .animation(DS.Animation.fast, value: isHovered)
-        .onHover { isHovered = $0 }
-        .contextMenu {
+    }
+
+    @ViewBuilder
+    private var documentMenu: some View {
             if let onOpen {
                 Button("Open", action: onOpen)
                     .disabled(!fileExists)
@@ -359,8 +504,6 @@ private struct LibraryCard: View {
                 Divider()
                 Button("Remove from Library", role: .destructive, action: onRemove)
             }
-        }
-        .accessibilityLabel("Open \(displayTitle), \(document.pageLabel)")
     }
 
     private var coverArea: some View {
@@ -389,17 +532,8 @@ private struct LibraryCard: View {
             // How much of this book you already know — the number that
             // decides whether it's worth starting (L-V2).
             if let coverage = document.coverage?.profile, coverage.totalTokens > 0 {
-                Text("\(Int(coverage.knownShare * 100))%")
-                    .font(DS.Typography.caption2.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(
-                        DS.Color.coverageTint(for: coverage.difficulty).opacity(0.85),
-                        in: Capsule()
-                    )
+                CoverageBadge(profile: coverage, filled: true)
                     .padding(5)
-                    .help("You know \(percentText(coverage)) of this book's words")
             }
         }
         .overlay(alignment: .bottom) {
@@ -642,5 +776,38 @@ private struct ManageCollectionsSheet: View {
             }
         }
         .padding(.vertical, DS.Spacing.xxs)
+    }
+}
+
+// MARK: - Shelves
+
+/// Which shelf a document sits on (v14 S3): articles and stories are the
+/// EPUBs RELL writes into its own Articles and Stories folders.
+enum LibraryShelf {
+    case books, articles, stories
+
+    func localizedKind(isEPUB: Bool) -> String {
+        switch self {
+        case .articles: return String(localized: "Article")
+        case .stories:  return String(localized: "Story")
+        case .books:    return isEPUB ? "EPUB" : "PDF"
+        }
+    }
+
+    fileprivate static let articlesPath = folderPath(ArticleImporter.folderName)
+    fileprivate static let storiesPath = folderPath(WordStory.folderName)
+
+    private static func folderPath(_ name: String) -> String? {
+        guard let base = FileManager.default.rellAppSupportDirectory() else { return nil }
+        return base.appendingPathComponent(name, isDirectory: true).standardizedFileURL.path + "/"
+    }
+}
+
+extension RecentDocument {
+    var shelf: LibraryShelf {
+        let path = URL(fileURLWithPath: self.path).standardizedFileURL.path
+        if let articles = LibraryShelf.articlesPath, path.hasPrefix(articles) { return .articles }
+        if let stories = LibraryShelf.storiesPath, path.hasPrefix(stories) { return .stories }
+        return .books
     }
 }

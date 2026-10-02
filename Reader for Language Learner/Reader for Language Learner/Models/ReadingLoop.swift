@@ -463,6 +463,10 @@ nonisolated enum WordDiff {
 /// A short story built around the words due for review (Roadmap v13
 /// Sprint 4) — review by reading. It never touches the schedule.
 nonisolated enum WordStory {
+    /// Under Application Support/RELL — where the library finds its
+    /// "Stories" shelf (v14 S3).
+    static let folderName = "Stories"
+
 
     struct Story: Equatable {
         let title: String

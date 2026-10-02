@@ -12,6 +12,7 @@ struct SavedWordsListView: View {
     var currentDocumentName: String?
 
     @Environment(CEFREstimator.self) private var cefrEstimator
+    @Environment(WordEncounterStore.self) private var encounterStore: WordEncounterStore?
 
     @AppStorage(StorageKey.savedWordsSortOrder) private var sortRaw = SavedWordsSortOrder.dateDesc.rawValue
     @State private var searchText    = ""
@@ -220,6 +221,7 @@ struct SavedWordsListView: View {
         if filteredWords.isEmpty {
             emptyState
         } else {
+            let lastEncounters = encounterStore?.latestByWord() ?? [:]
             List {
                 ForEach(filteredWords) { word in
                     HStack(spacing: DS.Spacing.sm) {
@@ -229,7 +231,7 @@ struct SavedWordsListView: View {
                                 .foregroundStyle(multiSelection.contains(word.id)
                                                  ? DS.Color.accent : DS.Color.textTertiary)
                         }
-                        SavedWordRow(word: word)
+                        SavedWordRow(word: word, lastEncounter: lastEncounters[word.id])
                     }
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -305,12 +307,19 @@ struct SavedWordsListView: View {
 
     // MARK: - Empty State
 
+    /// Says why the list is empty and, when a search or filter is the
+    /// reason, offers to undo it (v14 S3).
+    @ViewBuilder
     private var emptyState: some View {
-        DSEmptyState(
-            icon: searchText.isEmpty && selectedFilter == .all ? "star" : "magnifyingglass",
-            title: emptyStateTitle,
-            message: emptyStateMessage
-        )
+        if !searchText.isEmpty {
+            DSEmptyState(icon: "magnifyingglass", title: emptyStateTitle, message: emptyStateMessage,
+                         action: { searchText = "" }, actionLabel: "Clear Search")
+        } else if selectedFilter != .all {
+            DSEmptyState(icon: "line.3.horizontal.decrease.circle", title: emptyStateTitle, message: emptyStateMessage,
+                         action: { selectedFilter = .all }, actionLabel: "Show All Words")
+        } else {
+            DSEmptyState(icon: "star", title: emptyStateTitle, message: emptyStateMessage)
+        }
     }
 
     private var emptyStateTitle: LocalizedStringKey {
@@ -319,7 +328,7 @@ struct SavedWordsListView: View {
 
     private var emptyStateMessage: LocalizedStringKey? {
         if searchText.isEmpty && selectedFilter == .all {
-            return "Save vocabulary from the reader, then review due words here."
+            return "While reading, double-click a word and choose Save. It shows up here, ready to review."
         }
         if selectedFilter == .thisPDF {
             return "No vocabulary saved from this document yet. Select text and save it from the inspector."

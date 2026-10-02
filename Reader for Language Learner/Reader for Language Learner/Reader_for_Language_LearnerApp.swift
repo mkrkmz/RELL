@@ -170,6 +170,11 @@ private struct MenuBarQuickLookupView: View {
 
 extension Notification.Name {
     static let openPDFCommand = Notification.Name("openPDFCommand")
+    /// Help ▸ What's New in RELL — the key window shows the page.
+    static let whatsNewCommand = Notification.Name("whatsNewCommand")
+    /// An empty Bookmarks list's button — the key window toggles a bookmark
+    /// at the current page or position, as ⌘B does (v14 S3).
+    static let toggleBookmarkCommand = Notification.Name("toggleBookmarkCommand")
     /// Object: the selected passage. The key window rewrites it at the
     /// reader's level (v13 Sprint 3).
     static let simplifySelectionCommand = Notification.Name("simplifySelectionCommand")

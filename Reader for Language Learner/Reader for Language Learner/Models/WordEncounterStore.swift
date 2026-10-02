@@ -42,6 +42,20 @@ final class WordEncounterStore {
     // MARK: - Queries
 
     /// A word's encounters, newest first.
+    /// Each word's most recent encounter, built in one pass — for a list
+    /// that shows it on every row (v14 S3).
+    func latestByWord() -> [UUID: WordEncounter] {
+        Self.latestByWord(in: encounters)
+    }
+
+    nonisolated static func latestByWord(in encounters: [WordEncounter]) -> [UUID: WordEncounter] {
+        var latest: [UUID: WordEncounter] = [:]
+        for encounter in encounters where encounter.date > (latest[encounter.wordID]?.date ?? .distantPast) {
+            latest[encounter.wordID] = encounter
+        }
+        return latest
+    }
+
     func encounters(for wordID: UUID) -> [WordEncounter] {
         encounters.filter { $0.wordID == wordID }.sorted { $0.date > $1.date }
     }

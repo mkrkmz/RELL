@@ -10,6 +10,8 @@ import SwiftUI
 
 struct SavedWordRow: View {
     let word: SavedWord
+    /// The latest time this word turned up in your reading, if ever.
+    var lastEncounter: WordEncounter? = nil
 
     @State private var isHovered = false
 
@@ -19,149 +21,67 @@ struct SavedWordRow: View {
         return f
     }()
 
+    // v14 S3: three things per row — level and status, the meaning in one
+    // line, and where you last met the word. Source page, domain, mode,
+    // save date, tags, notes and the next review are on the word's page.
+    // (Tags used a FlowLayout, which re-flows with the column's width — not
+    // allowed in an AppKit-sized column since v14.)
     var body: some View {
-        HStack(alignment: .top, spacing: DS.Spacing.sm) {
-            // Mastery dot — color reflects learning progress
-            Circle()
-                .fill(word.masteryLevel.color.opacity(0.7))
-                .frame(width: 6, height: 6)
-                .padding(.top, 5)
-                .help(word.masteryLevel.label)
-
-            VStack(alignment: .leading, spacing: DS.Spacing.xxs + 1) {
-                // Term
-                HStack(spacing: DS.Spacing.xs) {
-                    Text(word.term)
-                        .font(DS.Typography.callout.weight(.medium))
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .lineLimit(1)
-                    if isHovered {
-                        SpeakButton(text: word.term, size: 11)
-                            .transition(.opacity)
-                    }
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: DS.Spacing.xs) {
+                Text(word.term)
+                    .font(DS.Typography.callout.weight(.medium))
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .lineLimit(1)
+                if isHovered {
+                    SpeakButton(text: word.term, size: 11)
+                        .transition(.opacity)
                 }
 
-                // Source + domain badge + date row
-                HStack(spacing: DS.Spacing.xs) {
-                    if let pdf = word.pdfFilename {
-                        HStack(spacing: 3) {
-                            Image(systemName: "doc.text")
-                                .font(DS.Typography.icon(9))
-                            Text(pdf)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        }
-                        .foregroundStyle(DS.Color.textTertiary)
-                        if let p = word.pageNumber {
-                            Text("p.\(p)")
-                                .foregroundStyle(DS.Color.textTertiary)
-                        }
-                    }
+                Spacer(minLength: DS.Spacing.xs)
 
-                    // Domain badge (hidden for General to reduce noise)
-                    let domain = DomainPreference(rawValue: word.domain) ?? .general
-                    if domain != .general {
-                        Text(domain.localizedTitle)
-                            .font(DS.Typography.caption2.weight(.semibold))
-                            .foregroundStyle(domain.badgeColor)
-                            .padding(.horizontal, DS.Spacing.xs)
-                            .padding(.vertical, 1)
-                            .background(domain.badgeColor.opacity(0.12))
-                            .clipShape(Capsule())
-                    }
-
-                    if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
-                        HStack(spacing: 2) {
-                            if word.cefrIsAuto {
-                                Image(systemName: "sparkle")
-                                    .font(DS.Typography.icon(7, weight: .semibold))
-                            }
-                            Text(cefr.rawValue)
-                                .font(DS.Typography.caption2.weight(.semibold))
-                        }
-                        .foregroundStyle(cefr.badgeColor)
-                        .padding(.horizontal, DS.Spacing.xs)
-                        .padding(.vertical, 1)
-                        .background(cefr.badgeColor.opacity(0.12))
-                        .clipShape(Capsule())
-                        .help(word.cefrIsAuto ? "AI-estimated level" : "CEFR level")
-                    }
-
-                    if let language = word.language.flatMap(Language.init) {
-                        Text(language.flag)
-                            .font(DS.Typography.caption2)
-                            .help(language.nativeName)
-                    }
-
-                    Spacer()
-
-                    // Mode indicator
-                    let mode = ExplainMode(rawValue: word.mode) ?? .word
-                    Image(systemName: mode == .word ? "character.cursor.ibeam" : "text.alignleft")
-                        .foregroundStyle(DS.Color.textTertiary)
-
-                    Text(Self.relativeFormatter.localizedString(for: word.savedAt, relativeTo: Date()))
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
-                .font(DS.Typography.caption2)
-
-                HStack(spacing: DS.Spacing.xs) {
-                    Label(word.reviewStatus.label, systemImage: word.reviewStatus.icon)
-                        .font(DS.Typography.caption2.weight(.semibold))
-                        .foregroundStyle(word.reviewStatus.color)
-
-                    if let nextReviewAt = word.nextReviewAt, word.reviewStatus != .mastered {
-                        Text("Next \(Self.relativeFormatter.localizedString(for: nextReviewAt, relativeTo: Date()))")
-                            .font(DS.Typography.caption2)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
-
-                // Tag chips
-                if !word.tags.isEmpty {
-                    FlowLayout(spacing: 3) {
-                        ForEach(word.tags, id: \.self) { tag in
-                            TagChip(tag: tag)
-                        }
-                    }
-                    .padding(.top, 1)
-                }
-
-                // Notes snippet
-                if !word.notes.isEmpty {
-                    Text(word.notes)
+                if let language = word.language.flatMap(Language.init), language != Language.storedTarget {
+                    Text(language.flag)
                         .font(DS.Typography.caption2)
-                        .foregroundStyle(DS.Color.textSecondary)
-                        .lineLimit(1)
-                        .italic()
+                        .help(language.nativeName)
                 }
-
-                // Module output dots — colored indicator per saved module
-                let savedModules = ModuleType.allCases.filter {
-                    !(word.llmOutputs[$0.rawValue] ?? "")
-                        .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                }
-                if !savedModules.isEmpty {
-                    HStack(spacing: DS.Spacing.xs) {
-                        ForEach(savedModules) { module in
-                            Circle()
-                                .fill(module.accentColor.opacity(0.75))
-                                .frame(width: 5, height: 5)
+                if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
+                    HStack(spacing: 2) {
+                        if word.cefrIsAuto {
+                            Image(systemName: "sparkle")
+                                .font(DS.Typography.icon(7, weight: .semibold))
                         }
+                        Text(cefr.rawValue)
                     }
-                    .padding(.top, 1)
+                    .font(DS.Typography.caption2.weight(.semibold))
+                    .foregroundStyle(cefr.badgeColor)
+                    .padding(.horizontal, DS.Spacing.xs)
+                    .padding(.vertical, 1)
+                    .background(cefr.badgeColor.opacity(0.12), in: Capsule())
+                    .help(word.cefrIsAuto ? "AI-estimated level" : "CEFR level")
                 }
+                Text(word.reviewStatus.label)
+                    .font(DS.Typography.caption2.weight(.semibold))
+                    .foregroundStyle(word.reviewStatus.color)
+                    .padding(.horizontal, DS.Spacing.xs)
+                    .padding(.vertical, 1)
+                    .background(word.reviewStatus.color.opacity(0.12), in: Capsule())
+                    .lineLimit(1)
+            }
 
-                // Definition snippet (from saved LLM output)
-                if let defn = word.llmOutputs[ModuleType.definitionEN.rawValue]?
-                    .trimmingCharacters(in: .whitespacesAndNewlines),
-                   !defn.isEmpty {
-                    Text(defn)
-                        .font(DS.Typography.caption2)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .lineLimit(2)
-                        .padding(.top, 1)
-                }
+            if let meaning = Self.oneLineMeaning(of: word) {
+                Text(AttributedResultView.markdown(meaning))
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .lineLimit(1)
+            }
+
+            if let lastMet = lastMetText {
+                Text(lastMet)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
         }
         .padding(.vertical, DS.Spacing.xxs)
@@ -174,5 +94,31 @@ struct SavedWordRow: View {
         .accessibilityLabel("\(word.term), \(word.masteryLevel.localizedTitle)")
         .accessibilityHint("Tap to view details")
         .accessibilityValue(word.pdfFilename.map { "from \($0)" } ?? "")
+    }
+
+    /// "Last met: <book> · <when>", or where it was saved when it hasn't
+    /// turned up in your reading since.
+    private var lastMetText: String? {
+        if let lastEncounter {
+            let when = Self.relativeFormatter.localizedString(for: lastEncounter.date, relativeTo: Date())
+            return String(localized: "Last met: \(lastEncounter.documentTitle) · \(when)")
+        }
+        guard let source = word.pdfFilename else { return nil }
+        let when = Self.relativeFormatter.localizedString(for: word.savedAt, relativeTo: Date())
+        return String(localized: "Saved from \(source) · \(when)")
+    }
+
+    /// The meaning in your language if a module wrote one, else the
+    /// definition — first line only.
+    static func oneLineMeaning(of word: SavedWord) -> String? {
+        for module in [ModuleType.meaningTR, .definitionEN] {
+            let text = word.llmOutputs[module.rawValue] ?? ""
+            if let line = text.split(whereSeparator: \.isNewline)
+                .map({ $0.trimmingCharacters(in: .whitespaces) })
+                .first(where: { !$0.isEmpty }) {
+                return line
+            }
+        }
+        return nil
     }
 }

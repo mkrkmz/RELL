@@ -32,42 +32,47 @@ struct DashboardActivityCard: View {
         progress >= 1
     }
 
+    // Half the home column since v14 S3 (beside the review card): the ring
+    // and the text on top, the week's chart under them.
     var body: some View {
-        HStack(spacing: DS.Spacing.lg) {
-            goalRing
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            HStack(spacing: DS.Spacing.md) {
+                goalRing
 
-            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                Text(goalReached ? "Daily goal reached" : "\(todayMinutes) of \(goalMinutes) min today")
-                    .font(DS.Typography.label)
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                    Text(goalReached ? "Daily goal reached" : "\(todayMinutes) of \(goalMinutes) min today")
+                        .font(DS.Typography.label)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .lineLimit(1)
 
-                if readingStreak > 0 {
-                    HStack(spacing: DS.Spacing.xs) {
-                        Image(systemName: "flame.fill")
-                            .font(DS.Typography.icon(10))
-                            .foregroundStyle(streakAtRisk ? DS.Color.warning : (goalReached ? DS.Color.warning : DS.Color.textTertiary))
-                        if streakAtRisk {
-                            Text(readingStreak == 1 ? "1-day streak · read today to keep it" : "\(readingStreak)-day streak · read today to keep it")
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(DS.Color.warning)
-                        } else {
-                            Text(readingStreak == 1 ? "1-day streak" : "\(readingStreak)-day streak")
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(DS.Color.textTertiary)
+                    if readingStreak > 0 {
+                        HStack(spacing: DS.Spacing.xs) {
+                            Image(systemName: "flame.fill")
+                                .font(DS.Typography.icon(10))
+                                .foregroundStyle(streakAtRisk ? DS.Color.warning : (goalReached ? DS.Color.warning : DS.Color.textTertiary))
+                            if streakAtRisk {
+                                Text(readingStreak == 1 ? "1-day streak · read today to keep it" : "\(readingStreak)-day streak · read today to keep it")
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(DS.Color.warning)
+                            } else {
+                                Text(readingStreak == 1 ? "1-day streak" : "\(readingStreak)-day streak")
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(DS.Color.textTertiary)
+                            }
                         }
+                    } else {
+                        Text("Read a little every day")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
                     }
-                } else {
-                    Text("Read a little every day")
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.textTertiary)
                 }
+
+                Spacer(minLength: 0)
             }
 
-            Spacer(minLength: DS.Spacing.lg)
-
             weeklyChart
-                .frame(width: 190, height: 48)
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
         }
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.vertical, DS.Spacing.md)

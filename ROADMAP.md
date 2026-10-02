@@ -253,19 +253,41 @@ cumle secildiginde o cumle icin araclar. **Maketle baslar.**
 Amac: uygulamayi acinca ne yapilacagi, nereye gidilecegi tek bakista;
 araclar bir yerde. **Maketle baslar.**
 
-- [ ] **Bugun = merkez** — kaldigin yer, bugunun tekrarlari, okuma hedefi ve
+- [x] **Bugun = merkez** — kaldigin yer, bugunun tekrarlari, okuma hedefi ve
       bir **"Araclar"** satiri (Makale ice aktar, Kelimelerinden hikaye,
       Tekrar penceresi) — daginik sheet'lere tek giris
-- [ ] **Kitaplik** — kapak izgarasi/liste gecisi, zorluk/kapsama rozeti,
+- [x] **Kitaplik** — kapak izgarasi/liste gecisi, zorluk/kapsama rozeti,
       koleksiyonlar daha gorunur; ice aktarilan makaleler ve hikayeler ayri
       rafta ("Makaleler", "Hikayeler")
-- [ ] **Kelimeler** — liste satirlari sadelesir (durum, seviye, son
+- [x] **Kelimeler** — liste satirlari sadelesir (durum, seviye, son
       karsilasma), filtreler tek satirda; kelime sayfasi kenar cubugundan da
       acilir
-- [ ] **Bos durumlar** — her bos ekran ne yapilacagini soyler ve tek eylem
+- [x] **Bos durumlar** — her bos ekran ne yapilacagini soyler ve tek eylem
       sunar
-- [ ] **Yenilikler** — guncellemeden sonraki ilk acilista kisa bir "Bu
+- [x] **Yenilikler** — guncellemeden sonraki ilk acilista kisa bir "Bu
       surumde" sayfasi (CHANGELOG ozetinden, TR)
+- [x] Uygulama (maket onayi 2026-10-02; kararlar: tekrar + hedef yan yana,
+      liste gorunumu varsayilan izgara, satirdan tarih/alan/mod kalkti —
+      bayrak yalniz hedef dilden farkliysa, Yenilikler bir kez kendiliginden).
+      Bugun: "Devam" hapi, `DashboardToolsRow`, etkinlik karti dikey (grafik
+      altta). Kitaplik: `LibraryCard.Style` grid/list, raflar
+      `RecentDocument.shelf` (Articles/Stories klasorunden), raf bos
+      durumlari eylemli; `CoverageBadge` ortak. Kelimeler: satir uc bilgi +
+      `WordEncounterStore.latestByWord` (liste basina tek gecis); etiketler
+      satirdan kalkti (FlowLayout sutunda — v14 kuralina aykiriydi); filtre:
+      durum + siralama + tek "Filtre" menusu, etkin filtre cipleri. Bos
+      durumlar: yer imi (⌘B, `.toggleBookmarkCommand`), arama/filtre
+      temizle, vurgu/not yonergeleri. Yenilikler: `WhatsNew` (elle yazilir,
+      "major.minor"; yerel derleme 1.0 → yalniz Yardim menusunden),
+      `WhatsNewSheet`. xcstrings: kacisli tirnakli anahtarlar icin bos nesne
+      deseni duzeltildi. Testler `HomeLibraryWordsTests` (6). Gorsel kontrol
+      gecici render ile. `make ci-test` 638 test, 0 hata
+- [ ] **Canli tur (kullanici)** — (1) ana ekran: Devam, tekrar + hedef yan
+      yana, Araclar satiri (uc dugme); (2) kitaplik: Tumunu gor ›, izgara/
+      liste, raflar (Makaleler, Hikayeler; bos raf dugmesi); (3) kelimeler:
+      satir, Filtre menusu, etkin filtre cipi kaldirma, bos liste dugmeleri;
+      (4) yer imleri bos: "Bu Sayfayi Isaretle"; (5) Yardim ▸ RELL'deki
+      Yenilikler
 
 ## Sprint 4 — "Cila: ayarlar, tanitim, erisilebilirlik" (Should)
 

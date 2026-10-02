@@ -107,21 +107,29 @@ struct EmptyStateView: View {
 
             // Today's work in the order it's usually done: pick the book
             // back up, clear the reviews, then the reading goal.
-            if let savedWordsStore, hasSavedWords {
-                DashboardWordCard(
-                    store: savedWordsStore,
-                    onReviewAll: onReview
-                )
+            // Today's reviews and today's reading side by side (v14 S3):
+            // each is one number and one thing to do.
+            HStack(alignment: .top, spacing: DS.Spacing.md) {
+                if let savedWordsStore, hasSavedWords {
+                    DashboardWordCard(
+                        store: savedWordsStore,
+                        onReviewAll: onReview
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+
+                if let sessionStore, heroDocument != nil {
+                    DashboardActivityCard(
+                        todayReadingTime: todayReadingTime,
+                        last7Days: sessionStore.last7Days,
+                        readingStreak: sessionStore.currentStreak,
+                        streakAtRisk: sessionStore.isStreakAtRisk
+                    )
+                    .frame(maxWidth: .infinity)
+                }
             }
 
-            if let sessionStore, heroDocument != nil {
-                DashboardActivityCard(
-                    todayReadingTime: todayReadingTime,
-                    last7Days: sessionStore.last7Days,
-                    readingStreak: sessionStore.currentStreak,
-                    streakAtRisk: sessionStore.isStreakAtRisk
-                )
-            }
+            DashboardToolsRow(onReview: onReview)
 
             if !otherDocuments.isEmpty {
                 RecentDocumentList(
@@ -189,6 +197,63 @@ private struct DashboardHeader: View {
     }
 }
 
+// MARK: - Tools
+
+/// The tools that open their own window or sheet, in one place (v14 S3).
+/// Before, each was reachable only from a menu or ⌘K.
+private struct DashboardToolsRow: View {
+    var onReview: (() -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            Text("Tools")
+                .dsOverlineLabel()
+                .textCase(.uppercase)
+            HStack(spacing: DS.Spacing.md) {
+                tile("Import Web Article", detail: "Read a web page like a book", icon: "globe") {
+                    NotificationCenter.default.post(name: .importWebArticleCommand, object: nil)
+                }
+                tile("Story From Your Words", detail: "A short story with the words due", icon: "text.book.closed") {
+                    NotificationCenter.default.post(name: .wordStoryCommand, object: nil)
+                }
+                if let onReview {
+                    tile("Review Window", detail: "Study cards in their own window", icon: "rectangle.stack", action: onReview)
+                }
+            }
+        }
+    }
+
+    private func tile(
+        _ title: LocalizedStringKey, detail: LocalizedStringKey, icon: String, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                Image(systemName: icon)
+                    .font(DS.Typography.icon(15, weight: .medium))
+                    .foregroundStyle(DS.Color.accent)
+                    // Same box for every symbol, so the titles line up.
+                    .frame(width: 22, height: 20, alignment: .leading)
+                    .padding(.bottom, DS.Spacing.xxs)
+                Text(title)
+                    .font(DS.Typography.label)
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                Text(detail)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(DS.Spacing.md)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
+            .contentShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - Continue Reading Hero
 
 private struct ContinueReadingHero: View {
@@ -242,9 +307,14 @@ private struct ContinueReadingHero: View {
 
                 Spacer(minLength: DS.Spacing.lg)
 
-                Image(systemName: "arrow.right")
-                    .font(DS.Typography.icon(14, weight: .semibold))
-                    .foregroundStyle(isHovered ? DS.Color.accent : DS.Color.textTertiary)
+                // The card is the button; this says what it does (v14 S3).
+                Text("Continue")
+                    .font(DS.Typography.callout.weight(.semibold))
+                    .foregroundStyle(SwiftUI.Color.white)
+                    .padding(.horizontal, DS.Spacing.md)
+                    .padding(.vertical, DS.Spacing.xs + 1)
+                    .background(isHovered ? DS.Color.accentStrong : DS.Color.accent, in: Capsule())
+                    .fixedSize()
             }
             .padding(DS.Spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -425,6 +495,10 @@ private struct RecentDocumentRow: View {
                     .lineLimit(1)
 
                 Spacer(minLength: DS.Spacing.md)
+
+                if let coverage = document.coverage?.profile, coverage.totalTokens > 0 {
+                    CoverageBadge(profile: coverage)
+                }
 
                 Text(trailingText)
                     .font(DS.Typography.caption)

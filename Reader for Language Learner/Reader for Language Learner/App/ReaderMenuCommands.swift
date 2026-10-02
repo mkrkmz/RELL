@@ -15,6 +15,13 @@ struct ReaderMenuCommands: Commands {
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
+        // ── Help ──────────────────────────────────────────────────────
+        CommandGroup(before: .help) {
+            Button("What's New in RELL") {
+                NotificationCenter.default.post(name: .whatsNewCommand, object: nil)
+            }
+        }
+
         // ── File ──────────────────────────────────────────────────────
         CommandGroup(after: .newItem) {
             Button("Open…") {

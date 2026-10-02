@@ -89,7 +89,9 @@ struct EPUBBookmarksView: View {
         DSEmptyState(
             icon:    "bookmark",
             title:   "No Bookmarks",
-            message: "Press ⌘B to bookmark your current position."
+            message: "Bookmark your place to come back to it. ⌘B does it from anywhere.",
+            action:  { NotificationCenter.default.post(name: .toggleBookmarkCommand, object: nil) },
+            actionLabel: "Bookmark This Spot"
         )
     }
 

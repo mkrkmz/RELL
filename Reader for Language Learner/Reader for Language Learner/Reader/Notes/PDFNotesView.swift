@@ -195,7 +195,7 @@ struct PDFNotesView: View {
             title: isFiltered ? "No Matching Notes" : "No Notes Yet",
             message: isFiltered
                 ? "Try a different search or filter for \(filename)."
-                : "Select a passage, add a note, then turn useful ideas into saved words or review items."
+                : "Select a passage, right-click and choose Add Note."
         )
     }
 

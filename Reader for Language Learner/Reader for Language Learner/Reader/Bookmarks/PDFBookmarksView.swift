@@ -83,7 +83,9 @@ struct PDFBookmarksView: View {
         DSEmptyState(
             icon:    "bookmark",
             title:   "No Bookmarks",
-            message: "Press ⌘B to bookmark the current page."
+            message: "Bookmark a page to come back to it. ⌘B does it from anywhere.",
+            action:  { NotificationCenter.default.post(name: .toggleBookmarkCommand, object: nil) },
+            actionLabel: "Bookmark This Page"
         )
     }
 

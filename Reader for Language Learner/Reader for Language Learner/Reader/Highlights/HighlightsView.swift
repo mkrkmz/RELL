@@ -94,7 +94,7 @@ struct HighlightsView: View {
         DSEmptyState(
             icon:    "highlighter",
             title:   "No Highlights",
-            message: "Select text, right-click, and choose Highlight to mark passages."
+            message: "Select a passage, then choose Tools ▸ Highlight in the bar above it, or right-click ▸ Highlight."
         )
     }
 

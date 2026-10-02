@@ -115,7 +115,7 @@ struct WordStorySheet: View {
 
     private func save(_ story: WordStory.Story, words: [String], used: [String], language: Language) throws -> URL {
         guard let base = FileManager.default.rellAppSupportDirectory() else { throw CocoaError(.fileNoSuchFile) }
-        let folder = base.appendingPathComponent("Stories", isDirectory: true)
+        let folder = base.appendingPathComponent(WordStory.folderName, isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let missing = words.filter { !used.contains($0) }
         let note = missing.isEmpty

@@ -26,155 +26,179 @@ struct SavedWordsFilterBar: View {
 
     @Environment(CEFREstimator.self) private var cefrEstimator
 
-    /// Controls must compress with the sidebar: fixed picker widths used to
-    /// force this row wider than the panel, clipping the whole list. Pickers
-    /// now have flexible frames and the count wraps to its own line when the
-    /// single-row layout doesn't fit.
+    /// v14 S3: status, sort and one Filter menu (deck, level, language) on
+    /// the first line; the count and the filters in effect — each removable
+    /// — on the second. Before, up to five controls competed for one row
+    /// and wrapped. Pickers have flexible frames so the row compresses with
+    /// the sidebar instead of forcing it wider.
     var body: some View {
-        ViewThatFits(in: .horizontal) {
+        VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
             HStack(spacing: DS.Spacing.xs) {
-                filterControls
-                Spacer(minLength: DS.Spacing.xs)
-                countText
+                Picker("", selection: Binding(
+                    get: { selectedFilter },
+                    set: { selectedFilter = $0 }
+                )) {
+                    ForEach(availableFilters) { filter in
+                        Text(filter.localizedTitle).tag(filter)
+                    }
+                }
+                .labelsHidden()
+                .controlSize(.mini)
+                .frame(minWidth: 60, maxWidth: 120)
+
+                Picker("", selection: Binding(
+                    get: { sortOrder },
+                    set: { sortOrder = $0 }
+                )) {
+                    ForEach(SavedWordsSortOrder.allCases) { o in
+                        Text(o.localizedTitle).tag(o)
+                    }
+                }
+                .labelsHidden()
+                .controlSize(.mini)
+                .frame(minWidth: 50, maxWidth: 90)
+
+                filterMenu
+
+                Spacer(minLength: 0)
             }
 
-            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                HStack(spacing: DS.Spacing.xs) {
-                    filterControls
-                    Spacer(minLength: 0)
-                }
+            HStack(spacing: DS.Spacing.xs) {
                 countText
+                activeFilterChips
+                Spacer(minLength: 0)
             }
+            .frame(height: 16)
         }
         .padding(.horizontal, DS.Spacing.sm)
         .padding(.vertical, DS.Spacing.xs)
     }
 
-    @ViewBuilder
-    private var filterControls: some View {
-        Picker("", selection: Binding(
-            get: { selectedFilter },
-            set: { selectedFilter = $0 }
-        )) {
-            ForEach(availableFilters) { filter in
-                Text(filter.localizedTitle).tag(filter)
-            }
-        }
-        .labelsHidden()
-        .controlSize(.mini)
-        .frame(minWidth: 76, maxWidth: 120)
+    private var activeCount: Int {
+        (selectedTag != nil ? 1 : 0) + (selectedCEFR != nil ? 1 : 0) + (selectedLanguage != nil ? 1 : 0)
+    }
 
-        Picker("", selection: Binding(
-            get: { sortOrder },
-            set: { sortOrder = $0 }
-        )) {
-            ForEach(SavedWordsSortOrder.allCases) { o in
-                Text(o.localizedTitle).tag(o)
-            }
-        }
-        .labelsHidden()
-        .controlSize(.mini)
-        .frame(minWidth: 60, maxWidth: 90)
+    // MARK: Filter menu
 
-        if !store.allTags.isEmpty {
-            Menu {
-                Button {
-                    selectedTag = nil
-                } label: {
-                    Label("All decks", systemImage: selectedTag == nil ? "checkmark" : "")
-                }
-                Divider()
-                ForEach(store.allTags, id: \.self) { tag in
+    private var filterMenu: some View {
+        Menu {
+            if !store.allTags.isEmpty {
+                Section("Deck") {
                     Button {
-                        selectedTag = tag
+                        selectedTag = nil
                     } label: {
-                        Label(
-                            "\(tag) (\(store.tagCount(tag)))",
-                            systemImage: selectedTag?.lowercased() == tag.lowercased() ? "checkmark" : ""
-                        )
+                        Label("All decks", systemImage: selectedTag == nil ? "checkmark" : "")
                     }
-                }
-            } label: {
-                HStack(spacing: 2) {
-                    Image(systemName: "tag")
-                    Text(selectedTag ?? "Deck")
-                        .lineLimit(1)
-                }
-            }
-            .menuStyle(.borderlessButton)
-            .controlSize(.mini)
-            .frame(maxWidth: 96)
-            .help("Filter by deck (tag)")
-        }
-
-        if !usedCEFRLevels.isEmpty || cefrEstimator.unratedCount > 0 {
-            Menu {
-                if !usedCEFRLevels.isEmpty {
-                    Button {
-                        selectedCEFR = nil
-                    } label: {
-                        Label("All levels", systemImage: selectedCEFR == nil ? "checkmark" : "")
-                    }
-                    Divider()
-                    ForEach(usedCEFRLevels) { level in
+                    ForEach(store.allTags, id: \.self) { tag in
                         Button {
-                            selectedCEFR = level
+                            selectedTag = tag
                         } label: {
-                            Label(level.rawValue, systemImage: selectedCEFR == level ? "checkmark" : "")
+                            Label(
+                                "\(tag) (\(store.tagCount(tag)))",
+                                systemImage: selectedTag?.lowercased() == tag.lowercased() ? "checkmark" : ""
+                            )
                         }
                     }
-                    Divider()
-                }
-                if cefrEstimator.isRunningBulk {
-                    Text("Estimating… \(cefrEstimator.bulkCompleted)/\(cefrEstimator.bulkTotal)")
-                    Button("Cancel Estimation") { cefrEstimator.cancelBulk() }
-                } else if cefrEstimator.unratedCount > 0 {
-                    Button {
-                        cefrEstimator.estimateMissing()
-                    } label: {
-                        Label("Estimate Missing Levels (\(cefrEstimator.unratedCount))", systemImage: "sparkle")
-                    }
-                }
-            } label: {
-                HStack(spacing: 2) {
-                    Image(systemName: "graduationcap")
-                    Text(selectedCEFR?.rawValue ?? "CEFR")
-                        .lineLimit(1)
                 }
             }
-            .menuStyle(.borderlessButton)
-            .controlSize(.mini)
-            .frame(maxWidth: 80)
-            .help("Filter by CEFR level")
-        }
 
-        if usedLanguages.count > 1 {
-            Menu {
-                Button {
-                    selectedLanguage = nil
-                } label: {
-                    Label("All languages", systemImage: selectedLanguage == nil ? "checkmark" : "")
-                }
-                Divider()
-                ForEach(usedLanguages) { language in
-                    Button {
-                        selectedLanguage = language
-                    } label: {
-                        Label("\(language.flag) \(language.nativeName)", systemImage: selectedLanguage == language ? "checkmark" : "")
+            if !usedCEFRLevels.isEmpty || cefrEstimator.unratedCount > 0 {
+                Section("Level") {
+                    if !usedCEFRLevels.isEmpty {
+                        Button {
+                            selectedCEFR = nil
+                        } label: {
+                            Label("All levels", systemImage: selectedCEFR == nil ? "checkmark" : "")
+                        }
+                        ForEach(usedCEFRLevels) { level in
+                            Button {
+                                selectedCEFR = level
+                            } label: {
+                                Label(level.rawValue, systemImage: selectedCEFR == level ? "checkmark" : "")
+                            }
+                        }
+                    }
+                    if cefrEstimator.isRunningBulk {
+                        Text("Estimating… \(cefrEstimator.bulkCompleted)/\(cefrEstimator.bulkTotal)")
+                        Button("Cancel Estimation") { cefrEstimator.cancelBulk() }
+                    } else if cefrEstimator.unratedCount > 0 {
+                        Button {
+                            cefrEstimator.estimateMissing()
+                        } label: {
+                            Label("Estimate Missing Levels (\(cefrEstimator.unratedCount))", systemImage: "sparkle")
+                        }
                     }
                 }
-            } label: {
-                HStack(spacing: 2) {
-                    Text(selectedLanguage?.flag ?? "🌐")
-                    Text(selectedLanguage?.shortCode ?? String(localized: "Language"))
-                        .lineLimit(1)
+            }
+
+            if usedLanguages.count > 1 {
+                Section("Language") {
+                    Button {
+                        selectedLanguage = nil
+                    } label: {
+                        Label("All languages", systemImage: selectedLanguage == nil ? "checkmark" : "")
+                    }
+                    ForEach(usedLanguages) { language in
+                        Button {
+                            selectedLanguage = language
+                        } label: {
+                            Label("\(language.flag) \(language.nativeName)", systemImage: selectedLanguage == language ? "checkmark" : "")
+                        }
+                    }
                 }
             }
-            .menuStyle(.borderlessButton)
-            .controlSize(.mini)
-            .frame(maxWidth: 88)
-            .help("Filter by language")
+
+            if activeCount > 0 {
+                Divider()
+                Button("Clear Filters") {
+                    selectedTag = nil; selectedCEFR = nil; selectedLanguage = nil
+                }
+            }
+        } label: {
+            HStack(spacing: 2) {
+                Image(systemName: "line.3.horizontal.decrease")
+                Text(activeCount > 0 ? String(localized: "Filter (\(activeCount))") : String(localized: "Filter"))
+                    .lineLimit(1)
+            }
         }
+        .menuStyle(.borderlessButton)
+        .controlSize(.mini)
+        .fixedSize()
+        .help("Filter by deck, level or language")
+    }
+
+    // MARK: Active filters
+
+    private var activeFilterChips: some View {
+        HStack(spacing: DS.Spacing.xxs) {
+            if let selectedTag {
+                removableChip(selectedTag) { self.selectedTag = nil }
+            }
+            if let selectedCEFR {
+                removableChip(selectedCEFR.rawValue) { self.selectedCEFR = nil }
+            }
+            if let selectedLanguage {
+                removableChip("\(selectedLanguage.flag) \(selectedLanguage.shortCode)") { self.selectedLanguage = nil }
+            }
+        }
+    }
+
+    private func removableChip(_ title: String, remove: @escaping () -> Void) -> some View {
+        Button(action: remove) {
+            HStack(spacing: 2) {
+                Text(title).lineLimit(1)
+                Image(systemName: "xmark")
+                    .font(DS.Typography.icon(7, weight: .bold))
+            }
+            .font(DS.Typography.caption2.weight(.medium))
+            .foregroundStyle(DS.Color.accent)
+            .padding(.horizontal, DS.Spacing.xs)
+            .padding(.vertical, 1)
+            .background(DS.Color.accentSubtle, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .help(Text("Remove this filter"))
+        .accessibilityLabel(Text("Remove filter \(title)"))
     }
 
     private var usedCEFRLevels: [CEFRLevel] {
@@ -199,9 +223,9 @@ struct SavedWordsFilterBar: View {
         let total = store.words.count
         let shown = shownCount
         if selectedFilter == .all {
-            return "\(store.pendingReviewCount) due · \(total) saved"
+            return String(localized: "\(store.pendingReviewCount) due · \(total) saved")
         }
-        if shown == total { return "\(total) saved" }
-        return "\(shown) of \(total)"
+        if shown == total { return String(localized: "\(total) saved") }
+        return String(localized: "\(shown) of \(total)")
     }
 }

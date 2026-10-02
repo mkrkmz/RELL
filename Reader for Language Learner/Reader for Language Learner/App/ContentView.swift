@@ -221,6 +221,10 @@ struct ContentView: View {
     func withNotifications(_ content: some View) -> some View {
         content
             .onReceive(NotificationCenter.default.publisher(for: .openPDFCommand)) { _ in openPDF() }
+            .onReceive(NotificationCenter.default.publisher(for: .toggleBookmarkCommand)) { _ in
+                guard model.hostWindow?.isKeyWindow == true else { return }
+                toggleCurrentPageBookmark()
+            }
             .onReceive(NotificationCenter.default.publisher(for: .openReviewWindowCommand)) { _ in
                 openWindow(id: "review")
             }
@@ -409,6 +413,28 @@ struct ContentView: View {
             )) {
                 OnboardingView { hasCompletedOnboarding = true }
                     .frame(width: 560, height: 540)
+            }
+            .sheet(item: Bindable(model).whatsNewPage) { page in
+                WhatsNewSheet(page: page) { model.whatsNewPage = nil }
+            }
+            .onAppear {
+                // Once per version, in the first window that appears; the
+                // version is recorded before showing, so no other window
+                // shows it too.
+                let defaults = UserDefaults.standard
+                guard WhatsNew.shouldShow(
+                    appVersion: WhatsNew.appVersion,
+                    lastSeen: defaults.string(forKey: StorageKey.whatsNewLastSeen),
+                    hasCompletedOnboarding: hasCompletedOnboarding
+                ), let page = WhatsNew.page(forAppVersion: WhatsNew.appVersion) else { return }
+                defaults.set(page.version, forKey: StorageKey.whatsNewLastSeen)
+                model.whatsNewPage = page
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .whatsNewCommand)) { _ in
+                guard model.hostWindow?.isKeyWindow == true
+                        || NSApp.keyWindow == nil && model.hostWindow == NSApp.windows.first(where: \.isVisible)
+                else { return }
+                model.whatsNewPage = WhatsNew.page(forAppVersion: WhatsNew.appVersion) ?? WhatsNew.releases.first
             }
     }
 
