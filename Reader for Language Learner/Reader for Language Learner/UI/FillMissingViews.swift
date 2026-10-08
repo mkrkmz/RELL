@@ -368,6 +368,7 @@ private struct FillTally: View {
     private func cell(_ field: FillField, _ kind: FillSource.Kind) -> String {
         if field == .pronunciation && kind != .dictionary { return "–" }
         if field == .level && kind == .dictionary { return "–" }
+        if field == .mnemonic && kind != .provider { return "–" }
         return "\(run.count(field, kind))"
     }
 }

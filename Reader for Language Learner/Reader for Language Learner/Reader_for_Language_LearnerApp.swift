@@ -203,6 +203,8 @@ extension Notification.Name {
     static let commandPaletteCommand = Notification.Name("commandPaletteCommand")
     /// Posted by SavedWordsStore.add with the new word's UUID as `object`.
     static let savedWordAdded = Notification.Name("savedWordAdded")
+    /// A saved word just reached `StudyPlan.strugglingThreshold` "Again"s.
+    static let savedWordStruggling = Notification.Name("savedWordStruggling")
     /// Posted by LLM settings when the Keychain-backed API key changes.
     static let llmAPIKeyChanged = Notification.Name("llmAPIKeyChanged")
 }

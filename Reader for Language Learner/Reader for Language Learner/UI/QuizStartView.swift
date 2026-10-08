@@ -87,7 +87,7 @@ struct QuizStartView: View {
                         .foregroundStyle(DS.Color.textTertiary)
                 }
 
-                if quizMode.isObjectivelyGraded {
+                if quizMode.isObjectivelyGraded || quizMode == .mixed {
                     Toggle("Grade my typed answer automatically", isOn: $typedAutoGrade)
                         .toggleStyle(.switch)
                         .controlSize(.mini)

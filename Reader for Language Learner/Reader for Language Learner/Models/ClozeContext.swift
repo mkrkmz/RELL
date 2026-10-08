@@ -27,8 +27,14 @@ enum ClozeContext {
     /// Only sentences where the word appears as saved are used: the answer is
     /// graded against the saved term, and a blank that stood for "ran" would
     /// mark a correct "ran" wrong and ask for "run" where it doesn't fit.
-    static func choice(for word: SavedWord, encounters: [WordEncounter]) -> Choice? {
+    ///
+    /// `unfamiliar` are the other words you're still learning (lowercased).
+    /// A sentence full of them tests several words at once; the rotation
+    /// keeps to the sentences with the fewest — ideally none, so the blank
+    /// is the only thing you don't know yet (i+1, v15 S3).
+    static func choice(for word: SavedWord, encounters: [WordEncounter], unfamiliar: Set<String> = []) -> Choice? {
         var candidates: [Choice] = []
+        var unfamiliarCounts: [Int] = []
         var seen: Set<String> = []
 
         func add(_ sentence: String, source: WordEncounter?) {
@@ -39,6 +45,7 @@ enum ClozeContext {
             guard masked != trimmed else { return }
             seen.insert(key)
             candidates.append(Choice(masked: masked, source: source))
+            unfamiliarCounts.append(unfamiliarCount(in: masked, unfamiliar: unfamiliar))
         }
 
         add(word.sentence, source: nil)
@@ -47,7 +54,18 @@ enum ClozeContext {
         for encounter in encounters.sorted(by: { $0.date < $1.date }) {
             add(encounter.sentence, source: encounter)
         }
-        guard !candidates.isEmpty else { return nil }
-        return candidates[word.reviewCount % candidates.count]
+        guard let fewest = unfamiliarCounts.min() else { return nil }
+        let best = candidates.indices.filter { unfamiliarCounts[$0] == fewest }.map { candidates[$0] }
+        return best[word.reviewCount % best.count]
+    }
+
+    /// How many of `unfamiliar` the sentence holds, as whole words.
+    static func unfamiliarCount(in sentence: String, unfamiliar: Set<String>) -> Int {
+        guard !unfamiliar.isEmpty else { return 0 }
+        let lowered = sentence.lowercased()
+        let tokens = Set(lowered.split { !$0.isLetter && $0 != "-" && $0 != "'" }.map(String.init))
+        return unfamiliar.count { term in
+            term.contains(" ") ? lowered.contains(term) : tokens.contains(term)
+        }
     }
 }

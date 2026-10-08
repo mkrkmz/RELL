@@ -45,6 +45,13 @@ struct SavedWordRow: View {
                         .font(DS.Typography.caption2)
                         .help(language.nativeName)
                 }
+                if word.isStruggling {
+                    Image(systemName: "exclamationmark.arrow.circlepath")
+                        .font(DS.Typography.icon(10, weight: .semibold))
+                        .foregroundStyle(DS.Color.danger)
+                        .help("You keep forgetting this one")
+                        .accessibilityLabel("You keep forgetting this one")
+                }
                 if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
                     HStack(spacing: 2) {
                         if word.cefrIsAuto {

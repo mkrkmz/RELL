@@ -46,6 +46,8 @@ extension QuizView {
 
     func beginRoom(with words: [SavedWord], practice: Bool) {
         session.optionsBuilder = { buildOptions(for: $0) }
+        session.modeResolver = { stageMode(for: $0) }
+        session.introducesNewWords = !quizMode.isRoundBased
         session.cram = practice
         let run = quizMode.isRoundBased ? words.filter { $0.usableDefinition != nil } : words
         session.begin(with: run, mode: quizMode, shuffle: false)
@@ -72,19 +74,21 @@ extension QuizView {
             Group {
                 if quizMode.isRoundBased {
                     matchingRound
+                } else if session.isIntroducing {
+                    introductionCard(for: word)
                 } else {
-                    switch quizMode {
+                    switch cardMode {
                     case .flashcard:      flashcardBody(word)
                     case .multipleChoice: multipleChoiceBody(word)
                     case .typed:          typedBody(word)
                     case .listening:      listeningBody(word)
-                    case .matching:       EmptyView()
+                    case .matching, .mixed: EmptyView()
                     }
                 }
             }
             .frame(maxWidth: quizMode.isRoundBased ? .infinity : Self.roomCardWidth)
             Spacer(minLength: 0)
-            if session.isFlipped && !quizMode.isRoundBased {
+            if session.isFlipped && !quizMode.isRoundBased && !session.isIntroducing {
                 Group {
                     if showsRatingRow { roomRatingRow(for: word) } else { autoGradeContinueRow(for: word) }
                 }
@@ -101,7 +105,11 @@ extension QuizView {
         // The flashcard handles these itself when it has focus; this is for
         // when the room does (after a grade, a take-back or a skip).
         .onKeyPress(keys: [.space, .return]) { _ in
-            guard quizMode == .flashcard, !session.isFlipped else { return .ignored }
+            if session.isIntroducing {
+                finishIntroduction()
+                return .handled
+            }
+            guard cardMode == .flashcard, !session.isFlipped else { return .ignored }
             flipCard()
             return .handled
         }
@@ -116,6 +124,35 @@ extension QuizView {
         }
         .onAppear { roomFocused = true }
         .animation(DS.Animation.springFast, value: session.isFlipped)
+    }
+
+    func finishIntroduction() {
+        withAnimation(DS.Animation.springFast) { session.finishIntroduction(mode: quizMode) }
+    }
+
+    /// A word you've never reviewed, shown before it's asked (v15 S3): what
+    /// it means, how it sounds, where you met it.
+    func introductionCard(for word: SavedWord) -> some View {
+        VStack(spacing: DS.Spacing.md) {
+            cardFace(
+                content: VStack(spacing: DS.Spacing.sm) {
+                    Text("NEW WORD").dsOverlineLabel()
+                    roomBack(for: word)
+                },
+                isFront: true
+            )
+            Button {
+                finishIntroduction()
+            } label: {
+                Text("Got It — Ask Me Later")
+                    .font(DS.Typography.callout.weight(.semibold))
+                    .frame(maxWidth: 280)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .help("It comes back as a question a few cards later (Space)")
+        }
+        .onAppear { speak(word) }
     }
 
     @discardableResult
@@ -231,6 +268,17 @@ extension QuizView {
                             .foregroundStyle(DS.Color.textSecondary)
                     }
                 }
+                if let hook = FillField.mnemonic.value(in: word) {
+                    VStack(spacing: DS.Spacing.xxs) {
+                        Text("MEMORY HOOK").dsOverlineLabel()
+                        Text(hook)
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(DS.Color.textPrimary)
+                    }
+                    .padding(DS.Spacing.sm)
+                    .frame(maxWidth: .infinity)
+                    .background(DS.Color.warning.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.md))
+                }
                 if !word.sentence.isEmpty {
                     roomSentence(word)
                 }
@@ -262,7 +310,7 @@ extension QuizView {
     /// The other saved outputs (examples, collocations…) behind one button.
     @ViewBuilder
     private func roomMoreModules(_ word: SavedWord) -> some View {
-        let cardModules: Set<ModuleType> = [.meaningTR, .definitionEN, .pronunciationEN]
+        let cardModules: Set<ModuleType> = [.meaningTR, .definitionEN, .pronunciationEN, .mnemonicEN]
         let others = savedModules(for: word).filter { !cardModules.contains($0) }
         if !others.isEmpty {
             if session.showAllBackSections {

@@ -48,7 +48,13 @@ struct SavedWordDetailSheet: View {
     }
 
     /// Fields the card section lists, in card order.
-    private static let cardFields: [FillField] = [.meaning, .definition, .pronunciation, .examples, .level]
+    private static let cardFields: [FillField] = [.meaning, .definition, .pronunciation, .examples, .level, .mnemonic]
+
+    /// The card's rows: the memory hook only once there is one, or for a
+    /// word you keep forgetting (v15 S3).
+    private var shownCardFields: [FillField] {
+        Self.cardFields.filter { $0 != .mnemonic || word.isStruggling || !$0.isMissing(in: word) }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -141,7 +147,9 @@ struct SavedWordDetailSheet: View {
     /// from. Empty fields can be filled here; a filled one can be edited,
     /// filled again or removed from its context menu.
     private var cardSection: some View {
-        let empty = Self.cardFields.filter { $0 != .examples && $0.isMissing(in: word) }.count
+        // What "Fill Missing" fills: examples and the memory hook are asked
+        // for one by one ("Fill Again" on their row).
+        let empty = Self.cardFields.filter { FillField.defaultSelection.contains($0) && $0.isMissing(in: word) }.count
         return VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: DS.Spacing.sm) {
                 Text("CARD").dsOverlineLabel()
@@ -183,7 +191,7 @@ struct SavedWordDetailSheet: View {
             .padding(.horizontal, DS.Spacing.md)
             .padding(.vertical, DS.Spacing.sm)
 
-            ForEach(Self.cardFields) { field in
+            ForEach(shownCardFields) { field in
                 Divider()
                 cardRow(field)
             }

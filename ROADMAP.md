@@ -183,16 +183,30 @@ Amac: kelime calismasi ayri, odakli ve tam ekran bir yere tasinsin
 Amac: tekrar, kelimenin asamasina gore dogru alistirmayi secsin.
 **Maketle baslar.**
 
-- [ ] **Yeni kelime tanitimi** — ilk kez gelen kelime once tanitilir (anlam,
-      cumle, ses), sonra ayni oturumda ilk kez sorulur
-- [ ] **Asamaya gore karisik mod** — yeni: tanima (coktan secmeli);
-      ogreniliyor: bosluk doldurma ve yazma; oturmus: dinleyip yazma; tek mod
+Kullanici maketsiz kodlanmasini istedi (2026-10-08).
+
+- [x] **Yeni kelime tanitimi** — Calisma odasinda hic calisilmamis kelime
+      once tanitilir (anlam, tanim, telaffuz, cumle, ses; "Anladim, sonra
+      sor" / Bosluk), 3 kart sonra soru olarak gelir
+      (`QuizSession.finishIntroduction`); kenar cubugu tanitmaz
+- [x] **Asamaya gore karisik mod** — yeni `QuizMode.mixed` ("Asamaya
+      gore", menude ilk): ilk iki tekrar coktan secmeli, ogrenilirken
+      bosluk doldurma/yazma, oturmus kelimede dinleyip yazma (ses yoksa
+      yazma), sorulacak bir sey yoksa kart (`QuizMode.stageMode`); tek mod
       secimi korunur
-- [ ] **Kitaplarindan baglam (A1)** (Should) — kelime icin okunan
-      kitaplardan geri kalanini bildigin (i+1) cumleler; bosluk doldurma her
-      tekrarda farkli cumle
-- [ ] **Zorlu kelimeler** (Should) — sik unutulanlar isaretlenir, ayri
-      oturum, akilda tutma ipucu otomatik doldurulur
+- [x] **Kitaplarindan baglam (A1)** — bosluk doldurma, icinde baska
+      ogrenilmekte olan kayitli kelime en az olan cumleleri tercih eder ve
+      onlar arasinda doner (`ClozeContext.unfamiliarCount`)
+- [x] **Zorlu kelimeler** — ≥2 "Tekrar" (`SavedWord.isStruggling`): listede
+      isaret, kelime sayfasinda "Akilda tutma ipucu" satiri, kartin
+      arkasinda ipucu kutusu; zorlu olduğu anda ipucu yalniz bu Mac'teki
+      saglayicidan doldurulur (`FillField.mnemonic`, cihaz ici model
+      kullanilmaz — v12 olcumu); calisma odasinda "Sik unuttuklarin" kaynagi
+- [x] Testler: `LearningLoopTests` (7) — asama secimi, karisik turda kart
+      basina mod, tanitim akisi, i+1 secimi (mutasyonla dogrulandi), zorlu
+      isaretinin bir kez yayinlanmasi, ipucunun buluta gitmemesi. Tam paket
+      682 yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 4 — "Kelime getiren kapilar ve kapanis"
 

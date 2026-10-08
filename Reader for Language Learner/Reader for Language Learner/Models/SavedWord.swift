@@ -337,6 +337,12 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         fieldSources[field.rawValue].flatMap(FillSource.init(stored:))
     }
 
+    /// Marked "Again" often enough to need a different way in (v15 S3):
+    /// it gets a badge, a memory hook and its own study source.
+    var isStruggling: Bool {
+        incorrectCount >= StudyPlan.strugglingThreshold
+    }
+
     var hasBeenReviewed: Bool {
         reviewCount > 0 || lastReviewedAt != nil
     }

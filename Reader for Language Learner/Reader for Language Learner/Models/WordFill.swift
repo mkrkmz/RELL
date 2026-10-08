@@ -29,6 +29,9 @@ enum FillField: String, CaseIterable, Identifiable, Codable {
     case pronunciation
     case level
     case examples
+    /// A memory hook, for words you keep forgetting (v15 S3). Only from
+    /// your provider: Apple's model wrote nonsense mnemonics in the v12 spike.
+    case mnemonic
 
     var id: String { rawValue }
 
@@ -40,6 +43,7 @@ enum FillField: String, CaseIterable, Identifiable, Codable {
         case .definition:    return .definitionEN
         case .pronunciation: return .pronunciationEN
         case .examples:      return .examplesEN
+        case .mnemonic:      return .mnemonicEN
         case .level:         return nil
         }
     }
@@ -80,6 +84,7 @@ enum FillField: String, CaseIterable, Identifiable, Codable {
         case .pronunciation: return String(localized: "Pronunciation")
         case .level:         return String(localized: "Level")
         case .examples:      return String(localized: "Examples")
+        case .mnemonic:      return String(localized: "Memory hook")
         }
     }
 
@@ -90,6 +95,7 @@ enum FillField: String, CaseIterable, Identifiable, Codable {
         case .pronunciation:        return String(localized: "Dictionary only; the base form's for other forms")
         case .level:                return String(localized: "Model")
         case .examples:             return String(localized: "The model writes them")
+        case .mnemonic:             return String(localized: "Your AI provider; for words you keep forgetting")
         }
     }
 

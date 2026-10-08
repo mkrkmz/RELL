@@ -141,6 +141,13 @@ struct StudySetupView: View {
             } hint: {
                 if !quizMode.affectsSchedule {
                     Text("Practice: your review schedule stays as it is.")
+                } else if quizMode == .mixed {
+                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                        Text("New words: pick the right one. Learning: type the missing word. Settled: hear it and type it.")
+                            .fixedSize(horizontal: false, vertical: true)
+                        Toggle("Grade my typed answer automatically", isOn: $typedAutoGrade)
+                            .toggleStyle(.checkbox)
+                    }
                 } else if quizMode.isObjectivelyGraded {
                     Toggle("Grade my typed answer automatically", isOn: $typedAutoGrade)
                         .toggleStyle(.checkbox)

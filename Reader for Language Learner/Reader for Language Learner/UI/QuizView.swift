@@ -48,6 +48,12 @@ struct QuizView: View {
     /// Modules shown on the card back by default; the rest sit behind "Show more".
     static let summaryModules: [ModuleType] = [.definitionEN, .meaningTR]
 
+    /// The exercise of the card on screen: the chosen mode, or what
+    /// "By Stage" picked for this word (v15 S3).
+    var cardMode: QuizMode {
+        quizMode == .mixed ? (session.currentMode ?? .flashcard) : quizMode
+    }
+
     var quizMode: QuizMode {
         let stored = QuizMode(rawValue: quizModeRaw) ?? .flashcard
         // A stored mode can become unofferable — the voice it needs may have
@@ -228,13 +234,13 @@ struct QuizView: View {
 
             Spacer()
 
-            switch quizMode {
+            switch cardMode {
             case .flashcard:      flashcardBody(word)
             case .multipleChoice: multipleChoiceBody(word)
             case .typed:          typedBody(word)
             case .listening:      listeningBody(word)
             // Round-based modes never reach the single-card frame.
-            case .matching:       EmptyView()
+            case .matching, .mixed: EmptyView()
             }
 
             Spacer()
@@ -577,7 +583,13 @@ struct QuizView: View {
     /// since in reading, rotating by review — or nil when none contains the
     /// term (no blank → not a cloze).
     func clozeChoice(for word: SavedWord) -> ClozeContext.Choice? {
-        ClozeContext.choice(for: word, encounters: encounterStore?.encounters(for: word.id) ?? [])
+        ClozeContext.choice(
+            for: word,
+            encounters: encounterStore?.encounters(for: word.id) ?? [],
+            unfamiliar: Set(store.words
+                .filter { $0.id != word.id && $0.masteryLevel != .mastered }
+                .map { $0.term.lowercased() })
+        )
     }
 
     func clozeSentence(for word: SavedWord) -> String? {
@@ -592,7 +604,7 @@ struct QuizView: View {
     /// the user to re-judge it is busywork. Turning the setting off restores
     /// the four buttons, which is the only way to reach Hard/Easy.
     var showsRatingRow: Bool {
-        !(quizMode.isObjectivelyGraded && typedAutoGrade)
+        !(cardMode.isObjectivelyGraded && typedAutoGrade)
     }
 
     /// The auto-graded alternative to `ratingRow`: the grade is decided, this
@@ -936,8 +948,13 @@ struct QuizView: View {
     func beginQuiz() {
         // The session builds its own options; it can't reach the vocabulary.
         session.optionsBuilder = { buildOptions(for: $0) }
+        session.modeResolver = { stageMode(for: $0) }
         // A round-based run only carries words that can actually be paired.
         session.begin(with: quizMode.isRoundBased ? matchableWords : wordsToQuiz, mode: quizMode)
+    }
+
+    func stageMode(for word: SavedWord) -> QuizMode {
+        QuizMode.stageMode(for: word, canSpeak: SpeechManager.hasVoice(for: voiceLanguage(for: word)))
     }
 
     func flipCard() {
@@ -949,7 +966,7 @@ struct QuizView: View {
         // Modes the app can grade itself record the objective result the moment
         // the answer is revealed — that's the only point where the typed answer
         // and the word are both still on hand.
-        if quizMode.isObjectivelyGraded, let word = session.currentWord {
+        if cardMode.isObjectivelyGraded, let word = session.currentWord {
             session.recordObjectiveAnswer(
                 correct: QuizMatching.matchesTerm(typed: session.typedAnswer, term: word.term)
             )

@@ -15,6 +15,10 @@ import Foundation
 
 /// How a review card asks its question. Raw value is persisted (`quizMode`).
 enum QuizMode: String, CaseIterable, Identifiable {
+    /// Picks the exercise per card by how well the word is known (v15 S3):
+    /// recognise it while new, recall it while learning, hear it once it
+    /// has settled. First, so menus offer it first.
+    case mixed = "Mixed"
     case flashcard = "Flashcard"
     case multipleChoice = "Choice"
     case typed = "Type"
@@ -25,6 +29,20 @@ enum QuizMode: String, CaseIterable, Identifiable {
     case matching = "Match"
 
     var id: String { rawValue }
+
+    /// The exercise `.mixed` gives `word`:
+    /// - its first two reviews: multiple choice (recognition), or a
+    ///   flashcard when there's no definition to ask about;
+    /// - learning: type the missing word — a cloze from its sentences, or
+    ///   its definition as the hint;
+    /// - mastered: hear it and type it, when a voice can say it.
+    static func stageMode(for word: SavedWord, canSpeak: Bool) -> QuizMode {
+        let canAsk = word.usableDefinition != nil
+        let canCloze = canAsk || !word.sentence.isEmpty
+        if word.reviewCount < 2 { return canAsk ? .multipleChoice : .flashcard }
+        if word.masteryLevel == .mastered, canSpeak { return .listening }
+        return canCloze ? .typed : .flashcard
+    }
 
     /// Modes whose answer the app can check itself, rather than asking the
     /// user to judge their own recall.
@@ -50,6 +68,7 @@ enum QuizMode: String, CaseIterable, Identifiable {
         case .typed:          return "keyboard"
         case .listening:      return "ear"
         case .matching:       return "square.grid.2x2"
+        case .mixed:          return "shuffle"
         }
     }
 
@@ -60,6 +79,7 @@ enum QuizMode: String, CaseIterable, Identifiable {
         case .typed:          return String(localized: "Type")
         case .listening:      return String(localized: "Listen")
         case .matching:       return String(localized: "Match")
+        case .mixed:          return String(localized: "By Stage")
         }
     }
 }
@@ -135,6 +155,23 @@ final class QuizSession {
     /// computed here: it needs the whole vocabulary (for distractors) and the
     /// word's saved definition — knowledge this type has no business holding.
     @ObservationIgnored var optionsBuilder: ((SavedWord) -> [String])?
+    /// The exercise for a card in `.mixed` (v15 S3).
+    @ObservationIgnored var modeResolver: ((SavedWord) -> QuizMode)?
+    /// The exercise of the card on screen — the run's mode, or what
+    /// `.mixed` chose for this word.
+    private(set) var currentMode: QuizMode?
+
+    // MARK: - Introductions (v15 S3)
+
+    /// The study room shows a word you've never reviewed before asking it.
+    var introducesNewWords = false
+    private(set) var introduced: Set<UUID> = []
+
+    /// The card on screen is a new word still to be introduced.
+    var isIntroducing: Bool {
+        guard introducesNewWords, let word = currentWord else { return false }
+        return !word.hasBeenReviewed && !introduced.contains(word.id)
+    }
 
     // MARK: - Derived
 
@@ -171,7 +208,18 @@ final class QuizSession {
         isFinished = false
         answers = []
         history = []
+        introduced = []
         startedAt = Date()
+        prepareCard(mode: mode)
+    }
+
+    /// "Got it": the introduced word moves `gap` cards later, to be asked
+    /// once something else has come between.
+    func finishIntroduction(mode: QuizMode, gap: Int = 3) {
+        guard let word = currentWord else { return }
+        introduced.insert(word.id)
+        queue.remove(at: currentIndex)
+        queue.insert(word, at: min(currentIndex + gap, queue.count))
         prepareCard(mode: mode)
     }
 
@@ -183,7 +231,9 @@ final class QuizSession {
         mcOptions = []
         showAllBackSections = false
         talliesAtCardStart = currentTallies
-        guard let word = currentWord else { return }
+        guard let word = currentWord else { currentMode = nil; return }
+        let mode = mode == .mixed ? (modeResolver?(word) ?? .flashcard) : mode
+        currentMode = mode
         if mode == .multipleChoice {
             mcOptions = optionsBuilder?(word) ?? []
         }
@@ -205,6 +255,7 @@ final class QuizSession {
         isFinished = false
         answers = []
         history = []
+        introduced = []
         startedAt = nil
     }
 

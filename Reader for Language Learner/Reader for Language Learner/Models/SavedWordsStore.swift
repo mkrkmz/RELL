@@ -694,9 +694,14 @@ final class SavedWordsStore {
 
         // Schedule from the stored word, not the caller's copy, which may be
         // stale — FSRS needs the prior memory state and review date.
+        let wasStruggling = words[index].isStruggling
         let updated = Self.reviewed(words[index], rating: rating, at: reviewedAt)
         words[index] = updated
         save()
+        if updated.isStruggling && !wasStruggling {
+            // A memory hook is filled for it (WordEnricher, v15 S3).
+            NotificationCenter.default.post(name: .savedWordStruggling, object: updated.id)
+        }
         return updated
     }
 

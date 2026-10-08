@@ -82,6 +82,12 @@ enum WordFillEngine {
                 continue  // the models' IPA isn't trusted (v12 spike)
             case .level:
                 if let result = await backends.level?(word.term) { onResult(result) }
+            case .mnemonic:
+                let request = FillRequest(field: field, term: word.term, sentence: word.sentence, native: native, target: target)
+                if let provider = backends.provider,
+                   let value = await provider.ask(request).flatMap({ accept($0, request) }) {
+                    onResult(FillResult(field: field, value: value, source: .provider(provider.name)))
+                }
             case .meaning, .definition, .examples:
                 let request = FillRequest(field: field, term: word.term, sentence: word.sentence, native: native, target: target)
                 if let ask = backends.onDevice,
@@ -203,6 +209,10 @@ final class WordEnricher {
         NotificationCenter.default.addObserver(forName: .savedWordAdded, object: nil, queue: .main) { [weak self] note in
             guard let id = note.object as? UUID else { return }
             Task { @MainActor [weak self] in self?.fillAfterSave(wordID: id) }
+        }
+        NotificationCenter.default.addObserver(forName: .savedWordStruggling, object: nil, queue: .main) { [weak self] note in
+            guard let id = note.object as? UUID else { return }
+            Task { @MainActor [weak self] in self?.fillMemoryHook(wordID: id) }
         }
     }
 
@@ -359,6 +369,20 @@ final class WordEnricher {
         // Bring the word list's strip back for what was emptied.
         if emptied > 0 { defaults.set(-1, forKey: StorageKey.fillStripHiddenAtCount) }
         return emptied
+    }
+
+    /// A word just became one you keep forgetting: a memory hook, from a
+    /// server on this Mac only — like the save-time fill, nothing goes to
+    /// the cloud unasked. "Fill Again" on its page can use any provider.
+    private func fillMemoryHook(wordID: UUID) {
+        guard let word = store.word(withID: wordID), FillField.mnemonic.isMissing(in: word) else { return }
+        let backends = backends(.onThisMac)
+        Task(priority: .utility) { [weak self] in
+            guard let self else { return }
+            await WordFillEngine.fill(word, fields: [.mnemonic], backends: backends, native: Language.storedNative) { result in
+                self.store.fill(result.field, with: result.value, source: result.source, forWordID: wordID)
+            }
+        }
     }
 
     // MARK: Dictionary on the card
