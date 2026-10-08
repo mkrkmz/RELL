@@ -42,6 +42,16 @@ jobs:
             -resultBundlePath TestResults.xcresult \
             | xcpretty --color
 
+      # A test host that crashes leaves its backtrace only in the runner's
+      # crash reports; print them so the log says where (v15 S1).
+      - name: Print Crash Reports
+        if: failure()
+        run: |
+          for f in ~/Library/Logs/DiagnosticReports/Reader*; do
+            [ -e "$f" ] || continue
+            echo "::group::$f"; head -c 60000 "$f"; echo "::endgroup::"
+          done
+
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v5

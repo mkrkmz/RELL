@@ -51,10 +51,12 @@ enum SpotlightIndexer {
     // MARK: - Words
 
     static func index(_ word: SavedWord) {
+        guard !RELLProcess.isTestHost else { return }  // tests keep out of your Spotlight
         CSSearchableIndex.default().indexSearchableItems([searchableItem(for: word)])
     }
 
     static func removeWord(id: UUID) {
+        guard !RELLProcess.isTestHost else { return }  // tests keep out of your Spotlight
         CSSearchableIndex.default()
             .deleteSearchableItems(withIdentifiers: [wordPrefix + id.uuidString])
     }
@@ -66,6 +68,7 @@ enum SpotlightIndexer {
     /// its own queue, and a closure formed in a main-actor function would
     /// inherit that isolation — under Swift 6 a runtime check that traps.
     nonisolated static func reindexAllWords(_ words: [SavedWord]) {
+        guard !RELLProcess.isTestHost else { return }  // tests keep out of your Spotlight
         CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [wordDomain]) { _ in
             CSSearchableIndex.default().indexSearchableItems(words.map(searchableItem(for:)))
         }
@@ -95,6 +98,7 @@ enum SpotlightIndexer {
     // MARK: - Documents
 
     static func indexDocument(at url: URL) {
+        guard !RELLProcess.isTestHost else { return }  // tests keep out of your Spotlight
         let isEPUB = url.pathExtension.lowercased() == "epub"
         let attributes = CSSearchableItemAttributeSet(contentType: isEPUB ? .epub : .pdf)
         attributes.title = url.deletingPathExtension().lastPathComponent
@@ -113,6 +117,7 @@ enum SpotlightIndexer {
     }
 
     static func removeDocument(path: String) {
+        guard !RELLProcess.isTestHost else { return }  // tests keep out of your Spotlight
         CSSearchableIndex.default()
             .deleteSearchableItems(withIdentifiers: [documentPrefix + path])
     }

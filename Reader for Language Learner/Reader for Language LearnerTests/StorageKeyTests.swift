@@ -21,6 +21,7 @@ final class StorageKeyTests: XCTestCase {
             (StorageKey.fillOnSave, "fillOnSave"),
             (StorageKey.fillUsesProvider, "fillUsesProvider"),
             (StorageKey.fillStripHiddenAtCount, "fillStripHiddenAtCount"),
+            (StorageKey.fillRepairVersion, "fillRepairVersion"),
             (StorageKey.customSystemPreamble, "customSystemPreamble"),
             (StorageKey.dailyReadingGoalMinutes, "dailyReadingGoalMinutes"),
             (StorageKey.dailyReminderTime, "dailyReminderTime"),

@@ -32,6 +32,8 @@ nonisolated enum StorageKey {
     /// The words-list strip stays hidden while this many or fewer words lack
     /// a meaning (v15 S1) — it comes back when a new word adds to them.
     static let fillStripHiddenAtCount = "fillStripHiddenAtCount"
+    /// The last one-time repair of earlier fills that ran (v15 S1).
+    static let fillRepairVersion = "fillRepairVersion"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     /// The "major.minor" whose What's New page was last shown (v14 S3).

@@ -15,6 +15,7 @@
 //  the configured provider, and nothing that fails validation is written.
 //
 
+import AppKit
 import Foundation
 import NaturalLanguage
 
@@ -166,16 +167,28 @@ struct DictionaryEntry: Equatable {
     init?(raw: String) {
         let parts = raw.split(separator: "|", maxSplits: 2, omittingEmptySubsequences: false)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let text: String
         if parts.count == 3 {
             headword = parts[0]
             ipa = parts[1].isEmpty ? nil : parts[1]
-            body = parts[2]
+            text = parts[2]
         } else {
-            headword = ""
+            // Some entries have no pronunciation and no bars:
+            // "brainwave n (ani bir) parlak fikir; ilham brain". The
+            // headword is what comes before the first part of speech.
+            let whole = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let pos = Self.nextPartOfSpeech(in: whole),
+               whole[..<pos.lowerBound].split(separator: " ").count <= 3 {
+                headword = String(whole[..<pos.lowerBound]).trimmingCharacters(in: .whitespaces)
+                text = String(whole[pos.lowerBound...])
+            } else {
+                headword = ""
+                text = whole
+            }
             ipa = nil
-            body = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        guard !body.isEmpty else { return nil }
+        body = Self.droppingTrailingCrossReferences(text, headword: headword)
+        guard !body.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
     }
 
     /// The pronunciation as a card shows it, only when the entry is for
@@ -189,6 +202,21 @@ struct DictionaryEntry: Equatable {
     /// derivatives. Approved v15 S1 decision 4: the whole entry stays one
     /// click away in Dictionary.
     var briefSenses: String? {
+        let first = senses.prefix(2)
+        return first.isEmpty ? nil : first.joined(separator: "; ")
+    }
+
+    /// An Oxford Thesaurus entry — examples and synonym lists, no
+    /// definition ("abstinence noun 1 he took a pledge of abstinence.
+    /// teetotalism, temperance, …"). It answers neither field.
+    var isThesaurus: Bool {
+        let opening = body.prefix(400)
+        return body.contains("ANTONYM") || opening.filter { $0 == "," }.count >= 5
+    }
+
+    /// The senses of the first part of speech, cleaned, in entry order.
+    var senses: [String] {
+        guard !isThesaurus else { return [] }
         var text = body
         for marker in ["▸", " DERIVATIVES", " ORIGIN", " PHRASES", " PHRASAL VERBS", " USAGE"] {
             if let range = text.range(of: marker) { text = String(text[..<range.lowerBound]) }
@@ -198,20 +226,26 @@ struct DictionaryEntry: Equatable {
         // verb past participle, past slept…") is mostly grammar.
         if let range = Self.nextPartOfSpeech(in: text) { text = String(text[..<range.lowerBound]) }
 
-        let senses: [String]
-        if text.contains("•") || text.range(of: #"(^|\s)\d\s"#, options: .regularExpression) != nil {
-            senses = text
-                .replacingOccurrences(of: #"(^|\s)\d\s"#, with: "•", options: .regularExpression)
+        // Sense numbers: "1 şart; koşul 2 state durum", also glued to an
+        // inflection ("flatterflattest1 düz").
+        let numbered = #"(^|\s|(?<=[^\d\s]))\d{1,2}\s"#
+        let parts: [String]
+        if text.contains("•") || text.range(of: numbered, options: .regularExpression) != nil {
+            parts = text
+                .replacingOccurrences(of: numbered, with: "•", options: .regularExpression)
                 .components(separatedBy: "•")
         } else {
-            senses = text.components(separatedBy: ";")
+            parts = text.components(separatedBy: ";")
         }
-        let cleaned = senses
+        let head = headword.lowercased().filter(\.isLetter)
+        return parts
             .map(Self.droppingExample)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters.subtracting(CharacterSet(charactersIn: "()")))) }
             .filter { !$0.isEmpty }
-        guard !cleaned.isEmpty else { return nil }
-        return cleaned.prefix(2).joined(separator: "; ")
+            // An inflection list ("flatterflattest") is not a sense.
+            .filter { sense in
+                !(head.count >= 4 && !sense.contains(" ") && Self.sharesStem(sense.lowercased(), head))
+            }
     }
 
     // MARK: Parsing helpers
@@ -225,9 +259,13 @@ struct DictionaryEntry: Equatable {
 
     private static func droppingLeadingPartOfSpeech(_ text: String) -> String {
         var result = text.trimmingCharacters(in: .whitespaces)
+        // "(also team mate) noun …", "(US English behavioral) adjective …"
+        while result.hasPrefix("("), let close = result.firstIndex(of: ")") {
+            result = String(result[result.index(after: close)...]).trimmingCharacters(in: .whitespaces)
+        }
         // Longest first, so "transitive verb" isn't read as "verb".
-        for pos in partsOfSpeech.sorted(by: { $0.count > $1.count }) where result.hasPrefix(pos + " ") {
-            result = String(result.dropFirst(pos.count + 1))
+        for pos in partsOfSpeech.sorted(by: { $0.count > $1.count }) where result.hasPrefix(pos + " ") || result == pos {
+            result = String(result.dropFirst(pos.count)).trimmingCharacters(in: .whitespaces)
             break
         }
         // "[with object]" style labels after the part of speech.
@@ -235,6 +273,25 @@ struct DictionaryEntry: Equatable {
             result = String(result[result.index(after: close)...]).trimmingCharacters(in: .whitespaces)
         }
         return result
+    }
+
+    /// Bilingual entries end with related headwords — "… ilham brain",
+    /// "… sleeper sleepless sleepwalking" — which aren't part of the meaning.
+    private static func droppingTrailingCrossReferences(_ text: String, headword: String) -> String {
+        let head = headword.lowercased().filter(\.isLetter)
+        guard head.count >= 4 else { return text.trimmingCharacters(in: .whitespaces) }
+        var words = text.split(separator: " ")
+        while let last = words.last, words.count > 1,
+              last.allSatisfy({ $0.isLetter || $0 == "-" }),
+              Self.sharesStem(String(last).lowercased(), head) {
+            words.removeLast()
+        }
+        return words.joined(separator: " ")
+    }
+
+    private static func sharesStem(_ word: String, _ head: String) -> Bool {
+        let stem = min(4, head.count)
+        return word.count >= stem && word.prefix(stem) == head.prefix(stem)
     }
 
     private static func nextPartOfSpeech(in text: String) -> Range<String.Index>? {
@@ -282,5 +339,21 @@ enum FillValidator {
             return nil
         }
         return text
+    }
+}
+
+// MARK: - Spelling
+
+enum SpellingCheck {
+    /// Whether the system's spelling dictionary for `language` knows
+    /// `word`; false when there's no such dictionary.
+    @MainActor
+    static func isWord(_ word: String, in language: Language) -> Bool {
+        let code = language.shortCode.lowercased()
+        let checker = NSSpellChecker.shared
+        guard checker.availableLanguages.contains(where: { $0 == code || $0.hasPrefix(code + "_") }) else { return false }
+        let miss = checker.checkSpelling(of: word, startingAt: 0, language: code, wrap: false,
+                                         inSpellDocumentWithTag: 0, wordCount: nil)
+        return miss.location == NSNotFound
     }
 }

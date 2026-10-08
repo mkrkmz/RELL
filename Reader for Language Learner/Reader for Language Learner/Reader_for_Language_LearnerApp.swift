@@ -65,8 +65,8 @@ struct Reader_for_Language_LearnerApp: App {
         _cefrEstimator = State(initialValue: estimator)
         // Also listens for .savedWordAdded — fills a new word's empty card
         // fields from the dictionary and the on-device model (v15 S1).
-        _wordEnricher = State(initialValue: WordEnricher(store: savedWords, cefrEstimator: estimator,
-                                                         observesSaves: !RELLProcess.isTestHost))
+        let enricher = WordEnricher(store: savedWords, cefrEstimator: estimator, observesSaves: !RELLProcess.isTestHost)
+        _wordEnricher = State(initialValue: enricher)
         QuickLookupPanelController.shared.configure(
             savedWordsStore: savedWords,
             quickLookup: lookup
@@ -79,6 +79,9 @@ struct Reader_for_Language_LearnerApp: App {
         // Spotlight index, no system-wide hotkey, no notifications, no
         // backups. Its stores already live in a throwaway folder.
         guard !RELLProcess.isTestHost else { return }
+
+        // Fills written before the v15 S1 live-pass fixes, read again once.
+        enricher.repairEarlierFills()
 
         // Launch-time Spotlight sync — catches edits/deletes made since the
         // last run that the per-mutation hooks may have missed.

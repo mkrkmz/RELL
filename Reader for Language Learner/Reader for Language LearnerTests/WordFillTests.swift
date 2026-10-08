@@ -32,6 +32,82 @@ final class WordFillTests: XCTestCase {
         XCTAssertEqual(DictionaryEntry(raw: sleep)?.briefSenses, "uyku", "phrases after ▸ are dropped")
     }
 
+    /// v15 S1 live pass: an entry with no pronunciation bars gave the word
+    /// itself as its Turkish meaning.
+    func testEntriesWithoutBarsFindTheirHeadword() throws {
+        let entry = try XCTUnwrap(DictionaryEntry(raw: "brainwave n (ani bir) parlak fikir; ilham brain "))
+        XCTAssertEqual(entry.headword, "brainwave")
+        XCTAssertNil(entry.ipa)
+        XCTAssertEqual(entry.briefSenses, "(ani bir) parlak fikir; ilham", "the trailing cross-reference goes")
+        XCTAssertEqual(DictionaryEntry(raw: sleep + "sleeper sleepless sleepwalking")?.body.hasSuffix("uyumak"), true)
+    }
+
+    func testThesaurusEntriesAnswerNothing() {
+        let entry = DictionaryEntry(raw: "untimely adjective 1 I would like to explain the untimely interruption. ill-timed, badly timed, mistimed; inopportune, inappropriate; inconvenient, awkward. ANTONYMS timely, opportune.")
+        XCTAssertEqual(entry?.isThesaurus, true)
+        XCTAssertNil(entry?.briefSenses, "an example and synonyms are not a definition")
+    }
+
+    func testLabelsBeforeThePartOfSpeechAndAloneArePassedOver() {
+        XCTAssertEqual(DictionaryEntry(raw: "teammate | ˈtiːmmeɪt | (also team mate) noun a fellow member of a team: we're good friends. ")?.briefSenses,
+                       "a fellow member of a team")
+        XCTAssertNil(DictionaryEntry(raw: "jeer | dʒiə(r) | intransitive verb ▸ jeer at alaya almak yuhalamak ")?.briefSenses,
+                     "only a part of speech before the phrases")
+        XCTAssertEqual(DictionaryEntry(raw: "flat | flæt | adj flatterflattest1 düz; yassı 2 surface düz; dümdüz 3 refusal kesin ")?.senses.first,
+                       "düz; yassı", "the inflections glued to the sense number go")
+    }
+
+    /// Bilingual entries label senses in the language you study: "2 mock
+    /// alay etmek", "2 state durum". Short native words ("kat") stay.
+    func testSenseLabelsInTheStudiedLanguageAreDropped() {
+        let english: Set<String> = ["mock", "state", "before", "prove", "to", "be", "kat", "surface"]
+        func meaning(_ raw: String, _ term: String) -> String? {
+            WordFillEngine.dictionaryAnswer(for: term, raw: raw, native: .turkish, target: .english,
+                                            isTargetWord: { english.contains($0.lowercased()) })[.meaning]
+        }
+        XCTAssertEqual(meaning("sneer | sniə(r) | intransitive verb 1 dudak bükerek gülmek 2 mock alay etmek ", "sneered"),
+                       "dudak bükerek gülmek; alay etmek")
+        XCTAssertEqual(meaning("prove | pruːv | transitive verb kanıtlamak; ispat etmek prove to be ", "proven"),
+                       "kanıtlamak; ispat etmek")
+        XCTAssertEqual(meaning("storey | ˈstɔːri | n kat; bina katı ", "storey"), "kat; bina katı")
+        XCTAssertEqual(meaning("flat | flæt | adj flatterflattest1 düz; yassı 2 surface düz; dümdüz ", "flats"),
+                       "düz; yassı; dümdüz")
+    }
+
+    func testTheWordItselfIsNeverItsMeaning() {
+        let answer = WordFillEngine.dictionaryAnswer(for: "brainwave", raw: "brainwave n brainwave ",
+                                                     native: .turkish, target: .english)
+        XCTAssertNil(answer[.meaning])
+        XCTAssertNil(answer[.definition])
+    }
+
+    /// v15 S1 live pass: asked with the book sentence as context, the model
+    /// wrote the sentence's translation as the Turkish meaning.
+    func testRepairEmptiesWhatTheContextPromptWroteAndNothingElse() throws {
+        let store = makeStore()
+        let translated = SavedWord(term: "savagely", sentence: "he thought savagely as he spread manure",
+                                   llmOutputs: [ModuleType.meaningTR.rawValue: "\"Ünlü Harry Potter'ı şimdi görebilmeyi dilerlerdi.\""],
+                                   language: Language.english.rawValue,
+                                   fieldSources: ["meaning": FillSource.provider("LM Studio").stored])
+        let noSentence = SavedWord(term: "lawn", llmOutputs: [ModuleType.definitionEN.rawValue: "An area of short grass."],
+                                   language: Language.english.rawValue,
+                                   fieldSources: ["definition": FillSource.onDevice.stored])
+        let yours = SavedWord(term: "landlady", sentence: "He owed his landlady money.",
+                              llmOutputs: [ModuleType.meaningTR.rawValue: "ev sahibesi"])
+        for word in [translated, noSentence, yours] { store.add(word) }
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "WordFillTests-\(UUID().uuidString)"))
+        let enricher = WordEnricher(store: store, cefrEstimator: nil, observesSaves: false)
+
+        XCTAssertEqual(enricher.repairEarlierFills(defaults: defaults), 1)
+
+        XCTAssertTrue(FillField.meaning.isMissing(in: try XCTUnwrap(store.word(withID: translated.id))))
+        XCTAssertNil(store.word(withID: translated.id)?.source(of: .meaning))
+        XCTAssertEqual(store.word(withID: noSentence.id)?.llmOutputs, noSentence.llmOutputs, "no context was sent for it")
+        XCTAssertEqual(store.word(withID: yours.id)?.llmOutputs, yours.llmOutputs, "no source mark: yours, untouched")
+        XCTAssertEqual(defaults.integer(forKey: StorageKey.fillStripHiddenAtCount), -1, "the strip comes back")
+        XCTAssertEqual(enricher.repairEarlierFills(defaults: defaults), 0, "runs once")
+    }
+
     func testMonolingualEntriesDropExamplesAndDerivatives() {
         XCTAssertEqual(DictionaryEntry(raw: archEnemy)?.briefSenses,
                        "a person who is extremely opposed or hostile to someone or something; (the arch-enemy) archaic the Devil")

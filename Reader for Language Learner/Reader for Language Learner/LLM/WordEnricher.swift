@@ -98,18 +98,61 @@ enum WordFillEngine {
     /// What the dictionary entry can fill: the meaning or the definition,
     /// depending on the language the entry is written in, and the
     /// pronunciation when the entry is for this very form.
-    static func dictionaryAnswer(for term: String, raw: String?, native: Language, target: Language) -> [FillField: String] {
+    ///
+    /// `isTargetWord` spots the target-language labels a bilingual entry
+    /// puts inside its senses ("mock alay etmek", "state durum"); the live
+    /// check is the system's spelling dictionary.
+    static func dictionaryAnswer(
+        for term: String, raw: String?, native: Language, target: Language,
+        isTargetWord: ((String) -> Bool)? = nil
+    ) -> [FillField: String] {
         guard let raw, let entry = DictionaryEntry(raw: raw) else { return [:] }
+        let isTargetWord = isTargetWord ?? { SpellingCheck.isWord($0, in: target) }
         var answer: [FillField: String] = [:]
-        if let senses = entry.briefSenses, native != target {
-            switch SystemDictionary.language(of: raw, headword: entry.headword.isEmpty ? term : entry.headword) {
-            case native?: answer[.meaning] = senses
-            case target?: answer[.definition] = senses
+        if native != target, !entry.senses.isEmpty {
+            switch SystemDictionary.detectedLanguage(of: entry.body, among: [native, target]) {
+            case native?:
+                let senses = entry.senses.map { stripLabels($0, isTargetWord: isTargetWord) }.filter { !$0.isEmpty }
+                answer[.meaning] = usable(senses, term: term, headword: entry.headword)
+            case target?:
+                answer[.definition] = usable(entry.senses, term: term, headword: entry.headword)
             default: break
             }
         }
         answer[.pronunciation] = entry.pronunciation(for: term)
         return answer
+    }
+
+    /// The first two senses — never just the word again (v15 S1 live pass:
+    /// "brainwave" came back as its own Turkish meaning).
+    private static func usable(_ senses: [String], term: String, headword: String) -> String? {
+        let kept = senses.filter { !DictionaryEntry.sameWord($0, term) && !DictionaryEntry.sameWord($0, headword) }
+        // Two senses can share a word ("düz; yassı" and "düz; dümdüz").
+        var seen = Set<String>()
+        let items = kept.prefix(2)
+            .flatMap { $0.components(separatedBy: "; ") }
+            .filter { seen.insert($0.lowercased()).inserted }
+        return items.isEmpty ? nil : items.joined(separator: "; ")
+    }
+
+    /// Drops target-language words at the start of a native sense — the
+    /// entry's sense labels, four letters or longer so short native words
+    /// ("on", "kat") stay — and at its end (cross-references, "prove to be").
+    static func stripLabels(_ sense: String, isTargetWord: (String) -> Bool) -> String {
+        sense.components(separatedBy: ";").map { part -> String in
+            var words = part.split(separator: " ").map(String.init)
+            func isLabel(_ word: String, minLength: Int) -> Bool {
+                word.count >= minLength && word.allSatisfy { $0.isASCII && $0.isLetter } && isTargetWord(word)
+            }
+            while words.count > 1, isLabel(words[0], minLength: 4) { words.removeFirst() }
+            while words.count > 1, let last = words.last, isLabel(last, minLength: 2) { words.removeLast() }
+            // A part that is only a label ("ilkbahar; bahar; before").
+            if words.count == 1, isLabel(words[0], minLength: 4) { return "" }
+            return words.joined(separator: " ")
+        }
+        .map { $0.trimmingCharacters(in: .whitespaces) }
+        .filter { !$0.isEmpty }
+        .joined(separator: "; ")
     }
 
     private static func accept(_ raw: String, _ request: FillRequest) -> String? {
@@ -265,6 +308,47 @@ final class WordEnricher {
         }
     }
 
+    // MARK: Repair (v15 S1 live pass)
+
+    /// Fills made before the live-pass fixes can hold the word itself as
+    /// its meaning (an entry without pronunciation bars), or — asked with
+    /// the book sentence as context — a meaning or definition that is
+    /// really about the sentence, even its whole translation. Once, at
+    /// launch: dictionary fields are read again with today's rules; model
+    /// meanings and definitions of words that have a sentence are emptied,
+    /// to be filled again with the fixed prompt. Only fields a fill wrote —
+    /// never yours. Returns how many fields were emptied.
+    @discardableResult
+    func repairEarlierFills(defaults: UserDefaults = .standard) -> Int {
+        let version = 2
+        guard defaults.integer(forKey: StorageKey.fillRepairVersion) < version else { return 0 }
+        var emptied = 0
+        for word in store.words {
+            let target = word.language.flatMap(Language.init(rawValue:)) ?? Language.storedTarget
+            let dictionaryFields = [FillField.meaning, .definition, .pronunciation].filter { word.source(of: $0) == .dictionary }
+            if !dictionaryFields.isEmpty {
+                let answer = WordFillEngine.dictionaryAnswer(
+                    for: word.term, raw: SystemDictionary.rawDefinition(for: word.term),
+                    native: Language.storedNative, target: target
+                )
+                for field in dictionaryFields where answer[field] != field.value(in: word) {
+                    store.replaceFilled(field, with: answer[field], forWordID: word.id)
+                    if answer[field] == nil { emptied += 1 }
+                }
+            }
+            guard !word.sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
+            for field in [FillField.meaning, .definition] {
+                guard let source = word.source(of: field), source != .dictionary else { continue }
+                store.clear(field, forWordID: word.id)
+                emptied += 1
+            }
+        }
+        defaults.set(version, forKey: StorageKey.fillRepairVersion)
+        // Bring the word list's strip back for what was emptied.
+        if emptied > 0 { defaults.set(-1, forKey: StorageKey.fillStripHiddenAtCount) }
+        return emptied
+    }
+
     // MARK: Dictionary on the card
 
     /// The dictionary's answer for a card whose back has nothing to show —
@@ -375,11 +459,13 @@ final class WordEnricher {
         await gate.acquire()
         defer { gate.release() }
         guard !Task.isCancelled else { return nil }
-        let context = request.sentence.isEmpty ? nil : String(request.sentence.prefix(400))
+        // No context sentence: with one, the definition prompt asks for two
+        // paragraphs, the first about the sentence — the card wants the
+        // general meaning (v15 S1 live pass).
         do {
             return try await provider.chat(
                 system: module.systemPrompt(customPreamble: "", nativeLanguage: request.native, targetLanguage: request.target),
-                user: module.userPrompt(term: request.term, mode: .word, detail: .short, context: context,
+                user: module.userPrompt(term: request.term, mode: .word, detail: .short,
                                         nativeLanguage: request.native, targetLanguage: request.target),
                 temperature: module.recommendedTemperature,
                 maxTokens: module.recommendedMaxTokens(mode: .word, detail: .short),

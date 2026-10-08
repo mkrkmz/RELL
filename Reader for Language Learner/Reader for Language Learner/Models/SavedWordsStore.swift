@@ -407,6 +407,23 @@ final class SavedWordsStore {
         return true
     }
 
+    /// Rewrites — or with nil empties — a value a fill wrote. A field you
+    /// saved or typed has no source and is left alone.
+    func replaceFilled(_ field: FillField, with value: String?, forWordID id: UUID) {
+        guard let index = words.firstIndex(where: { $0.id == id }),
+              words[index].fieldSources[field.rawValue] != nil else { return }
+        guard let value else { clear(field, forWordID: id); return }
+        switch field {
+        case .level:
+            guard let level = CEFRLevel(rawValue: value) else { return }
+            words[index].cefrLevel = level.rawValue
+        default:
+            guard let module = field.module else { return }
+            words[index].llmOutputs[module.rawValue] = value
+        }
+        save()
+    }
+
     /// Empties a field and forgets its source — "Remove" on the word page,
     /// and the first half of "Fill again".
     func clear(_ field: FillField, forWordID id: UUID) {

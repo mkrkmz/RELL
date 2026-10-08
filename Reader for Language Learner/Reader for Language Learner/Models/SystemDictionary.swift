@@ -58,6 +58,18 @@ enum SystemDictionary {
         detectedLanguage(of: strippingHeadword(from: definition, headword: headword))
     }
 
+    /// Which of `candidates` `text` is written in — for a dictionary entry,
+    /// where the choice is between your two languages and a short entry
+    /// ("adj korkak") is too little for an open guess.
+    static func detectedLanguage(of text: String, among candidates: [Language]) -> Language? {
+        guard text.count >= 3 else { return nil }
+        let recognizer = NLLanguageRecognizer()
+        recognizer.languageConstraints = candidates.compactMap { LemmaMatcher.nlLanguage(for: $0) }
+        recognizer.processString(text)
+        guard let best = recognizer.languageHypotheses(withMaximum: 1).first, best.value >= 0.6 else { return nil }
+        return LemmaMatcher.language(for: best.key)
+    }
+
     /// The language `text` is confidently written in, or nil for a short or
     /// ambiguous text.
     static func detectedLanguage(of body: String) -> Language? {
