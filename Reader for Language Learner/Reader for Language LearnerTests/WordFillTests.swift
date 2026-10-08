@@ -25,7 +25,7 @@ final class WordFillTests: XCTestCase {
 
     // MARK: Dictionary entries
 
-    func testBilingualEntriesGiveTheFirstSensesWithoutGrammar() {
+    func testBilingualEntriesGiveTheFirstSensesWithoutGrammar() async {
         XCTAssertEqual(DictionaryEntry(raw: manure)?.briefSenses, "hayvan gübresi")
         XCTAssertEqual(DictionaryEntry(raw: loll)?.briefSenses, "tembel tembel oturmak")
         XCTAssertEqual(DictionaryEntry(raw: gleam)?.briefSenses, "ışık; parıltı", "only the first part of speech")
@@ -34,7 +34,7 @@ final class WordFillTests: XCTestCase {
 
     /// v15 S1 live pass: an entry with no pronunciation bars gave the word
     /// itself as its Turkish meaning.
-    func testEntriesWithoutBarsFindTheirHeadword() throws {
+    func testEntriesWithoutBarsFindTheirHeadword() async throws {
         let entry = try XCTUnwrap(DictionaryEntry(raw: "brainwave n (ani bir) parlak fikir; ilham brain "))
         XCTAssertEqual(entry.headword, "brainwave")
         XCTAssertNil(entry.ipa)
@@ -42,13 +42,13 @@ final class WordFillTests: XCTestCase {
         XCTAssertEqual(DictionaryEntry(raw: sleep + "sleeper sleepless sleepwalking")?.body.hasSuffix("uyumak"), true)
     }
 
-    func testThesaurusEntriesAnswerNothing() {
+    func testThesaurusEntriesAnswerNothing() async {
         let entry = DictionaryEntry(raw: "untimely adjective 1 I would like to explain the untimely interruption. ill-timed, badly timed, mistimed; inopportune, inappropriate; inconvenient, awkward. ANTONYMS timely, opportune.")
         XCTAssertEqual(entry?.isThesaurus, true)
         XCTAssertNil(entry?.briefSenses, "an example and synonyms are not a definition")
     }
 
-    func testLabelsBeforeThePartOfSpeechAndAloneArePassedOver() {
+    func testLabelsBeforeThePartOfSpeechAndAloneArePassedOver() async {
         XCTAssertEqual(DictionaryEntry(raw: "teammate | ˈtiːmmeɪt | (also team mate) noun a fellow member of a team: we're good friends. ")?.briefSenses,
                        "a fellow member of a team")
         XCTAssertNil(DictionaryEntry(raw: "jeer | dʒiə(r) | intransitive verb ▸ jeer at alaya almak yuhalamak ")?.briefSenses,
@@ -59,7 +59,7 @@ final class WordFillTests: XCTestCase {
 
     /// Bilingual entries label senses in the language you study: "2 mock
     /// alay etmek", "2 state durum". Short native words ("kat") stay.
-    func testSenseLabelsInTheStudiedLanguageAreDropped() {
+    func testSenseLabelsInTheStudiedLanguageAreDropped() async {
         let english: Set<String> = ["mock", "state", "before", "prove", "to", "be", "kat", "surface"]
         func meaning(_ raw: String, _ term: String) -> String? {
             WordFillEngine.dictionaryAnswer(for: term, raw: raw, native: .turkish, target: .english,
@@ -74,7 +74,7 @@ final class WordFillTests: XCTestCase {
                        "düz; yassı; dümdüz")
     }
 
-    func testTheWordItselfIsNeverItsMeaning() {
+    func testTheWordItselfIsNeverItsMeaning() async {
         let answer = WordFillEngine.dictionaryAnswer(for: "brainwave", raw: "brainwave n brainwave ",
                                                      native: .turkish, target: .english)
         XCTAssertNil(answer[.meaning])
@@ -83,7 +83,7 @@ final class WordFillTests: XCTestCase {
 
     /// v15 S1 live pass: asked with the book sentence as context, the model
     /// wrote the sentence's translation as the Turkish meaning.
-    func testRepairEmptiesWhatTheContextPromptWroteAndNothingElse() throws {
+    func testRepairEmptiesWhatTheContextPromptWroteAndNothingElse() async throws {
         let store = makeStore()
         let translated = SavedWord(term: "savagely", sentence: "he thought savagely as he spread manure",
                                    llmOutputs: [ModuleType.meaningTR.rawValue: "\"Ünlü Harry Potter'ı şimdi görebilmeyi dilerlerdi.\""],
@@ -108,7 +108,7 @@ final class WordFillTests: XCTestCase {
         XCTAssertEqual(enricher.repairEarlierFills(defaults: defaults), 0, "runs once")
     }
 
-    func testMonolingualEntriesDropExamplesAndDerivatives() {
+    func testMonolingualEntriesDropExamplesAndDerivatives() async {
         XCTAssertEqual(DictionaryEntry(raw: archEnemy)?.briefSenses,
                        "a person who is extremely opposed or hostile to someone or something; (the arch-enemy) archaic the Devil")
         XCTAssertEqual(DictionaryEntry(raw: absentMinded)?.briefSenses,
@@ -117,7 +117,7 @@ final class WordFillTests: XCTestCase {
                        "a condition of rest; a gummy secretion")
     }
 
-    func testPronunciationOnlyForTheSavedFormItself() {
+    func testPronunciationOnlyForTheSavedFormItself() async {
         XCTAssertEqual(DictionaryEntry(raw: manure)?.pronunciation(for: "manure"), "/məˈnjυə(r)/")
         XCTAssertEqual(DictionaryEntry(raw: archEnemy)?.pronunciation(for: "archenemy"), "/ˌɑːtʃˈɛnɪmi/",
                        "a hyphen doesn't make another word")
@@ -126,7 +126,7 @@ final class WordFillTests: XCTestCase {
 
     // MARK: Validation
 
-    func testModelAnswersThatAreNoAnswerAreRejected() {
+    func testModelAnswersThatAreNoAnswerAreRejected() async {
         func ok(_ text: String, _ field: FillField = .definition, _ language: Language = .english) -> String? {
             FillValidator.accept(text, term: "manure", language: language, field: field)
         }
@@ -190,7 +190,7 @@ final class WordFillTests: XCTestCase {
 
     // MARK: Store
 
-    func testFillNeverWritesOverAValue() throws {
+    func testFillNeverWritesOverAValue() async throws {
         let store = makeStore()
         let word = SavedWord(term: "manure", llmOutputs: [ModuleType.meaningTR.rawValue: "gübre (mine)"])
         store.add(word)
@@ -214,7 +214,7 @@ final class WordFillTests: XCTestCase {
         XCTAssertNil(store.word(withID: word.id)?.source(of: .definition))
     }
 
-    func testOldFilesOpenAndSourcesRoundTrip() throws {
+    func testOldFilesOpenAndSourcesRoundTrip() async throws {
         let old = #"[{"id":"\#(UUID().uuidString)","term":"landlady","llmOutputs":{"meaningTR":"ev sahibesi"}}]"#
         let decoded = try JSONDecoder().decode([SavedWord].self, from: Data(old.utf8))
         XCTAssertEqual(decoded.first?.fieldSources, [:])
@@ -294,7 +294,7 @@ final class WordFillTests: XCTestCase {
         withExtendedLifetime(enricher) {}
     }
 
-    func testOnlyALocalServerCountsAsOnThisMac() {
+    func testOnlyALocalServerCountsAsOnThisMac() async {
         func check(_ type: LLMProviderType, _ url: String, _ model: String) -> Bool {
             WordEnricher.runsOnThisMac(type: type, serverURL: url, model: model)
         }

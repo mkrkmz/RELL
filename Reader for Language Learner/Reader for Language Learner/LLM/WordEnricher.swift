@@ -209,9 +209,10 @@ final class WordEnricher {
     /// Not on the main actor. With the module's default MainActor
     /// isolation every deinit is isolated, and on macOS 15 the
     /// back-deployed runtime for that (`swift_task_deinitOnExecutor…
-    /// BackDeploy`) frees a task-local scope twice when one isolated deinit
-    /// releases an object with another — here the store. CI's macOS 15.7
-    /// runner crashed on it (v15 S1). Nothing here needs the main actor.
+    /// BackDeploy`) frees a task-local scope twice when an isolated deinit
+    /// running outside any task releases another isolated object — here
+    /// the store, whose writer is one too. CI's macOS 15.7 runner crashed
+    /// on it from synchronous tests (v15 S1). Nothing here needs the actor.
     nonisolated deinit {}
 
     // MARK: Counts
