@@ -135,7 +135,17 @@ telaffuz, ornek cumle. **Maketle baslar.**
       kaynak sirasi, uzerine yazmama (mutasyonla dogrulandi), Durdur,
       kaydederken buluta gitmeme, eski veri decode, serit pencereyi buyutmez.
       Tam paket 658 test yesil
-- [ ] Canli tur (kullanici)
+- [x] Canli tur (2026-10-08) — bulunan ve duzeltilenler: cubuksuz sozluk
+      girdisi kelimenin kendisini anlam yaptı (brainwave); EN–TR girdilerdeki
+      Ingilizce anlam etiketleri ("mock alay etmek") NSSpellChecker ile
+      atiliyor; Oxford Thesaurus cevaplari atlaniyor; baglam cumlesiyle
+      istenen anlam/tanim cumlenin cevirisini yaziyordu → doldurma baglam
+      gondermez; bir kerelik onarim (fillRepairVersion 3); cekimli kelimede
+      telaffuz kok halinden, adiyla ("/sniə(r)/ (sneer)"); bir sey
+      bulunamazsa "Baska bir sey bulunamadi". CI (macOS 15): ana aktor
+      deinit'i Task disinda ic ice calisinca geri tasinmis calisma zamani
+      cokuyor — testler async; uygulamadaki risk ayri goreve alindi.
+      Test sureci artik Spotlight'a yazmiyor (paket 9 dk → 27 sn)
 
 ## Sprint 2 — "Calisma odasi" (Must)
 
