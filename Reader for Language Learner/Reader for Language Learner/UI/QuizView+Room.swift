@@ -113,17 +113,29 @@ extension QuizView {
             flipCard()
             return .handled
         }
-        .onKeyPress(.leftArrow) { undoLastGrade() ? .handled : .ignored }
+        // While an answer is being typed the keys are the text field's:
+        // S is a letter and the arrows move the cursor (v15 S3 live pass).
+        .onKeyPress(.leftArrow) {
+            guard !isTypingAnswer else { return .ignored }
+            return undoLastGrade() ? .handled : .ignored
+        }
         .onKeyPress(.rightArrow) {
+            guard !isTypingAnswer else { return .ignored }
             withAnimation(DS.Animation.springFast) { session.skipCurrent(mode: quizMode) }
             return .handled
         }
         .onKeyPress(characters: ["s", "S"]) { _ in
+            guard !isTypingAnswer else { return .ignored }
             speak(word)
             return .handled
         }
         .onAppear { roomFocused = true }
         .animation(DS.Animation.springFast, value: session.isFlipped)
+    }
+
+    /// The card on screen has a text field for the answer.
+    var isTypingAnswer: Bool {
+        !session.isFlipped && !session.isIntroducing && (cardMode == .typed || cardMode == .listening)
     }
 
     func finishIntroduction() {
@@ -180,10 +192,14 @@ extension QuizView {
 
     private var roomKeyHints: some View {
         HStack(spacing: DS.Spacing.lg) {
-            keyHint("Space", String(localized: "flip"))
-            keyHint("←", String(localized: "take back"))
-            keyHint("→", String(localized: "skip"))
-            keyHint("S", String(localized: "listen"))
+            if isTypingAnswer {
+                keyHint("↩", String(localized: "check"))
+            } else {
+                keyHint("Space", String(localized: "flip"))
+                keyHint("←", String(localized: "take back"))
+                keyHint("→", String(localized: "skip"))
+                keyHint("S", String(localized: "listen"))
+            }
             keyHint("Esc", String(localized: "end"))
         }
         .font(DS.Typography.caption)

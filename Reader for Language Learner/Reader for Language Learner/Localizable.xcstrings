@@ -2295,6 +2295,16 @@
         }
       }
     },
+    "check" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kontrol et"
+          }
+        }
+      }
+    },
     "Check" : {
       "localizations" : {
         "tr" : {
