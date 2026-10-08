@@ -232,6 +232,16 @@
         }
       }
     },
+    "%lld are already saved." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tanesi zaten kayıtlı."
+          }
+        }
+      }
+    },
     "%lld available" : {
       "localizations" : {
         "tr" : {
@@ -378,6 +388,16 @@
         }
       }
     },
+    "%lld in other languages are left out." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başka dillerdeki %lld kelime alınmıyor."
+          }
+        }
+      }
+    },
     "%lld matches" : {
       "localizations" : {
         "tr" : {
@@ -414,6 +434,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yarına kadar %lld kelime daha tekrar zamanına giriyor."
+          }
+        }
+      }
+    },
+    "%lld new words in %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld new words in %2$@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$@ dilinde %1$lld yeni kelime."
           }
         }
       }
@@ -574,6 +610,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld kelimenin anlamı eksik"
+          }
+        }
+      }
+    },
+    "%lld words imported into the Kindle deck." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelime Kindle destesine aktarıldı."
           }
         }
       }
@@ -774,6 +820,16 @@
         }
       }
     },
+    "1 word imported into the Kindle deck." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 kelime Kindle destesine aktarıldı."
+          }
+        }
+      }
+    },
     "1 word selected" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -881,6 +937,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kelimelerinden Bir Hikâye"
+          }
+        }
+      }
+    },
+    "A study room of its own" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kendine ait bir çalışma odası"
           }
         }
       }
@@ -1993,6 +2059,16 @@
         }
       }
     },
+    "BOOKS" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KİTAPLAR"
+          }
+        }
+      }
+    },
     "Both use your AI provider. Turn them off to avoid extra requests." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2000,6 +2076,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İkisi de yapay zekâ sağlayıcını kullanır. Ek istek istemiyorsan kapat."
+          }
+        }
+      }
+    },
+    "Bring your Kindle words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle kelimelerini getir"
           }
         }
       }
@@ -2386,6 +2472,26 @@
         }
       }
     },
+    "Choose File…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosya seç…"
+          }
+        }
+      }
+    },
+    "Choose vocab.db — on a Kindle it's in system/vocabulary." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vocab.db dosyasını seç; Kindle'da system/vocabulary klasöründe."
+          }
+        }
+      }
+    },
     "Choose where to save a copy of all your RELL data." : {
       "localizations" : {
         "tr" : {
@@ -2683,6 +2789,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yapay zekânı bağla"
+          }
+        }
+      }
+    },
+    "Connect your Kindle with a USB cable, or choose a vocab.db file." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'ını USB kablosuyla bağla ya da bir vocab.db dosyası seç."
           }
         }
       }
@@ -3696,12 +3812,32 @@
         }
       }
     },
+    "Every saved word gets a full card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her kayıtlı kelimenin tam bir kartı var"
+          }
+        }
+      }
+    },
     "Examples" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Örnekler"
+          }
+        }
+      }
+    },
+    "Exercises that follow the word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimeye göre alıştırma"
           }
         }
       }
@@ -3948,12 +4084,32 @@
         }
       }
     },
+    "Fill in their meanings right after" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlamlarını hemen ardından doldur"
+          }
+        }
+      }
+    },
     "Fill Missing" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eksikleri doldur"
+          }
+        }
+      }
+    },
+    "Fill Missing adds meanings, definitions and pronunciation from Apple's dictionary and the on-device model." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksikleri doldur; anlamı, tanımı ve telaffuzu Apple Sözlük'ten ve cihaz içi modelden ekler."
           }
         }
       }
@@ -4296,6 +4452,16 @@
         }
       }
     },
+    "From %@. The file is only read." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ dosyasından. Dosya yalnızca okunur."
+          }
+        }
+      }
+    },
     "FROM THE DICTIONARY" : {
       "localizations" : {
         "tr" : {
@@ -4316,12 +4482,32 @@
         }
       }
     },
+    "From the dictionary and the on-device model, in the background." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözlükten ve cihaz içi modelden, arka planda."
+          }
+        }
+      }
+    },
     "From the dictionary, else the model" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sözlükten; bulunamazsa modelden"
+          }
+        }
+      }
+    },
+    "From the Kindle connected to this Mac. It is only read, never changed." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac'e bağlı Kindle'dan. Yalnızca okunur, hiçbir şey değiştirilmez."
           }
         }
       }
@@ -4581,6 +4767,16 @@
         }
       }
     },
+    "Help with the words you keep forgetting" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sık unuttuğun kelimelere yardım"
+          }
+        }
+      }
+    },
     "Hide" : {
       "localizations" : {
         "tr" : {
@@ -4808,6 +5004,26 @@
         }
       }
     },
+    "Import %lld Words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelimeyi aktar"
+          }
+        }
+      }
+    },
+    "Import 1 Word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 kelimeyi aktar"
+          }
+        }
+      }
+    },
     "Import a Web Article" : {
       "localizations" : {
         "tr" : {
@@ -4848,6 +5064,26 @@
         }
       }
     },
+    "Import From Kindle" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'dan aktar"
+          }
+        }
+      }
+    },
+    "Import the words you looked up on your Kindle" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'da baktığın kelimeleri aktar"
+          }
+        }
+      }
+    },
     "Import Web Article" : {
       "localizations" : {
         "tr" : {
@@ -4864,6 +5100,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Web Makalesi İçe Aktar…"
+          }
+        }
+      }
+    },
+    "Import what you looked up on your Kindle, with the sentences and books." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'da baktığın kelimeleri cümleleri ve kitaplarıyla aktar."
           }
         }
       }
@@ -4918,6 +5164,16 @@
         }
       }
     },
+    "Include the %lld words marked as learned on Kindle" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'da öğrenildi diye işaretlenen %lld kelimeyi de al"
+          }
+        }
+      }
+    },
     "Indigo" : {
       "localizations" : {
         "tr" : {
@@ -4954,6 +5210,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Birkaç kart sonra soru olarak gelir (Boşluk)"
+          }
+        }
+      }
+    },
+    "it didn't open" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "açılamadı"
           }
         }
       }
@@ -5425,6 +5691,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pencere açık olmasa bile menü çubuğundan kelime ara."
+          }
+        }
+      }
+    },
+    "Looking for a connected Kindle…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bağlı bir Kindle aranıyor…"
           }
         }
       }
@@ -5993,6 +6269,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "YENİ KELİMELER"
+          }
+        }
+      }
+    },
+    "New words are introduced first; By Stage picks recognising, typing or listening for each card." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni kelimeler önce tanıtılır; Aşamaya göre her kart için seçme, yazma ya da dinlemeyi seçer."
           }
         }
       }
@@ -9388,6 +9674,16 @@
         }
       }
     },
+    "Select None" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiçbirini seçme"
+          }
+        }
+      }
+    },
     "Select or deselect all visible words" : {
       "localizations" : {
         "tr" : {
@@ -10273,6 +10569,16 @@
         }
       }
     },
+    "Study in a large or full-screen window: choose how many words, see when each comes back, end with a summary." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Büyük ya da tam ekran bir pencerede çalış: kaç kelime seç, her birinin ne zaman döneceğini gör, özetle bitir."
+          }
+        }
+      }
+    },
     "Study Room" : {
       "localizations" : {
         "tr" : {
@@ -10565,6 +10871,16 @@
         }
       }
     },
+    "The Kindle vocabulary file couldn't be read: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle kelime dosyası okunamadı: %@"
+          }
+        }
+      }
+    },
     "The model is still downloading. Try again later." : {
       "localizations" : {
         "tr" : {
@@ -10645,12 +10961,32 @@
         }
       }
     },
+    "Their meanings are being filled in; the progress shows above the word list." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlamları dolduruluyor; ilerleme kelime listesinin üstünde görünür."
+          }
+        }
+      }
+    },
     "Theme" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tema"
+          }
+        }
+      }
+    },
+    "They're marked, get a memory hook and can be studied on their own." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İşaretlenirler, akılda tutma ipucu alırlar ve ayrıca çalışılabilirler."
           }
         }
       }
@@ -10701,6 +11037,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu belge artık bu Mac'te değil"
+          }
+        }
+      }
+    },
+    "This isn't a Kindle vocabulary file (vocab.db)." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu bir Kindle kelime dosyası (vocab.db) değil."
           }
         }
       }
@@ -11076,6 +11422,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bilinmiyor"
+          }
+        }
+      }
+    },
+    "Unknown book" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilinmeyen kitap"
           }
         }
       }
@@ -11666,6 +12022,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yapay zekâ sağlayıcın; sık unuttuğun kelimeler için"
+          }
+        }
+      }
+    },
+    "Your Kindle wasn't changed." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'ında hiçbir şey değişmedi."
           }
         }
       }

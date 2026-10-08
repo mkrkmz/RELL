@@ -4,6 +4,57 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.44.0] - 2026-10-09
+
+Learn the words you save. Roadmap v15 (Sprints 0–4): every saved word gets
+a card worth studying, word study moves into a room of its own, the
+exercises follow how well you know each word, and your Kindle words come in.
+
+### Added
+
+- **Fill Missing.** Saved words that had no meaning now get one. Fill
+  Missing in the word list fills the meaning in your language, the
+  definition, the pronunciation and the level, from Apple's dictionary
+  first, then Apple's on-device model, then your AI provider if you allow
+  it. Nothing you saved or typed is replaced, and each filled field shows
+  where it came from on the word's page, where you can edit, fill again or
+  remove it. Words you save from now on are filled in a few seconds later
+  (dictionary and on-device model only; a cloud provider is never used
+  without you pressing the button). Settings ▸ Study turns this off.
+- **The study room.** Word study has its own window, large or full screen
+  (⌥⌘V, the home screen's review card, ⌘K or "Study Full Screen" in the
+  sidebar). Choose how many words, from where (all, the book you read last,
+  a deck, or the ones you keep forgetting) and how many new ones. Cards are
+  large, with the sentence you met the word in; the rating buttons say when
+  the word comes back. Space flips, 1–4 grade, ← takes back the last grade,
+  → puts the card at the end, S reads the word, Esc ends with a summary of
+  what you remembered, what you struggled with and what settled.
+- **New words are introduced** in the study room before they're asked.
+- **By Stage.** A new way to study that picks the exercise per card: choose
+  the word while it's new, type it while you're learning it, hear and type
+  it once it has settled.
+- **Words you keep forgetting** (marked Again twice or more) are flagged in
+  the list and get a memory hook from your AI provider on this Mac.
+- **Import from Kindle.** The books button under the word list reads the
+  words you looked up on a connected Kindle (or a vocab.db file), with the
+  sentence and book of each, into a Kindle deck, and fills their meanings.
+  The Kindle is only read.
+
+### Changed
+
+- Fill-in-the-blank cards prefer sentences from your books with nothing
+  else you're still learning in them.
+- On the card back, a word without a meaning shows Apple's dictionary entry
+  with Add to Card.
+- Inflected words show their base form's pronunciation, named
+  ("/sniə(r)/ (sneer)").
+- "Estimate Missing Levels" moved into Fill Missing.
+
+### Fixed
+
+- Words saved from the right-click menu, Quick Lookup and Shortcuts were
+  stored with a different spelling of their mode.
+
 ## [1.43.0] - 2026-10-02
 
 Calmer to read, easier to find your way. Roadmap v14 (Sprints 0–4): no new

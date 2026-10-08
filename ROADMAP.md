@@ -206,15 +206,26 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-08).
       basina mod, tanitim akisi, i+1 secimi (mutasyonla dogrulandi), zorlu
       isaretinin bir kez yayinlanmasi, ipucunun buluta gitmemesi. Tam paket
       682 yesil
-- [ ] Canli tur (kullanici)
+- [x] Canli tur (2026-10-08) — yazma alistirmasinda S, ← ve → yazma
+      alanina gitmiyordu (oda kisayollari yakaliyordu); cevap yazilirken bu
+      tuslar alanin (b30dcaf)
 
 ## Sprint 4 — "Kelime getiren kapilar ve kapanis"
 
-- [ ] **Kindle kelime defteri** (Must) — vocab.db sec ya da bagli Kindle'i
-      bul; kelimeler, Kindle cumleleri ve kitap adlariyla gelir; kopyalar
-      atlanir; S1 doldurmasi eksikleri tamamlar
-- [ ] ~~Kisayollar~~ — S0 olumsuz: imzasiz derlemede Kisayollar'da
-      gorunmuyor (takim kimligi gerekir); v15 disi
+- [x] **Kindle kelime defteri** (Must) — gercek dosya (2026-10-09,
+      kullanicinin Kindle'i, kopyadan salt okunur): 559 kelime (550 en, 9 tr),
+      597 arama, 15 kitap; sema beklenen (WORDS / LOOKUPS / BOOK_INFO).
+      `KindleVocabulary` dosyayi gecici klasore kopyalar, kopyayi
+      `immutable=1` ile acar (Kindle'a hicbir sey yazilmaz, kilit dosyasi
+      bile olusmaz); her kelime en yeni aramasinin cumlesi ve kitabiyla.
+      `KindleImportSheet` (kelime listesinin altindaki kitap dugmesi):
+      bagli Kindle'i kendi bulur ya da vocab.db secilir; yalniz calisilan
+      dil, kayitli olanlar (terim ya da kok) atlanir, kitap kitap secim,
+      Kindle'da "ogrenildi" olanlar istege bagli; "Kindle" destesine
+      `addImported` ile tek kayitta eklenir (kelime basina doldurma/CEFR
+      tetiklenmez), ardindan sozluk + cihaz ici modelle toplu doldurma.
+      `KindleImportTests` (6, sema fiksturu)
+- [x] ~~Kisayollar~~ — S0 olumsuz (takim kimligi gerekir); v15 disi
 - [ ] Kapanis (Must): tam test, performans karsilastirmasi, canli tur,
       CHANGELOG, **1.44.0** (tag oncesi kullaniciya sorulur)
 

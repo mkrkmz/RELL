@@ -28,6 +28,7 @@ struct SavedWordsListView: View {
     @State private var fillScope: Set<UUID>?
     @State private var selectedWord: SavedWord?
     @State private var showBulkExport = false
+    @State private var showKindleImport = false
     @State private var showClearConfirm = false
 
     // Multi-select mode for bulk deck assignment / deletion.
@@ -177,6 +178,9 @@ struct SavedWordsListView: View {
                     missingMeaningOnly = true
                 }
             }
+        }
+        .sheet(isPresented: $showKindleImport) {
+            KindleImportSheet(store: store, enricher: enricher)
         }
         .sheet(isPresented: $showBulkExport) {
             BulkAnkiExportView(store: store)
@@ -395,6 +399,16 @@ struct SavedWordsListView: View {
                     .font(DS.Typography.caption)
             }
             .disabled(store.words.isEmpty)
+
+            Button {
+                showKindleImport = true
+            } label: {
+                Label("Import From Kindle", systemImage: "books.vertical")
+                    .labelStyle(.iconOnly)
+                    .font(DS.Typography.caption)
+            }
+            .help("Import the words you looked up on your Kindle")
+            .accessibilityLabel("Import From Kindle")
 
             Button {
                 isSelecting = true

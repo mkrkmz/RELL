@@ -149,6 +149,22 @@ final class SavedWordsStore {
         NotificationCenter.default.post(name: .savedWordAdded, object: word.id)
     }
 
+    /// Adds many words at once — a Kindle import (v15 S4). One save, and no
+    /// `.savedWordAdded` per word: the save-time fill and CEFR estimate
+    /// would fire hundreds of model requests at once; the importer starts
+    /// one bulk fill instead. Words already saved (same term) are skipped.
+    /// Returns the ids added.
+    @discardableResult
+    func addImported(_ newWords: [SavedWord]) -> [UUID] {
+        var terms = Set(words.map { $0.term.lowercased() })
+        let added = newWords.filter { terms.insert($0.term.lowercased()).inserted }
+        guard !added.isEmpty else { return [] }
+        words.insert(contentsOf: added, at: 0)
+        save()
+        added.forEach(SpotlightIndexer.index)
+        return added.map(\.id)
+    }
+
     func update(_ word: SavedWord) {
         guard let index = words.firstIndex(where: { $0.id == word.id }) else { return }
         words[index] = word

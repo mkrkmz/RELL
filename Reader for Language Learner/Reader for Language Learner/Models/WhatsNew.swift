@@ -25,6 +25,23 @@ nonisolated struct WhatsNew: Equatable, Sendable, Identifiable {
     /// Newest first.
     static var releases: [WhatsNew] {
         [
+            WhatsNew(version: "1.44", items: [
+                Item(icon: "text.badge.plus",
+                     title: String(localized: "Every saved word gets a full card"),
+                     detail: String(localized: "Fill Missing adds meanings, definitions and pronunciation from Apple's dictionary and the on-device model.")),
+                Item(icon: "rectangle.stack",
+                     title: String(localized: "A study room of its own"),
+                     detail: String(localized: "Study in a large or full-screen window: choose how many words, see when each comes back, end with a summary.")),
+                Item(icon: "shuffle",
+                     title: String(localized: "Exercises that follow the word"),
+                     detail: String(localized: "New words are introduced first; By Stage picks recognising, typing or listening for each card.")),
+                Item(icon: "exclamationmark.arrow.circlepath",
+                     title: String(localized: "Help with the words you keep forgetting"),
+                     detail: String(localized: "They're marked, get a memory hook and can be studied on their own.")),
+                Item(icon: "books.vertical",
+                     title: String(localized: "Bring your Kindle words"),
+                     detail: String(localized: "Import what you looked up on your Kindle, with the sentences and books.")),
+            ]),
             WhatsNew(version: "1.43", items: [
                 Item(icon: "text.cursor",
                      title: String(localized: "The selection bar says what it does"),
