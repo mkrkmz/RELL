@@ -17,8 +17,13 @@ struct SavedWordDetailSheet: View {
     @Environment(WordEncounterStore.self) private var encounterStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openWindow) private var openWindow
+    @Environment(WordEnricher.self) private var enricher: WordEnricher?
+    @AppStorage(StorageKey.fillUsesProvider) private var fillUsesProvider = true
 
     @State private var showAllEncounters = false
+    @State private var isFilling = false
+    @State private var editingField: FillField?
+    @State private var editText = ""
     @State private var showDetails = false
 
     /// Encounters shown before "Show all".
@@ -35,11 +40,13 @@ struct SavedWordDetailSheet: View {
         word.language.flatMap(Language.init(rawValue:)) ?? Language.storedTarget
     }
 
+    /// The meaning in your language, else the definition — the hero's line.
     private var definition: String? {
-        guard let raw = word.llmOutputs[ModuleType.definitionEN.rawValue] else { return nil }
-        let text = MarkdownUtils.sanitizeLLMOutput(raw).trimmingCharacters(in: .whitespacesAndNewlines)
-        return text.isEmpty ? nil : text
+        SavedWordRow.oneLineMeaning(of: word).map { MarkdownUtils.sanitizeLLMOutput($0) }
     }
+
+    /// Fields the card section lists, in card order.
+    private static let cardFields: [FillField] = [.meaning, .definition, .pronunciation, .examples, .level]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -55,6 +62,7 @@ struct SavedWordDetailSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: DS.Spacing.lg) {
                     hero
+                    cardSection
                     memoryCard
                     encountersSection
                     if !word.sentence.isEmpty { savedContext }
@@ -91,6 +99,13 @@ struct SavedWordDetailSheet: View {
                     .foregroundStyle(DS.Color.textPrimary)
                     .textSelection(.enabled)
                 SpeakButton(text: word.term, size: 15, language: language)
+                if let ipa = FillField.pronunciation.value(in: word) {
+                    Text(ipa)
+                        .font(DS.Typography.caption.monospaced())
+                        .foregroundStyle(DS.Color.textSecondary)
+                        .lineLimit(1)
+                        .textSelection(.enabled)
+                }
                 Spacer()
                 if let cefr = word.cefrLevel {
                     Text(cefr)
@@ -116,6 +131,188 @@ struct SavedWordDetailSheet: View {
                     .textSelection(.enabled)
             }
         }
+    }
+
+    // MARK: - Card (v15 S1)
+
+    /// What the review card shows, field by field, with where each came
+    /// from. Empty fields can be filled here; a filled one can be edited,
+    /// filled again or removed from its context menu.
+    private var cardSection: some View {
+        let empty = Self.cardFields.filter { $0 != .examples && $0.isMissing(in: word) }.count
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: DS.Spacing.sm) {
+                Text("CARD").dsOverlineLabel()
+                Spacer()
+                if empty > 0 {
+                    Text(empty == 1 ? String(localized: "1 field empty") : String(localized: "\(empty) fields empty"))
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textTertiary)
+                }
+                Button {
+                    NSWorkspace.shared.open(Self.dictionaryURL(for: word.term))
+                } label: {
+                    Label("Open in Dictionary", systemImage: "character.book.closed")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+                .help("Open in Dictionary")
+                .accessibilityLabel("Open in Dictionary")
+                if enricher != nil && empty > 0 {
+                    Button {
+                        fillMissing()
+                    } label: {
+                        if isFilling {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Text("Fill Missing")
+                        }
+                    }
+                    .controlSize(.small)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isFilling)
+                }
+            }
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.vertical, DS.Spacing.sm)
+
+            ForEach(Self.cardFields) { field in
+                Divider()
+                cardRow(field)
+            }
+        }
+        .dsCard(padding: nil)
+    }
+
+    @ViewBuilder
+    private func cardRow(_ field: FillField) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.sm) {
+            Text(field.localizedTitle)
+                .font(DS.Typography.caption)
+                .foregroundStyle(DS.Color.textTertiary)
+                .frame(width: 96, alignment: .leading)
+            if editingField == field {
+                TextField(field.localizedTitle, text: $editText, axis: .vertical)
+                    .textFieldStyle(.roundedBorder)
+                    .lineLimit(1...4)
+                    .onSubmit { commitEdit() }
+                Button("Done") { commitEdit() }
+                    .controlSize(.small)
+            } else {
+                Group {
+                    if let value = field.value(in: word) {
+                        Text(value)
+                            .font(field == .pronunciation ? DS.Typography.callout.monospaced() : DS.Typography.callout)
+                            .foregroundStyle(DS.Color.textPrimary)
+                            .lineLimit(4)
+                            .textSelection(.enabled)
+                    } else {
+                        Text(emptyText(for: field))
+                            .font(DS.Typography.callout.italic())
+                            .foregroundStyle(DS.Color.textTertiary)
+                            .lineLimit(2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if let source = word.source(of: field), !field.isMissing(in: word) {
+                    SourceChip(source: source)
+                }
+            }
+        }
+        .padding(.horizontal, DS.Spacing.md)
+        .padding(.vertical, DS.Spacing.sm)
+        .contentShape(Rectangle())
+        .contextMenu {
+            if field != .level {
+                Button("Edit") { beginEdit(field) }
+            }
+            if enricher != nil {
+                Button("Fill Again") { refill(field) }
+            }
+            if !field.isMissing(in: word) {
+                Divider()
+                Button("Remove", role: .destructive) { remove(field) }
+            }
+        }
+    }
+
+    private func emptyText(for field: FillField) -> String {
+        if field == .examples && !word.sentence.isEmpty {
+            return String(localized: "Empty. The card shows the sentence from your book.")
+        }
+        return String(localized: "Empty")
+    }
+
+    /// `dict://` opens Dictionary at the word — the whole entry the card
+    /// only takes two senses from.
+    static func dictionaryURL(for term: String) -> URL {
+        let encoded = term.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? term
+        return URL(string: "dict://\(encoded)") ?? URL(string: "dict://")!
+    }
+
+    private func fillMissing() {
+        guard let enricher else { return }
+        isFilling = true
+        Task {
+            await enricher.fill(wordID: word.id, allowProvider: fillUsesProvider)
+            mergeFilledFields()
+            isFilling = false
+        }
+    }
+
+    private func refill(_ field: FillField) {
+        guard let enricher else { return }
+        clearLocally(field)
+        isFilling = true
+        Task {
+            await enricher.refill(field, wordID: word.id, allowProvider: fillUsesProvider)
+            mergeFilledFields()
+            isFilling = false
+        }
+    }
+
+    private func remove(_ field: FillField) {
+        clearLocally(field)
+    }
+
+    private func clearLocally(_ field: FillField) {
+        if field == .level {
+            word.cefrLevel = nil
+            word.cefrIsAuto = false
+        } else if let module = field.module {
+            word.llmOutputs[module.rawValue] = nil
+        }
+        word.fieldSources[field.rawValue] = nil
+    }
+
+    /// The fill writes to the store; this page edits a copy until Save, so
+    /// fields the fill found are brought over — only into fields that are
+    /// still empty here.
+    private func mergeFilledFields() {
+        guard let stored = store.word(withID: word.id) else { return }
+        for field in FillField.allCases where field.isMissing(in: word) && !field.isMissing(in: stored) {
+            if field == .level {
+                word.cefrLevel = stored.cefrLevel
+                word.cefrIsAuto = stored.cefrIsAuto
+            } else if let module = field.module {
+                word.llmOutputs[module.rawValue] = stored.llmOutputs[module.rawValue]
+            }
+            word.fieldSources[field.rawValue] = stored.fieldSources[field.rawValue]
+        }
+    }
+
+    private func beginEdit(_ field: FillField) {
+        editText = field.value(in: word) ?? ""
+        editingField = field
+    }
+
+    /// What you type is yours: it loses the "filled from" mark.
+    private func commitEdit() {
+        guard let field = editingField, let module = field.module else { editingField = nil; return }
+        let text = editText.trimmingCharacters(in: .whitespacesAndNewlines)
+        word.llmOutputs[module.rawValue] = text.isEmpty ? nil : text
+        word.fieldSources[field.rawValue] = nil
+        editingField = nil
     }
 
     // MARK: - Memory
@@ -265,7 +462,9 @@ struct SavedWordDetailSheet: View {
                         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 }
 
-                if !word.llmOutputs.isEmpty { savedOutputs }
+                if word.llmOutputs.keys.contains(where: { key in !Self.cardFields.contains { $0.module?.rawValue == key } }) {
+                    savedOutputs
+                }
 
                 metadataSection
             }
@@ -280,7 +479,10 @@ struct SavedWordDetailSheet: View {
     private var savedOutputs: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             Text("SAVED OUTPUTS").dsOverlineLabel()
-            ForEach(ModuleType.allCases.filter { word.llmOutputs[$0.rawValue] != nil }) { module in
+            // The card's own fields are in the Card section above.
+            ForEach(ModuleType.allCases.filter { module in
+                word.llmOutputs[module.rawValue] != nil && !Self.cardFields.contains { $0.module == module }
+            }) { module in
                 let value = word.llmOutputs[module.rawValue] ?? ""
                 VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
                     HStack(spacing: DS.Spacing.xs) {

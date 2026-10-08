@@ -54,8 +54,13 @@ enum SystemDictionary {
     /// The headword and its pronunciation open the entry in the *looked-up*
     /// word's language ("sleep | sliːp | n uyku…"), which pulls detection the
     /// wrong way on a bilingual entry, so they're dropped first.
-    private static func language(of definition: String, headword: String) -> Language? {
-        let body = strippingHeadword(from: definition, headword: headword)
+    static func language(of definition: String, headword: String) -> Language? {
+        detectedLanguage(of: strippingHeadword(from: definition, headword: headword))
+    }
+
+    /// The language `text` is confidently written in, or nil for a short or
+    /// ambiguous text.
+    static func detectedLanguage(of body: String) -> Language? {
         guard body.count >= 8 else { return nil }
 
         let recognizer = NLLanguageRecognizer()

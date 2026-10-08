@@ -25,6 +25,13 @@ nonisolated enum StorageKey {
     static let dailyReminderTime = "dailyReminderTime"
     static let domainPreference = "domainPreference"
     static let epubFontSize = "epubFontSize"
+    /// Fill a new word's empty card fields after saving it (v15 S1). On by default.
+    static let fillOnSave = "fillOnSave"
+    /// "Fill Missing" may ask the configured provider too (v15 S1). On by default.
+    static let fillUsesProvider = "fillUsesProvider"
+    /// The words-list strip stays hidden while this many or fewer words lack
+    /// a meaning (v15 S1) — it comes back when a new word adds to them.
+    static let fillStripHiddenAtCount = "fillStripHiddenAtCount"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     /// The "major.minor" whose What's New page was last shown (v14 S3).

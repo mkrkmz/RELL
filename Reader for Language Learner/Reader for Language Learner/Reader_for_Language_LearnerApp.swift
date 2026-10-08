@@ -51,6 +51,7 @@ struct Reader_for_Language_LearnerApp: App {
     @State private var coverStore        = DocumentCoverStore()
     @State private var ankiPrefs         = AnkiModulePreferences()
     @State private var cefrEstimator:    CEFREstimator
+    @State private var wordEnricher:     WordEnricher
 
     init() {
         // The HUD panel lives outside the SwiftUI scene tree, so it gets its
@@ -60,7 +61,12 @@ struct Reader_for_Language_LearnerApp: App {
         _savedWordsStore = State(initialValue: savedWords)
         _quickLookup = State(initialValue: lookup)
         // Listens for .savedWordAdded — estimates CEFR for unrated new words.
-        _cefrEstimator = State(initialValue: CEFREstimator(savedWordsStore: savedWords))
+        let estimator = CEFREstimator(savedWordsStore: savedWords)
+        _cefrEstimator = State(initialValue: estimator)
+        // Also listens for .savedWordAdded — fills a new word's empty card
+        // fields from the dictionary and the on-device model (v15 S1).
+        _wordEnricher = State(initialValue: WordEnricher(store: savedWords, cefrEstimator: estimator,
+                                                         observesSaves: !RELLProcess.isTestHost))
         QuickLookupPanelController.shared.configure(
             savedWordsStore: savedWords,
             quickLookup: lookup
@@ -111,6 +117,7 @@ struct Reader_for_Language_LearnerApp: App {
                 .environment(coverStore)
                 .environment(ankiPrefs)
                 .environment(cefrEstimator)
+                .environment(wordEnricher)
                 .rellAccentTint()
         }
         .defaultSize(width: 1200, height: 800)
@@ -125,6 +132,7 @@ struct Reader_for_Language_LearnerApp: App {
         Window("Vocabulary Review", id: "review") {
             QuizView(store: savedWordsStore)
                 .environment(encounterStore)
+                .environment(wordEnricher)
                 .frame(minWidth: 460, minHeight: 560)
                 .rellAccentTint()
         }

@@ -22,6 +22,7 @@ struct LearningSettingsView: View {
     @AppStorage(StorageKey.readingRecapEnabled) private var readingRecapEnabled = true
     @AppStorage(StorageKey.chapterWarmUpEnabled) private var chapterWarmUpEnabled = true
     @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
+    @AppStorage(StorageKey.fillOnSave) private var fillOnSave = true
     @AppStorage(DailyReminderManager.enabledKey) private var dailyReminderEnabled = false
     @AppStorage(DailyReminderManager.timeKey) private var dailyReminderTime = DailyReminderManager.storedTime()
 
@@ -73,6 +74,25 @@ struct LearningSettingsView: View {
                 Text("Reading Loop")
             } footer: {
                 Text("Recaps and warm-ups use your AI provider, or Apple's on-device model where it's on.")
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+
+            Section {
+                Toggle(isOn: $fillOnSave) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Fill In Empty Fields")
+                        Text("Meaning, definition and pronunciation, a few seconds after you save a word.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                if fillOnSave {
+                    SourceChain(includesProvider: WordEnricher.runsOnThisMac(LLMConfiguration()))
+                }
+            } header: {
+                Text("When You Save a Word")
+            } footer: {
+                Text("A cloud provider is never used here. Only \"Fill Missing\" in the word list can use it.")
                     .foregroundStyle(DS.Color.textTertiary)
             }
 

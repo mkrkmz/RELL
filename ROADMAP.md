@@ -110,17 +110,32 @@ Amac: kod yazmadan once belirsizlikleri kullanicinin verisiyle kapatmak.
 Amac: her kayitli kelimenin calisilabilir bir karti olsun — tanim, anlam,
 telaffuz, ornek cumle. **Maketle baslar.**
 
-- [ ] **Doldurma servisi** — alan alan en ucuz guvenilir kaynaktan: Apple
-      sozlugu → cihaz ici model → yapay zeka saglayicisi. Var olanin uzerine
-      yazmaz, kaynagi isaretler; CEFR tahminindeki toplu is deseni (ilerleme,
-      iptal)
-- [ ] **Kelime listesinde "Eksikleri doldur"** — eksik sayisi, alan secimi,
-      ilerleme, iptal; kelime sayfasinda tek kelime icin ayni eylem
-- [ ] **Bos kart yuzu kalmasin** — aciklama yoksa kartin arkasi Apple
-      sozlugu sonucunu gosterir ve "Doldur" sunar; coktan secmeli/eslestirme
-      doldurulmus aciklamalari kullanir
-- [ ] **Kaydederken doldur** (Should) — karar 1'deki kaynak kuraliyla
-- [ ] Testler: kaynak sirasi, uzerine yazmama, iptal, eski veri decode
+- [x] **Doldurma servisi** — `WordEnricher` + `WordFillEngine` (LLM/),
+      `FillField`/`FillSource`/`DictionaryEntry`/`FillValidator`
+      (Models/WordFill.swift). Alan alan: Apple sozlugu → cihaz ici model →
+      saglayici. Sozluk cevabinin dili alani secer (anadil → anlam, hedef →
+      tanim); ilk iki anlam (karar 4); IPA yalniz kayitli bicimin kendi
+      girdisindeyse ("lolled" → "loll" IPA'si alinmaz). Var olanin uzerine
+      yazmaz (`SavedWordsStore.fill`), kaynak `SavedWord.fieldSources`'ta.
+      Seviye tahmini buraya tasindi (karar 2; filtre menusundeki toplu eylem
+      kalkti)
+- [x] **Kelime listesinde "Eksikleri doldur"** — serit (eksik sayisi /
+      ilerleme + Durdur; kapatilinca yeni eksik gelene kadar gizli), pencere
+      (alan secimi, ornekler varsayilan kapali — karar 1; saglayici anahtari;
+      kaynaga gore sayim; hala eksik kalanlar), "Anlami eksik olanlar"
+      filtresi, satir sag tik + coklu secim; kelime sayfasinda "Kart" bolumu
+      (kaynak etiketi, Duzenle / Yeniden doldur / Kaldir, Sozlukte ac)
+- [x] **Bos kart yuzu kalmasin** — anlam/tanim yoksa kartin arkasinda
+      "SOZLUKTEN" cevabi canli okunur, "Karta ekle" kalici yapar (karar 3);
+      doldurulan kelimeler coktan secmeli/eslestirmeye kendiliginden girer
+- [x] **Kaydederken doldur** — Ayarlar ▸ Calisma, varsayilan acik; sozluk +
+      cihaz ici model + yalniz bu Mac'teki sunucu (LM Studio/Ollama,
+      `-cloud` modeller haric); seviye CEFR tahmincisinde kalir
+- [x] Testler: `WordFillTests` (14) — gercek sozluk girdileriyle ayristirma,
+      kaynak sirasi, uzerine yazmama (mutasyonla dogrulandi), Durdur,
+      kaydederken buluta gitmeme, eski veri decode, serit pencereyi buyutmez.
+      Tam paket 658 test yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 2 — "Calisma odasi" (Must)
 

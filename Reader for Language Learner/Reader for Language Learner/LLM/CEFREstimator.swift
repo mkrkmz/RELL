@@ -3,8 +3,9 @@
 //  Reader for Language Learner
 //
 //  LLM-backed CEFR level estimation for saved words. Two entry points:
-//  a fire-and-forget estimate when a word is saved without a level, and a
-//  user-triggered bulk pass over every unrated word. Estimates only ever
+//  a fire-and-forget estimate when a word is saved without a level, and
+//  `estimate(term:)` for "Fill Missing" (`WordEnricher`, v15 S1), which
+//  took over the bulk pass over every unrated word. Estimates only ever
 //  fill `cefrLevel == nil` — a user-assigned level is never overwritten —
 //  and failures write nothing (a wrong badge is worse than no badge).
 //
@@ -20,12 +21,6 @@ final class CEFREstimator {
     /// Single-slot gate: estimation is background nicety traffic and must
     /// never compete with the inspector/HUD for a local server's one GPU context.
     @ObservationIgnored private let gate = AsyncLimiter(limit: 1)
-
-    // Bulk-run state for the toolbar popover.
-    private(set) var isRunningBulk = false
-    private(set) var bulkCompleted = 0
-    private(set) var bulkTotal = 0
-    @ObservationIgnored private var bulkTask: Task<Void, Never>?
 
     init(savedWordsStore: SavedWordsStore) {
         self.savedWordsStore = savedWordsStore
@@ -57,48 +52,11 @@ final class CEFREstimator {
         }
     }
 
-    // MARK: - Bulk estimation
-
-    var unratedCount: Int {
-        savedWordsStore.words.count(where: { $0.cefrLevel == nil })
-    }
-
-    func estimateMissing() {
-        guard !isRunningBulk else { return }
-        let targets = savedWordsStore.words.filter { $0.cefrLevel == nil }.map { ($0.id, $0.term) }
-        guard !targets.isEmpty else { return }
-
-        isRunningBulk = true
-        bulkCompleted = 0
-        bulkTotal = targets.count
-
-        bulkTask = Task(priority: .utility) { [weak self] in
-            for (id, term) in targets {
-                guard let self, !Task.isCancelled else { break }
-                if let level = await self.estimate(term: term) {
-                    // Re-check nil — the user may have assigned a level mid-run.
-                    if self.savedWordsStore.word(withID: id)?.cefrLevel == nil {
-                        self.savedWordsStore.setAutoCEFRLevel(level, forWordID: id)
-                    }
-                }
-                self.bulkCompleted += 1
-            }
-            self?.isRunningBulk = false
-            self?.bulkTask = nil
-        }
-    }
-
-    func cancelBulk() {
-        bulkTask?.cancel()
-        bulkTask = nil
-        isRunningBulk = false
-    }
-
     // MARK: - Single estimate
 
     /// One micro-request → one strict-parsed token. Any failure or format
     /// drift returns nil; nothing is stored.
-    private func estimate(term: String) async -> CEFRLevel? {
+    func estimate(term: String) async -> CEFRLevel? {
         await gate.acquire()
         defer { gate.release() }
         guard !Task.isCancelled else { return nil }

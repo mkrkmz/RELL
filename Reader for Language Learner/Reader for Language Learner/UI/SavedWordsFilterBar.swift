@@ -24,7 +24,8 @@ struct SavedWordsFilterBar: View {
     @Binding var selectedCEFR: CEFRLevel?
     @Binding var selectedLanguage: Language?
 
-    @Environment(CEFREstimator.self) private var cefrEstimator
+    /// Only words whose card has no meaning yet (v15 S1).
+    var missingMeaningOnly: Binding<Bool> = .constant(false)
 
     /// v14 S3: status, sort and one Filter menu (deck, level, language) on
     /// the first line; the count and the filters in effect — each removable
@@ -76,6 +77,7 @@ struct SavedWordsFilterBar: View {
 
     private var activeCount: Int {
         (selectedTag != nil ? 1 : 0) + (selectedCEFR != nil ? 1 : 0) + (selectedLanguage != nil ? 1 : 0)
+            + (missingMeaningOnly.wrappedValue ? 1 : 0)
     }
 
     // MARK: Filter menu
@@ -102,30 +104,27 @@ struct SavedWordsFilterBar: View {
                 }
             }
 
-            if !usedCEFRLevels.isEmpty || cefrEstimator.unratedCount > 0 {
+            Section("Card") {
+                Button {
+                    missingMeaningOnly.wrappedValue.toggle()
+                } label: {
+                    Label("Missing a meaning", systemImage: missingMeaningOnly.wrappedValue ? "checkmark" : "")
+                }
+            }
+
+            // Estimating missing levels moved to "Fill Missing" (v15 S1).
+            if !usedCEFRLevels.isEmpty {
                 Section("Level") {
-                    if !usedCEFRLevels.isEmpty {
-                        Button {
-                            selectedCEFR = nil
-                        } label: {
-                            Label("All levels", systemImage: selectedCEFR == nil ? "checkmark" : "")
-                        }
-                        ForEach(usedCEFRLevels) { level in
-                            Button {
-                                selectedCEFR = level
-                            } label: {
-                                Label(level.rawValue, systemImage: selectedCEFR == level ? "checkmark" : "")
-                            }
-                        }
+                    Button {
+                        selectedCEFR = nil
+                    } label: {
+                        Label("All levels", systemImage: selectedCEFR == nil ? "checkmark" : "")
                     }
-                    if cefrEstimator.isRunningBulk {
-                        Text("Estimating… \(cefrEstimator.bulkCompleted)/\(cefrEstimator.bulkTotal)")
-                        Button("Cancel Estimation") { cefrEstimator.cancelBulk() }
-                    } else if cefrEstimator.unratedCount > 0 {
+                    ForEach(usedCEFRLevels) { level in
                         Button {
-                            cefrEstimator.estimateMissing()
+                            selectedCEFR = level
                         } label: {
-                            Label("Estimate Missing Levels (\(cefrEstimator.unratedCount))", systemImage: "sparkle")
+                            Label(level.rawValue, systemImage: selectedCEFR == level ? "checkmark" : "")
                         }
                     }
                 }
@@ -152,6 +151,7 @@ struct SavedWordsFilterBar: View {
                 Divider()
                 Button("Clear Filters") {
                     selectedTag = nil; selectedCEFR = nil; selectedLanguage = nil
+                    missingMeaningOnly.wrappedValue = false
                 }
             }
         } label: {
@@ -164,7 +164,7 @@ struct SavedWordsFilterBar: View {
         .menuStyle(.borderlessButton)
         .controlSize(.mini)
         .fixedSize()
-        .help("Filter by deck, level or language")
+        .help("Filter by card, deck, level or language")
     }
 
     // MARK: Active filters
@@ -179,6 +179,9 @@ struct SavedWordsFilterBar: View {
             }
             if let selectedLanguage {
                 removableChip("\(selectedLanguage.flag) \(selectedLanguage.shortCode)") { self.selectedLanguage = nil }
+            }
+            if missingMeaningOnly.wrappedValue {
+                removableChip(String(localized: "No meaning")) { missingMeaningOnly.wrappedValue = false }
             }
         }
     }

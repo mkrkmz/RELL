@@ -24,6 +24,8 @@ struct QuizView: View {
     /// Sentences met in reading, for cloze contexts. Optional: a host without
     /// the encounter log still quizzes from the saved sentence alone.
     @Environment(WordEncounterStore.self) private var encounterStore: WordEncounterStore?
+    /// The dictionary's answer for a card with nothing on its back (v15 S1).
+    @Environment(WordEnricher.self) private var enricher: WordEnricher?
 
     // Filter: due words only by default
     @State private var includeAll = false
@@ -685,16 +687,24 @@ struct QuizView: View {
         // back is never just a "Show more" button.
         let visible = summary.isEmpty ? Array(saved.prefix(1)) : summary
         let hidden = saved.filter { !visible.contains($0) }
+        // v15 S1: no meaning or definition saved — show the dictionary's,
+        // read live; "Add to Card" keeps it.
+        let preview = summary.isEmpty ? enricher?.dictionaryPreview(for: word) : nil
 
         return cardScroll(maxHeight: maxHeight) {
             VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                if let preview {
+                    dictionaryPreviewSection(preview, word: word)
+                }
                 if saved.isEmpty {
                     // No LLM outputs at all — fall back to sentence/placeholder.
-                    Text(word.reviewDefinition)
-                        .font(DS.Typography.body)
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
+                    if preview == nil || !word.sentence.isEmpty {
+                        Text(word.reviewDefinition)
+                            .font(DS.Typography.body)
+                            .foregroundStyle(DS.Color.textPrimary)
+                            .lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 } else {
                     ForEach(visible) { module in
                         moduleSection(module, word: word)
@@ -723,6 +733,28 @@ struct QuizView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// The dictionary's answer on a card back that had nothing to show.
+    private func dictionaryPreviewSection(_ preview: FillResult, word: SavedWord) -> some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+            HStack(spacing: DS.Spacing.xs) {
+                Text(String(localized: "FROM THE DICTIONARY"))
+                    .font(DS.Typography.caption2.weight(.bold))
+                    .foregroundStyle(DS.Color.textTertiary)
+                Spacer(minLength: 0)
+                Button("Add to Card") { enricher?.addDictionaryAnswer(to: word.id) }
+                    .controlSize(.small)
+                    .help("Keep this on the card")
+            }
+            Text(preview.value)
+                .font(DS.Typography.callout)
+                .foregroundStyle(DS.Color.textPrimary)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// One labeled section on the card back (module dot + title + output).

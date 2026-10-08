@@ -181,6 +181,10 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     /// target language at store-load time, not on every read, so a later
     /// target-language change doesn't silently relabel old words.
     var language: String?
+    /// Where each filled-in card field came from, keyed by
+    /// `FillField.rawValue`, valued by `FillSource.stored` (v15 S1). A field
+    /// without an entry was saved from the inspector or typed by you.
+    var fieldSources: [String: String]
 
     init(
         id: UUID = UUID(),
@@ -206,7 +210,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         difficulty: Double? = nil,
         cefrLevel: String? = nil,
         cefrIsAuto: Bool = false,
-        language: String? = nil
+        language: String? = nil,
+        fieldSources: [String: String] = [:]
     ) {
         self.id = id
         self.term = term
@@ -232,6 +237,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.cefrLevel = cefrLevel
         self.cefrIsAuto = cefrIsAuto
         self.language = language
+        self.fieldSources = fieldSources
     }
 
     /// A real saved definition — the studied-language one when it exists,
@@ -294,6 +300,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         case cefrLevel
         case cefrIsAuto
         case language
+        case fieldSources
     }
 
     init(from decoder: Decoder) throws {
@@ -322,6 +329,12 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         cefrLevel = try container.decodeIfPresent(String.self, forKey: .cefrLevel)
         cefrIsAuto = try container.decodeIfPresent(Bool.self, forKey: .cefrIsAuto) ?? false
         language = try container.decodeIfPresent(String.self, forKey: .language)
+        fieldSources = try container.decodeIfPresent([String: String].self, forKey: .fieldSources) ?? [:]
+    }
+
+    /// Where `field`'s value came from, or nil when you saved or typed it.
+    func source(of field: FillField) -> FillSource? {
+        fieldSources[field.rawValue].flatMap(FillSource.init(stored:))
     }
 
     var hasBeenReviewed: Bool {

@@ -370,6 +370,7 @@ final class SavedWordsStore {
         guard let index = words.firstIndex(where: { $0.id == word.id }) else { return }
         words[index].cefrLevel = level?.rawValue
         words[index].cefrIsAuto = false
+        words[index].fieldSources[FillField.level.rawValue] = nil
         save()
     }
 
@@ -380,6 +381,45 @@ final class SavedWordsStore {
         guard words[index].cefrLevel == nil else { return }
         words[index].cefrLevel = level.rawValue
         words[index].cefrIsAuto = true
+        save()
+    }
+
+    // MARK: - Filled fields (v15 S1)
+
+    /// Writes a filled-in value — only into a field that's still empty, so a
+    /// meaning you saved or typed, or one filled meanwhile, is never
+    /// replaced. Returns whether it wrote.
+    @discardableResult
+    func fill(_ field: FillField, with value: String, source: FillSource, forWordID id: UUID) -> Bool {
+        guard let index = words.firstIndex(where: { $0.id == id }),
+              field.isMissing(in: words[index]) else { return false }
+        switch field {
+        case .level:
+            guard let level = CEFRLevel(rawValue: value) else { return false }
+            words[index].cefrLevel = level.rawValue
+            words[index].cefrIsAuto = true
+        default:
+            guard let module = field.module else { return false }
+            words[index].llmOutputs[module.rawValue] = value
+        }
+        words[index].fieldSources[field.rawValue] = source.stored
+        save()
+        return true
+    }
+
+    /// Empties a field and forgets its source — "Remove" on the word page,
+    /// and the first half of "Fill again".
+    func clear(_ field: FillField, forWordID id: UUID) {
+        guard let index = words.firstIndex(where: { $0.id == id }) else { return }
+        switch field {
+        case .level:
+            words[index].cefrLevel = nil
+            words[index].cefrIsAuto = false
+        default:
+            guard let module = field.module else { return }
+            words[index].llmOutputs[module.rawValue] = nil
+        }
+        words[index].fieldSources[field.rawValue] = nil
         save()
     }
 
@@ -436,6 +476,7 @@ final class SavedWordsStore {
         for index in words.indices where ids.contains(words[index].id) {
             words[index].cefrLevel = level?.rawValue
             words[index].cefrIsAuto = false
+            words[index].fieldSources[FillField.level.rawValue] = nil
             changed = true
         }
         guard changed else { return }

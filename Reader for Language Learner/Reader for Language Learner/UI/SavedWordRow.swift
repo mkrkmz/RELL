@@ -74,6 +74,12 @@ struct SavedWordRow: View {
                     .font(DS.Typography.caption)
                     .foregroundStyle(DS.Color.textSecondary)
                     .lineLimit(1)
+            } else {
+                // v15 S1: say it's missing rather than leave a gap.
+                Text("No meaning yet")
+                    .font(DS.Typography.caption.italic())
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(1)
             }
 
             if let lastMet = lastMetText {

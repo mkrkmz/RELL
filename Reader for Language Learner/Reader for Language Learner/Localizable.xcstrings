@@ -135,6 +135,26 @@
         }
       }
     },
+    "%@ definition" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ tanım"
+          }
+        }
+      }
+    },
+    "%@ meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ anlam"
+          }
+        }
+      }
+    },
     "%@ notes in %@" : {
       "localizations" : {
         "en" : {
@@ -318,6 +338,36 @@
         }
       }
     },
+    "%lld empty" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld eksik"
+          }
+        }
+      }
+    },
+    "%lld fields empty" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld alan eksik"
+          }
+        }
+      }
+    },
+    "%lld fields filled." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld alan dolduruldu."
+          }
+        }
+      }
+    },
     "%lld matches" : {
       "localizations" : {
         "tr" : {
@@ -396,6 +446,22 @@
         }
       }
     },
+    "%lld of %lld words have an empty field." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld words have an empty field."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$lld kelimeden %1$lld tanesinde eksik alan var."
+          }
+        }
+      }
+    },
     "%lld pages" : {
       "localizations" : {
         "tr" : {
@@ -458,6 +524,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld ısınma"
+          }
+        }
+      }
+    },
+    "%lld words have no meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelimenin anlamı eksik"
           }
         }
       }
@@ -575,6 +651,16 @@
         }
       }
     },
+    "1 field empty" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 alan eksik"
+          }
+        }
+      }
+    },
     "1 word selected" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -642,6 +728,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A → Z"
+          }
+        }
+      }
+    },
+    "A cloud provider is never used here. Only \"Fill Missing\" in the word list can use it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burada bulut sağlayıcı hiç kullanılmaz. Onu yalnızca kelime listesindeki \"Eksikleri doldur\" kullanabilir."
           }
         }
       }
@@ -844,6 +940,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Etiket ekle"
+          }
+        }
+      }
+    },
+    "Add to Card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karta ekle"
           }
         }
       }
@@ -1077,6 +1183,16 @@
         }
       }
     },
+    "Also use your AI provider" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapay zekâ sağlayıcını da kullan"
+          }
+        }
+      }
+    },
     "Analyze" : {
       "localizations" : {
         "tr" : {
@@ -1235,6 +1351,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Görünüm"
+          }
+        }
+      }
+    },
+    "Apple Dictionary" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Sözlük"
           }
         }
       }
@@ -1796,6 +1922,7 @@
       }
     },
     "Cancel Estimation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -1811,6 +1938,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İptal edildi"
+          }
+        }
+      }
+    },
+    "Card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kart"
+          }
+        }
+      }
+    },
+    "CARD" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KART"
           }
         }
       }
@@ -2448,6 +2595,16 @@
         }
       }
     },
+    "Continue in Background" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arka planda sürdür"
+          }
+        }
+      }
+    },
     "Continue reading" : {
       "localizations" : {
         "tr" : {
@@ -2984,6 +3141,26 @@
         }
       }
     },
+    "Dictionary" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözlük"
+          }
+        }
+      }
+    },
+    "Dictionary only" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnız sözlükten"
+          }
+        }
+      }
+    },
     "Do you remember “%@”?" : {
       "localizations" : {
         "tr" : {
@@ -3032,6 +3209,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bitti"
+          }
+        }
+      }
+    },
+    "Done." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitti."
           }
         }
       }
@@ -3151,6 +3338,16 @@
         }
       }
     },
+    "Each field is saved as soon as it's found." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her alan bulunduğu anda kaydedilir."
+          }
+        }
+      }
+    },
     "Easy" : {
       "comment" : "\"Easy\" in the UI.",
       "isCommentAutoGenerated" : true,
@@ -3243,6 +3440,26 @@
         }
       }
     },
+    "Empty" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksik"
+          }
+        }
+      }
+    },
+    "Empty. The card shows the sentence from your book." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksik. Kartta kitabındaki cümle gösteriliyor."
+          }
+        }
+      }
+    },
     "Enter Focus Mode" : {
       "localizations" : {
         "tr" : {
@@ -3274,6 +3491,7 @@
       }
     },
     "Estimate Missing Levels (%lld)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -3284,6 +3502,7 @@
       }
     },
     "Estimating… %lld/%lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -3475,6 +3694,16 @@
         }
       }
     },
+    "Field" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alan"
+          }
+        }
+      }
+    },
     "File not found" : {
       "localizations" : {
         "tr" : {
@@ -3495,6 +3724,82 @@
         }
       }
     },
+    "Fill %lld Fields" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld alanı doldur"
+          }
+        }
+      }
+    },
+    "Fill 1 Field" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 alanı doldur"
+          }
+        }
+      }
+    },
+    "Fill Again" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden doldur"
+          }
+        }
+      }
+    },
+    "Fill In Empty Fields" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksik alanları doldur"
+          }
+        }
+      }
+    },
+    "Fill Missing" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksikleri doldur"
+          }
+        }
+      }
+    },
+    "Fill Missing…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksikleri doldur…"
+          }
+        }
+      }
+    },
+    "Filling · %lld / %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Filling · %1$lld / %2$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dolduruluyor · %lld / %lld"
+          }
+        }
+      }
+    },
     "Filter" : {
       "localizations" : {
         "tr" : {
@@ -3511,6 +3816,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Filtre (%lld)"
+          }
+        }
+      }
+    },
+    "Filter by card, deck, level or language" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karta, desteye, seviyeye ya da dile göre süz"
           }
         }
       }
@@ -3538,6 +3853,7 @@
       }
     },
     "Filter by deck, level or language" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -3776,6 +4092,36 @@
         }
       }
     },
+    "FROM THE DICTIONARY" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SÖZLÜKTEN"
+          }
+        }
+      }
+    },
+    "From the dictionary and the on-device model" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözlükten ve cihaz içi modelden"
+          }
+        }
+      }
+    },
+    "From the dictionary, else the model" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözlükten; bulunamazsa modelden"
+          }
+        }
+      }
+    },
     "Front (Card Question)" : {
       "localizations" : {
         "tr" : {
@@ -4001,6 +4347,16 @@
         }
       }
     },
+    "Hide" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gizle"
+          }
+        }
+      }
+    },
     "Hide extra modules" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4048,6 +4404,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çeviriyi gizle"
+          }
+        }
+      }
+    },
+    "Hide until more words are missing a meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlamı eksik kelime artana kadar gizle"
           }
         }
       }
@@ -4354,6 +4720,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İki Yana Yasla"
+          }
+        }
+      }
+    },
+    "Keep this on the card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bunu kartta tut"
           }
         }
       }
@@ -4927,6 +5303,16 @@
         }
       }
     },
+    "Meaning, definition and pronunciation, a few seconds after you save a word." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimeyi kaydettikten birkaç saniye sonra anlam, tanım ve telaffuz."
+          }
+        }
+      }
+    },
     "Medical" : {
       "localizations" : {
         "tr" : {
@@ -5029,6 +5415,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dakika"
+          }
+        }
+      }
+    },
+    "Missing a meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlamı eksik olanlar"
           }
         }
       }
@@ -5461,6 +5857,26 @@
         }
       }
     },
+    "No meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlam eksik"
+          }
+        }
+      }
+    },
+    "No meaning yet" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlam eksik"
+          }
+        }
+      }
+    },
     "No models found.\nIs the server running?" : {
       "localizations" : {
         "tr" : {
@@ -5861,6 +6277,16 @@
         }
       }
     },
+    "On-device model" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cihaz içi model"
+          }
+        }
+      }
+    },
     "One \"This chapter\" button above the page" : {
       "localizations" : {
         "tr" : {
@@ -5898,6 +6324,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yalnızca içe aktardığın site"
+          }
+        }
+      }
+    },
+    "Only when the first two find nothing. A cloud provider receives the words." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnız ilk ikisi bulamazsa. Bulut sağlayıcıysa kelimeler oraya gönderilir."
           }
         }
       }
@@ -6018,6 +6454,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu sayfada aç"
+          }
+        }
+      }
+    },
+    "Open in Dictionary" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözlükte aç"
           }
         }
       }
@@ -6706,6 +7152,16 @@
         }
       }
     },
+    "Pronunciation" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telaffuz"
+          }
+        }
+      }
+    },
     "Pronunciation, etymology, mnemonics" : {
       "localizations" : {
         "tr" : {
@@ -7222,6 +7678,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hatırlatmalar"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaldır"
           }
         }
       }
@@ -8772,6 +9238,16 @@
         }
       }
     },
+    "Show Words Still Missing a Meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlamı hâlâ eksik olanları göster"
+          }
+        }
+      }
+    },
     "Shown on the home screen's reading card. You can also right-click that card to change it." : {
       "localizations" : {
         "tr" : {
@@ -9087,6 +9563,22 @@
         }
       }
     },
+    "Still empty: %@, %lld words" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Still empty: %1$@, %2$lld words"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hâlâ eksik: %1$@, %2$lld kelime"
+          }
+        }
+      }
+    },
     "Stop" : {
       "localizations" : {
         "tr" : {
@@ -9133,6 +9625,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seslendirmeyi durdur (⇧⌘X)"
+          }
+        }
+      }
+    },
+    "Stopped. What was filled stays." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durduruldu. Doldurulanlar kaldı."
           }
         }
       }
@@ -9499,6 +10001,26 @@
         }
       }
     },
+    "The model writes them" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model yazar"
+          }
+        }
+      }
+    },
+    "The model writes them; most words already have their book sentence" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model yazar; çoğu kelimenin kitaptan cümlesi zaten var"
+          }
+        }
+      }
+    },
     "The response will appear here as soon as the model starts producing text." : {
       "localizations" : {
         "tr" : {
@@ -9788,6 +10310,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çevriliyor…"
+          }
+        }
+      }
+    },
+    "TRIED IN ORDER" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SIRAYLA DENENİR"
           }
         }
       }
@@ -10169,6 +10701,16 @@
         }
       }
     },
+    "When You Save a Word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelime kaydedince"
+          }
+        }
+      }
+    },
     "WHERE YOU SAVED IT" : {
       "localizations" : {
         "tr" : {
@@ -10399,6 +10941,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sarı"
+          }
+        }
+      }
+    },
+    "You can close this window. Filling goes on in the background, with its progress above the word list." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencereyi kapatabilirsin. Doldurma arka planda sürer; ilerlemesi kelime listesinin üstünde görünür."
           }
         }
       }

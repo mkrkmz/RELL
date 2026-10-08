@@ -11,7 +11,8 @@ struct SavedWordsListView: View {
     var store: SavedWordsStore
     var currentDocumentName: String?
 
-    @Environment(CEFREstimator.self) private var cefrEstimator
+    @Environment(WordEnricher.self) private var enricher: WordEnricher?
+    @AppStorage(StorageKey.fillUsesProvider) private var fillUsesProvider = true
     @Environment(WordEncounterStore.self) private var encounterStore: WordEncounterStore?
 
     @AppStorage(StorageKey.savedWordsSortOrder) private var sortRaw = SavedWordsSortOrder.dateDesc.rawValue
@@ -21,6 +22,10 @@ struct SavedWordsListView: View {
     @State private var selectedTag: String?
     @State private var selectedCEFR: CEFRLevel?
     @State private var selectedLanguage: Language?
+    @State private var missingMeaningOnly = false
+    @State private var showFillSheet = false
+    /// The words "Fill Missing" works on: the selection, or nil for all.
+    @State private var fillScope: Set<UUID>?
     @State private var selectedWord: SavedWord?
     @State private var showBulkExport = false
     @State private var showClearConfirm = false
@@ -62,6 +67,11 @@ struct SavedWordsListView: View {
         // CEFR level filter
         if let selectedCEFR {
             result = result.filter { $0.cefrLevel == selectedCEFR.rawValue }
+        }
+
+        // Card filter (v15 S1)
+        if missingMeaningOnly {
+            result = result.filter { FillField.meaning.isMissing(in: $0) }
         }
 
         // Language filter
@@ -113,8 +123,15 @@ struct SavedWordsListView: View {
                 ),
                 selectedTag: $selectedTag,
                 selectedCEFR: $selectedCEFR,
-                selectedLanguage: $selectedLanguage
+                selectedLanguage: $selectedLanguage,
+                missingMeaningOnly: $missingMeaningOnly
             )
+            if let enricher {
+                FillMissingStrip(enricher: enricher) {
+                    fillScope = nil
+                    showFillSheet = true
+                }
+            }
             Divider()
             listContent
             Divider()
@@ -151,6 +168,15 @@ struct SavedWordsListView: View {
         }
         .sheet(item: $selectedWord) { word in
             SavedWordDetailSheet(word: word, store: store)
+        }
+        .sheet(isPresented: $showFillSheet) {
+            if let enricher {
+                FillMissingSheet(store: store, enricher: enricher, wordIDs: fillScope) {
+                    searchText = ""
+                    selectedFilter = .all
+                    missingMeaningOnly = true
+                }
+            }
         }
         .sheet(isPresented: $showBulkExport) {
             BulkAnkiExportView(store: store)
@@ -247,6 +273,13 @@ struct SavedWordsListView: View {
                         }
                         .contextMenu {
                             Button("Edit Notes…") { selectedWord = word }
+                            if let enricher, FillField.defaultSelection.contains(where: { $0.isMissing(in: word) }) {
+                                Button {
+                                    Task { await enricher.fill(wordID: word.id, allowProvider: fillUsesProvider) }
+                                } label: {
+                                    Label("Fill Missing", systemImage: "text.badge.plus")
+                                }
+                            }
                             Button {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(word.term, forType: .string)
@@ -451,6 +484,13 @@ struct SavedWordsListView: View {
             .help("Assign or remove decks for the selected words")
 
             Menu {
+                if enricher != nil {
+                    Button("Fill Missing…") {
+                        fillScope = multiSelection
+                        showFillSheet = true
+                    }
+                    Divider()
+                }
                 Menu("CEFR Level") {
                     ForEach(CEFRLevel.allCases) { level in
                         Button(level.rawValue) {
