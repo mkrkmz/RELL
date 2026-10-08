@@ -726,7 +726,7 @@ extension PDFKitView {
                     sentence: sentence,
                     pdfFilename: filename,
                     pageNumber: pageNum,
-                    mode: "word",
+                    mode: ExplainMode.word.rawValue,
                     domain: "general",
                     llmOutputs: [:],
                     language: Language.storedTarget.rawValue

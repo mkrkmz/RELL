@@ -37,7 +37,7 @@ struct AddWordIntent: AppIntent {
             sentence: "",
             pdfFilename: nil,
             pageNumber: nil,
-            mode: "word",
+            mode: ExplainMode.word.rawValue,
             domain: "general",
             llmOutputs: [:],
             language: Language.storedTarget.rawValue

@@ -67,16 +67,36 @@ kalemler (notarization, widget, App Group, CloudKit).
 
 Amac: kod yazmadan once belirsizlikleri kullanicinin verisiyle kapatmak.
 
-- [ ] **Doldurma kaynaklari olcumu** — kullanicinin 59 kelimesinde: Apple
-      sozlugu kacinin Turkce anlamini ve IPA'sini veriyor, ne hizda; cihaz
-      ici model ve yapilandirilmis saglayici tanimlari ne kalitede, ne hizda
+- [x] **Doldurma kaynaklari olcumu** (2026-10-08, kullanicinin 59 kelimesi,
+      salt okunur):
+      - Apple sozlugu (`DCSCopyTextDefinition`, varsayilan sozluk kumesi):
+        **59/59 bulundu**; cevap dili ilk eslesen sozluge bagli — 38 Turkce
+        (Ingilizce–Turkce sozluk), 15 Ingilizce (tek dilli), 6 belirsiz;
+        **IPA 49/59**; aciklamasi olmayan 26 kelimenin 26'si doldurulabilir.
+        Sure: ilk cagri 46 ms, sonrakiler <1 ms. Belirli bir sozluge sormak
+        ozel API ister — kullanilmaz; cevap diline gore alana yazilir
+      - Tanim (8 kelime, ayni prompt): Apple cihaz ici model ~0,4 sn/kelime,
+        8/8 kullanilir (biri hafif yanlis: "manure" = toprak); LM Studio
+        `gemma-4-e4b` ilk istek 13 sn, sonra ~0,5 sn, **1 bos cevap**, 1
+        yazim hatasi. Karar: tanim icin once cihaz ici model, yedek
+        saglayici; bos/yanlis dilde cevap kaydedilmez, yeniden denenir
 - [ ] **Kindle vocab.db** — Kindle USB ile bagliyken
       `system/vocabulary/vocab.db` yapisi (salt okunur)
-- [ ] **Kisayollar denemesi** — App Intents, Apple Developer imzasi olmadan
-      derlenen uygulamada Kisayollar'da gorunuyor mu; gorunmuyorsa D1 girmez
-- [ ] **Temizlik** — "word"/"Word" mod tutarsizliginin kaynagi duzeltilir,
-      kayitli veri bir kez normalize edilir
-- [ ] v14 takibi: soguk acilis ortancasi 549 → 576 ms — nedenine bakis
+- [ ] **Kisayollar denemesi** — DUZELTME: Kisayollar **zaten var** (7925d86,
+      ilk surumler): "Add Word to RELL", "Start Vocabulary Review", "Look Up
+      in RELL" (`App/RELLIntents.swift`); Servisler menusu de var ("Look Up
+      in RELL"). Katalogdaki D1 ve Servisler fikirleri koda bakilmadan
+      onerilmisti. Kalan: kullanicinin Kisayollar uygulamasinda gorunuyor mu
+      (imzasiz derleme). S4 isi: "Tekrara basla" calisma penceresine acsin,
+      "Kac kelime bekliyor?" eklensin, eklenen kelime doldurulsun
+- [x] **Temizlik** — "word"/"Word": dort kaydetme yolu (PDF ve EPUB sag tik,
+      Hizli Arama, AddWordIntent) kucuk harf yaziyordu. Yazanlar
+      `ExplainMode.word.rawValue` kullaniyor; `ExplainMode.normalizedRawValue`
+      okurken ve `SavedWord.init`'te normalize eder — kayitli 21 kelime ilk
+      kaydedişte duzelir, ayri veri islemi yok. `SavedWordModeTests` (2)
+- [x] v14 takibi: soguk acilis — ucuncu tur (2026-10-08) ortanca **498 ms**
+      (512, 492, 484, 498, 561); 576 ms makine durumuna bagli gurultuydu.
+      Gerileme yok
 
 ## Sprint 1 — "Kelimeleri tamamla" (Must)
 

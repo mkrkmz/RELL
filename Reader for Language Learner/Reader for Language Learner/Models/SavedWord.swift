@@ -213,7 +213,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.sentence = sentence
         self.pdfFilename = pdfFilename
         self.pageNumber = pageNumber
-        self.mode = mode
+        self.mode = ExplainMode.normalizedRawValue(mode)
         self.domain = domain
         self.notes = notes
         self.tags = tags
@@ -303,7 +303,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         sentence = try container.decodeIfPresent(String.self, forKey: .sentence) ?? ""
         pdfFilename = try container.decodeIfPresent(String.self, forKey: .pdfFilename)
         pageNumber = try container.decodeIfPresent(Int.self, forKey: .pageNumber)
-        mode = try container.decodeIfPresent(String.self, forKey: .mode) ?? ExplainMode.word.rawValue
+        mode = ExplainMode.normalizedRawValue(try container.decodeIfPresent(String.self, forKey: .mode) ?? ExplainMode.word.rawValue)
         domain = try container.decodeIfPresent(String.self, forKey: .domain) ?? DomainPreference.general.rawValue
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
         tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []

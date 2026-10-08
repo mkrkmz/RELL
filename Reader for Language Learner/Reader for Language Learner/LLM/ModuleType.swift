@@ -21,6 +21,13 @@ enum ExplainMode: String, CaseIterable, Identifiable {
         }
     }
 
+    /// "word" → "Word". Four save paths wrote the raw value in lower case
+    /// (v15 S0: 21 of 59 saved words); comparisons and `init(rawValue:)`
+    /// are case-sensitive, so stored modes are normalised when read.
+    static func normalizedRawValue(_ raw: String) -> String {
+        allCases.first { $0.rawValue.caseInsensitiveCompare(raw) == .orderedSame }?.rawValue ?? raw
+    }
+
     /// The mode a selection is explained in unless the reader overrides it
     /// (v14 S2): one word is a word, anything longer a sentence — the same
     /// test the inspector uses to show the word card.

@@ -265,7 +265,7 @@ struct EPUBReaderView: NSViewRepresentable {
                 sentence: manager.lastSelectionSentence ?? "",
                 pdfFilename: manager.loadedURL?.deletingPathExtension().lastPathComponent,
                 pageNumber: manager.chapterIndex + 1,
-                mode: "word",
+                mode: ExplainMode.word.rawValue,
                 domain: "general",
                 llmOutputs: [:],
                 language: Language.storedTarget.rawValue

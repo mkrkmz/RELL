@@ -97,7 +97,7 @@ final class QuickLookupPanelModel {
             sentence: "",
             pdfFilename: nil,
             pageNumber: nil,
-            mode: ExplainMode.word.rawValue.lowercased(),
+            mode: ExplainMode.word.rawValue,
             domain: DomainPreference.general.rawValue.lowercased(),
             llmOutputs: outputs,
             language: Language.storedTarget.rawValue
