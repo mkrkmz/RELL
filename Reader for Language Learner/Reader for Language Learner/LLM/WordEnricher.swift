@@ -329,7 +329,10 @@ final class WordEnricher {
     /// never yours. Returns how many fields were emptied.
     @discardableResult
     func repairEarlierFills(defaults: UserDefaults = .standard) -> Int {
-        let version = 2
+        // 3: version 2 ran once on the live-pass Mac from a build between
+        // the fixes (word-as-meaning fixed, sense labels and context
+        // translations not yet), so it runs again with the final rules.
+        let version = 3
         guard defaults.integer(forKey: StorageKey.fillRepairVersion) < version else { return 0 }
         var emptied = 0
         for word in store.words {

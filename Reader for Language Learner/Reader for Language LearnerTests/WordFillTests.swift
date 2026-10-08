@@ -98,6 +98,8 @@ final class WordFillTests: XCTestCase {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "WordFillTests-\(UUID().uuidString)"))
         let enricher = WordEnricher(store: store, cefrEstimator: nil, observesSaves: false)
 
+        // Version 2 ran on the live-pass Mac with half the fixes; 3 runs again.
+        defaults.set(2, forKey: StorageKey.fillRepairVersion)
         XCTAssertEqual(enricher.repairEarlierFills(defaults: defaults), 1)
 
         XCTAssertTrue(FillField.meaning.isMissing(in: try XCTUnwrap(store.word(withID: translated.id))))
