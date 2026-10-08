@@ -43,7 +43,6 @@ final class ReaderWindowModel {
     var columnVisibility: NavigationSplitViewVisibility = .all
     var showInspector = true
     var isDropTargeted = false
-    var showWorkspaceReview = false
     var showStats = false
     /// The chapter warm-up popover (v13 Sprint 2).
     var showWarmUp = false

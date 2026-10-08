@@ -34,6 +34,13 @@ nonisolated enum StorageKey {
     static let fillStripHiddenAtCount = "fillStripHiddenAtCount"
     /// The last one-time repair of earlier fills that ran (v15 S1).
     static let fillRepairVersion = "fillRepairVersion"
+    /// Study room (v15 S2): words per session (0 = all waiting), new words
+    /// per session, the book sentence on the card front, and whether the
+    /// window was last in full screen.
+    static let studySessionSize = "studySessionSize"
+    static let studyNewLimit = "studyNewLimit"
+    static let studySentenceOnFront = "studySentenceOnFront"
+    static let studyRoomFullScreen = "studyRoomFullScreen"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     /// The "major.minor" whose What's New page was last shown (v14 S3).

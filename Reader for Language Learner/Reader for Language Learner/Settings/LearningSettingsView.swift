@@ -23,6 +23,7 @@ struct LearningSettingsView: View {
     @AppStorage(StorageKey.chapterWarmUpEnabled) private var chapterWarmUpEnabled = true
     @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
     @AppStorage(StorageKey.fillOnSave) private var fillOnSave = true
+    @AppStorage(StorageKey.studySentenceOnFront) private var sentenceOnFront = true
     @AppStorage(DailyReminderManager.enabledKey) private var dailyReminderEnabled = false
     @AppStorage(DailyReminderManager.timeKey) private var dailyReminderTime = DailyReminderManager.storedTime()
 
@@ -94,6 +95,19 @@ struct LearningSettingsView: View {
             } footer: {
                 Text("A cloud provider is never used here. Only \"Fill Missing\" in the word list can use it.")
                     .foregroundStyle(DS.Color.textTertiary)
+            }
+
+            Section {
+                Toggle(isOn: $sentenceOnFront) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Show the Book Sentence on the Card Front")
+                        Text("Where you met the word, under it. Turn off to test the word alone.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+            } header: {
+                Text("Study Room")
             }
 
             Section {

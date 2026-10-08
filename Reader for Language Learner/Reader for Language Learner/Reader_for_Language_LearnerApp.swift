@@ -131,15 +131,17 @@ struct Reader_for_Language_LearnerApp: App {
             ReaderMenuCommands()
         }
 
-        // Standalone review window — study without a document open.
-        Window("Vocabulary Review", id: "review") {
-            QuizView(store: savedWordsStore)
+        // The study room (v15 S2) — word study in its own large window that
+        // goes full screen. Same id as the old review window it replaces.
+        Window("Study Room", id: StudyRoom.windowID) {
+            StudyRoomView(store: savedWordsStore)
                 .environment(encounterStore)
                 .environment(wordEnricher)
-                .frame(minWidth: 460, minHeight: 560)
+                .environment(recentDocumentStore)
+                .frame(minWidth: 720, minHeight: 560)
                 .rellAccentTint()
         }
-        .defaultSize(width: 460, height: 620)
+        .defaultSize(width: 1100, height: 720)
 
         // Quick Lookup from the menu bar, even with no window open.
         MenuBarExtra(

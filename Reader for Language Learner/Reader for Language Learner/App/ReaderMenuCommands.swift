@@ -156,7 +156,7 @@ struct ReaderMenuCommands: Commands {
 
             Divider()
 
-            Button("Vocabulary Review") { openWindow(id: "review") }
+            Button("Study Room") { openWindow(id: StudyRoom.windowID) }
                 .keyboardShortcut("v", modifiers: [.command, .option])
 
             Button("Story From Your Words…") {

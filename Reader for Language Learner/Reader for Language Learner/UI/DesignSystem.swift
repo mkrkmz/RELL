@@ -136,6 +136,13 @@ enum DS {
         /// The larger variant — the flashcard front, the single most
         /// prominent term on screen.
         static var wordDisplayLarge: SwiftUI.Font { .system(size: 28, weight: .semibold) }
+        /// The study room's card (v15 S2): the word across a large window,
+        /// in the reading face, so it looks like the page it came from.
+        static var studyWord:    SwiftUI.Font { .system(size: 52, weight: .semibold, design: .serif) }
+        /// The meaning on the back of a study-room card.
+        static var studyMeaning: SwiftUI.Font { .system(size: 22, weight: .semibold) }
+        /// The book sentence on a study-room card.
+        static var studyContext: SwiftUI.Font { .system(size: 17, design: .serif) }
 
         /// Numeric display with tabular/rounded digits — ring percentages,
         /// stat counters, quiz results. Always `.rounded`; size varies by

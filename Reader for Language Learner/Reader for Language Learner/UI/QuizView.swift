@@ -11,6 +11,10 @@ import SwiftUI
 
 struct QuizView: View {
     var store: SavedWordsStore
+    /// The sidebar's quick review, or the study room's window (v15 S2) —
+    /// same card modes; the room has its own setup, summary, larger cards
+    /// and the arrow keys.
+    var style: Style = .sidebar
     var onContinueReading: (() -> Void)? = nil
     var onOpenSavedWords: (() -> Void)? = nil
     /// Set by modal hosts (the dashboard review sheet): shows a close button
@@ -19,28 +23,32 @@ struct QuizView: View {
     var onClose: (() -> Void)? = nil
 
     /// Queue, position, tallies and the card's answer state — see `QuizSession`.
-    @State private var session = QuizSession()
+    @State var session = QuizSession()
 
     /// Sentences met in reading, for cloze contexts. Optional: a host without
     /// the encounter log still quizzes from the saved sentence alone.
-    @Environment(WordEncounterStore.self) private var encounterStore: WordEncounterStore?
+    @Environment(WordEncounterStore.self) var encounterStore: WordEncounterStore?
     /// The dictionary's answer for a card with nothing on its back (v15 S1).
-    @Environment(WordEnricher.self) private var enricher: WordEnricher?
+    @Environment(WordEnricher.self) var enricher: WordEnricher?
+    /// The book read last, for the study room's "This book".
+    @Environment(RecentDocumentStore.self) var recentDocuments: RecentDocumentStore?
+    @AppStorage(StorageKey.studySentenceOnFront) var sentenceOnFront = true
+    @FocusState var roomFocused: Bool
 
     // Filter: due words only by default
-    @State private var includeAll = false
-    @State private var selectedTag: String?
+    @State var includeAll = false
+    @State var selectedTag: String?
 
     // Modes
-    @AppStorage(StorageKey.quizMode) private var quizModeRaw = QuizMode.flashcard.rawValue
+    @AppStorage(StorageKey.quizMode) var quizModeRaw = QuizMode.flashcard.rawValue
     /// In the modes the app can check itself, let the check be the grade
     /// instead of asking the user to judge an answer already marked ✓ or ✗.
-    @AppStorage(StorageKey.typedAutoGrade) private var typedAutoGrade = true
+    @AppStorage(StorageKey.typedAutoGrade) var typedAutoGrade = true
 
     /// Modules shown on the card back by default; the rest sit behind "Show more".
-    private static let summaryModules: [ModuleType] = [.definitionEN, .meaningTR]
+    static let summaryModules: [ModuleType] = [.definitionEN, .meaningTR]
 
-    private var quizMode: QuizMode {
+    var quizMode: QuizMode {
         let stored = QuizMode(rawValue: quizModeRaw) ?? .flashcard
         // A stored mode can become unofferable — the voice it needs may have
         // been removed since it was last chosen.
@@ -51,7 +59,7 @@ struct QuizView: View {
     /// system has no voice for anything in the vocabulary: without one,
     /// AVSpeech reads the word in the wrong language, which teaches the wrong
     /// pronunciation — worse than not offering the mode.
-    private var availableModes: [QuizMode] {
+    var availableModes: [QuizMode] {
         QuizMode.allCases.filter { mode in
             switch mode {
             case .listening: return canSpeakVocabulary
@@ -67,7 +75,7 @@ struct QuizView: View {
     /// The run is built from these rather than filtered per grid: a slice of
     /// the full queue can fall below the minimum even when the vocabulary
     /// doesn't, which would strand the round with nothing to pair.
-    private var matchableWords: [SavedWord] {
+    var matchableWords: [SavedWord] {
         var seen: Set<String> = []
         return wordsToQuiz.filter { word in
             guard word.usableDefinition != nil else { return false }
@@ -79,7 +87,7 @@ struct QuizView: View {
     // MARK: - Matching Round
 
     @ViewBuilder
-    private var matchingRound: some View {
+    var matchingRound: some View {
         let words = session.upcoming(MatchingRound.defaultPairs)
         QuizMatchingBody(
             words: words,
@@ -100,19 +108,19 @@ struct QuizView: View {
         )
     }
 
-    private var canSpeakVocabulary: Bool {
+    var canSpeakVocabulary: Bool {
         if SpeechManager.hasVoice(for: Language.storedTarget) { return true }
         let saved = Set(store.words.compactMap { $0.language.flatMap(Language.init(rawValue:)) })
         return saved.contains(where: SpeechManager.hasVoice(for:))
     }
 
-    private var dueWords: [SavedWord] { store.dueWords() }
+    var dueWords: [SavedWord] { store.dueWords() }
 
-    private var wordsToQuiz: [SavedWord] {
+    var wordsToQuiz: [SavedWord] {
         store.reviewQueue(includeAll: includeAll, tag: selectedTag)
     }
 
-    private var isUsingFallbackQueue: Bool {
+    var isUsingFallbackQueue: Bool {
         !includeAll && dueWords.isEmpty && !store.reviewFallbackWords().isEmpty
     }
 
@@ -120,6 +128,8 @@ struct QuizView: View {
         Group {
             if store.words.isEmpty {
                 emptyState
+            } else if style == .room {
+                roomContent
             } else if wordsToQuiz.isEmpty {
                 allMasteredState
             } else if session.isFinished {
@@ -160,17 +170,17 @@ struct QuizView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(DS.Animation.standard, value: session.isFinished)
-        .overlay(alignment: .topTrailing) { closeButton }
+        .overlay(alignment: .topTrailing) { if style == .sidebar { closeButton } }
         // cancelAction alone doesn't fire in this sheet; cancelOperation:
         // via the responder chain is the reliable macOS Esc path.
-        .onExitCommand { onClose?() }
+        .onExitCommand { handleEscape() }
     }
 
     /// Rendered only for modal hosts. `.cancelAction` is what makes Esc work:
     /// without a cancel-action button in the tree, Esc dies in the focusable
     /// flashcard's key-press chain and the sheet is inescapable mid-quiz.
     @ViewBuilder
-    private var closeButton: some View {
+    var closeButton: some View {
         if let onClose {
             Button(action: onClose) {
                 Image(systemName: "xmark.circle.fill")
@@ -188,13 +198,13 @@ struct QuizView: View {
     // MARK: - Quiz Card
 
     @ViewBuilder
-    private var quizCard: some View {
+    var quizCard: some View {
         if let word = session.currentWord {
             quizCard(for: word)
         }
     }
 
-    private func quizCard(for word: SavedWord) -> some View {
+    func quizCard(for word: SavedWord) -> some View {
         VStack(spacing: DS.Spacing.lg) {
             VStack(spacing: DS.Spacing.xs) {
                 ProgressView(value: Double(session.position), total: Double(session.total))
@@ -244,7 +254,7 @@ struct QuizView: View {
     // MARK: - Flashcard Body
 
     @ViewBuilder
-    private func flashcardBody(_ word: SavedWord) -> some View {
+    func flashcardBody(_ word: SavedWord) -> some View {
         ZStack {
             cardFace(content: backContent(for: word), isFront: false)
                 .rotation3DEffect(.degrees(session.isFlipped ? 0 : -90), axis: (x: 0, y: 1, z: 0))
@@ -260,15 +270,15 @@ struct QuizView: View {
         .onKeyPress(.space) { flipCard(); return .handled }
         .onKeyPress(.return) { flipCard(); return .handled }
         .onKeyPress(.escape) {
-            guard let onClose else { return .ignored }
-            onClose()
+            guard style == .room || onClose != nil else { return .ignored }
+            handleEscape()
             return .handled
         }
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(session.isFlipped ? "Card back" : "Card front")
         .accessibilityHint("Press space or return to flip")
 
-        if !session.isFlipped {
+        if !session.isFlipped && style == .sidebar {
             Text("Tap to reveal")
                 .font(DS.Typography.caption2)
                 .foregroundStyle(DS.Color.textTertiary)
@@ -278,7 +288,7 @@ struct QuizView: View {
     // MARK: - Multiple Choice Body (definition → term)
 
     @ViewBuilder
-    private func multipleChoiceBody(_ word: SavedWord) -> some View {
+    func multipleChoiceBody(_ word: SavedWord) -> some View {
         VStack(spacing: DS.Spacing.md) {
             if session.mcOptions.count < 2 {
                 // No usable definition or not enough distractor terms —
@@ -310,7 +320,7 @@ struct QuizView: View {
     /// Question card: the definition with the term masked out. The term,
     /// mastery badge, and source badge are all withheld until reveal — each
     /// one leaks the answer.
-    private func choiceQuestionContent(for word: SavedWord) -> some View {
+    func choiceQuestionContent(for word: SavedWord) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             Text("WHICH WORD FITS?")
                 .font(DS.Typography.caption2.weight(.bold))
@@ -326,14 +336,14 @@ struct QuizView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func maskedDefinition(for word: SavedWord) -> String {
+    func maskedDefinition(for word: SavedWord) -> String {
         QuizMatching.maskTerm(
             word.term,
             in: MarkdownUtils.sanitizeLLMOutput(word.reviewDefinition)
         )
     }
 
-    private func choiceRow(index: Int, option: String, correct: String) -> some View {
+    func choiceRow(index: Int, option: String, correct: String) -> some View {
         let isCorrect = option == correct
         let isSelected = session.mcSelectedIndex == index
         let tint: Color = {
@@ -374,7 +384,7 @@ struct QuizView: View {
         .accessibilityLabel(choiceAccessibilityLabel(option: option, isCorrect: isCorrect, isSelected: isSelected))
     }
 
-    private func choiceAccessibilityLabel(option: String, isCorrect: Bool, isSelected: Bool) -> String {
+    func choiceAccessibilityLabel(option: String, isCorrect: Bool, isSelected: Bool) -> String {
         guard session.isFlipped else { return option }
         if isCorrect { return String(localized: "\(option), correct answer") }
         if isSelected { return String(localized: "\(option), your answer, incorrect") }
@@ -384,7 +394,7 @@ struct QuizView: View {
     // MARK: - Listening Body (hear the word → type it)
 
     @ViewBuilder
-    private func listeningBody(_ word: SavedWord) -> some View {
+    func listeningBody(_ word: SavedWord) -> some View {
         VStack(spacing: DS.Spacing.md) {
             if session.isFlipped {
                 cardFace(content: revealContent(for: word), isFront: false)
@@ -415,7 +425,7 @@ struct QuizView: View {
     }
 
     /// The question is the audio itself — a big replay button, no spelling.
-    private func listeningQuestionContent(for word: SavedWord) -> some View {
+    func listeningQuestionContent(for word: SavedWord) -> some View {
         VStack(spacing: DS.Spacing.md) {
             Text("LISTEN AND TYPE THE WORD")
                 .font(DS.Typography.caption2.weight(.bold))
@@ -438,11 +448,11 @@ struct QuizView: View {
 
     /// The word's own saved language, falling back to the study language for
     /// words saved before per-word language tracking (pre-v1.24).
-    private func voiceLanguage(for word: SavedWord) -> Language {
+    func voiceLanguage(for word: SavedWord) -> Language {
         word.language.flatMap(Language.init(rawValue:)) ?? Language.storedTarget
     }
 
-    private func speak(_ word: SavedWord) {
+    func speak(_ word: SavedWord) {
         let rate = UserDefaults.standard.object(forKey: StorageKey.speechRate) as? Double ?? 0.5
         SpeechManager.shared.speak(word.term, language: voiceLanguage(for: word), rate: Float(rate))
     }
@@ -450,7 +460,7 @@ struct QuizView: View {
     // MARK: - Typed Recall Body (cloze → type the word)
 
     @ViewBuilder
-    private func typedBody(_ word: SavedWord) -> some View {
+    func typedBody(_ word: SavedWord) -> some View {
         let hasQuestion = clozeSentence(for: word) != nil || word.usableDefinition != nil
 
         VStack(spacing: DS.Spacing.md) {
@@ -488,7 +498,7 @@ struct QuizView: View {
 
     /// Question card: the saved sentence as a cloze (term blanked out) plus
     /// the masked definition as a secondary hint.
-    private func typedQuestionContent(for word: SavedWord) -> some View {
+    func typedQuestionContent(for word: SavedWord) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.md) {
             Text(clozeSentence(for: word) != nil ? "TYPE THE MISSING WORD" : "TYPE THE WORD")
                 .font(DS.Typography.caption2.weight(.bold))
@@ -537,7 +547,7 @@ struct QuizView: View {
     }
 
     /// Objective ✓/✗ result shown under the reveal card.
-    private func typedResultView(_ word: SavedWord) -> some View {
+    func typedResultView(_ word: SavedWord) -> some View {
         let isCorrect = QuizMatching.matchesTerm(typed: session.typedAnswer, term: word.term)
         let tint = isCorrect ? DS.Color.success : DS.Color.danger
         let trimmedAnswer = session.typedAnswer.trimmingCharacters(in: .whitespaces)
@@ -566,11 +576,11 @@ struct QuizView: View {
     /// The card's sentence with the term masked — the saved one or one met
     /// since in reading, rotating by review — or nil when none contains the
     /// term (no blank → not a cloze).
-    private func clozeChoice(for word: SavedWord) -> ClozeContext.Choice? {
+    func clozeChoice(for word: SavedWord) -> ClozeContext.Choice? {
         ClozeContext.choice(for: word, encounters: encounterStore?.encounters(for: word.id) ?? [])
     }
 
-    private func clozeSentence(for word: SavedWord) -> String? {
+    func clozeSentence(for word: SavedWord) -> String? {
         clozeChoice(for: word)?.masked
     }
 
@@ -581,13 +591,13 @@ struct QuizView: View {
     /// Next — the answer was already objectively right or wrong, and asking
     /// the user to re-judge it is busywork. Turning the setting off restores
     /// the four buttons, which is the only way to reach Hard/Easy.
-    private var showsRatingRow: Bool {
+    var showsRatingRow: Bool {
         !(quizMode.isObjectivelyGraded && typedAutoGrade)
     }
 
     /// The auto-graded alternative to `ratingRow`: the grade is decided, this
     /// just applies it and moves on.
-    private func autoGradeContinueRow(for word: SavedWord) -> some View {
+    func autoGradeContinueRow(for word: SavedWord) -> some View {
         let isCorrect = QuizMatching.matchesTerm(typed: session.typedAnswer, term: word.term)
         return Button {
             recordRating(isCorrect ? .good : .again, word: word)
@@ -603,7 +613,7 @@ struct QuizView: View {
         .help(isCorrect ? "Graded correct — continue" : "Graded incorrect — continue")
     }
 
-    private func ratingRow(for word: SavedWord) -> some View {
+    func ratingRow(for word: SavedWord) -> some View {
         // The card face stays flat (content); only this rating bar goes glass.
         DSGlassGroup(spacing: DS.Spacing.lg) {
             HStack(spacing: DS.Spacing.lg) {
@@ -623,16 +633,25 @@ struct QuizView: View {
 
     // MARK: - Card Faces
 
-    private func cardFace(content: some View, isFront: Bool) -> some View {
+    func cardFace(content: some View, isFront: Bool) -> some View {
         content
-            .padding(DS.Spacing.lg)
-            .frame(maxWidth: .infinity, minHeight: DS.Layout.cardFrontMinHeight)
+            .padding(style == .room ? DS.Spacing.xl : DS.Spacing.lg)
+            .frame(maxWidth: .infinity, minHeight: style == .room ? 300 : DS.Layout.cardFrontMinHeight)
             .dsCard(padding: nil, radius: DS.Radius.lg, stroke: .hairlineStrong)
             .dsShadow(DS.Shadow.card)
             .padding(.horizontal, DS.Spacing.md)
     }
 
-    private func frontContent(for word: SavedWord) -> some View {
+    @ViewBuilder
+    func frontContent(for word: SavedWord) -> some View {
+        if style == .room {
+            roomFront(for: word)
+        } else {
+            sidebarFront(for: word)
+        }
+    }
+
+    func sidebarFront(for word: SavedWord) -> some View {
         VStack(spacing: DS.Spacing.sm) {
             Text("TERM")
                 .font(DS.Typography.caption2.weight(.bold))
@@ -655,13 +674,18 @@ struct QuizView: View {
     }
 
     /// Flashcard back: every saved module, summary-first with "Show more".
-    private func backContent(for word: SavedWord) -> some View {
-        backSections(for: word, maxHeight: DS.Layout.cardBackHeightExpanded)
+    @ViewBuilder
+    func backContent(for word: SavedWord) -> some View {
+        if style == .room {
+            roomBack(for: word)
+        } else {
+            backSections(for: word, maxHeight: DS.Layout.cardBackHeightExpanded)
+        }
     }
 
     /// Reveal card for choice/typed modes — the question hid the term, so the
     /// reveal leads with it before the saved content.
-    private func revealContent(for word: SavedWord) -> some View {
+    func revealContent(for word: SavedWord) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
             HStack(spacing: DS.Spacing.sm) {
                 Text(word.term)
@@ -680,7 +704,7 @@ struct QuizView: View {
 
     /// Scrollable, labeled sections for all saved module outputs.
     /// Definition + native meaning show by default; the rest expand on demand.
-    private func backSections(for word: SavedWord, maxHeight: CGFloat) -> some View {
+    func backSections(for word: SavedWord, maxHeight: CGFloat) -> some View {
         let saved = savedModules(for: word)
         let summary = saved.filter { Self.summaryModules.contains($0) }
         // If neither summary module was saved, promote the first output so the
@@ -736,7 +760,7 @@ struct QuizView: View {
     }
 
     /// The dictionary's answer on a card back that had nothing to show.
-    private func dictionaryPreviewSection(_ preview: FillResult, word: SavedWord) -> some View {
+    func dictionaryPreviewSection(_ preview: FillResult, word: SavedWord) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
             HStack(spacing: DS.Spacing.xs) {
                 Text(String(localized: "FROM THE DICTIONARY"))
@@ -758,7 +782,7 @@ struct QuizView: View {
     }
 
     /// One labeled section on the card back (module dot + title + output).
-    private func moduleSection(_ module: ModuleType, word: SavedWord) -> some View {
+    func moduleSection(_ module: ModuleType, word: SavedWord) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
             HStack(spacing: DS.Spacing.xs) {
                 Circle()
@@ -779,7 +803,7 @@ struct QuizView: View {
     }
 
     /// Modules with a non-empty saved output, in canonical module order.
-    private func savedModules(for word: SavedWord) -> [ModuleType] {
+    func savedModules(for word: SavedWord) -> [ModuleType] {
         ModuleType.allCases.filter {
             !(word.llmOutputs[$0.rawValue] ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -788,7 +812,7 @@ struct QuizView: View {
 
     /// Bounded scroll container used by card bodies so long content scrolls
     /// inside the card instead of overflowing the sidebar.
-    private func cardScroll<Content: View>(
+    func cardScroll<Content: View>(
         maxHeight: CGFloat,
         @ViewBuilder content: () -> Content
     ) -> some View {
@@ -801,7 +825,7 @@ struct QuizView: View {
 
     // MARK: - Action Button
 
-    private func actionButton(
+    func actionButton(
         label: String,
         icon: String,
         color: Color,
@@ -836,7 +860,7 @@ struct QuizView: View {
 
     // MARK: - Empty / All Mastered
 
-    private var emptyState: some View {
+    var emptyState: some View {
         DSEmptyState(
             icon: "star",
             title: "No saved words",
@@ -844,7 +868,7 @@ struct QuizView: View {
         )
     }
 
-    private var allMasteredState: some View {
+    var allMasteredState: some View {
         VStack(spacing: DS.Spacing.lg) {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
@@ -871,7 +895,7 @@ struct QuizView: View {
 
     // MARK: - Mastery Badge
 
-    private func masteryBadge(_ level: MasteryLevel) -> some View {
+    func masteryBadge(_ level: MasteryLevel) -> some View {
         Label(level.label, systemImage: level.icon)
             .font(DS.Typography.caption2.weight(.semibold))
             .foregroundStyle(level.color)
@@ -881,7 +905,7 @@ struct QuizView: View {
             .clipShape(Capsule())
     }
 
-    private func sourceBadge(for word: SavedWord) -> some View {
+    func sourceBadge(for word: SavedWord) -> some View {
         HStack(spacing: DS.Spacing.xs) {
             Image(systemName: "doc.text")
             Text(sourceText(for: word))
@@ -896,7 +920,7 @@ struct QuizView: View {
         .clipShape(Capsule())
     }
 
-    private func sourceText(for word: SavedWord) -> String {
+    func sourceText(for word: SavedWord) -> String {
         if let pdfFilename = word.pdfFilename, let pageNumber = word.pageNumber {
             return "\(pdfFilename) · p.\(pageNumber)"
         }
@@ -909,18 +933,18 @@ struct QuizView: View {
 
     // MARK: - Logic
 
-    private func beginQuiz() {
+    func beginQuiz() {
         // The session builds its own options; it can't reach the vocabulary.
         session.optionsBuilder = { buildOptions(for: $0) }
         // A round-based run only carries words that can actually be paired.
         session.begin(with: quizMode.isRoundBased ? matchableWords : wordsToQuiz, mode: quizMode)
     }
 
-    private func flipCard() {
+    func flipCard() {
         withAnimation(DS.Animation.cardFlip) { session.reveal() }
     }
 
-    private func revealAnswer() {
+    func revealAnswer() {
         withAnimation(DS.Animation.standard) { session.reveal() }
         // Modes the app can grade itself record the objective result the moment
         // the answer is revealed — that's the only point where the typed answer
@@ -932,12 +956,12 @@ struct QuizView: View {
         }
     }
 
-    private func recordRating(_ rating: ReviewRating, word: SavedWord) {
+    func recordRating(_ rating: ReviewRating, word: SavedWord) {
         session.record(rating, for: word, in: store)
         advance()
     }
 
-    private func advance() {
+    func advance() {
         // Only the move between cards animates; finishing has the body's own
         // `.animation(_:value: session.isFinished)` transition.
         if session.isLastCard {
@@ -953,7 +977,7 @@ struct QuizView: View {
     /// other saved words. Returns empty when the word has no real definition
     /// to ask about, or when the vocabulary is too small for distractors —
     /// both signal a plain-reveal fallback.
-    private func buildOptions(for word: SavedWord) -> [String] {
+    func buildOptions(for word: SavedWord) -> [String] {
         // The question shows the definition, so it must actually exist.
         guard word.usableDefinition != nil else { return [] }
 

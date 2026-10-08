@@ -65,7 +65,7 @@ extension ContentView {
         func command(_ id: String, _ title: String, _ icon: String, enabled: Bool = true, _ action: @escaping () -> Void) {
             items.append(PaletteItem(id: "cmd-\(id)", kind: .command, title: title, icon: icon, isEnabled: enabled, perform: action))
         }
-        command("review", String(localized: "Vocabulary Review"), "rectangle.stack") { openWindow(id: "review") }
+        command("review", String(localized: "Study Room"), "rectangle.stack") { openWindow(id: StudyRoom.windowID) }
         command("import", String(localized: "Import Web Article…"), "globe") {
             NotificationCenter.default.post(name: .importWebArticleCommand, object: nil)
         }

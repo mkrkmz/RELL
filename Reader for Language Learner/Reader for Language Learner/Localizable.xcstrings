@@ -302,6 +302,16 @@
         }
       }
     },
+    "%lld days" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld gün"
+          }
+        }
+      }
+    },
     "%lld days away — you'll get a short recap when you open it" : {
       "localizations" : {
         "tr" : {
@@ -384,6 +394,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld dakika"
+          }
+        }
+      }
+    },
+    "%lld more saved" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kayıt daha"
+          }
+        }
+      }
+    },
+    "%lld more words come due by tomorrow." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yarına kadar %lld kelime daha tekrar zamanına giriyor."
           }
         }
       }
@@ -528,12 +558,32 @@
         }
       }
     },
+    "%lld words done" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelime bitti"
+          }
+        }
+      }
+    },
     "%lld words have no meaning" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld kelimenin anlamı eksik"
+          }
+        }
+      }
+    },
+    "%lld words now come back after a week or more." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelime artık bir haftadan uzun aralıkla geliyor."
           }
         }
       }
@@ -566,6 +616,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Isınmak için %lld kelime"
+          }
+        }
+      }
+    },
+    "%lld words will be waiting by tomorrow." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yarın %lld kelime bekleyecek."
           }
         }
       }
@@ -621,6 +681,16 @@
         }
       }
     },
+    "%lld%% of your pairs were right the first time." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eşleştirmelerinin %%%lld kadarı ilk denemede doğruydu."
+          }
+        }
+      }
+    },
     "%lldpx" : {
       "localizations" : {
         "tr" : {
@@ -641,6 +711,19 @@
         }
       }
     },
+    "⌃⌘F full screen" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌃⌘F tam ekran"
+          }
+        }
+      }
+    },
+    "⌥⌘V" : {
+
+    },
     "1 · Select" : {
       "localizations" : {
         "tr" : {
@@ -651,12 +734,42 @@
         }
       }
     },
+    "1 day" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 gün"
+          }
+        }
+      }
+    },
     "1 field empty" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 alan eksik"
+          }
+        }
+      }
+    },
+    "1 more saved" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 kayıt daha"
+          }
+        }
+      }
+    },
+    "1 word done" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 kelime bitti"
           }
         }
       }
@@ -768,6 +881,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kelimelerinden Bir Hikâye"
+          }
+        }
+      }
+    },
+    "About %lld min." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yaklaşık %lld dk."
           }
         }
       }
@@ -1159,6 +1282,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "TÜM ZAMANLAR"
+          }
+        }
+      }
+    },
+    "All waiting" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekleyenlerin hepsi"
           }
         }
       }
@@ -1978,6 +2111,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kartın ön yüzü"
+          }
+        }
+      }
+    },
+    "Card front: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartın önü: %@"
           }
         }
       }
@@ -3471,6 +3614,16 @@
         }
       }
     },
+    "end" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bitir"
+          }
+        }
+      }
+    },
     "Enter Focus Mode" : {
       "localizations" : {
         "tr" : {
@@ -4006,6 +4159,16 @@
         }
       }
     },
+    "flip" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "çevir"
+          }
+        }
+      }
+    },
     "Flip the daily word card, keep your streak, and watch the goal ring fill." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4073,6 +4236,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sıklık"
+          }
+        }
+      }
+    },
+    "FROM" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NEREDEN"
           }
         }
       }
@@ -4209,6 +4382,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Git"
+          }
+        }
+      }
+    },
+    "Go Over the %lld You Struggled With" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorlandığın %lld kelimeyi tekrar çalış"
+          }
+        }
+      }
+    },
+    "Go Over the 1 You Struggled With" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorlandığın kelimeyi tekrar çalış"
           }
         }
       }
@@ -4517,6 +4710,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Üzerine gelme sözlüğü, ön analiz, özetler ve bölüm hazırlığı yapay zekâ sağlayıcını ya da açıksa Apple'ın cihaz içi modelini kullanır. Apple Çeviri, dil indirildikten sonra çevrimdışı çalışır; desteklemediği dil çiftlerinde yapay zekâ sağlayıcına geçer."
+          }
+        }
+      }
+    },
+    "HOW" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NASIL"
+          }
+        }
+      }
+    },
+    "HOW MANY WORDS" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KAÇ KELİME"
           }
         }
       }
@@ -4977,6 +5190,16 @@
         }
       }
     },
+    "listen" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dinle"
+          }
+        }
+      }
+    },
     "Listen" : {
       "localizations" : {
         "tr" : {
@@ -5212,6 +5435,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Şöyle işaretle…"
+          }
+        }
+      }
+    },
+    "marked again" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tekrar dedin"
           }
         }
       }
@@ -5531,6 +5764,16 @@
         }
       }
     },
+    "More Words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha fazla kelime"
+          }
+        }
+      }
+    },
     "N" : {
       "comment" : "grammar tag: noun",
       "localizations" : {
@@ -5578,6 +5821,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tekrar Gerekli"
+          }
+        }
+      }
+    },
+    "never studied" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hiç çalışılmamış"
           }
         }
       }
@@ -5642,6 +5895,16 @@
         }
       }
     },
+    "New word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni kelime"
+          }
+        }
+      }
+    },
     "New words" : {
       "comment" : "A label displayed in the reading stats view.",
       "isCommentAutoGenerated" : true,
@@ -5650,6 +5913,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yeni kelimeler"
+          }
+        }
+      }
+    },
+    "NEW WORDS" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YENİ KELİMELER"
           }
         }
       }
@@ -6043,6 +6316,26 @@
         }
       }
     },
+    "No words here yet." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burada henüz kelime yok."
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiç"
+          }
+        }
+      }
+    },
     "None yet" : {
       "localizations" : {
         "tr" : {
@@ -6179,6 +6472,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Şu anda tekrar bekleyen kelime yok. Okumaya devam et ya da tüm kayıtlı kelimeleri Tekrar'a dahil et."
+          }
+        }
+      }
+    },
+    "Nothing is waiting here. Practice leaves your schedule as it is." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burada bekleyen kelime yok. Alıştırma tekrar takvimini değiştirmez."
           }
         }
       }
@@ -6535,6 +6838,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hızlı Arama panelini her uygulamadan aç."
+          }
+        }
+      }
+    },
+    "Open the study room in full screen" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma odasını tam ekranda aç"
           }
         }
       }
@@ -6949,12 +7262,42 @@
         }
       }
     },
+    "Practice" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alıştırma"
+          }
+        }
+      }
+    },
+    "Practice %lld words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelimeyle alıştırma yap"
+          }
+        }
+      }
+    },
     "Practice Again" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tekrar Çalış"
+          }
+        }
+      }
+    },
+    "Practice done" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alıştırma bitti"
           }
         }
       }
@@ -6985,6 +7328,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sadece alıştırma — tekrar programında hiçbir şey değişmedi."
+          }
+        }
+      }
+    },
+    "Practice: your review schedule stays as it is." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alıştırma: tekrar takvimin değişmez."
           }
         }
       }
@@ -7058,6 +7411,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çevirmek için boşluk veya enter tuşuna bas"
+          }
+        }
+      }
+    },
+    "Press space to flip" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çevirmek için boşluğa bas"
           }
         }
       }
@@ -7679,6 +8042,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "RELL varsayılan olarak LM Studio üzerinden yerel bir LLM kullanır — gizli ve ücretsiz. LM Studio'yu başlat, bir model yükle ve yerel sunucuyu etkinleştir."
+          }
+        }
+      }
+    },
+    "remembered" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hatırladın"
           }
         }
       }
@@ -8317,6 +8690,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yalnızca bir destedeki (etiketteki) kelimeleri tekrar et."
+          }
+        }
+      }
+    },
+    "review streak" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tekrar serisi"
           }
         }
       }
@@ -9078,6 +9461,16 @@
         }
       }
     },
+    "SETTLED" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OTURANLAR"
+          }
+        }
+      }
+    },
     "Short" : {
       "localizations" : {
         "tr" : {
@@ -9229,6 +9622,16 @@
         }
       }
     },
+    "Show the Book Sentence on the Card Front" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitaptaki cümleyi kartın önünde göster"
+          }
+        }
+      }
+    },
     "Show the full library" : {
       "localizations" : {
         "tr" : {
@@ -9366,6 +9769,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "sk-..."
+          }
+        }
+      }
+    },
+    "skip" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "atla"
           }
         }
       }
@@ -9554,6 +9967,26 @@
         }
       }
     },
+    "Start with %lld words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelimeyle başla"
+          }
+        }
+      }
+    },
+    "Start with 1 word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 kelimeyle başla"
+          }
+        }
+      }
+    },
     "Start with a Book or PDF" : {
       "localizations" : {
         "tr" : {
@@ -9710,6 +10143,16 @@
         }
       }
     },
+    "Streak: %lld days." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seri: %lld gün."
+          }
+        }
+      }
+    },
     "Streaming output in progress" : {
       "localizations" : {
         "tr" : {
@@ -9736,6 +10179,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kartları ayrı pencerede çalış"
+          }
+        }
+      }
+    },
+    "Study Full Screen" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tam ekranda çalış"
+          }
+        }
+      }
+    },
+    "Study Room" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma odası"
           }
         }
       }
@@ -9818,6 +10281,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Etiketler: "
+          }
+        }
+      }
+    },
+    "take back" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "geri al"
           }
         }
       }
@@ -10112,6 +10585,16 @@
         }
       }
     },
+    "This book: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitap: %@"
+          }
+        }
+      }
+    },
     "This chapter" : {
       "localizations" : {
         "tr" : {
@@ -10279,6 +10762,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inspector'ı aç/kapat (⌘⌥I)"
+          }
+        }
+      }
+    },
+    "took" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sürdü"
           }
         }
       }
@@ -10539,6 +11032,16 @@
         }
       }
     },
+    "Up to %lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En fazla %lld"
+          }
+        }
+      }
+    },
     "Use New Note to capture a thought at your current position." : {
       "localizations" : {
         "tr" : {
@@ -10631,11 +11134,22 @@
       }
     },
     "Vocabulary Review" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kelime Tekrarı"
+          }
+        }
+      }
+    },
+    "waiting for review" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tekrar bekleyen"
           }
         }
       }
@@ -10738,6 +11252,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kelime kaydedince"
+          }
+        }
+      }
+    },
+    "Where you met the word, under it. Turn off to test the word alone." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimenin altında, onu nerede gördüğün. Kelimeyi tek başına sınamak için kapat."
           }
         }
       }
@@ -10906,6 +11430,16 @@
         }
       }
     },
+    "Words waiting for review come first; new ones are mixed in." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önce tekrar bekleyenler gelir, yeni kelimeler araya karışır."
+          }
+        }
+      }
+    },
     "Words you know" : {
       "localizations" : {
         "tr" : {
@@ -10986,6 +11520,26 @@
         }
       }
     },
+    "you keep forgetting" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sık unuttukların"
+          }
+        }
+      }
+    },
+    "You keep forgetting (%lld)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sık unuttukların (%lld)"
+          }
+        }
+      }
+    },
     "You know %@ of this book's words" : {
       "localizations" : {
         "tr" : {
@@ -11002,6 +11556,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu kitabın kelimelerinin %%%lld'ini biliyorsun"
+          }
+        }
+      }
+    },
+    "YOU STRUGGLED WITH" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ZORLANDIKLARIN"
           }
         }
       }

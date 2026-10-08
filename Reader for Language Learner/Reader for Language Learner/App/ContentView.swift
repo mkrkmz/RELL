@@ -58,10 +58,6 @@ struct ContentView: View {
         get { model.showInspector }
         nonmutating set { model.showInspector = newValue }
     }
-    var showWorkspaceReview: Bool {
-        get { model.showWorkspaceReview }
-        nonmutating set { model.showWorkspaceReview = newValue }
-    }
     var showStats: Bool {
         get { model.showStats }
         nonmutating set { model.showStats = newValue }
@@ -190,7 +186,7 @@ struct ContentView: View {
                         bookmarkStore: bookmarkStore,
                         onOpenRecent: { openDocument($0.url) },
                         onRemoveRecent: { recentDocumentStore.remove(id: $0.id) },
-                        onReview: { showWorkspaceReview = true },
+                        onReview: { openWindow(id: StudyRoom.windowID) },
                         coverStore: coverStore,
                         sessionStore: sessionStore
                     )
@@ -226,7 +222,7 @@ struct ContentView: View {
                 toggleCurrentPageBookmark()
             }
             .onReceive(NotificationCenter.default.publisher(for: .openReviewWindowCommand)) { _ in
-                openWindow(id: "review")
+                openWindow(id: StudyRoom.windowID)
             }
             .onContinueUserActivity(CSSearchableItemActionType) { activity in
                 guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
@@ -382,14 +378,6 @@ struct ContentView: View {
                     onSave: { noteStore.saveDraft($0) },
                     onCancel: { noteStore.cancelDraft() }
                 )
-            }
-            .sheet(isPresented: Bindable(model).showWorkspaceReview) {
-                QuizView(
-                    store: savedWordsStore,
-                    onContinueReading: { showWorkspaceReview = false },
-                    onClose: { showWorkspaceReview = false }
-                )
-                    .frame(width: 460, height: 560)
             }
             .sheet(isPresented: Bindable(model).showStats) {
                 NavigationStack {

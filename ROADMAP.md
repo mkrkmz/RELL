@@ -152,17 +152,31 @@ telaffuz, ornek cumle. **Maketle baslar.**
 Amac: kelime calismasi ayri, odakli ve tam ekran bir yere tasinsin
 (karar 2: ayri pencere). **Maketle baslar.**
 
-- [ ] **Calisma penceresi** — "Vocabulary Review" penceresinin yerini alir
-      (ayni `id: "review"`, eski yollar calisir): buyuk acilir, tam ekrana
-      gecer, Esc oturumu bitirir; ana ekran, ⌘K ve Git menusu buraya acar
-- [ ] **Oturum kurulumu ve sonu** — kac kelime, kaynak (tum / bu kitap /
-      deste / zorlu), yeni + tekrar dengesi; sonda dogru/yanlis, bugun
-      oturanlar, yarin bekleyenler
-- [ ] **Buyuk kart duzeni** — bes mod genis alanda; kelime buyuk, kitaptaki
-      cumlesi altinda, ses; klavye (Space cevir, 1–4 puanla, ←/→)
-- [ ] **Kenar cubugundaki tekrar** (Should, karar 3) — hizli tekrar olarak
-      kalir + "Tam ekranda calis"
-- [ ] Testler: oturum secimi, klavye eylemleri, pencere boyutlari
+- [x] **Calisma penceresi** — `StudyRoomView` + `QuizView(style: .room)`
+      (`UI/QuizView+Room.swift`): ayni `id: "review"`, 1100×720 acilir, en
+      kucuk 720×560; tam ekrani hatirlar (`studyRoomFullScreen`); Esc
+      oturumu bitirip ozete gecer, kurulum/ozette pencereyi kapatir. Ana
+      ekrandaki tekrar karti, ⌘K, Git menusu (⌥⌘V) buraya acar; eski
+      ContentView tekrar sayfasi kalkti. Adi "Calisma odasi"
+- [x] **Oturum kurulumu ve sonu** — `StudyPlan` (saf): 10/20/hepsi
+      (varsayilan 20, hatirlanir — karar 1), kaynak tumu / son okunan kitap /
+      deste / sik unutulanlar (≥2 "Tekrar"), yeni kelime siniri 0/5/10
+      (varsayilan 5 — karar 5); tekrarlar en eski vadeden, yeniler araya
+      esit dagilir; bekleyen yoksa "alistirma" (takvim degismez).
+      `StudySetupView`, `StudySummaryView` (hatirlanan / tekrar denen /
+      oturanlar ≥7 gun, sure, yarin bekleyenler, seri; zorlananlari tek
+      tikla yeniden calis)
+- [x] **Buyuk kart duzeni** — kelime 52 pt serif, altinda kitaptaki cumle
+      (Ayarlar'dan kapatilir — karar 3), arkada anlam/tanim/telaffuz;
+      Space cevirir, 1–4 puanlar, ← son puani geri alir (zamanlama eski
+      haline doner), → karti sona atar, S sesli okur (karar 2); puan
+      dugmelerinde sonraki tekrar zamani (`SavedWordsStore.reviewed` saf
+      fonksiyon; onizleme ve gercek puan ayni yoldan — karar 4)
+- [x] **Kenar cubugundaki tekrar** — kalir + "Tam ekranda calis"
+- [x] Testler: `StudyRoomTests` (10) — kuyruk sirasi/siniri/kaynaklar,
+      geri alma (atlamadan sonra dogru kart), atlama, onizleme = gercek
+      puan, ozet, kurulum ve ozet 720×560'ta pencereyi buyutmez
+- [ ] Tam test paketi + canli tur (kullanici)
 
 ## Sprint 3 — "Daha iyi ogrenme dongusu" (Must)
 

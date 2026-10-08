@@ -85,6 +85,39 @@ final class QuizSession {
     private(set) var gradedCount = 0
     private(set) var correctCount = 0
 
+    // MARK: - Answers (v15 S2)
+
+    /// One graded answer, for the study room's summary.
+    struct Answer: Equatable {
+        let wordID: UUID
+        let term: String
+        let rating: ReviewRating
+        let nextReviewAt: Date?
+    }
+
+    private(set) var answers: [Answer] = []
+    private(set) var startedAt: Date?
+
+    /// What undoing the last grade puts back.
+    private struct Step {
+        let before: SavedWord
+        let index: Int
+        let requeued: Bool
+        let tallies: Tallies
+        let answerCount: Int
+    }
+
+    private struct Tallies {
+        var again = 0, good = 0, easy = 0, graded = 0, correct = 0
+    }
+
+    @ObservationIgnored private var history: [Step] = []
+    /// The tallies as the card on screen was shown — an undo restores them,
+    /// including an objective grade recorded at reveal.
+    @ObservationIgnored private var talliesAtCardStart = Tallies()
+
+    var canUndo: Bool { !history.isEmpty }
+
     // MARK: - Options
 
     /// Practice without touching the schedule: nothing reaches the store.
@@ -125,9 +158,10 @@ final class QuizSession {
 
     // MARK: - Lifecycle
 
-    /// Starts a fresh run over `words` in random order.
-    func begin(with words: [SavedWord], mode: QuizMode) {
-        queue = words.shuffled()
+    /// Starts a fresh run over `words` — in random order, or as given (the
+    /// study room orders its own queue).
+    func begin(with words: [SavedWord], mode: QuizMode, shuffle: Bool = true) {
+        queue = shuffle ? words.shuffled() : words
         currentIndex = 0
         againCount = 0
         goodCount = 0
@@ -135,6 +169,9 @@ final class QuizSession {
         gradedCount = 0
         correctCount = 0
         isFinished = false
+        answers = []
+        history = []
+        startedAt = Date()
         prepareCard(mode: mode)
     }
 
@@ -145,6 +182,7 @@ final class QuizSession {
         mcSelectedIndex = nil
         mcOptions = []
         showAllBackSections = false
+        talliesAtCardStart = currentTallies
         guard let word = currentWord else { return }
         if mode == .multipleChoice {
             mcOptions = optionsBuilder?(word) ?? []
@@ -158,6 +196,16 @@ final class QuizSession {
     func finish() {
         isFlipped = false
         isFinished = true
+    }
+
+    /// Back to the setup screen: no queue, nothing finished.
+    func reset() {
+        queue = []
+        currentIndex = 0
+        isFinished = false
+        answers = []
+        history = []
+        startedAt = nil
     }
 
     /// Returns to the card stack after the results screen ("Review More").
@@ -176,6 +224,14 @@ final class QuizSession {
     /// Tallies a grade, schedules it through the store (unless cramming), and
     /// puts a lapsed word back on the end of the queue.
     func record(_ rating: ReviewRating, for word: SavedWord, in store: SavedWordsStore) {
+        let before = store.word(withID: word.id) ?? word
+        let queueCount = queue.count
+        let tallies = talliesAtCardStart
+        let answerCount = answers.count
+        defer {
+            history.append(Step(before: before, index: currentIndex, requeued: queue.count > queueCount,
+                                tallies: tallies, answerCount: answerCount))
+        }
         switch rating {
         case .again: againCount += 1
         // Hard is a successful recall, so it tallies with Good — matching how
@@ -186,10 +242,50 @@ final class QuizSession {
 
         if cram {
             if rating == .again { queue.append(word) }
+            answers.append(Answer(wordID: word.id, term: word.term, rating: rating, nextReviewAt: nil))
         } else {
             let updated = store.applyReview(rating, to: word)
             if rating == .again, let updated { queue.append(updated) }
+            answers.append(Answer(wordID: word.id, term: word.term, rating: rating, nextReviewAt: updated?.nextReviewAt))
         }
+    }
+
+    /// Takes back the last grade: the word's schedule as it was, the
+    /// tallies, and the card back on screen (v15 S2, ←). False when there's
+    /// nothing to undo.
+    @discardableResult
+    func undoLast(in store: SavedWordsStore, mode: QuizMode) -> Bool {
+        guard let step = history.popLast() else { return false }
+        // The copy put back for an "Again" — found by id, since a skip may
+        // have moved other cards behind it.
+        if step.requeued, let copy = queue.lastIndex(where: { $0.id == step.before.id }), copy > step.index {
+            queue.remove(at: copy)
+        }
+        if !cram { store.update(step.before) }
+        if queue.indices.contains(step.index) { queue[step.index] = step.before }
+        againCount = step.tallies.again
+        goodCount = step.tallies.good
+        easyCount = step.tallies.easy
+        gradedCount = step.tallies.graded
+        correctCount = step.tallies.correct
+        answers.removeLast(answers.count - step.answerCount)
+        currentIndex = step.index
+        isFinished = false
+        prepareCard(mode: mode)
+        return true
+    }
+
+    /// Puts the card on screen at the end of the queue (→). Nothing happens
+    /// on the last card.
+    func skipCurrent(mode: QuizMode) {
+        guard !isLastCard, queue.indices.contains(currentIndex) else { return }
+        let word = queue.remove(at: currentIndex)
+        queue.append(word)
+        prepareCard(mode: mode)
+    }
+
+    private var currentTallies: Tallies {
+        Tallies(again: againCount, good: goodCount, easy: easyCount, graded: gradedCount, correct: correctCount)
     }
 
     /// Moves past a whole grid at once — the matching game answers several

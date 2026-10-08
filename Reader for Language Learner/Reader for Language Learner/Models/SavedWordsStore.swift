@@ -692,12 +692,28 @@ final class SavedWordsStore {
     func applyReview(_ rating: ReviewRating, to word: SavedWord, reviewedAt: Date = Date()) -> SavedWord? {
         guard let index = words.firstIndex(where: { $0.id == word.id }) else { return nil }
 
-        // Snapshot the stored word before any mutation — FSRS needs the prior
-        // memory state and review date, and the caller's copy may be stale.
-        let previous = words[index]
+        // Schedule from the stored word, not the caller's copy, which may be
+        // stale — FSRS needs the prior memory state and review date.
+        let updated = Self.reviewed(words[index], rating: rating, at: reviewedAt)
+        words[index] = updated
+        save()
+        return updated
+    }
+
+    /// When `word` would come back after `rating` — the study room's rating
+    /// buttons say it before you press (v15 S2). Nothing is written.
+    func nextReviewDate(for word: SavedWord, after rating: ReviewRating, at date: Date = Date()) -> Date? {
+        let stored = words.first(where: { $0.id == word.id }) ?? word
+        return Self.reviewed(stored, rating: rating, at: date).nextReviewAt
+    }
+
+    /// `previous` after a review graded `rating` at `reviewedAt`: tallies,
+    /// history, FSRS state, next date and mastery. Pure, so a preview and the
+    /// real review can't disagree.
+    static func reviewed(_ previous: SavedWord, rating: ReviewRating, at reviewedAt: Date) -> SavedWord {
         let previousReviewDate = previous.lastReviewedAt
 
-        var updated = words[index]
+        var updated = previous
         updated.reviewCount += 1
         if updated.reviewHistory.isEmpty, let lastReviewedAt = updated.lastReviewedAt {
             updated.reviewHistory = [lastReviewedAt]
@@ -730,7 +746,7 @@ final class SavedWordsStore {
 
         let priorState = previous.fsrsState ?? FSRSScheduler.seedState(
             easeFactor: previous.easeFactor,
-            previousIntervalDays: previousIntervalDays(for: previous),
+            previousIntervalDays: Self.previousIntervalDays(for: previous),
             isMastered: previous.masteryLevel == .mastered,
             hasBeenReviewed: previous.hasBeenReviewed
         )
@@ -764,14 +780,12 @@ final class SavedWordsStore {
             updated.masteryLevel = .learning
         }
 
-        words[index] = updated
-        save()
         return updated
     }
 
     /// The interval the previous engine had settled on for this word, in days —
     /// used to seed FSRS stability so a migrated library keeps its momentum.
-    private func previousIntervalDays(for word: SavedWord) -> Double? {
+    private static func previousIntervalDays(for word: SavedWord) -> Double? {
         guard let next = word.nextReviewAt, let last = word.lastReviewedAt else { return nil }
         let days = next.timeIntervalSince(last) / 86_400
         return days > 0 ? days : nil
