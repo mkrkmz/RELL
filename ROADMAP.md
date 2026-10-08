@@ -176,7 +176,7 @@ Amac: kelime calismasi ayri, odakli ve tam ekran bir yere tasinsin
 - [x] Testler: `StudyRoomTests` (10) — kuyruk sirasi/siniri/kaynaklar,
       geri alma (atlamadan sonra dogru kart), atlama, onizleme = gercek
       puan, ozet, kurulum ve ozet 720×560'ta pencereyi buyutmez
-- [ ] Tam test paketi + canli tur (kullanici)
+- [x] Tam test paketi (675 yesil; geri alma testi mutasyonla dogrulandi) + canli tur (2026-10-08, birden fazla oturum, sorun yok)
 
 ## Sprint 3 — "Daha iyi ogrenme dongusu" (Must)
 
