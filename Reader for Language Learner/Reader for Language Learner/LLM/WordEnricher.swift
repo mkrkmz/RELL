@@ -206,6 +206,14 @@ final class WordEnricher {
         }
     }
 
+    /// Not on the main actor. With the module's default MainActor
+    /// isolation every deinit is isolated, and on macOS 15 the
+    /// back-deployed runtime for that (`swift_task_deinitOnExecutor…
+    /// BackDeploy`) frees a task-local scope twice when one isolated deinit
+    /// releases an object with another — here the store. CI's macOS 15.7
+    /// runner crashed on it (v15 S1). Nothing here needs the main actor.
+    nonisolated deinit {}
+
     // MARK: Counts
 
     func missingCount(_ field: FillField, in ids: Set<UUID>? = nil) -> Int {
