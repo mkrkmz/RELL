@@ -80,15 +80,22 @@ Amac: kod yazmadan once belirsizlikleri kullanicinin verisiyle kapatmak.
         `gemma-4-e4b` ilk istek 13 sn, sonra ~0,5 sn, **1 bos cevap**, 1
         yazim hatasi. Karar: tanim icin once cihaz ici model, yedek
         saglayici; bos/yanlis dilde cevap kaydedilmez, yeniden denenir
-- [ ] **Kindle vocab.db** — Kindle USB ile bagliyken
-      `system/vocabulary/vocab.db` yapisi (salt okunur)
+- [x] **Kindle vocab.db** — S4'e ertelendi (2026-10-08: cihaz kullanicinin
+      yaninda degil). Ice aktarma bilinen semayla (WORDS, LOOKUPS,
+      BOOK_INFO) ve test fiksturuyle yazilir; surumden once kullanicinin
+      gercek dosyasiyla salt okunur dogrulanir
 - [ ] **Kisayollar denemesi** — DUZELTME: Kisayollar **zaten var** (7925d86,
       ilk surumler): "Add Word to RELL", "Start Vocabulary Review", "Look Up
       in RELL" (`App/RELLIntents.swift`); Servisler menusu de var ("Look Up
       in RELL"). Katalogdaki D1 ve Servisler fikirleri koda bakilmadan
-      onerilmisti. Kalan: kullanicinin Kisayollar uygulamasinda gorunuyor mu
-      (imzasiz derleme). S4 isi: "Tekrara basla" calisma penceresine acsin,
-      "Kac kelime bekliyor?" eklensin, eklenen kelime doldurulsun
+      onerilmisti. **Sonuc (2026-10-08): imzasiz derlemede gorunmuyor.**
+      Eylem verisi uygulamada (`Metadata.appintents`), linkd paketi
+      indeksliyor ama her acilista "Unable to get teamId" hatasi veriyor —
+      ad-hoc imzada takim kimligi yok. Ucretli hesap olmadan tek yol Xcode'da
+      ucretsiz Apple ID ("Personal Team") ile yerel imza; CI'nin DMG'si yine
+      ad-hoc kalir. Karar (kullanicinin kosulu: "hesap olmadan calisirsa"):
+      Kisayollar v15'ten cikar, mevcut eylemler oldugu gibi kalir; Servisler
+      menusu imzasiz calisiyor
 - [x] **Temizlik** — "word"/"Word": dort kaydetme yolu (PDF ve EPUB sag tik,
       Hizli Arama, AddWordIntent) kucuk harf yaziyordu. Yazanlar
       `ExplainMode.word.rawValue` kullaniyor; `ExplainMode.normalizedRawValue`
@@ -153,8 +160,8 @@ Amac: tekrar, kelimenin asamasina gore dogru alistirmayi secsin.
 - [ ] **Kindle kelime defteri** (Must) — vocab.db sec ya da bagli Kindle'i
       bul; kelimeler, Kindle cumleleri ve kitap adlariyla gelir; kopyalar
       atlanir; S1 doldurmasi eksikleri tamamlar
-- [ ] **Kisayollar** (Should, S0 olumluysa) — "Kelime kaydet", "Calismaya
-      basla", "Kac kelime bekliyor?"
+- [ ] ~~Kisayollar~~ — S0 olumsuz: imzasiz derlemede Kisayollar'da
+      gorunmuyor (takim kimligi gerekir); v15 disi
 - [ ] Kapanis (Must): tam test, performans karsilastirmasi, canli tur,
       CHANGELOG, **1.44.0** (tag oncesi kullaniciya sorulur)
 
@@ -166,7 +173,7 @@ Amac: tekrar, kelimenin asamasina gore dogru alistirmayi secsin.
    kendiliginden; bulut saglayici yalniz "Eksikleri doldur" ile.
 2. Tam ekran: ayri Calisma penceresi.
 3. Kenar cubugundaki Tekrar sekmesi kalir + "Tam ekranda calis".
-4. Kindle: S0'da kullanici cihazini baglar; dosya yalniz okunur.
+4. Kindle: dosya yalniz okunur; cihaz S4'te baglanir (S0'da yanda degildi).
 
 ## Fikir havuzu (v15'e alinmadi)
 
