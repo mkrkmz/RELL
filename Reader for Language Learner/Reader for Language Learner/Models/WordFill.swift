@@ -87,7 +87,7 @@ enum FillField: String, CaseIterable, Identifiable, Codable {
     var sourceHint: String {
         switch self {
         case .meaning, .definition: return String(localized: "From the dictionary, else the model")
-        case .pronunciation:        return String(localized: "Dictionary only")
+        case .pronunciation:        return String(localized: "Dictionary only; the base form's for other forms")
         case .level:                return String(localized: "Model")
         case .examples:             return String(localized: "The model writes them")
         }
@@ -191,11 +191,14 @@ struct DictionaryEntry: Equatable {
         guard !body.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
     }
 
-    /// The pronunciation as a card shows it, only when the entry is for
-    /// the saved form itself — the lemma's IPA is wrong for "lolled".
+    /// The pronunciation as a card shows it. For another form of the word
+    /// the entry's IPA is the base form's, so it says so: "/sniə(r)/
+    /// (sneer)" for "sneered" (v15 S1 live pass: leaving it empty kept
+    /// "Fill Missing" on the word page for good).
     func pronunciation(for term: String) -> String? {
-        guard let ipa, Self.sameWord(headword, term) else { return nil }
-        return "/\(ipa)/"
+        guard let ipa else { return nil }
+        if headword.isEmpty || Self.sameWord(headword, term) { return "/\(ipa)/" }
+        return "/\(ipa)/ (\(headword))"
     }
 
     /// The first two senses, without parts of speech, examples, phrases or

@@ -3152,11 +3152,22 @@
       }
     },
     "Dictionary only" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yalnız sözlükten"
+          }
+        }
+      }
+    },
+    "Dictionary only; the base form's for other forms" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnız sözlükten; çekimli kelimede kök hâlininki"
           }
         }
       }
@@ -6168,6 +6179,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Şu anda tekrar bekleyen kelime yok. Okumaya devam et ya da tüm kayıtlı kelimeleri Tekrar'a dahil et."
+          }
+        }
+      }
+    },
+    "Nothing more found" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başka bir şey bulunamadı"
           }
         }
       }
@@ -9957,6 +9978,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deste, seçilen %lld kelimenin tümüne eklenecek."
+          }
+        }
+      }
+    },
+    "The dictionary and the models had nothing for the empty fields. You can type them in from the field's menu." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözlükte ve modellerde boş alanlar için bir şey yoktu. Alanın menüsünden kendin yazabilirsin."
           }
         }
       }

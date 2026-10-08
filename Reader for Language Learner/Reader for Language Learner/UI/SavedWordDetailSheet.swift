@@ -22,6 +22,8 @@ struct SavedWordDetailSheet: View {
 
     @State private var showAllEncounters = false
     @State private var isFilling = false
+    /// The last fill found nothing for the empty fields.
+    @State private var nothingMoreFound = false
     @State private var editingField: FillField?
     @State private var editText = ""
     @State private var showDetails = false
@@ -158,7 +160,12 @@ struct SavedWordDetailSheet: View {
                 .buttonStyle(.borderless)
                 .help("Open in Dictionary")
                 .accessibilityLabel("Open in Dictionary")
-                if enricher != nil && empty > 0 {
+                if enricher != nil && empty > 0 && nothingMoreFound {
+                    Text("Nothing more found")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .help("The dictionary and the models had nothing for the empty fields. You can type them in from the field's menu.")
+                } else if enricher != nil && empty > 0 {
                     Button {
                         fillMissing()
                     } label: {
@@ -253,9 +260,11 @@ struct SavedWordDetailSheet: View {
     private func fillMissing() {
         guard let enricher else { return }
         isFilling = true
+        let emptyBefore = FillField.allCases.filter { $0.isMissing(in: word) }.count
         Task {
             await enricher.fill(wordID: word.id, allowProvider: fillUsesProvider)
             mergeFilledFields()
+            nothingMoreFound = FillField.allCases.filter { $0.isMissing(in: word) }.count == emptyBefore
             isFilling = false
         }
     }
@@ -276,6 +285,7 @@ struct SavedWordDetailSheet: View {
     }
 
     private func clearLocally(_ field: FillField) {
+        nothingMoreFound = false
         if field == .level {
             word.cefrLevel = nil
             word.cefrIsAuto = false
@@ -313,6 +323,7 @@ struct SavedWordDetailSheet: View {
         word.llmOutputs[module.rawValue] = text.isEmpty ? nil : text
         word.fieldSources[field.rawValue] = nil
         editingField = nil
+        nothingMoreFound = false
     }
 
     // MARK: - Memory

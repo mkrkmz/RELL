@@ -119,11 +119,12 @@ final class WordFillTests: XCTestCase {
                        "a condition of rest; a gummy secretion")
     }
 
-    func testPronunciationOnlyForTheSavedFormItself() async {
+    func testPronunciationNamesTheBaseFormForOtherForms() async {
         XCTAssertEqual(DictionaryEntry(raw: manure)?.pronunciation(for: "manure"), "/məˈnjυə(r)/")
         XCTAssertEqual(DictionaryEntry(raw: archEnemy)?.pronunciation(for: "archenemy"), "/ˌɑːtʃˈɛnɪmi/",
                        "a hyphen doesn't make another word")
-        XCTAssertNil(DictionaryEntry(raw: loll)?.pronunciation(for: "lolled"), "the lemma's IPA is wrong for lolled")
+        XCTAssertEqual(DictionaryEntry(raw: loll)?.pronunciation(for: "lolled"), "/lɒl/ (loll)",
+                       "another form gets the base form's, named")
     }
 
     // MARK: Validation
