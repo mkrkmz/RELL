@@ -231,8 +231,9 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-08).
       cumle basi buyuk harfi kuculur ("It" → "it", "Komodo" kalir).
       `KindleImportTests` (7, sema fiksturu). Tam paket 689 yesil
 - [x] ~~Kisayollar~~ — S0 olumsuz (takim kimligi gerekir); v15 disi
-- [ ] Kapanis (Must): tam test, performans karsilastirmasi, canli tur,
-      CHANGELOG, **1.44.0** (tag oncesi kullaniciya sorulur)
+- [x] Kapanis (Must): tam test (689 yesil, CI yesil), canli turlar
+      (S1–S4, kullanici), CHANGELOG 1.44.0 + Yenilikler 1.44; **1.44.0**
+      kullanicinin onayiyla yayinlandi (2026-10-09)
 
 ---
 
