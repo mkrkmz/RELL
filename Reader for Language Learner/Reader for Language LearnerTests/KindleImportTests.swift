@@ -55,6 +55,25 @@ final class KindleImportTests: XCTestCase {
         XCTAssertThrowsError(try KindleVocabulary.read(url))
     }
 
+    func testSentenceStartCapitalsGoAndFunctionWordsStayOut() async {
+        func word(_ text: String, stem: String? = nil, sentence: String) -> KindleWord {
+            KindleWord(id: "en:\(text)", word: text, stem: stem ?? text, languageCode: "en", isMastered: false,
+                       sentence: sentence, bookID: "b", bookTitle: "B", lookedUpAt: Date())
+        }
+        XCTAssertEqual(word("It", sentence: "It was cold.").term, "it", "opens the sentence")
+        XCTAssertEqual(word("Komodo", sentence: "A Komodo dragon.").term, "Komodo", "a name mid-sentence")
+        XCTAssertEqual(word("I", sentence: "I ran.").term, "I")
+
+        let words = [word("It", sentence: "It was cold."), word("have", sentence: "We have none."),
+                     word("an", sentence: "an apple"), word("vacillate", sentence: "They vacillate."),
+                     word("albeit", sentence: "It worked, albeit slowly."),
+                     word("thalamus", sentence: "The thalamus relays signals.")]
+        let plan = KindleVocabulary.Plan(words: words, existing: [], target: .english)
+        XCTAssertEqual(plan.candidates.map(\.term), ["vacillate", "albeit", "thalamus"],
+                       "the user's Kindle: alone, the tagger called thalamus a function word; albeit is one, and worth learning")
+        XCTAssertEqual(plan.tooCommon, 3)
+    }
+
     // MARK: Plan and import
 
     func testThePlanLeavesOutWhatsSavedAndOtherLanguages() async throws {

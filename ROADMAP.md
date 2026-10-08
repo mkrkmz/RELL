@@ -224,7 +224,12 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-08).
       Kindle'da "ogrenildi" olanlar istege bagli; "Kindle" destesine
       `addImported` ile tek kayitta eklenir (kelime basina doldurma/CEFR
       tetiklenmez), ardindan sozluk + cihaz ici modelle toplu doldurma.
-      `KindleImportTests` (6, sema fiksturu)
+      Gercek dosyada (kopyadan, salt okunur) plan: 528 yeni, 6 zaten
+      kayitli, 9 Turkce, 16 cok sik kelime (it, the, have…) alinmiyor;
+      tek basina etiketlenince "thalamus"/"anthem" islev sozcugu sayiliyordu
+      → cumlesi icinde etiketlenir, yalniz ≤5 harfliler ("albeit" kalir);
+      cumle basi buyuk harfi kuculur ("It" → "it", "Komodo" kalir).
+      `KindleImportTests` (7, sema fiksturu). Tam paket 689 yesil
 - [x] ~~Kisayollar~~ — S0 olumsuz (takim kimligi gerekir); v15 disi
 - [ ] Kapanis (Must): tam test, performans karsilastirmasi, canli tur,
       CHANGELOG, **1.44.0** (tag oncesi kullaniciya sorulur)

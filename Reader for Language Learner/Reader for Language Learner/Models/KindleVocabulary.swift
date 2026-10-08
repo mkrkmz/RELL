@@ -16,6 +16,7 @@
 //
 
 import Foundation
+import NaturalLanguage
 import SQLite3
 
 /// One word from a Kindle, with its latest lookup.
@@ -33,10 +34,15 @@ struct KindleWord: Equatable, Identifiable {
     let lookedUpAt: Date
 
     /// The term to save: as read, except a capital that only starts the
-    /// sentence ("Exactly" → "exactly"; "Levantine" stays).
+    /// sentence ("Exactly" → "exactly", "It" → "it"; "Levantine" and "I"
+    /// stay).
     var term: String {
-        guard let first = word.first, first.isUppercase,
-              let stemFirst = stem.first, stemFirst.isLowercase else { return word }
+        guard let first = word.first, first.isUppercase, word != "I", !word.hasPrefix("I'") else { return word }
+        let stemIsLower = stem.first?.isLowercase == true
+        let opensSentence = sentence
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\"'“‘(«— ").union(.whitespaces))
+            .hasPrefix(word)
+        guard stemIsLower || opensSentence else { return word }
         return first.lowercased() + word.dropFirst()
     }
 
@@ -141,14 +147,18 @@ enum KindleVocabulary {
         let alreadySaved: Int
         /// In another language than the one you study.
         let otherLanguage: Int
+        /// Words no one studies — "it", "an", "have" — looked up by a slip
+        /// of the finger.
+        let tooCommon: Int
 
         init(words: [KindleWord], existing: [SavedWord], target: Language) {
             let saved = Set(existing.map { $0.term.lowercased() })
-            var alreadySaved = 0, otherLanguage = 0
+            var alreadySaved = 0, otherLanguage = 0, tooCommon = 0
             var candidates: [KindleWord] = []
             var seenTerms = Set<String>()
             for word in words {
                 guard word.language == target else { otherLanguage += 1; continue }
+                if KindleVocabulary.isFunctionWord(word.term, language: target, sentence: word.sentence) { tooCommon += 1; continue }
                 let term = word.term.lowercased()
                 if saved.contains(term) || saved.contains(word.stem.lowercased()) || !seenTerms.insert(term).inserted {
                     alreadySaved += 1
@@ -159,6 +169,7 @@ enum KindleVocabulary {
             self.candidates = candidates
             self.alreadySaved = alreadySaved
             self.otherLanguage = otherLanguage
+            self.tooCommon = tooCommon
 
             var counts: [String: (title: String, count: Int)] = [:]
             for word in candidates {
@@ -188,6 +199,35 @@ enum KindleVocabulary {
                 }
         }
     }
+
+    /// Pronouns, articles, prepositions, conjunctions and particles, and
+    /// the forms of be / have / do — by the language's own tagger.
+    static func isFunctionWord(_ term: String, language: Language, sentence: String = "") -> Bool {
+        let lowered = term.lowercased()
+        if language == .english, auxiliaries.contains(lowered) { return true }
+        // Short ones only: "albeit" and "whereas" are closed-class too, and
+        // worth learning.
+        guard !lowered.contains(" "), lowered.count <= 5 else { return false }
+        // In its sentence when it's there: alone, the tagger calls
+        // "thalamus" and "anthem" function words (v15 S4, the user's Kindle).
+        let text = sentence.isEmpty ? lowered : sentence
+        let tagger = NLTagger(tagSchemes: [.lexicalClass])
+        tagger.string = text
+        if let nl = LemmaMatcher.nlLanguage(for: language) {
+            tagger.setLanguage(nl, range: text.startIndex..<text.endIndex)
+        }
+        let whole = "\\b\(NSRegularExpression.escapedPattern(for: term))\\b"
+        guard let range = text.range(of: whole, options: [.regularExpression, .caseInsensitive])
+            ?? text.range(of: term, options: [.caseInsensitive]) else { return false }
+        let (tag, _) = tagger.tag(at: range.lowerBound, unit: .word, scheme: .lexicalClass)
+        let closed: Set<NLTag> = [.pronoun, .determiner, .preposition, .conjunction, .particle, .classifier]
+        return tag.map(closed.contains) ?? false
+    }
+
+    private static let auxiliaries: Set<String> = [
+        "be", "am", "is", "are", "was", "were", "been", "being",
+        "have", "has", "had", "having", "do", "does", "did", "i'm", "it's",
+    ]
 
     /// The deck imported words go into, so they can be studied together.
     static let deckName = "Kindle"

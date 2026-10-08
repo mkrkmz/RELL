@@ -584,6 +584,16 @@
         }
       }
     },
+    "%lld very common words, like “it” or “have”, are left out." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“it” ya da “have” gibi çok sık geçen %lld kelime alınmıyor."
+          }
+        }
+      }
+    },
     "%lld warm-up" : {
       "localizations" : {
         "tr" : {

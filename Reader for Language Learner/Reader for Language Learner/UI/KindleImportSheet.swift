@@ -162,6 +162,7 @@ struct KindleImportSheet: View {
         var parts = [String(localized: "\(plan.candidates.count) new words in \(FillField.languageName(Language.storedTarget)).")]
         if plan.alreadySaved > 0 { parts.append(String(localized: "\(plan.alreadySaved) are already saved.")) }
         if plan.otherLanguage > 0 { parts.append(String(localized: "\(plan.otherLanguage) in other languages are left out.")) }
+        if plan.tooCommon > 0 { parts.append(String(localized: "\(plan.tooCommon) very common words, like “it” or “have”, are left out.")) }
         return parts.joined(separator: " ")
     }
 
