@@ -108,15 +108,37 @@ final class WordNotebookTests: XCTestCase {
 
     // MARK: Layout
 
-    func testTheNotebookFitsItsSmallestWindow() async throws {
+    /// The notebook's columns at its smallest window height (560 pt).
+    /// Measured column by column: the whole split view adds its toolbar to
+    /// the test's plain window, which on macOS 15 grows the window by the
+    /// toolbar's height (CI, 588 pt) — the app's window has its toolbar
+    /// from the start.
+    func testTheNotebooksColumnsFitItsSmallestWindow() async throws {
         let store = makeStore()
-        for index in 0..<30 { store.add(SavedWord(term: "word\(index)", pdfFilename: "Why We Sleep", tags: ["Okul"])) }
-        let notebook = WordNotebookView(store: store)
-            .environment(WordEncounterStore(fileURL: FileManager.default.temporaryDirectory
-                .appendingPathComponent(UUID().uuidString).appendingPathComponent("e.json")))
-            .environment(AnkiModulePreferences())
-        let height = try await LayoutGuard.settledHeight(of: notebook, width: 820, height: 560)
-        XCTAssertLessThanOrEqual(height, 560 + 1, "the notebook forced the window to \(height) pt")
+        for index in 0..<30 {
+            var word = SavedWord(term: "word\(index)", sentence: String(repeating: "A long sentence from the book. ", count: 8),
+                                 pdfFilename: "Why We Sleep", tags: ["Okul"],
+                                 llmOutputs: [ModuleType.meaningTR.rawValue: "anlam", ModuleType.definitionEN.rawValue: "A definition."])
+            word.notes = String(repeating: "A note. ", count: 40)
+            store.add(word)
+        }
+        let encounters = WordEncounterStore(fileURL: FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString).appendingPathComponent("e.json"))
+        let enricher = WordEnricher(store: store, cefrEstimator: nil, observesSaves: false)
+
+        for tableMode in [false, true] {
+            let list = SavedWordsListView(store: store, currentDocumentName: nil, pool: store.words,
+                                          selection: .constant(store.words.first?.id), tableMode: tableMode)
+                .environment(encounters).environment(enricher).environment(AnkiModulePreferences())
+            let height = try await LayoutGuard.settledHeight(of: list, width: 420, height: 560)
+            XCTAssertLessThanOrEqual(height, 560 + 1, "the list (table \(tableMode)) forced the window to \(height) pt")
+        }
+
+        let word = try XCTUnwrap(store.words.first)
+        let page = SavedWordDetailSheet(word: word, store: store, isPane: true)
+            .environment(encounters).environment(enricher)
+        let height = try await LayoutGuard.settledHeight(of: page, width: 360, height: 560)
+        XCTAssertLessThanOrEqual(height, 560 + 1, "the word's page forced the window to \(height) pt")
     }
 
     // MARK: Helpers
