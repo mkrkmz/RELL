@@ -17,16 +17,21 @@ import SwiftUI
 /// until a new word adds to the count.
 struct FillMissingStrip: View {
     var enricher: WordEnricher
+    /// A book's words (v16 S1); nil for every word.
+    var wordIDs: Set<UUID>? = nil
     var onOpen: () -> Void
 
     @AppStorage(StorageKey.fillStripHiddenAtCount) private var hiddenAtCount = -1
+    /// In a book the strip is closed for the session only; the stored
+    /// count belongs to the whole list.
+    @State private var hiddenInBook = false
 
     var body: some View {
         if let run = enricher.run, !run.isFinished {
             running(run)
         } else {
-            let missing = enricher.missingCount(.meaning)
-            if missing > 0 && missing > hiddenAtCount {
+            let missing = enricher.missingCount(.meaning, in: wordIDs)
+            if missing > 0 && (wordIDs == nil ? missing > hiddenAtCount : !hiddenInBook) {
                 idle(missing: missing)
             }
         }
@@ -47,7 +52,9 @@ struct FillMissingStrip: View {
             Button("Fill Missing", action: onOpen)
                 .controlSize(.small)
                 .buttonStyle(.borderedProminent)
-            Button("Hide", systemImage: "xmark") { hiddenAtCount = missing }
+            Button("Hide", systemImage: "xmark") {
+                if wordIDs == nil { hiddenAtCount = missing } else { hiddenInBook = true }
+            }
                 .labelStyle(.iconOnly)
                 .buttonStyle(.plain)
                 .font(DS.Typography.icon(9, weight: .semibold))

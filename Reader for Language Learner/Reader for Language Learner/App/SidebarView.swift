@@ -52,6 +52,8 @@ struct SidebarView: View {
     var noteStore:       PDFNoteStore
     var highlightStore:  PDFHighlightStore
     var currentDocumentName: String?
+    /// The open file — the Words tab shows its book's words (v16 S1).
+    var documentURL: URL? = nil
     /// Non-nil document ⇒ the window is showing an EPUB.
     var epubManager: EPUBViewManager? = nil
     var epubHighlightStore: EPUBHighlightStore
@@ -255,7 +257,14 @@ struct SidebarView: View {
         case .words:
             WordsView(
                 store: savedWordsStore,
-                currentDocumentName: currentDocumentName
+                currentDocumentName: currentDocumentName,
+                book: documentURL.map { url in
+                    let title = epubManager?.document?.title
+                    return SavedWordsListView.BookContext(
+                        document: BookIdentity.Document(url: url, title: title),
+                        title: title ?? BookIdentity.displayTitle(url.deletingPathExtension().lastPathComponent)
+                    )
+                }
             )
         }
     }

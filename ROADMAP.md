@@ -108,16 +108,29 @@ CloudKit, Kisayollar).
 
 ## Sprint 1 — "Kitabin kelimeleri" (Must, **maketle baslar**)
 
-- [ ] **Kenar cubugunda kitap kelimeleri** — iki grup (karar 1): bu
-      kitaptan kaydedilenler (basliktan eslesenler dahil, karar 2) ve bu
-      kitapta karsilasilanlar; sayilar, arama ve filtreler kitap icinde;
-      "This Document" filtresi kalkar; altta "Tum kelimeler…" baglantisi
-- [ ] **Bu kitabi calis** — kenar cubugundaki Tekrar yalniz bu kitabin
-      kelimelerini sorar; "Tam ekranda calis" calisma odasini kaynak "Bu
-      kitap" ile acar (basliktan eslesen Kindle kelimeleri dahil)
-- [ ] **Eslesmeyi kapatma** — kitap basina "Baska kaynaklarla birlestirme"
-- [ ] Testler: kitap kelimeleri, iki grup, kaynak; kenar cubugu pencereyi
-      buyutmez
+Maket onayi (2026-10-09, onerilerle): birlestirme anahtari ••• menusunde
+kaynak listesiyle; "yeniden karsilasilan" ilk 5; bekleyen yoksa "Tumunu
+calis"; Kindle aktarimi S2'de pencereye; kenar cubugunda disa aktarma
+yalniz bu kitap.
+
+- [x] **Kenar cubugunda kitap kelimeleri** — `BookWords` (saf): bu
+      kitaptan kaydedilenler (dosya yolu, dosya adi, basliktan esleşen
+      kopyalar ve Kindle) + bu kitapta yeniden karsilasilanlar; ayri adlar
+      bir kez eslenir (~1 ms/kitap, 590 kelime). Liste: kitap basligi +
+      sayilar + ••• (birlestirme anahtari, kaynaklar, bu kitabi calis, bu
+      kitabin kelimelerini disa aktar); iki bolum; arama/filtre/eksikleri
+      doldur/disa aktarma kitap icinde; "This Document" filtresi kalkti;
+      satirda Kindle etiketi. Gercek veri: Why We Sleep 232 + 10 (Kindle
+      214, diger kopya 12/6, bu dosya 6/12), Harry Potter 12 + 26
+- [x] **Bu kitabi calis** — kenar cubugundaki Tekrar yalniz bu kitabin
+      kelimeleri; bekleyen yoksa "Tumunu calis (N)"; "Bu kitabi tam
+      ekranda calis" calisma odasini kaynak "Bu kitap" ile acar
+      (`studyRoomPresetBookPath`); `StudySource.book` artik basliktan eslesir
+- [x] **Eslesmeyi kapatma** — kitap basina, `bookTitleMatchingOff`
+- [x] Testler: `BookWordsTests` (4) — kopyalar ve Kindle, yeniden
+      karsilasilanlar, anahtar, baslik gorunumu, liste en dar kenar
+      cubugunda pencereyi buyutmez. Tam paket 700 yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 2 — "Kelime defteri penceresi" (Must, **maketle baslar**)
 

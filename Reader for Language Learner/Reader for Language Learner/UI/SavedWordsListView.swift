@@ -10,6 +10,16 @@ import SwiftUI
 struct SavedWordsListView: View {
     var store: SavedWordsStore
     var currentDocumentName: String?
+    /// The open book: the list shows its words only (v16 S1). Nil shows
+    /// every saved word.
+    var book: BookContext? = nil
+    var onStudyBook: (() -> Void)? = nil
+
+    /// A book as its sidebar knows it.
+    struct BookContext: Equatable {
+        let document: BookIdentity.Document
+        let title: String
+    }
 
     @Environment(WordEnricher.self) private var enricher: WordEnricher?
     @AppStorage(StorageKey.fillUsesProvider) private var fillUsesProvider = true
@@ -30,6 +40,11 @@ struct SavedWordsListView: View {
     @State private var showBulkExport = false
     @State private var showKindleImport = false
     @State private var showClearConfirm = false
+    @State private var showAllMet = false
+    /// Bumped when the book's merge switch changes, to recompute.
+    @State private var matchingRevision = 0
+    /// "Met again" shows this many before "Show all" (decision 2).
+    private static let collapsedMetCount = 5
 
     // Multi-select mode for bulk deck assignment / deletion.
     @State private var isSelecting = false
@@ -42,8 +57,25 @@ struct SavedWordsListView: View {
         SavedWordsSortOrder(rawValue: sortRaw) ?? .dateDesc
     }
 
+    private var matchesTitles: Bool {
+        _ = matchingRevision
+        return BookWords.matchesTitles(forDocumentAt: book?.document.path)
+    }
+
+    private var bookWords: BookWords? {
+        book.map { BookWords(document: $0.document, words: store.words,
+                             encounters: encounterStore?.encounters ?? [], matchingTitles: matchesTitles) }
+    }
+
+    /// Met again in this book, narrowed by the search.
+    private func metWords(_ bookWords: BookWords) -> [SavedWord] {
+        guard !searchText.isEmpty else { return bookWords.met }
+        let q = searchText.lowercased()
+        return bookWords.met.filter { $0.term.lowercased().contains(q) }
+    }
+
     private var filteredWords: [SavedWord] {
-        var result = store.words
+        var result = bookWords?.saved ?? store.words
 
         switch selectedFilter {
         case .all:
@@ -55,9 +87,7 @@ struct SavedWordsListView: View {
         case .mastered:
             result = result.filter { $0.masteryLevel == .mastered }
         case .thisPDF:
-            if let doc = currentDocumentName {
-                result = result.filter { $0.pdfFilename == doc }
-            }
+            break  // v16 S1: the list itself is the book's now
         }
 
         // Tag / deck filter
@@ -103,18 +133,18 @@ struct SavedWordsListView: View {
     }
 
     private var availableFilters: [SavedWordsFilter] {
-        currentDocumentName == nil
-            ? SavedWordsFilter.allCases.filter { $0 != .thisPDF }
-            : SavedWordsFilter.allCases
+        SavedWordsFilter.allCases.filter { $0 != .thisPDF }
     }
 
     // MARK: - Body
 
     var body: some View {
         VStack(spacing: 0) {
+            if let book { bookHeader(book) }
             searchBar
             SavedWordsFilterBar(
                 store: store,
+                scope: bookWords?.saved,
                 availableFilters: availableFilters,
                 shownCount: filteredWords.count,
                 selectedFilter: $selectedFilter,
@@ -128,8 +158,8 @@ struct SavedWordsListView: View {
                 missingMeaningOnly: $missingMeaningOnly
             )
             if let enricher {
-                FillMissingStrip(enricher: enricher) {
-                    fillScope = nil
+                FillMissingStrip(enricher: enricher, wordIDs: bookWords?.ids) {
+                    fillScope = bookWords?.ids
                     showFillSheet = true
                 }
             }
@@ -183,7 +213,7 @@ struct SavedWordsListView: View {
             KindleImportSheet(store: store, enricher: enricher)
         }
         .sheet(isPresented: $showBulkExport) {
-            BulkAnkiExportView(store: store)
+            BulkAnkiExportView(store: store, limitedTo: bookWords?.ids)
         }
         .confirmationDialog(
             "Clear all \(store.words.count) saved words?",
@@ -221,7 +251,7 @@ struct SavedWordsListView: View {
             searchShortcutButton
             DSSearchField(
                 text: $searchText,
-                placeholder: "Search words, notes, sources…",
+                placeholder: book == nil ? "Search words, notes, sources…" : "Search this book…",
                 focused: $searchFocused
             )
             .help("Search saved words (⇧⌘F)")
@@ -248,90 +278,15 @@ struct SavedWordsListView: View {
 
     @ViewBuilder
     private var listContent: some View {
-        if filteredWords.isEmpty {
+        if let book, let bookWords {
+            bookList(book, bookWords)
+        } else if filteredWords.isEmpty {
             emptyState
         } else {
             let lastEncounters = encounterStore?.latestByWord() ?? [:]
             List {
                 ForEach(filteredWords) { word in
-                    HStack(spacing: DS.Spacing.sm) {
-                        if isSelecting {
-                            Image(systemName: multiSelection.contains(word.id)
-                                  ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(multiSelection.contains(word.id)
-                                                 ? DS.Color.accent : DS.Color.textTertiary)
-                        }
-                        SavedWordRow(word: word, lastEncounter: lastEncounters[word.id])
-                    }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if isSelecting {
-                                if multiSelection.contains(word.id) {
-                                    multiSelection.remove(word.id)
-                                } else {
-                                    multiSelection.insert(word.id)
-                                }
-                            } else {
-                                selectedWord = word
-                            }
-                        }
-                        .contextMenu {
-                            Button("Edit Notes…") { selectedWord = word }
-                            if let enricher, FillField.defaultSelection.contains(where: { $0.isMissing(in: word) }) {
-                                Button {
-                                    Task { await enricher.fill(wordID: word.id, allowProvider: fillUsesProvider) }
-                                } label: {
-                                    Label("Fill Missing", systemImage: "text.badge.plus")
-                                }
-                            }
-                            Button {
-                                NSPasteboard.general.clearContents()
-                                NSPasteboard.general.setString(word.term, forType: .string)
-                            } label: {
-                                Label("Copy Term", systemImage: "doc.on.doc")
-                            }
-                            Divider()
-                            Menu("Mark as…") {
-                                ForEach(MasteryLevel.allCases, id: \.rawValue) { level in
-                                    Button {
-                                        store.setMastery(level, for: word)
-                                    } label: {
-                                        Label(level.localizedTitle, systemImage: level.icon)
-                                    }
-                                    .disabled(word.masteryLevel == level)
-                                }
-                            }
-                            Menu("CEFR Level") {
-                                ForEach(CEFRLevel.allCases) { level in
-                                    Button {
-                                        store.setCEFRLevel(level, for: word)
-                                    } label: {
-                                        Label(level.rawValue, systemImage: word.cefrLevel == level.rawValue ? "checkmark" : "")
-                                    }
-                                }
-                                if word.cefrLevel != nil {
-                                    Divider()
-                                    Button("Clear Level") { store.setCEFRLevel(nil, for: word) }
-                                }
-                            }
-                            Menu("Deck") {
-                                ForEach(store.allTags, id: \.self) { tag in
-                                    Button {
-                                        if word.hasTag(tag) {
-                                            store.removeTag(tag, from: word.id)
-                                        } else {
-                                            store.addTag(tag, to: word.id)
-                                        }
-                                    } label: {
-                                        Label(tag, systemImage: word.hasTag(tag) ? "checkmark" : "")
-                                    }
-                                }
-                                if !store.allTags.isEmpty { Divider() }
-                                Button("Edit Tags…") { selectedWord = word }
-                            }
-                            Divider()
-                            Button("Delete", role: .destructive) { store.delete(word) }
-                        }
+                    wordRow(word, lastEncounters: lastEncounters)
                 }
                 .onDelete { offsets in
                     offsets.map { filteredWords[$0] }.forEach { store.delete($0) }
@@ -340,6 +295,214 @@ struct SavedWordsListView: View {
             .listStyle(.plain)
             .animation(DS.Animation.standard, value: filteredWords.count)
         }
+    }
+
+    // MARK: - Book (v16 S1)
+
+    private func bookHeader(_ book: BookContext) -> some View {
+        let words = bookWords?.saved ?? []
+        let due = words.count { store.isDue($0) }
+        return HStack(spacing: DS.Spacing.xs) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(book.title)
+                    .font(DS.Typography.headline)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Text(words.isEmpty ? String(localized: "No words yet")
+                                   : String(localized: "\(words.count) words · \(due) waiting for review"))
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            bookMenu(book)
+        }
+        .padding(.horizontal, DS.Spacing.sm)
+        .padding(.top, DS.Spacing.sm)
+    }
+
+    private func bookMenu(_ book: BookContext) -> some View {
+        Menu {
+            Toggle(isOn: Binding(
+                get: { matchesTitles },
+                set: { on in
+                    if let path = book.document.path { BookWords.setMatchesTitles(on, forDocumentAt: path) }
+                    matchingRevision += 1
+                }
+            )) {
+                Text("Include Other Copies and Kindle")
+            }
+            if let sources = bookWords?.sources, !sources.isEmpty {
+                Section("Words From") {
+                    ForEach(sources) { source in
+                        Text(sourceLabel(source))
+                    }
+                }
+            }
+            Divider()
+            if let onStudyBook {
+                Button("Study This Book Full Screen", action: onStudyBook)
+            }
+            Button("Export This Book's Words…") { showBulkExport = true }
+                .disabled(bookWords?.saved.isEmpty ?? true)
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("This book's words")
+        .accessibilityLabel("This book's words")
+    }
+
+    private func sourceLabel(_ source: BookWords.Source) -> String {
+        switch source.kind {
+        case .thisFile:  return String(localized: "This file (\(source.count))")
+        case .kindle:    return String(localized: "Kindle · \(source.name) (\(source.count))")
+        case .otherCopy: return String(localized: "Another copy · \(source.name) (\(source.count))")
+        }
+    }
+
+    @ViewBuilder
+    private func bookList(_ book: BookContext, _ bookWords: BookWords) -> some View {
+        let saved = filteredWords
+        let met = metWords(bookWords)
+        if saved.isEmpty && met.isEmpty {
+            if bookWords.saved.isEmpty && bookWords.met.isEmpty {
+                DSEmptyState(icon: "character.book.closed",
+                             title: "No words from this book yet",
+                             message: "Double-click a word while you read and choose Save.")
+            } else {
+                emptyState
+            }
+        } else {
+            let lastEncounters = encounterStore?.latestByWord() ?? [:]
+            List {
+                if !saved.isEmpty {
+                    Section {
+                        ForEach(saved) { word in
+                            wordRow(word, lastEncounters: lastEncounters)
+                        }
+                    } header: {
+                        sectionHeader(String(localized: "SAVED FROM THIS BOOK"), count: saved.count)
+                    }
+                }
+                if !met.isEmpty {
+                    Section {
+                        let shown = showAllMet ? met : Array(met.prefix(Self.collapsedMetCount))
+                        ForEach(shown) { word in
+                            wordRow(word, lastEncounters: lastEncounters)
+                        }
+                        if met.count > Self.collapsedMetCount {
+                            Button(showAllMet ? String(localized: "Show fewer")
+                                              : String(localized: "Show all \(met.count)")) {
+                                withAnimation(DS.Animation.standard) { showAllMet.toggle() }
+                            }
+                            .buttonStyle(.link)
+                            .font(DS.Typography.caption)
+                        }
+                    } header: {
+                        sectionHeader(String(localized: "MET AGAIN IN THIS BOOK"), count: met.count)
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .animation(DS.Animation.standard, value: saved.count)
+        }
+    }
+
+    private func sectionHeader(_ title: String, count: Int) -> some View {
+        HStack {
+            Text(title).dsOverlineLabel()
+            Spacer()
+            Text("\(count)")
+                .font(DS.Typography.caption2)
+                .foregroundStyle(DS.Color.textTertiary)
+                .monospacedDigit()
+        }
+    }
+
+    /// One word's row, with its context menu.
+    @ViewBuilder
+    private func wordRow(_ word: SavedWord, lastEncounters: [UUID: WordEncounter]) -> some View {
+        HStack(spacing: DS.Spacing.sm) {
+            if isSelecting {
+                Image(systemName: multiSelection.contains(word.id)
+                      ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(multiSelection.contains(word.id)
+                                     ? DS.Color.accent : DS.Color.textTertiary)
+            }
+            SavedWordRow(word: word, lastEncounter: lastEncounters[word.id])
+        }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                if isSelecting {
+                    if multiSelection.contains(word.id) {
+                        multiSelection.remove(word.id)
+                    } else {
+                        multiSelection.insert(word.id)
+                    }
+                } else {
+                    selectedWord = word
+                }
+            }
+            .contextMenu {
+                Button("Edit Notes…") { selectedWord = word }
+                if let enricher, FillField.defaultSelection.contains(where: { $0.isMissing(in: word) }) {
+                    Button {
+                        Task { await enricher.fill(wordID: word.id, allowProvider: fillUsesProvider) }
+                    } label: {
+                        Label("Fill Missing", systemImage: "text.badge.plus")
+                    }
+                }
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(word.term, forType: .string)
+                } label: {
+                    Label("Copy Term", systemImage: "doc.on.doc")
+                }
+                Divider()
+                Menu("Mark as…") {
+                    ForEach(MasteryLevel.allCases, id: \.rawValue) { level in
+                        Button {
+                            store.setMastery(level, for: word)
+                        } label: {
+                            Label(level.localizedTitle, systemImage: level.icon)
+                        }
+                        .disabled(word.masteryLevel == level)
+                    }
+                }
+                Menu("CEFR Level") {
+                    ForEach(CEFRLevel.allCases) { level in
+                        Button {
+                            store.setCEFRLevel(level, for: word)
+                        } label: {
+                            Label(level.rawValue, systemImage: word.cefrLevel == level.rawValue ? "checkmark" : "")
+                        }
+                    }
+                    if word.cefrLevel != nil {
+                        Divider()
+                        Button("Clear Level") { store.setCEFRLevel(nil, for: word) }
+                    }
+                }
+                Menu("Deck") {
+                    ForEach(store.allTags, id: \.self) { tag in
+                        Button {
+                            if word.hasTag(tag) {
+                                store.removeTag(tag, from: word.id)
+                            } else {
+                                store.addTag(tag, to: word.id)
+                            }
+                        } label: {
+                            Label(tag, systemImage: word.hasTag(tag) ? "checkmark" : "")
+                        }
+                    }
+                    if !store.allTags.isEmpty { Divider() }
+                    Button("Edit Tags…") { selectedWord = word }
+                }
+                Divider()
+                Button("Delete", role: .destructive) { store.delete(word) }
+            }
     }
 
     // MARK: - Empty State

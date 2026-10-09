@@ -23,13 +23,17 @@ struct StudySetupView: View {
     @AppStorage(StorageKey.studyNewLimit) private var newLimit = 5
     @State private var source: StudySource = .all
 
+    static func document(_ recent: RecentDocument) -> BookIdentity.Document {
+        BookIdentity.Document(path: recent.path, names: [recent.filename])
+    }
+
     private var plan: StudyPlan { StudyPlan(size: size, source: source, newLimit: newLimit) }
     private var queue: [SavedWord] { plan.queue(from: store.words) }
     private var practice: [SavedWord] { plan.practiceQueue(from: store.words) }
 
     private var bookWordCount: Int {
         guard let lastDocument else { return 0 }
-        return StudyPlan.words(in: .book(lastDocument.filename), from: store.words).count
+        return StudyPlan.words(in: .book(Self.document(lastDocument)), from: store.words).count
     }
 
     private var strugglingCount: Int {
@@ -47,6 +51,17 @@ struct StudySetupView: View {
             .padding(DS.Spacing.xl)
             .frame(maxWidth: .infinity)
         }
+        // "Study This Book" in a book's sidebar opens the room on that book,
+        // or turns an open room to it.
+        .onAppear(perform: applyPresetBook)
+        .onReceive(NotificationCenter.default.publisher(for: .studyRoomFullScreenRequest)) { _ in applyPresetBook() }
+    }
+
+    private func applyPresetBook() {
+        let defaults = UserDefaults.standard
+        guard let path = defaults.string(forKey: StorageKey.studyRoomPresetBookPath) else { return }
+        defaults.removeObject(forKey: StorageKey.studyRoomPresetBookPath)
+        if let lastDocument, lastDocument.path == path { source = .book(Self.document(lastDocument)) }
     }
 
     // MARK: Today
@@ -111,7 +126,7 @@ struct StudySetupView: View {
                     StudyChip(title: String(localized: "All"), isOn: source == .all) { source = .all }
                     if let lastDocument, bookWordCount > 0 {
                         StudyChip(title: String(localized: "This book: \(lastDocument.displayTitle)"),
-                                  isOn: source == .book(lastDocument.filename)) { source = .book(lastDocument.filename) }
+                                  isOn: source == .book(Self.document(lastDocument))) { source = .book(Self.document(lastDocument)) }
                     }
                     if !store.allTags.isEmpty { deckMenu }
                     if strugglingCount > 0 {

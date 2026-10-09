@@ -16,8 +16,9 @@ import Foundation
 /// Where a session's words come from.
 enum StudySource: Hashable {
     case all
-    /// Words saved from one document — its `SavedWord.pdfFilename`.
-    case book(String)
+    /// Words saved from one book — this file, other copies and Kindle,
+    /// matched by title unless switched off for the book (v16 S1).
+    case book(BookIdentity.Document)
     /// A deck (tag).
     case deck(String)
     /// Words you've marked "Again" at least `StudyPlan.strugglingThreshold` times.
@@ -75,7 +76,9 @@ struct StudyPlan: Equatable {
     static func words(in source: StudySource, from words: [SavedWord]) -> [SavedWord] {
         switch source {
         case .all:            return words
-        case .book(let name): return words.filter { $0.pdfFilename == name }
+        case .book(let document):
+            return BookWords(document: document, words: words, encounters: [],
+                             matchingTitles: BookWords.matchesTitles(forDocumentAt: document.path)).saved
         case .deck(let tag):  return words.filter { $0.hasTag(tag) }
         case .struggling:     return words.filter { $0.incorrectCount >= strugglingThreshold }
         }

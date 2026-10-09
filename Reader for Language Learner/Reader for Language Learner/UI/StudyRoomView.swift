@@ -27,8 +27,10 @@ enum StudyRoom {
     static let windowID = "review"
 
     /// Opens the room in full screen — the sidebar's "Study Full Screen".
+    /// `bookPath`: the study room starts on that book ("Study This Book").
     @MainActor
-    static func openFullScreen(using openWindow: OpenWindowAction) {
+    static func openFullScreen(using openWindow: OpenWindowAction, bookPath: String? = nil) {
+        if let bookPath { UserDefaults.standard.set(bookPath, forKey: StorageKey.studyRoomPresetBookPath) }
         UserDefaults.standard.set(true, forKey: StorageKey.studyRoomFullScreen)
         openWindow(id: windowID)
         // Already open: the window takes the request itself.

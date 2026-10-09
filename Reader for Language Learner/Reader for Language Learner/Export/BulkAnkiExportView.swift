@@ -40,6 +40,7 @@ struct BulkAnkiExportView: View {
     /// whole store.
     private var scopedWords: [SavedWord] {
         store.words.filter { word in
+            (limitedTo?.contains(word.id) ?? true) &&
             (scopeDeck == nil || word.hasTag(scopeDeck!))
                 && (scopeCEFR == nil || word.cefrLevel == scopeCEFR!.rawValue)
                 && (scopeMastery == nil || word.masteryLevel == scopeMastery!)
@@ -47,10 +48,14 @@ struct BulkAnkiExportView: View {
         }
     }
 
+    /// Only these words — a book's, from its sidebar (v16 S1).
+    var limitedTo: Set<UUID>?
+
     // Initialize selection to all words
-    init(store: SavedWordsStore) {
+    init(store: SavedWordsStore, limitedTo: Set<UUID>? = nil) {
         self.store = store
-        _selectedIDs = State(initialValue: Set(store.words.map(\.id)))
+        self.limitedTo = limitedTo
+        _selectedIDs = State(initialValue: limitedTo ?? Set(store.words.map(\.id)))
     }
 
     /// Re-selects everything currently in scope. Called whenever a scope

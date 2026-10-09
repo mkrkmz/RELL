@@ -45,6 +45,15 @@ struct SavedWordRow: View {
                         .font(DS.Typography.caption2)
                         .help(language.nativeName)
                 }
+                if word.hasTag(KindleVocabulary.deckName) {
+                    Text("Kindle")
+                        .font(DS.Typography.caption2.weight(.semibold))
+                        .foregroundStyle(.purple)
+                        .padding(.horizontal, DS.Spacing.xs)
+                        .padding(.vertical, 1)
+                        .background(Color.purple.opacity(0.12), in: Capsule())
+                        .help("Imported from your Kindle")
+                }
                 if word.isStruggling {
                     Image(systemName: "exclamationmark.arrow.circlepath")
                         .font(DS.Typography.icon(10, weight: .semibold))

@@ -12,6 +12,8 @@ import SwiftUI
 
 struct SavedWordsFilterBar: View {
     var store: SavedWordsStore
+    /// The words counted — a book's (v16 S1); nil counts every word.
+    var scope: [SavedWord]? = nil
     /// Filters offered — the list view decides whether "This Document"
     /// belongs in the roster.
     var availableFilters: [SavedWordsFilter]
@@ -223,10 +225,12 @@ struct SavedWordsFilterBar: View {
     }
 
     private var countLabel: String {
-        let total = store.words.count
+        let words = scope ?? store.words
+        let total = words.count
         let shown = shownCount
         if selectedFilter == .all {
-            return String(localized: "\(store.pendingReviewCount) due · \(total) saved")
+            let due = scope.map { $0.count { store.isDue($0) } } ?? store.pendingReviewCount
+            return String(localized: "\(due) due · \(total) saved")
         }
         if shown == total { return String(localized: "\(total) saved") }
         return String(localized: "\(shown) of \(total)")

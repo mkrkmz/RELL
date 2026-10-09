@@ -53,7 +53,7 @@ final class StudyRoomTests: XCTestCase {
         func terms(_ source: StudySource) -> [String] {
             StudyPlan(size: 20, source: source, newLimit: 5).queue(from: words, at: now).map(\.term)
         }
-        XCTAssertEqual(terms(.book("Crime and Punishment")), ["book"])
+        XCTAssertEqual(terms(.book(BookIdentity.Document(path: "/Books/Crime and Punishment.epub", names: ["Crime and Punishment"]))), ["book"])
         XCTAssertEqual(terms(.deck("okul")), ["deck"], "decks match case-insensitively")
         XCTAssertEqual(terms(.struggling), ["hardest", "hard"], "due or not, most-forgotten first")
     }

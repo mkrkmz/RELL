@@ -26,6 +26,8 @@ final class StorageKeyTests: XCTestCase {
             (StorageKey.studyNewLimit, "studyNewLimit"),
             (StorageKey.studySentenceOnFront, "studySentenceOnFront"),
             (StorageKey.studyRoomFullScreen, "studyRoomFullScreen"),
+            (StorageKey.bookTitleMatchingOff, "bookTitleMatchingOff"),
+            (StorageKey.studyRoomPresetBookPath, "studyRoomPresetBookPath"),
             (StorageKey.customSystemPreamble, "customSystemPreamble"),
             (StorageKey.dailyReadingGoalMinutes, "dailyReadingGoalMinutes"),
             (StorageKey.dailyReminderTime, "dailyReminderTime"),

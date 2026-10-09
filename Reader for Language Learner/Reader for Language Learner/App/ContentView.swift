@@ -446,6 +446,7 @@ struct ContentView: View {
                 noteStore:           noteStore,
                 highlightStore:      highlightStore,
                 currentDocumentName: currentDocumentName,
+                documentURL:         selectionState.documentURL,
                 epubManager:         isEPUBDocument ? epubManager : nil,
                 epubHighlightStore:  epubHighlightStore,
                 epubBookmarkStore:   epubBookmarkStore,

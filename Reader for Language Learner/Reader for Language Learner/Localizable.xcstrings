@@ -604,6 +604,22 @@
         }
       }
     },
+    "%lld words · %lld waiting for review" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld words · %2$lld waiting for review"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelime · %lld tekrar bekleyen"
+          }
+        }
+      }
+    },
     "%lld words done" : {
       "localizations" : {
         "tr" : {
@@ -1468,6 +1484,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İşaretler"
+          }
+        }
+      }
+    },
+    "Another copy · %@ (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Another copy · %1$@ (%2$lld)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Başka bir kopya · %@ (%lld)"
           }
         }
       }
@@ -3543,6 +3575,16 @@
         }
       }
     },
+    "Double-click a word while you read and choose Save." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okurken bir kelimeye çift tıkla ve Kaydet'i seç."
+          }
+        }
+      }
+    },
     "Double-click any word for instant definitions, translations, and collocations." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3968,6 +4010,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Buraya Aktar"
+          }
+        }
+      }
+    },
+    "Export This Book's Words…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitabın kelimelerini dışa aktar…"
           }
         }
       }
@@ -5124,6 +5176,16 @@
         }
       }
     },
+    "Imported from your Kindle" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'ından aktarıldı"
+          }
+        }
+      }
+    },
     "Importing…" : {
       "localizations" : {
         "tr" : {
@@ -5150,6 +5212,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kayıtlı tüm kelimeleri dahil et"
+          }
+        }
+      }
+    },
+    "Include Other Copies and Kindle" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer kopyaları ve Kindle'ı dahil et"
           }
         }
       }
@@ -5270,6 +5342,32 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bunu kartta tut"
+          }
+        }
+      }
+    },
+    "Kindle" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle"
+          }
+        }
+      }
+    },
+    "Kindle · %@ (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Kindle · %1$@ (%2$lld)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle · %@ (%lld)"
           }
         }
       }
@@ -5955,6 +6053,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir belgede %lld kez karşılaştın"
+          }
+        }
+      }
+    },
+    "MET AGAIN IN THIS BOOK" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BU KİTAPTA YENİDEN KARŞILAŞILAN"
           }
         }
       }
@@ -6692,12 +6800,32 @@
         }
       }
     },
+    "No words from this book yet" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitaptan henüz kelime yok"
+          }
+        }
+      }
+    },
     "No words here yet." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Burada henüz kelime yok."
+          }
+        }
+      }
+    },
+    "No words yet" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz kelime yok"
           }
         }
       }
@@ -6868,6 +6996,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Başka bir şey bulunamadı"
+          }
+        }
+      }
+    },
+    "Nothing waiting in this book" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitapta tekrar bekleyen yok"
           }
         }
       }
@@ -9456,6 +9594,16 @@
         }
       }
     },
+    "SAVED FROM THIS BOOK" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BU KİTAPTAN KAYDEDİLEN"
+          }
+        }
+      }
+    },
     "SAVED OUTPUTS" : {
       "localizations" : {
         "tr" : {
@@ -9577,6 +9725,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kitaplıkta ara (⇧⌘F)"
+          }
+        }
+      }
+    },
+    "Search this book…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitapta ara…"
           }
         }
       }
@@ -10559,6 +10717,16 @@
         }
       }
     },
+    "Study All (%lld)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tümünü çalış (%lld)"
+          }
+        }
+      }
+    },
     "Study cards in their own window" : {
       "localizations" : {
         "tr" : {
@@ -10595,6 +10763,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çalışma odası"
+          }
+        }
+      }
+    },
+    "Study This Book Full Screen" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitabı tam ekranda çalış"
           }
         }
       }
@@ -11021,6 +11199,16 @@
         }
       }
     },
+    "This book's words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitabın kelimeleri"
+          }
+        }
+      }
+    },
     "This chapter" : {
       "localizations" : {
         "tr" : {
@@ -11047,6 +11235,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu belge artık bu Mac'te değil"
+          }
+        }
+      }
+    },
+    "This file (%lld)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu dosya (%lld)"
           }
         }
       }
@@ -11840,6 +12038,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kelime bugün tekrar bekliyor"
+          }
+        }
+      }
+    },
+    "Words From" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimelerin kaynağı"
           }
         }
       }

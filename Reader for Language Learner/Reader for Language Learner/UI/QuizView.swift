@@ -21,6 +21,10 @@ struct QuizView: View {
     /// and binds Esc, so the quiz can be left mid-session. Window/sidebar
     /// hosts leave it nil — they already have their own exit.
     var onClose: (() -> Void)? = nil
+    /// A book's words (v16 S1): the sidebar reviews only these.
+    var scopeIDs: Set<UUID>? = nil
+    /// Nothing waiting in the book: study every word instead.
+    var onStudyAll: (() -> Void)? = nil
 
     /// Queue, position, tallies and the card's answer state — see `QuizSession`.
     @State var session = QuizSession()
@@ -120,14 +124,19 @@ struct QuizView: View {
         return saved.contains(where: SpeechManager.hasVoice(for:))
     }
 
-    var dueWords: [SavedWord] { store.dueWords() }
+    var dueWords: [SavedWord] { inScope(store.dueWords()) }
 
     var wordsToQuiz: [SavedWord] {
-        store.reviewQueue(includeAll: includeAll, tag: selectedTag)
+        inScope(store.reviewQueue(includeAll: includeAll, tag: selectedTag))
     }
 
     var isUsingFallbackQueue: Bool {
-        !includeAll && dueWords.isEmpty && !store.reviewFallbackWords().isEmpty
+        !includeAll && dueWords.isEmpty && !inScope(store.reviewFallbackWords()).isEmpty
+    }
+
+    func inScope(_ words: [SavedWord]) -> [SavedWord] {
+        guard let scopeIDs else { return words }
+        return words.filter { scopeIDs.contains($0.id) }
     }
 
     var body: some View {
@@ -136,6 +145,8 @@ struct QuizView: View {
                 emptyState
             } else if style == .room {
                 roomContent
+            } else if wordsToQuiz.isEmpty && scopeIDs != nil {
+                nothingWaitingInBook
             } else if wordsToQuiz.isEmpty {
                 allMasteredState
             } else if session.isFinished {
@@ -878,6 +889,26 @@ struct QuizView: View {
             title: "No saved words",
             message: "Save vocabulary from the reader to build your review queue."
         )
+    }
+
+    /// A book with nothing waiting (v16 S1, decision 3).
+    var nothingWaitingInBook: some View {
+        VStack(spacing: DS.Spacing.md) {
+            Spacer()
+            Image(systemName: "checkmark.circle")
+                .font(DS.Typography.icon(34, weight: .light))
+                .foregroundStyle(DS.Color.success)
+            Text("Nothing waiting in this book")
+                .font(DS.Typography.headline)
+            let all = store.pendingReviewCount
+            if all > 0, let onStudyAll {
+                Button(String(localized: "Study All (\(all))"), action: onStudyAll)
+                    .buttonStyle(.borderedProminent)
+            }
+            Spacer()
+        }
+        .padding(DS.Spacing.lg)
+        .frame(maxWidth: .infinity)
     }
 
     var allMasteredState: some View {

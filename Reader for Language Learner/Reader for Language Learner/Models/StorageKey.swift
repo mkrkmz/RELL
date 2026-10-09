@@ -41,6 +41,11 @@ nonisolated enum StorageKey {
     static let studyNewLimit = "studyNewLimit"
     static let studySentenceOnFront = "studySentenceOnFront"
     static let studyRoomFullScreen = "studyRoomFullScreen"
+    /// Paths of books whose words don't include other copies and Kindle
+    /// (v16 S1, the per-book switch).
+    static let bookTitleMatchingOff = "bookTitleMatchingOff"
+    /// One-shot: the book the study room opens with ("Study This Book").
+    static let studyRoomPresetBookPath = "studyRoomPresetBookPath"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     /// The "major.minor" whose What's New page was last shown (v14 S3).

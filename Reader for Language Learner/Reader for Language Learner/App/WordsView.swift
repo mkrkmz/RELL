@@ -11,6 +11,8 @@ import SwiftUI
 struct WordsView: View {
     var store: SavedWordsStore
     var currentDocumentName: String?
+    /// The open book (v16 S1): both segments work on its words.
+    var book: SavedWordsListView.BookContext? = nil
 
     enum Segment: String, CaseIterable, Identifiable {
         case words = "Words"
@@ -44,12 +46,13 @@ struct WordsView: View {
 
             switch segment {
             case .words:
-                SavedWordsListView(store: store, currentDocumentName: currentDocumentName)
+                SavedWordsListView(store: store, currentDocumentName: currentDocumentName, book: book,
+                                   onStudyBook: book.map { book in { studyFullScreen(bookPath: book.document.path) } })
             case .review:
                 // Approved v15 S2 decision 3: the quick review stays here;
                 // the study room is one click away.
                 studyFullScreenButton
-                QuizView(store: store)
+                QuizView(store: store, scopeIDs: bookIDs, onStudyAll: { studyFullScreen(bookPath: nil) })
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -57,11 +60,11 @@ struct WordsView: View {
 
     private var studyFullScreenButton: some View {
         Button {
-            StudyRoom.openFullScreen(using: openWindow)
+            studyFullScreen(bookPath: book?.document.path)
         } label: {
             HStack(spacing: DS.Spacing.xs) {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
-                Text("Study Full Screen")
+                Text(book == nil ? String(localized: "Study Full Screen") : String(localized: "Study This Book Full Screen"))
                 Spacer(minLength: 0)
                 Text("⌥⌘V")
                     .font(DS.Typography.mono)
@@ -81,8 +84,21 @@ struct WordsView: View {
         .padding(.top, DS.Spacing.sm)
     }
 
+    /// The book's saved words — this file, other copies, Kindle.
+    private var bookIDs: Set<UUID>? {
+        book.map {
+            BookWords(document: $0.document, words: store.words, encounters: [],
+                      matchingTitles: BookWords.matchesTitles(forDocumentAt: $0.document.path)).ids
+        }
+    }
+
+    private func studyFullScreen(bookPath: String?) {
+        StudyRoom.openFullScreen(using: openWindow, bookPath: bookPath)
+    }
+
     private var reviewLabel: String {
-        let due = store.pendingReviewCount
+        let due = bookIDs.map { ids in store.words.count { ids.contains($0.id) && store.isDue($0) } }
+            ?? store.pendingReviewCount
         return due > 0
             ? String(localized: "Review (\(due))")
             : String(localized: "Review")

@@ -61,11 +61,22 @@ enum BookIdentity {
         return false
     }
 
+    /// A file name as a title: download-site tails, copy numbers and
+    /// underscores gone ("Why We Sleep_ Unlocking… -- Walker -- … (1)" →
+    /// "Why We Sleep: Unlocking…").
+    static func displayTitle(_ name: String) -> String {
+        var text = name
+        if let range = text.range(of: " -- ") { text = String(text[..<range.lowerBound]) }
+        text = text.replacingOccurrences(of: "_ ", with: ": ").replacingOccurrences(of: "_", with: " ")
+        text = text.replacingOccurrences(of: #"\s*\(\d{1,2}\)$"#, with: "", options: .regularExpression)
+        return text.trimmingCharacters(in: .whitespaces)
+    }
+
     // MARK: Documents
 
     /// A document as the reader knows it: its file, and the names it goes by
     /// (file name, and the book's own title when it has one).
-    struct Document: Equatable {
+    struct Document: Hashable {
         var path: String?
         var names: [String]
 
