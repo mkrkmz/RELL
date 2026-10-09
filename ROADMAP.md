@@ -98,7 +98,13 @@ CloudKit, Kisayollar).
       `DeinitIsolationTests` bilerek senkron (store → yazici, servis →
       store, pencere modelleri); `WindowLayoutTests` okuyucu testi macOS
       15'te yeniden acik — CI kaniti
-- [ ] v15 takibi (Should): soguk acilis olcumu (S0 v15: ortanca 498 ms)
+- [x] Soguk acilis (2026-10-09) — ayni makinede, ayni oturumda yan yana
+      (`testLaunchPerformance`, 5 olcum): v15 basi a81fcd3 ortanca ~355 ms,
+      1.44.0 ~410 ms, S0 (6ad3336) ~390–410 ms. v15 + S0 en fazla ~40–50 ms
+      ekledi, olcumlerin yayilimi (330–430) icinde. RELL kapatildiktan hemen
+      sonraki ilk uc tur ~600 ms cikti — arka plan isleri; ayni kod biraz
+      sonra 410 ms. Ders: tarihsel sayiyla degil, temel commit'i ayni anda
+      olcerek karsilastir (git worktree)
 
 ## Sprint 1 — "Kitabin kelimeleri" (Must, **maketle baslar**)
 
