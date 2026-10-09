@@ -130,7 +130,7 @@ yalniz bu kitap.
 - [x] Testler: `BookWordsTests` (4) — kopyalar ve Kindle, yeniden
       karsilasilanlar, anahtar, baslik gorunumu, liste en dar kenar
       cubugunda pencereyi buyutmez. Tam paket 700 yesil
-- [ ] Canli tur (kullanici)
+- [x] Canli tur (2026-10-09, sorun yok)
 
 ## Sprint 2 — "Kelime defteri penceresi" (Must, **maketle baslar**)
 
