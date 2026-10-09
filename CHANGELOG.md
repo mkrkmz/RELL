@@ -4,6 +4,52 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.45.0] - 2026-10-09
+
+Words in their book, every word in one place. Roadmap v16 (Sprints 0–4):
+a book's sidebar shows its own words, all your words get their own window,
+and the same book under different names — a Kindle title, a downloaded
+PDF, an EPUB — is recognised as one book.
+
+### Added
+
+- **The word notebook.** Every saved word in its own window (⌥⌘K, the home
+  screen's Tools, ⌘K, or All Words… in a book's sidebar): states, books
+  and decks on the left; the list or a table you can sort by word, meaning,
+  level, status, next review or book; the selected word's page on the right,
+  saved as you edit it. Spotlight and ⌘K open words here. Kindle import and
+  Clear All live here now.
+- **Words saved twice.** The notebook finds words saved under two forms
+  ("gleam" and "gleaming") and merges them when you ask: sentences, decks,
+  notes, filled fields and the whole review history are kept, with the
+  memory of the one you knew better. A copy of your data is saved in
+  Backups first.
+- **Your Kindle has new words.** With a Kindle connected, the home screen
+  says how many words an import would bring.
+- **A deck per book in Anki.** Anki TSV export can put each book into its
+  own deck under RELL (RELL::Why We Sleep; Anki 2.1.55 or later).
+
+### Changed
+
+- **A book's sidebar shows its words.** The Words tab lists the words saved
+  from the open book and, apart, the ones saved elsewhere and met again in
+  it. Other copies of the book and its Kindle words count too, matched by
+  title; the ••• menu turns that off for a book and shows where its words
+  come from. The sidebar's review asks only the book's words and opens the
+  study room on the book.
+- **Book cards count their words.** Library cards show a book's words and
+  how many are waiting; a click on the count opens them in the notebook.
+- **Fill Missing goes through the dictionary first** for every word, then
+  asks the models, and a run cut short by quitting goes on at the next
+  launch (dictionary and models on this Mac only).
+
+### Fixed
+
+- On macOS 15, closing a window could crash RELL: objects released from a
+  window's teardown freed the same memory twice. Found through CI crash
+  reports; the reader-window test runs on macOS 15 again.
+- Review statuses in the word list are translated.
+
 ## [1.44.0] - 2026-10-09
 
 Learn the words you save. Roadmap v15 (Sprints 0–4): every saved word gets

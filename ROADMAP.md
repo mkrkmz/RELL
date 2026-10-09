@@ -197,8 +197,11 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-09).
 
 ## Sprint 4 — "Kapanis"
 
-- [ ] Kapanis (Must): tam test, performans karsilastirmasi, canli tur,
-      CHANGELOG + Yenilikler, **1.45.0** (tag oncesi kullaniciya sorulur)
+- [x] Kapanis (Must): tam test (713 yesil), performans (ayni oturumda
+      donusumlu: 1.44.0 ortanca ~568/579 ms, simdi ~594/592 ms — fark
+      olcum yayilimi icinde), canli turlar (S1–S3, kullanici), CHANGELOG
+      1.45.0 + Yenilikler 1.45
+- [ ] **1.45.0** etiketi (kullanicinin onayiyla)
 
 ---
 

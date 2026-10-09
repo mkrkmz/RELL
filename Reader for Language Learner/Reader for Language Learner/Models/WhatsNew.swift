@@ -25,6 +25,23 @@ nonisolated struct WhatsNew: Equatable, Sendable, Identifiable {
     /// Newest first.
     static var releases: [WhatsNew] {
         [
+            WhatsNew(version: "1.45", items: [
+                Item(icon: "book.closed",
+                     title: String(localized: "A book shows its own words"),
+                     detail: String(localized: "The sidebar lists the words saved from the open book — other copies and Kindle included — and the ones you met again in it.")),
+                Item(icon: "character.book.closed",
+                     title: String(localized: "Every word in the word notebook"),
+                     detail: String(localized: "Its own window (⌥⌘K) with books, decks and states, a sortable table and each word's page beside the list.")),
+                Item(icon: "square.on.square",
+                     title: String(localized: "One word, not two"),
+                     detail: String(localized: "Words saved under two forms, like gleam and gleaming, are found and merged on request, history and all.")),
+                Item(icon: "books.vertical",
+                     title: String(localized: "Kindle words, as they come"),
+                     detail: String(localized: "The home screen says when your Kindle has new words; Fill Missing goes on after a restart.")),
+                Item(icon: "square.stack.3d.up",
+                     title: String(localized: "A deck per book in Anki"),
+                     detail: String(localized: "Export each book into its own deck under RELL.")),
+            ]),
             WhatsNew(version: "1.44", items: [
                 Item(icon: "text.badge.plus",
                      title: String(localized: "Every saved word gets a full card"),

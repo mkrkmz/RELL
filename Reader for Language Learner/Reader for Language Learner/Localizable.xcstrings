@@ -990,12 +990,32 @@
         }
       }
     },
+    "A book shows its own words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitap kendi kelimelerini gösteriyor"
+          }
+        }
+      }
+    },
     "A cloud provider is never used here. Only \"Fill Missing\" in the word list can use it." : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Burada bulut sağlayıcı hiç kullanılmaz. Onu yalnızca kelime listesindeki \"Eksikleri doldur\" kullanabilir."
+          }
+        }
+      }
+    },
+    "A deck per book in Anki" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anki'de her kitaba bir deste"
           }
         }
       }
@@ -4059,6 +4079,16 @@
         }
       }
     },
+    "Every word in the word notebook" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bütün kelimeler kelime defterinde"
+          }
+        }
+      }
+    },
     "Examples" : {
       "localizations" : {
         "tr" : {
@@ -4175,6 +4205,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yedeği Dışa Aktar…"
+          }
+        }
+      }
+    },
+    "Export each book into its own deck under RELL." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her kitabı RELL altında kendi destesine aktar."
           }
         }
       }
@@ -5532,6 +5572,16 @@
         }
       }
     },
+    "Its own window (⌥⌘K) with books, decks and states, a sortable table and each word's page beside the list." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kendi penceresi (⌥⌘K): kitaplar, desteler ve durumlar, sıralanabilir tablo ve listenin yanında kelimenin sayfası."
+          }
+        }
+      }
+    },
     "Its page shows here: the card, how well you remember it and where you met it." : {
       "localizations" : {
         "tr" : {
@@ -5624,6 +5674,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kindle · %@ (%lld)"
+          }
+        }
+      }
+    },
+    "Kindle words, as they come" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle kelimeleri geldikçe"
           }
         }
       }
@@ -7513,6 +7573,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Her kitap için ayrı Anki destesi"
+          }
+        }
+      }
+    },
+    "One word, not two" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İki değil, tek kelime"
           }
         }
       }
@@ -11522,6 +11592,16 @@
         }
       }
     },
+    "The home screen says when your Kindle has new words; Fill Missing goes on after a restart." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'ında yeni kelime olunca ana ekran söyler; Eksikleri doldur yeniden açılışta kaldığı yerden sürer."
+          }
+        }
+      }
+    },
     "The hover dictionary and pre-analysis use your AI provider, or Apple's on-device model where it's on. Apple Translation works offline once the language is downloaded, and falls back to your AI provider for pairs it doesn't support." : {
       "localizations" : {
         "tr" : {
@@ -11618,6 +11698,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seçim Apple'ın cihaz içi modeli için fazla uzun."
+          }
+        }
+      }
+    },
+    "The sidebar lists the words saved from the open book — other copies and Kindle included — and the ones you met again in it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kenar çubuğu açık kitaptan kaydettiğin kelimeleri (diğer kopyalar ve Kindle dahil) ve bu kitapta yeniden karşılaştıklarını listeler."
           }
         }
       }
@@ -12593,6 +12683,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "“gleam” ve “gleaming” gibi iki biçimde kaydedilen kelimeler burada görünür."
+          }
+        }
+      }
+    },
+    "Words saved under two forms, like gleam and gleaming, are found and merged on request, history and all." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gleam ve gleaming gibi iki biçimde kaydedilen kelimeler bulunur ve istersen geçmişiyle birlikte birleştirilir."
           }
         }
       }
