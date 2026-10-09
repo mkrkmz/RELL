@@ -191,7 +191,9 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-09).
       Deck sutunu + `#deck column:5`, `RELL::<kitap>` (basliktaki ":"
       alt deste yaratmasin diye "-")
 - [x] Testler: `OrganizeTests` (7). Tam paket 713 yesil
-- [ ] Canli tur (kullanici)
+- [x] Canli tur (2026-10-09) — kitaplik rozeti basligin ustune biniyordu
+      (kartin tamamina bindirilmisti, beyaz zeminde gri); kapagin sag alt
+      kosesine, kapsama rozeti gibi koyu zemine tasindi (4bd55e1)
 
 ## Sprint 4 — "Kapanis"
 
