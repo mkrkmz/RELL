@@ -201,7 +201,7 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-09).
       donusumlu: 1.44.0 ortanca ~568/579 ms, simdi ~594/592 ms — fark
       olcum yayilimi icinde), canli turlar (S1–S3, kullanici), CHANGELOG
       1.45.0 + Yenilikler 1.45
-- [ ] **1.45.0** etiketi (kullanicinin onayiyla)
+- [x] **1.45.0** yayinlandi (2026-10-09, kullanicinin onayiyla; Release is akisi yesil, DMG + zip, Latest)
 
 ---
 
