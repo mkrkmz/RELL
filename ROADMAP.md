@@ -166,17 +166,32 @@ turu, yarida kalan devam eder.
 
 ## Sprint 3 — "Duzen" (Should)
 
-- [ ] **Kitaplikta kelime sayilari** — ana ekran ve kitaplik kartlarinda
-      kitap basina kayitli / tekrar bekleyen; tiklayinca kelime defteri o
-      kitapla acilir
-- [ ] **Ayni kelimeyi birlestir** — ayni kokten kayitlar ("gleaming" /
-      "gleam"): kelime defterinde oneri, onayla birlestirme (cumleler,
-      karsilasmalar, tekrar gecmisi, desteler korunur; FSRS durumu daha
-      ileride olandan), oncesinde yedek
-- [ ] **Kindle'da yeni kelime var** — Kindle baglaninca son aktarimdan beri
-      eklenenler ana ekranda sessizce; tek tikla yalniz yeniler
-- [ ] **Kitap bazinda Anki** — disa aktarimda kitap alt destesi
-      (`RELL::Why We Sleep`)
+Kullanici maketsiz kodlanmasini istedi (2026-10-09).
+
+- [x] **Kitaplikta kelime sayilari** — `documentStats` artik `BookWords`
+      ile (kopyalar ve Kindle dahil) kayitli + tekrar bekleyen; izgara
+      kartinda tiklanir rozet ("232 · 9") kelime defterini o kitapla acar
+      (`WordNotebook.open(onBookNamed:)`, adi tasimayan dosya basliktan
+      bulur); liste kartinda alt satirda sayi, sag tikta "Bu kitabin
+      kelimelerini goster"
+- [x] **Ayni kelimeyi birlestir** — `WordMerge` (saf): ayni dilde ayni kok
+      (`LemmaMatcher`); kalacak olan once en cok tekrar edilen, sonra en
+      eski. Birlesim: bos kart alanlari kaynagiyla, desteler, notlar, diger
+      cumleler notlara, tekrar gecmisinin tamami, FSRS durumu daha ileride
+      olandan, en eski kayit tarihi; karsilasmalar tasinir
+      (`WordEncounterStore.reassign`). Defterde "Iki kez kaydedilen"
+      kaynagi + `DuplicateWordsView` (radyo ile secim, onayli birlestirme);
+      oncesinde `PersistenceBackup.snapshotBeforeChange` (son 5 tutulur).
+      Gercek veri: 8 cift (drenched/drench, scowled/scowl…), hepsi dogru, 89 ms
+- [x] **Kindle'da yeni kelime var** — `KindleNoticeBanner` ana ekranda:
+      acilista ve Kindle takilinca (`didMountNotification`) aktarimin
+      getirecegi sayi; "Aktar…" Kindle penceresini acar, kapatinca daha
+      fazlasi olana kadar gizli
+- [x] **Kitap bazinda Anki** — "Her kitap icin ayri Anki destesi":
+      Deck sutunu + `#deck column:5`, `RELL::<kitap>` (basliktaki ":"
+      alt deste yaratmasin diye "-")
+- [x] Testler: `OrganizeTests` (7). Tam paket 713 yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 4 — "Kapanis"
 

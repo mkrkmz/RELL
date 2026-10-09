@@ -190,6 +190,19 @@ final class WordEncounterStore {
     /// Tests and termination: write any pending change now.
     func flush() { writer.flush() }
 
+    /// The encounters of merged-away words now belong to the kept one (v16 S3).
+    func reassign(from ids: Set<UUID>, to id: UUID) {
+        guard encounters.contains(where: { ids.contains($0.wordID) }) else { return }
+        encounters = encounters.map { encounter in
+            guard ids.contains(encounter.wordID) else { return encounter }
+            return WordEncounter(id: encounter.id, wordID: id, documentPath: encounter.documentPath,
+                                 documentTitle: encounter.documentTitle, location: encounter.location,
+                                 isEPUB: encounter.isEPUB, sentence: encounter.sentence,
+                                 occurrences: encounter.occurrences, date: encounter.date)
+        }
+        save()
+    }
+
     #if DEBUG
     /// Tests only: waits for the scan `recordRead` started.
     func waitForPendingScan() async { await scanTask?.value }

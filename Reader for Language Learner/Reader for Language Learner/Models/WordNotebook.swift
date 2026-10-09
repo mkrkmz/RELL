@@ -24,6 +24,8 @@ enum WordNotebook {
 
     enum Source: Hashable {
         case all, waiting, new, struggling, missingMeaning
+        /// The same word saved twice (v16 S3).
+        case duplicates
         case book(Book)
         case noBook
         case deck(String)
@@ -61,6 +63,7 @@ enum WordNotebook {
         case .new:            return words.filter { !$0.hasBeenReviewed }
         case .struggling:     return words.filter(\.isStruggling)
         case .missingMeaning: return words.filter { FillField.meaning.isMissing(in: $0) }
+        case .duplicates:     return WordMerge.duplicates(in: words).flatMap(\.words)
         case .book(let book):
             let names = Set(book.names)
             return words.filter { $0.pdfFilename.map(names.contains) ?? false }
@@ -74,6 +77,23 @@ enum WordNotebook {
     /// A word to show once the notebook is up — set before opening it, so a
     /// window that's only now appearing finds it.
     @MainActor static var pendingReveal: UUID?
+
+    /// A book to show once the notebook is up — a library card's word count.
+    @MainActor static var pendingBookName: String?
+
+    /// Opens the notebook on the book saved under `name` (any of its names).
+    @MainActor
+    static func open(onBookNamed name: String, using openWindow: (String) -> Void) {
+        pendingBookName = name
+        openWindow(windowID)
+        NotificationCenter.default.post(name: .revealInNotebook, object: nil)
+    }
+
+    /// The notebook's book for `name`: the one holding that name, or the
+    /// same book by title.
+    static func book(named name: String, in books: [Book]) -> Book? {
+        books.first { $0.names.contains(name) } ?? books.first { $0.names.contains { BookIdentity.sameBook($0, name) } }
+    }
 
     /// Opens the notebook on `id` (Spotlight, ⌘K, a book's "All Words…").
     @MainActor

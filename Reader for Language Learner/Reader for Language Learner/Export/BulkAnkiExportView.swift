@@ -23,6 +23,8 @@ struct BulkAnkiExportView: View {
     @State private var scopeLanguage: Language?
 
     @AppStorage(StorageKey.bulkExportFormat) private var formatRaw = ExportFormat.ankiTSV.rawValue
+    /// One Anki deck per book (v16 S3), under "RELL".
+    @AppStorage(StorageKey.ankiDeckPerBook) private var deckPerBook = false
 
     @State private var exportResult: ExportResult?
 
@@ -158,6 +160,19 @@ struct BulkAnkiExportView: View {
                         }
                     }
                     .toggleStyle(.checkbox)
+
+                    if format == .ankiTSV {
+                        Toggle(isOn: $deckPerBook) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("One Anki Deck per Book")
+                                    .font(.subheadline)
+                                Text("Each book becomes a deck under RELL, like RELL::Why We Sleep.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .toggleStyle(.checkbox)
+                    }
 
                     // Preview
                     if let firstSelected = store.words.first(where: { selectedIDs.contains($0.id) }) {
@@ -379,7 +394,7 @@ struct BulkAnkiExportView: View {
         let mode   = ExplainMode(rawValue: word.mode)     ?? .word
         let domain = DomainPreference(rawValue: word.domain) ?? .general
 
-        return AnkiExporter.buildNote(
+        var note = AnkiExporter.buildNote(
             selectedText: word.term,
             mode: mode,
             domain: domain,
@@ -392,6 +407,19 @@ struct BulkAnkiExportView: View {
             tags: prefs.tags,
             extraTags: word.tags
         )
+        if deckPerBook && format == .ankiTSV {
+            note.deck = AnkiExporter.bookDeck(bookTitles[word.pdfFilename ?? ""])
+        }
+        return note
+    }
+
+    /// Each source name's book title — copies and Kindle under one deck.
+    private var bookTitles: [String: String] {
+        var titles: [String: String] = [:]
+        for book in WordNotebook.books(from: store.words) {
+            for name in book.names { titles[name] = book.title }
+        }
+        return titles
     }
 
     @MainActor

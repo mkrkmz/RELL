@@ -19,6 +19,9 @@ struct WordNotebookView: View {
     @State private var selection: UUID?
     @State private var showAllBooks = false
     @AppStorage(StorageKey.notebookTableMode) private var tableMode = false
+    /// Saved twice (v16 S3) — the tagger over every word, so worked out
+    /// when the words change rather than on every redraw.
+    @State private var duplicates: [WordMerge.Group] = []
 
     /// Books shown before "N more books".
     private static let collapsedBookCount = 6
@@ -30,13 +33,20 @@ struct WordNotebookView: View {
             sourceList
                 .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 300)
         } content: {
-            SavedWordsListView(
-                store: store,
-                currentDocumentName: nil,
-                pool: WordNotebook.words(for: source ?? .all, from: store.words),
-                selection: $selection,
-                tableMode: tableMode
-            )
+            Group {
+                if source == .duplicates {
+                    DuplicateWordsView(store: store, groups: duplicates, selection: $selection,
+                                       onMerged: findDuplicates)
+                } else {
+                    SavedWordsListView(
+                        store: store,
+                        currentDocumentName: nil,
+                        pool: WordNotebook.words(for: source ?? .all, from: store.words),
+                        selection: $selection,
+                        tableMode: tableMode
+                    )
+                }
+            }
             .navigationSplitViewColumnWidth(min: 320, ideal: 420)
             .toolbar { toolbar }
         } detail: {
@@ -50,10 +60,22 @@ struct WordNotebookView: View {
         }
         .navigationTitle(Text("Word Notebook"))
         .onAppear(perform: takePendingReveal)
+        .task(id: store.words.count) { findDuplicates() }
         .onReceive(NotificationCenter.default.publisher(for: .revealInNotebook)) { _ in takePendingReveal() }
     }
 
+    private func findDuplicates() {
+        duplicates = WordMerge.duplicates(in: store.words)
+    }
+
     private func takePendingReveal() {
+        if let name = WordNotebook.pendingBookName {
+            WordNotebook.pendingBookName = nil
+            if let book = WordNotebook.book(named: name, in: books) {
+                source = .book(book)
+                selection = nil
+            }
+        }
         guard let id = WordNotebook.pendingReveal else { return }
         WordNotebook.pendingReveal = nil
         source = .all
@@ -72,6 +94,9 @@ struct WordNotebookView: View {
                     WordNotebook.words(for: .struggling, from: store.words).count)
                 row(.missingMeaning, String(localized: "Missing a Meaning"), "text.badge.plus",
                     WordNotebook.words(for: .missingMeaning, from: store.words).count)
+                if !duplicates.isEmpty || source == .duplicates {
+                    row(.duplicates, String(localized: "Saved Twice"), "square.on.square", duplicates.count)
+                }
             }
             let books = books
             if !books.isEmpty {

@@ -17,7 +17,7 @@ final class KindleImportTests: XCTestCase {
     // MARK: Reading
 
     func testReadsWordsWithTheirLatestSentenceAndBook() async throws {
-        let words = try KindleVocabulary.read(try fixture())
+        let words = try KindleVocabulary.read(try Self.fixture())
         XCTAssertEqual(words.count, 5)
         let tesserae = try XCTUnwrap(words.first { $0.word == "tesserae" })
         XCTAssertEqual(tesserae.sentence, "Prim is not to take any tesserae.", "the newest lookup")
@@ -29,7 +29,7 @@ final class KindleImportTests: XCTestCase {
     }
 
     func testTheKindleFileIsNeverWritten() async throws {
-        let database = try fixture()
+        let database = try Self.fixture()
         let before = try Data(contentsOf: database)
         let modified = try database.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
         _ = try KindleVocabulary.read(database)
@@ -77,7 +77,7 @@ final class KindleImportTests: XCTestCase {
     // MARK: Plan and import
 
     func testThePlanLeavesOutWhatsSavedAndOtherLanguages() async throws {
-        let words = try KindleVocabulary.read(try fixture())
+        let words = try KindleVocabulary.read(try Self.fixture())
         let existing = [SavedWord(term: "Exactly"), SavedWord(term: "tessera")]   // by term, and by stem
         let plan = KindleVocabulary.Plan(words: words, existing: existing, target: .english)
         XCTAssertEqual(Set(plan.candidates.map(\.word)), ["loaves", "Levantine"])
@@ -116,7 +116,7 @@ final class KindleImportTests: XCTestCase {
 
     /// A vocab.db with Kindle's schema: two lookups of "tesserae" (the newer
     /// one wins), a Kindle-mastered word, and a Turkish book's word.
-    private func fixture() throws -> URL {
+    static func fixture() throws -> URL {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let url = folder.appendingPathComponent("vocab.db")

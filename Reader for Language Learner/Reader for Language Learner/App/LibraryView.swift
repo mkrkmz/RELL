@@ -19,6 +19,7 @@ struct LibraryView: View {
     let onBack: () -> Void
 
     @Environment(RecentDocumentStore.self) private var recentDocumentStore
+    @Environment(\.openWindow) private var openWindow
 
     @State private var searchText = ""
     @State private var statsDocument: RecentDocument?
@@ -144,7 +145,9 @@ struct LibraryView: View {
             document: document,
             style: style,
             cover: cover(for: document),
-            savedWords: style == .list ? statsProvider?(document).savedWords : nil,
+            savedWords: statsProvider?(document).savedWords,
+            dueWords: statsProvider?(document).dueWords,
+            onShowWords: { WordNotebook.open(onBookNamed: document.filename) { openWindow(id: $0) } },
             collections: recentDocumentStore.collections,
             onOpen: onOpen.map { open in { open(document) } },
             onRemove: onRemove.map { remove in { remove(document) } },
@@ -336,8 +339,11 @@ struct LibraryCard: View {
     let document: RecentDocument
     var style: Style = .grid
     var cover: NSImage?
-    /// Saved words from this document — shown in the list style.
+    /// Saved words from this book — copies and Kindle included (v16 S3).
     var savedWords: Int? = nil
+    var dueWords: Int? = nil
+    /// Opens the word notebook on this book.
+    var onShowWords: (() -> Void)? = nil
     var collections: [DocumentCollection] = []
     var onOpen: (() -> Void)?
     var onRemove: (() -> Void)?
@@ -370,6 +376,7 @@ struct LibraryCard: View {
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
         .contextMenu { documentMenu }
+        .overlay(alignment: .bottomTrailing) { if style == .grid { wordsButton } }
         .accessibilityLabel("Open \(displayTitle), \(document.pageLabel)")
     }
 
@@ -431,8 +438,37 @@ struct LibraryCard: View {
         guard fileExists else { return String(localized: "File not found") }
         var parts: [String] = [document.shelf.localizedKind(isEPUB: document.isEPUB)]
         if document.lastPageIndex != nil { parts.append(document.pageLabel) }
-        if let savedWords, savedWords > 0 { parts.append(String(localized: "\(savedWords) saved")) }
+        if let savedWords, savedWords > 0 {
+            // Copies and Kindle included (v16 S3); the context menu opens them.
+            parts.append(String(localized: "\(savedWords) words"))
+        }
         return parts.joined(separator: " · ")
+    }
+
+    /// "232 words · 9" — opens the word notebook on the book (v16 S3).
+    @ViewBuilder
+    private var wordsButton: some View {
+        if let savedWords, savedWords > 0, let onShowWords {
+            Button(action: onShowWords) {
+                HStack(spacing: 3) {
+                    Image(systemName: "character.book.closed")
+                    Text("\(savedWords)")
+                    if let dueWords, dueWords > 0 {
+                        Text("· \(dueWords)").foregroundStyle(DS.Color.warning)
+                    }
+                }
+                .font(DS.Typography.caption2.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(DS.Color.textSecondary)
+                .padding(.horizontal, DS.Spacing.xs)
+                .padding(.vertical, 2)
+                .background(.regularMaterial, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(DS.Spacing.sm)
+            .help("Show this book's words in the word notebook")
+            .accessibilityLabel(Text("\(savedWords) words from this book"))
+        }
     }
 
     // MARK: Grid style
@@ -463,6 +499,9 @@ struct LibraryCard: View {
             if let onOpen {
                 Button("Open", action: onOpen)
                     .disabled(!fileExists)
+                if let onShowWords, (savedWords ?? 0) > 0 {
+                    Button("Show This Book's Words", action: onShowWords)
+                }
                 Divider()
             }
             if let onTogglePin {

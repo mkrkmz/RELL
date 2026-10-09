@@ -52,6 +52,11 @@ nonisolated enum StorageKey {
     static let fillPendingFields = "fillPendingFields"
     /// The word notebook shows a table instead of the list (v16 S2).
     static let notebookTableMode = "notebookTableMode"
+    /// v16 S3: Anki export puts each book in its own deck.
+    static let ankiDeckPerBook = "ankiDeckPerBook"
+    /// v16 S3: how many new Kindle words the home screen's notice was
+    /// closed at; it comes back when there are more.
+    static let kindleNoticeHiddenAtCount = "kindleNoticeHiddenAtCount"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     /// The "major.minor" whose What's New page was last shown (v14 S3).

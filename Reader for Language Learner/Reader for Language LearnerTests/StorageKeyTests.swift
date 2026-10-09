@@ -31,6 +31,8 @@ final class StorageKeyTests: XCTestCase {
             (StorageKey.fillPendingWordIDs, "fillPendingWordIDs"),
             (StorageKey.fillPendingFields, "fillPendingFields"),
             (StorageKey.notebookTableMode, "notebookTableMode"),
+            (StorageKey.ankiDeckPerBook, "ankiDeckPerBook"),
+            (StorageKey.kindleNoticeHiddenAtCount, "kindleNoticeHiddenAtCount"),
             (StorageKey.customSystemPreamble, "customSystemPreamble"),
             (StorageKey.dailyReadingGoalMinutes, "dailyReadingGoalMinutes"),
             (StorageKey.dailyReminderTime, "dailyReminderTime"),

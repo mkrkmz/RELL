@@ -16,6 +16,8 @@ struct AnkiNoteDraft {
     let back: String
     let tags: String
     let source: String
+    /// The Anki deck, when exported one per book (v16 S3): "RELL::Why We Sleep".
+    var deck: String? = nil
 }
 
 /// Output flavors for bulk export. Raw values are stable — they back
@@ -139,9 +141,9 @@ enum AnkiExporter {
 
     // MARK: - TSV Serialization
 
-    /// Produces a single TSV row: Front\tBack\tTags\tSource
-    static func tsvRow(from note: AnkiNoteDraft) -> String {
-        let fields = [note.front, note.back, note.tags, note.source]
+    /// Produces a single TSV row: Front\tBack\tTags\tSource(\tDeck)
+    static func tsvRow(from note: AnkiNoteDraft, withDeck: Bool = false) -> String {
+        let fields = [note.front, note.back, note.tags, note.source] + (withDeck ? [note.deck ?? deckRoot] : [])
         return fields
             .map { escapeTSV($0) }
             .joined(separator: "\t")
@@ -157,9 +159,25 @@ enum AnkiExporter {
     /// Multi-row TSV document for bulk export.
     static func tsvDocument(from notes: [AnkiNoteDraft]) -> String {
         guard !notes.isEmpty else { return "" }
-        let header = "#separator:tab\n#html:true\n#columns:Front\tBack\tTags\tSource"
-        let rows = notes.map { tsvRow(from: $0) }.joined(separator: "\n")
+        // A Deck column, named in the header, puts each note in its own deck
+        // on import (Anki 2.1.55+).
+        let withDeck = notes.contains { $0.deck != nil }
+        let header = withDeck
+            ? "#separator:tab\n#html:true\n#columns:Front\tBack\tTags\tSource\tDeck\n#deck column:5"
+            : "#separator:tab\n#html:true\n#columns:Front\tBack\tTags\tSource"
+        let rows = notes.map { tsvRow(from: $0, withDeck: withDeck) }.joined(separator: "\n")
         return header + "\n" + rows + "\n"
+    }
+
+    /// The parent deck of the per-book decks.
+    static let deckRoot = "RELL"
+
+    /// "RELL::Why We Sleep" — Anki's "::" makes it a subdeck; a title's own
+    /// colons would too, so they're turned into dashes.
+    static func bookDeck(_ title: String?) -> String {
+        guard let title, !title.trimmingCharacters(in: .whitespaces).isEmpty else { return deckRoot }
+        let clean = title.replacingOccurrences(of: ":", with: " -").replacingOccurrences(of: "\t", with: " ")
+        return "\(deckRoot)::\(clean)"
     }
 
     // MARK: - Format Dispatch

@@ -189,6 +189,35 @@ enum PersistenceBackup {
         }
     }
 
+    // MARK: Before a change
+
+    /// A copy of everything just before a change that can't be undone in
+    /// the app — merging words (v16 S3): `Backups/before-merge-<time>/`.
+    /// Pending writes are flushed first so the copy is current.
+    @discardableResult
+    static func snapshotBeforeChange(_ label: String, dataDirectory: URL? = nil,
+                                     defaults: UserDefaults = .standard, now: Date = Date()) -> URL? {
+        guard let dataDirectory = dataDirectory ?? FileManager.default.rellAppSupportDirectory() else { return nil }
+        PersistenceCoordinator.flushAll()
+        let folder = dataDirectory
+            .appendingPathComponent(backupsFolderName, isDirectory: true)
+            .appendingPathComponent("before-\(label)-\(PersistenceRecovery.timestamp(now))", isDirectory: true)
+        do {
+            try writeSnapshot(from: dataDirectory, defaults: defaults, to: folder)
+            // The newest five; daily backups are pruned on their own.
+            let root = folder.deletingLastPathComponent()
+            let older = ((try? FileManager.default.contentsOfDirectory(atPath: root.path)) ?? [])
+                .filter { $0.hasPrefix("before-") }
+                .sorted(by: >)
+                .dropFirst(5)
+            for name in older { try? FileManager.default.removeItem(at: root.appendingPathComponent(name)) }
+            return folder
+        } catch {
+            AppLogger.persistence.error("Backup before \(label, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
     // MARK: Snapshot
 
     /// Writes every existing data file (and the PDF bookmarks) into

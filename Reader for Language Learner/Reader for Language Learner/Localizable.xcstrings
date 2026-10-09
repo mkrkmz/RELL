@@ -30,6 +30,16 @@
         }
       }
     },
+    "· %lld" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· %lld"
+          }
+        }
+      }
+    },
     "· ×%lld" : {
 
     },
@@ -561,6 +571,16 @@
         }
       }
     },
+    "%lld reviews" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tekrar"
+          }
+        }
+      }
+    },
     "%lld reviews · %lld missed" : {
       "localizations" : {
         "en" : {
@@ -617,6 +637,16 @@
         }
       }
     },
+    "%lld words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelime"
+          }
+        }
+      }
+    },
     "%lld words · %lld waiting for review" : {
       "localizations" : {
         "en" : {
@@ -639,6 +669,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld kelime bitti"
+          }
+        }
+      }
+    },
+    "%lld words from this book" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitaptan %lld kelime"
           }
         }
       }
@@ -845,6 +885,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 kayıt daha"
+          }
+        }
+      }
+    },
+    "1 review" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 tekrar"
           }
         }
       }
@@ -1437,6 +1487,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zaten kayıtlı"
+          }
+        }
+      }
+    },
+    "Also saved as “%@”: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Also saved as “%1$@”: %2$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@” olarak da kaydedilmişti: %2$@"
           }
         }
       }
@@ -3779,6 +3845,16 @@
         }
       }
     },
+    "Each book becomes a deck under RELL, like RELL::Why We Sleep." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her kitap RELL altında bir deste olur; örneğin RELL::Why We Sleep."
+          }
+        }
+      }
+    },
     "Each field is saved as soon as it's found." : {
       "localizations" : {
         "tr" : {
@@ -5030,6 +5106,16 @@
         }
       }
     },
+    "Hide until the Kindle has more new words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'da daha fazla yeni kelime olana kadar gizle"
+          }
+        }
+      }
+    },
     "Higher values produce more creative/varied output. Lower values are more focused and deterministic. Changes take effect on the next request." : {
       "localizations" : {
         "tr" : {
@@ -5296,6 +5382,16 @@
         }
       }
     },
+    "Import…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktar…"
+          }
+        }
+      }
+    },
     "Imported from your Kindle" : {
       "localizations" : {
         "tr" : {
@@ -5476,12 +5572,32 @@
         }
       }
     },
+    "Keep %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ kalsın"
+          }
+        }
+      }
+    },
     "Keep this on the card" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bunu kartta tut"
+          }
+        }
+      }
+    },
+    "Keep this one" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kalsın"
           }
         }
       }
@@ -6177,6 +6293,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menü Çubuğu Simgesi"
+          }
+        }
+      }
+    },
+    "Merge" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Birleştir"
+          }
+        }
+      }
+    },
+    "Merge Into “%@”" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” içinde birleştir"
+          }
+        }
+      }
+    },
+    "Merge into “%@”?" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” içinde birleştirilsin mi?"
+          }
+        }
+      }
+    },
+    "Merged into “%@”." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” içinde birleştirildi."
           }
         }
       }
@@ -7006,6 +7162,16 @@
         }
       }
     },
+    "No word is saved twice" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İki kez kaydedilmiş kelime yok"
+          }
+        }
+      }
+    },
     "No words from this book yet" : {
       "localizations" : {
         "tr" : {
@@ -7337,6 +7503,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sayfanın üstünde tek bir \"Bu bölüm\" düğmesi"
+          }
+        }
+      }
+    },
+    "One Anki Deck per Book" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her kitap için ayrı Anki destesi"
           }
         }
       }
@@ -9841,6 +10017,16 @@
         }
       }
     },
+    "Saved Twice" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İki kez kaydedilen"
+          }
+        }
+      }
+    },
     "Saved words" : {
       "comment" : "A label for the number of saved words.",
       "isCommentAutoGenerated" : true,
@@ -10202,6 +10388,16 @@
         }
       }
     },
+    "Sentences, decks, notes and reviews are kept on one word. A copy of your data is saved in Backups first." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümleler, desteler, notlar ve tekrarlar tek kelimede toplanır. Önce verinin bir kopyası Yedekler klasörüne kaydedilir."
+          }
+        }
+      }
+    },
     "Sepia" : {
       "localizations" : {
         "tr" : {
@@ -10439,6 +10635,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kelimeleri liste ya da tablo olarak göster"
+          }
+        }
+      }
+    },
+    "Show This Book's Words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitabın kelimelerini göster"
+          }
+        }
+      }
+    },
+    "Show this book's words in the word notebook" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kitabın kelimelerini kelime defterinde göster"
           }
         }
       }
@@ -12371,6 +12587,16 @@
         }
       }
     },
+    "Words saved under two forms, like “gleam” and “gleaming”, show here." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“gleam” ve “gleaming” gibi iki biçimde kaydedilen kelimeler burada görünür."
+          }
+        }
+      }
+    },
     "Words waiting for review come first; new ones are mixed in." : {
       "localizations" : {
         "tr" : {
@@ -12537,6 +12763,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yapay zekâ sağlayıcın; sık unuttuğun kelimeler için"
+          }
+        }
+      }
+    },
+    "Your Kindle has %lld new words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'ında %lld yeni kelime var"
+          }
+        }
+      }
+    },
+    "Your Kindle has 1 new word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindle'ında 1 yeni kelime var"
           }
         }
       }

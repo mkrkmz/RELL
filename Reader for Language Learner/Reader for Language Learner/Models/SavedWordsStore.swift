@@ -176,6 +176,23 @@ final class SavedWordsStore {
         SpotlightIndexer.index(word)
     }
 
+    /// Merges `others` into `keep` (`WordMerge.merged`) and removes them
+    /// (v16 S3). The caller moves their encounters and takes the backup.
+    func merge(keep keepID: UUID, others otherIDs: [UUID]) {
+        guard let keep = word(withID: keepID) else { return }
+        let others = otherIDs.compactMap(word(withID:)).filter { $0.id != keepID }
+        guard !others.isEmpty else { return }
+        let merged = WordMerge.merged(keep: keep, others: others)
+        let removed = Set(others.map(\.id))
+        words = words.compactMap { word in
+            if word.id == keepID { return merged }
+            return removed.contains(word.id) ? nil : word
+        }
+        save()
+        SpotlightIndexer.index(merged)
+        removed.forEach(SpotlightIndexer.removeWord)
+    }
+
     func delete(_ word: SavedWord) {
         words.removeAll { $0.id == word.id }
         save()

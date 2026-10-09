@@ -129,6 +129,10 @@ struct EmptyStateView: View {
                 }
             }
 
+            if let savedWordsStore {
+                KindleNoticeBanner(store: savedWordsStore)
+            }
+
             DashboardToolsRow(onReview: onReview)
 
             if !otherDocuments.isEmpty {
@@ -153,11 +157,19 @@ struct EmptyStateView: View {
     /// Builds per-document stats, bridging the two filename keyings: reading
     /// sessions key on the file name with extension, while saved words / notes
     /// / bookmarks key on the name without it.
+    private func bookWords(for document: RecentDocument) -> [SavedWord]? {
+        guard let savedWordsStore else { return nil }
+        return BookWords(document: BookIdentity.Document(path: document.path, names: [document.filename]),
+                         words: savedWordsStore.words, encounters: [],
+                         matchingTitles: BookWords.matchesTitles(forDocumentAt: document.path)).saved
+    }
+
     private func documentStats(for document: RecentDocument) -> DocumentStats {
         DocumentStats(
             readingTime: sessionStore?.totalTime(for: document.url.lastPathComponent) ?? 0,
-            savedWords: savedWordsStore?.savedCount(for: document.filename) ?? 0,
-            dueWords: savedWordsStore?.dueCount(for: document.filename) ?? 0,
+            // The book's words, copies and Kindle included (v16 S3).
+            savedWords: bookWords(for: document)?.count ?? 0,
+            dueWords: bookWords(for: document).map { words in words.count { savedWordsStore?.isDue($0) == true } } ?? 0,
             notes: noteStore?.count(for: document.filename) ?? 0,
             bookmarks: bookmarkStore?.bookmarks(for: document.filename).count ?? 0,
             progress: document.readingProgress,
