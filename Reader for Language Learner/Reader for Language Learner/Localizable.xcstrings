@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "—" : {
+
+    },
     "— you wrote “%@”" : {
       "localizations" : {
         "tr" : {
@@ -414,6 +417,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld dakika"
+          }
+        }
+      }
+    },
+    "%lld More Books" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kitap daha"
           }
         }
       }
@@ -1388,12 +1401,32 @@
         }
       }
     },
+    "All Words" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm kelimeler"
+          }
+        }
+      }
+    },
     "All words mastered!" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tüm kelimeler öğrenildi!"
+          }
+        }
+      }
+    },
+    "All Words…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm kelimeler…"
           }
         }
       }
@@ -2373,6 +2406,16 @@
         }
       }
     },
+    "Changes are saved as you make them." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değişiklikler yaptığın anda kaydedilir."
+          }
+        }
+      }
+    },
     "Chapter" : {
       "localizations" : {
         "tr" : {
@@ -2510,6 +2553,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir RELL Backup klasörü seç."
+          }
+        }
+      }
+    },
+    "Choose a word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir kelime seç"
           }
         }
       }
@@ -3295,6 +3348,16 @@
         }
       }
     },
+    "Decks" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desteler"
+          }
+        }
+      }
+    },
     "Decks for the selected words" : {
       "localizations" : {
         "tr" : {
@@ -3371,6 +3434,16 @@
         }
       }
     },
+    "Delete “%@”?" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” silinsin mi?"
+          }
+        }
+      }
+    },
     "Delete %lld selected words?" : {
       "localizations" : {
         "tr" : {
@@ -3407,6 +3480,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seçilen kelimeleri sil"
+          }
+        }
+      }
+    },
+    "Delete…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sil…"
           }
         }
       }
@@ -3468,6 +3551,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sözlük"
+          }
+        }
+      }
+    },
+    "Dictionary · %lld / %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Dictionary · %1$lld / %2$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözlük · %lld / %lld"
           }
         }
       }
@@ -3874,6 +3973,16 @@
         }
       }
     },
+    "Every saved word, by book and deck" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bütün kelimeler, kitap ve desteye göre"
+          }
+        }
+      }
+    },
     "Examples" : {
       "localizations" : {
         "tr" : {
@@ -4065,6 +4174,16 @@
         }
       }
     },
+    "Fewer Books" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha az kitap"
+          }
+        }
+      }
+    },
     "Fewer modules" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4187,6 +4306,7 @@
       }
     },
     "Filling · %lld / %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5316,6 +5436,26 @@
         }
       }
     },
+    "Its page shows here: the card, how well you remember it and where you met it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfası burada açılır: kartı, ne kadar hatırladığın ve nerede karşılaştığın."
+          }
+        }
+      }
+    },
+    "Its reviews and sentences go with it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar geçmişi ve cümleleri de silinir."
+          }
+        }
+      }
+    },
     "Jump to Page" : {
       "localizations" : {
         "tr" : {
@@ -5971,6 +6111,16 @@
         }
       }
     },
+    "Meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlam"
+          }
+        }
+      }
+    },
     "Meaning, definition and pronunciation, a few seconds after you save a word." : {
       "localizations" : {
         "tr" : {
@@ -6127,6 +6277,16 @@
         }
       }
     },
+    "Missing a Meaning" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anlamı eksik"
+          }
+        }
+      }
+    },
     "Mistakes" : {
       "localizations" : {
         "tr" : {
@@ -6153,6 +6313,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Model"
+          }
+        }
+      }
+    },
+    "Models · %lld / %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Models · %1$lld / %2$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modeller · %lld / %lld"
           }
         }
       }
@@ -6285,6 +6461,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "hiç çalışılmamış"
+          }
+        }
+      }
+    },
+    "Never Studied" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiç çalışılmamış"
           }
         }
       }
@@ -6482,6 +6668,16 @@
         }
       }
     },
+    "Next Review" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki tekrar"
+          }
+        }
+      }
+    },
     "Next review %@" : {
       "localizations" : {
         "tr" : {
@@ -6528,6 +6724,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Henüz Makale Yok"
+          }
+        }
+      }
+    },
+    "No Book" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitapsız"
           }
         }
       }
@@ -7356,12 +7562,32 @@
         }
       }
     },
+    "Open the study room (⌥⌘V)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışma odasını aç (⌥⌘V)"
+          }
+        }
+      }
+    },
     "Open the study room in full screen" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çalışma odasını tam ekranda aç"
+          }
+        }
+      }
+    },
+    "Open the word notebook (⌥⌘K)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelime defterini aç (⌥⌘K)"
           }
         }
       }
@@ -9219,6 +9445,7 @@
       }
     },
     "Review Window" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -9665,6 +9892,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir kelimeyi sonra tekrar etmek üzere RELL kelime hazinene kaydeder."
+          }
+        }
+      }
+    },
+    "Scheduled" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planlandı"
           }
         }
       }
@@ -10196,6 +10433,16 @@
         }
       }
     },
+    "Show the words as a list or a table" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelimeleri liste ya da tablo olarak göster"
+          }
+        }
+      }
+    },
     "Show Welcome Tour Again" : {
       "localizations" : {
         "tr" : {
@@ -10551,6 +10798,16 @@
         }
       }
     },
+    "Status" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durum"
+          }
+        }
+      }
+    },
     "Stay immersed in the language you're studying, or get the meaning in your own." : {
       "localizations" : {
         "tr" : {
@@ -10825,6 +11082,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sistem Prompt Önsözü"
+          }
+        }
+      }
+    },
+    "Table" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tablo"
           }
         }
       }
@@ -11798,6 +12065,16 @@
         }
       }
     },
+    "Waiting for Review" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekrar bekleyen"
+          }
+        }
+      }
+    },
     "Warm-up: hard words here" : {
       "localizations" : {
         "tr" : {
@@ -12012,6 +12289,16 @@
         }
       }
     },
+    "Word Notebook" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelime defteri"
+          }
+        }
+      }
+    },
     "Word saved!" : {
       "localizations" : {
         "tr" : {
@@ -12180,6 +12467,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "sık unuttukların"
+          }
+        }
+      }
+    },
+    "You Keep Forgetting" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sık unuttukların"
           }
         }
       }

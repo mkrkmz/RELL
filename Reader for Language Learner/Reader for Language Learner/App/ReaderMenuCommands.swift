@@ -159,6 +159,9 @@ struct ReaderMenuCommands: Commands {
             Button("Study Room") { openWindow(id: StudyRoom.windowID) }
                 .keyboardShortcut("v", modifiers: [.command, .option])
 
+            Button("Word Notebook") { openWindow(id: WordNotebook.windowID) }
+                .keyboardShortcut("k", modifiers: [.command, .option])
+
             Button("Story From Your Words…") {
                 NotificationCenter.default.post(name: .wordStoryCommand, object: nil)
             }

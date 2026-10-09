@@ -46,6 +46,12 @@ nonisolated enum StorageKey {
     static let bookTitleMatchingOff = "bookTitleMatchingOff"
     /// One-shot: the book the study room opens with ("Study This Book").
     static let studyRoomPresetBookPath = "studyRoomPresetBookPath"
+    /// A fill run cut short by quitting: the words and fields still to do
+    /// (v16 S2), resumed at the next launch.
+    static let fillPendingWordIDs = "fillPendingWordIDs"
+    static let fillPendingFields = "fillPendingFields"
+    /// The word notebook shows a table instead of the list (v16 S2).
+    static let notebookTableMode = "notebookTableMode"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     /// The "major.minor" whose What's New page was last shown (v14 S3).

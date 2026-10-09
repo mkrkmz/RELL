@@ -134,15 +134,32 @@ yalniz bu kitap.
 
 ## Sprint 2 — "Kelime defteri penceresi" (Must, **maketle baslar**)
 
-- [ ] **Kelime defteri** — yeni pencere (calisma odasi gibi): solda liste
-      (arama, durum/seviye/deste/dil + **kitap** filtresi, eksikleri
-      doldur, Kindle, disa aktar, coklu secim), sagda secili kelimenin
-      sayfasi (sheet yerine yan yana); ana ekran Tools karosu, ⌘K, Git
-      menusu; Spotlight'tan kelime acmak bu pencereye gider
-- [ ] **Tablo gorunumu** — liste/tablo anahtari; siralanabilir sutunlar:
-      kelime, anlam, seviye, durum, sonraki tekrar, kitap; coklu secimle
-      toplu islemler
-- [ ] Testler: pencere en kucuk boyutta buyumez, tablo siralamasi
+Maket onayi (2026-10-09, onerilerle): uc sutun; pencerede degisiklik
+hemen kaydedilir (silme onay ister), kenar cubugundaki sayfa Kaydet/Iptal
+ile kalir; acilis liste, secim hatirlanir; ⌥⌘K; toplu doldurma once sozluk
+turu, yarida kalan devam eder.
+
+- [x] **Kelime defteri** — `Window("Word Notebook", id: "words")`,
+      `WordNotebookView`: sol sutun durumlar (tumu, tekrar bekleyen, hic
+      calisilmamis, sik unutulan, anlami eksik) + kitaplar (`WordNotebook.books`,
+      adlar basliktan kumelenir: Why We Sleep tek satir) + desteler; orta
+      `SavedWordsListView` (havuz + secim + tablo modu; tek tik secer, cift
+      tik sayfa acar); sag `SavedWordDetailSheet(isPane:)` — degisen alanlar
+      depodaki en guncel kelimenin uzerine yazilir. Girisler: ana ekran
+      Tools karosu, ⌘K (komut + kelime sonuclari artik defterde acilir),
+      Git menusu ⌥⌘K, kitabin "Tum kelimeler…", Spotlight. Kindle aktarimi
+      ve "Tumunu sil" yalniz defterde; kitabin kenar cubugunda "Tum
+      kelimeler…"
+- [x] **Tablo gorunumu** — `WordTable`: kelime, anlam, seviye, durum,
+      sonraki tekrar, kitap; her sutun siralanir
+- [x] **Doldurma (karar 5)** — once butun kelimelerde sozluk turu, sonra
+      model turu ("Sozluk · x / y", "Modeller · x / y"); yarida kalan
+      `fillPendingWordIDs` ile acilista yalniz yerel kaynaklarla surer,
+      Durdur unutturur (test sureci kendi defaults'unu kullanir). Neden:
+      Kindle'dan gelen 529 kelimenin yalniz 18'i dolmustu
+- [x] Testler: `WordNotebookTests` (6) — kitap kumeleri, kaynaklar, sozluk
+      once, devam, durdur, pencere en kucuk boyutta buyumez
+- [ ] Tam test (yerel) + canli tur (kullanici)
 
 ## Sprint 3 — "Duzen" (Should)
 

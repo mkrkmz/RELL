@@ -14,6 +14,14 @@ struct SavedWordsListView: View {
     /// every saved word.
     var book: BookContext? = nil
     var onStudyBook: (() -> Void)? = nil
+    /// The word notebook (v16 S2): the words of the source picked in its
+    /// first column, the selected word shown in its third, and a table
+    /// instead of the list when asked.
+    var pool: [SavedWord]? = nil
+    var selection: Binding<UUID?>? = nil
+    var tableMode: Bool = false
+    /// The book's "All Words…" — opens the notebook.
+    var onShowAllWords: (() -> Void)? = nil
 
     /// A book as its sidebar knows it.
     struct BookContext: Equatable {
@@ -57,6 +65,11 @@ struct SavedWordsListView: View {
         SavedWordsSortOrder(rawValue: sortRaw) ?? .dateDesc
     }
 
+    /// The words this list is about, when it isn't every word.
+    private var scopeIDs: Set<UUID>? {
+        bookWords?.ids ?? pool.map { Set($0.map(\.id)) }
+    }
+
     private var matchesTitles: Bool {
         _ = matchingRevision
         return BookWords.matchesTitles(forDocumentAt: book?.document.path)
@@ -75,7 +88,7 @@ struct SavedWordsListView: View {
     }
 
     private var filteredWords: [SavedWord] {
-        var result = bookWords?.saved ?? store.words
+        var result = bookWords?.saved ?? pool ?? store.words
 
         switch selectedFilter {
         case .all:
@@ -144,7 +157,7 @@ struct SavedWordsListView: View {
             searchBar
             SavedWordsFilterBar(
                 store: store,
-                scope: bookWords?.saved,
+                scope: bookWords?.saved ?? pool,
                 availableFilters: availableFilters,
                 shownCount: filteredWords.count,
                 selectedFilter: $selectedFilter,
@@ -158,8 +171,8 @@ struct SavedWordsListView: View {
                 missingMeaningOnly: $missingMeaningOnly
             )
             if let enricher {
-                FillMissingStrip(enricher: enricher, wordIDs: bookWords?.ids) {
-                    fillScope = bookWords?.ids
+                FillMissingStrip(enricher: enricher, wordIDs: scopeIDs) {
+                    fillScope = scopeIDs
                     showFillSheet = true
                 }
             }
@@ -195,7 +208,7 @@ struct SavedWordsListView: View {
             searchText = ""
             selectedFilter = .all
             selectedTag = nil
-            selectedWord = word
+            if let selection { selection.wrappedValue = word.id } else { selectedWord = word }
         }
         .sheet(item: $selectedWord) { word in
             SavedWordDetailSheet(word: word, store: store)
@@ -213,7 +226,7 @@ struct SavedWordsListView: View {
             KindleImportSheet(store: store, enricher: enricher)
         }
         .sheet(isPresented: $showBulkExport) {
-            BulkAnkiExportView(store: store, limitedTo: bookWords?.ids)
+            BulkAnkiExportView(store: store, limitedTo: scopeIDs)
         }
         .confirmationDialog(
             "Clear all \(store.words.count) saved words?",
@@ -280,6 +293,8 @@ struct SavedWordsListView: View {
     private var listContent: some View {
         if let book, let bookWords {
             bookList(book, bookWords)
+        } else if tableMode && !filteredWords.isEmpty {
+            WordTable(words: filteredWords, selection: selection ?? .constant(nil))
         } else if filteredWords.isEmpty {
             emptyState
         } else {
@@ -371,7 +386,8 @@ struct SavedWordsListView: View {
             if bookWords.saved.isEmpty && bookWords.met.isEmpty {
                 DSEmptyState(icon: "character.book.closed",
                              title: "No words from this book yet",
-                             message: "Double-click a word while you read and choose Save.")
+                             message: "Double-click a word while you read and choose Save.",
+                             action: onShowAllWords, actionLabel: "All Words…")
             } else {
                 emptyState
             }
@@ -435,6 +451,10 @@ struct SavedWordsListView: View {
             SavedWordRow(word: word, lastEncounter: lastEncounters[word.id])
         }
             .contentShape(Rectangle())
+            .listRowBackground(selection?.wrappedValue == word.id ? DS.Color.accentSubtle : nil)
+            // In the notebook a click shows the word beside the list; a
+            // double click still opens its page on its own.
+            .onTapGesture(count: 2) { if !isSelecting && selection != nil { selectedWord = word } }
             .onTapGesture {
                 if isSelecting {
                     if multiSelection.contains(word.id) {
@@ -442,6 +462,8 @@ struct SavedWordsListView: View {
                     } else {
                         multiSelection.insert(word.id)
                     }
+                } else if let selection {
+                    selection.wrappedValue = word.id
                 } else {
                     selectedWord = word
                 }
@@ -563,15 +585,19 @@ struct SavedWordsListView: View {
             }
             .disabled(store.words.isEmpty)
 
-            Button {
-                showKindleImport = true
-            } label: {
-                Label("Import From Kindle", systemImage: "books.vertical")
-                    .labelStyle(.iconOnly)
-                    .font(DS.Typography.caption)
+            // Kindle brings words for every book: it lives in the notebook
+            // (approved v16 S1 decision 4), not in a book's sidebar.
+            if book == nil {
+                Button {
+                    showKindleImport = true
+                } label: {
+                    Label("Import From Kindle", systemImage: "books.vertical")
+                        .labelStyle(.iconOnly)
+                        .font(DS.Typography.caption)
+                }
+                .help("Import the words you looked up on your Kindle")
+                .accessibilityLabel("Import From Kindle")
             }
-            .help("Import the words you looked up on your Kindle")
-            .accessibilityLabel("Import From Kindle")
 
             Button {
                 isSelecting = true
@@ -585,7 +611,13 @@ struct SavedWordsListView: View {
 
             Spacer()
 
-            if !store.words.isEmpty {
+            if book != nil, let onShowAllWords {
+                // A book's sidebar: the way to every word, not "Clear all".
+                Button("All Words…", action: onShowAllWords)
+                    .buttonStyle(.link)
+                    .font(DS.Typography.caption)
+                    .help("Open the word notebook (⌥⌘K)")
+            } else if !store.words.isEmpty {
                 Button(role: .destructive) {
                     showClearConfirm = true
                 } label: {

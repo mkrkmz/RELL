@@ -181,6 +181,12 @@ final class WordEnricher {
         var tally: [FillField: [FillSource.Kind: Int]] = [:]
         var isFinished = false
         var wasStopped = false
+        /// v16 S2: every word from the dictionary first (seconds), then the
+        /// models for what's left — quitting early still leaves most words
+        /// with a meaning.
+        var phase: Phase = .dictionary
+
+        enum Phase: Equatable { case dictionary, models }
 
         var filledCount: Int { tally.values.reduce(0) { $0 + $1.values.reduce(0, +) } }
 
@@ -250,33 +256,83 @@ final class WordEnricher {
         guard !isRunning else { return }
         let targets = words(in: wordIDs).filter { word in fields.contains { $0.isMissing(in: word) } }.map(\.id)
         guard !targets.isEmpty else { return }
-        let backends = backends(allowProvider ? .any : .never)
+        let full = backends(allowProvider ? .any : .never)
+        let dictionaryOnly = FillBackends(dictionary: full.dictionary, onDevice: nil, provider: nil, level: nil)
         let native = Language.storedNative
         run = Run(total: targets.count, fields: fields)
+        savePending(targets, fields: fields)
 
         task = Task { [weak self] in
+            // The dictionary for every word first: instant, offline.
             for id in targets {
-                guard let self, !Task.isCancelled else { break }
-                guard let word = self.store.word(withID: id) else { self.run?.completed += 1; continue }
-                self.run?.currentTerm = word.term
-                await WordFillEngine.fill(word, fields: fields, backends: backends, native: native) { result in
-                    if self.store.fill(result.field, with: result.value, source: result.source, forWordID: id) {
-                        self.run?.tally[result.field, default: [:]][result.source.kind, default: 0] += 1
-                    }
-                }
-                if !Task.isCancelled { self.run?.completed += 1 }
+                guard let self, !Task.isCancelled else { return }
+                await self.fillOne(id, fields: fields, backends: dictionaryOnly, native: native)
             }
-            self?.run?.isFinished = true
-            self?.run?.currentTerm = ""
-            self?.task = nil
-            self?.hideStripForWhatsLeft()
+            guard let self, !Task.isCancelled else { return }
+            self.run?.phase = .models
+            self.run?.completed = 0
+            // Then the models, for what the dictionary didn't have.
+            for (index, id) in targets.enumerated() {
+                guard !Task.isCancelled else { return }
+                await self.fillOne(id, fields: fields, backends: full, native: native)
+                if index % 10 == 9 { self.savePending(Array(targets[(index + 1)...]), fields: fields) }
+            }
+            self.run?.isFinished = true
+            self.run?.currentTerm = ""
+            self.task = nil
+            self.clearPending()
+            self.hideStripForWhatsLeft()
         }
+    }
+
+    private func fillOne(_ id: UUID, fields: Set<FillField>, backends: FillBackends, native: Language) async {
+        if let word = store.word(withID: id), fields.contains(where: { $0.isMissing(in: word) }) {
+            run?.currentTerm = word.term
+            await WordFillEngine.fill(word, fields: fields, backends: backends, native: native) { result in
+                if self.store.fill(result.field, with: result.value, source: result.source, forWordID: id) {
+                    self.run?.tally[result.field, default: [:]][result.source.kind, default: 0] += 1
+                }
+            }
+        }
+        if !Task.isCancelled { run?.completed += 1 }
+    }
+
+    // MARK: Resume (v16 S2, decision 5)
+
+    /// A run cut short by quitting RELL picks up at the next launch — with
+    /// the dictionary and the models on this Mac only, since nobody pressed
+    /// a button this time.
+    func resumePendingFill() {
+        let defaults = pendingDefaults
+        guard let raw = defaults.stringArray(forKey: StorageKey.fillPendingWordIDs), !raw.isEmpty else { return }
+        let ids = Set(raw.compactMap(UUID.init(uuidString:)))
+        let fields = Set((defaults.stringArray(forKey: StorageKey.fillPendingFields) ?? []).compactMap(FillField.init(rawValue:)))
+        guard !fields.isEmpty else { clearPending(); return }
+        start(fields: fields, allowProvider: false, wordIDs: ids)
+        if run == nil { clearPending() }   // nothing left to fill
+    }
+
+    /// Where an unfinished run is remembered. A test host keeps it out of
+    /// the user's own preferences.
+    @ObservationIgnored var pendingDefaults: UserDefaults = RELLProcess.isTestHost
+        ? (UserDefaults(suiteName: "rell-test-host-\(ProcessInfo.processInfo.processIdentifier)") ?? .standard)
+        : .standard
+
+    private func savePending(_ ids: [UUID], fields: Set<FillField>) {
+        pendingDefaults.set(ids.map(\.uuidString), forKey: StorageKey.fillPendingWordIDs)
+        pendingDefaults.set(fields.map(\.rawValue).sorted(), forKey: StorageKey.fillPendingFields)
+    }
+
+    private func clearPending() {
+        pendingDefaults.removeObject(forKey: StorageKey.fillPendingWordIDs)
+        pendingDefaults.removeObject(forKey: StorageKey.fillPendingFields)
     }
 
     /// Stops after the field in flight; everything filled so far stays.
     func stop() {
         task?.cancel()
         task = nil
+        clearPending()   // stopping is a choice; quitting isn't
         run?.wasStopped = true
         run?.isFinished = true
         run?.currentTerm = ""

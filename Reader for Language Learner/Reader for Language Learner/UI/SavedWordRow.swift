@@ -76,7 +76,7 @@ struct SavedWordRow: View {
                     .background(cefr.badgeColor.opacity(0.12), in: Capsule())
                     .help(word.cefrIsAuto ? "AI-estimated level" : "CEFR level")
                 }
-                Text(word.reviewStatus.label)
+                Text(word.reviewStatus.localizedTitle)
                     .font(DS.Typography.caption2.weight(.semibold))
                     .foregroundStyle(word.reviewStatus.color)
                     .padding(.horizontal, DS.Spacing.xs)

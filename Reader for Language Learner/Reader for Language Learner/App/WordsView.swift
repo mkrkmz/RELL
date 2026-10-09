@@ -47,7 +47,8 @@ struct WordsView: View {
             switch segment {
             case .words:
                 SavedWordsListView(store: store, currentDocumentName: currentDocumentName, book: book,
-                                   onStudyBook: book.map { book in { studyFullScreen(bookPath: book.document.path) } })
+                                   onStudyBook: book.map { book in { studyFullScreen(bookPath: book.document.path) } },
+                                   onShowAllWords: { WordNotebook.open { openWindow(id: $0) } })
             case .review:
                 // Approved v15 S2 decision 3: the quick review stays here;
                 // the study room is one click away.

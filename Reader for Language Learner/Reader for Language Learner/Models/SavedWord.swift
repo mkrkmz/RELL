@@ -82,6 +82,16 @@ enum ReviewStatus {
     case scheduled
     case mastered
 
+    /// For visible text (`label` stays English for older call sites).
+    var localizedTitle: String {
+        switch self {
+        case .new:       return String(localized: "New")
+        case .due:       return String(localized: "Due")
+        case .scheduled: return String(localized: "Scheduled")
+        case .mastered:  return String(localized: "Mastered")
+        }
+    }
+
     var label: String {
         switch self {
         case .new: return "New"

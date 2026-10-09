@@ -14,6 +14,9 @@ import SwiftUI
 struct SavedWordDetailSheet: View {
     @State var word: SavedWord
     var store: SavedWordsStore
+    /// In the word notebook's third column (v16 S2): no Save/Cancel —
+    /// edits are saved as they're made; deleting asks first.
+    var isPane: Bool = false
     @Environment(WordEncounterStore.self) private var encounterStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openWindow) private var openWindow
@@ -21,6 +24,7 @@ struct SavedWordDetailSheet: View {
     @AppStorage(StorageKey.fillUsesProvider) private var fillUsesProvider = true
 
     @State private var showAllEncounters = false
+    @State private var confirmDelete = false
     @State private var isFilling = false
     /// The last fill found nothing for the empty fields.
     @State private var nothingMoreFound = false
@@ -57,6 +61,94 @@ struct SavedWordDetailSheet: View {
     }
 
     var body: some View {
+        if isPane {
+            paneBody
+        } else {
+            sheetBody
+        }
+    }
+
+    // MARK: - Pane (v16 S2)
+
+    /// The fields this page edits. Saved as they change — into the stored
+    /// word, so a review made meanwhile in the study room isn't undone.
+    private struct Edits: Equatable {
+        var tags: [String]
+        var notes: String
+        var llmOutputs: [String: String]
+        var fieldSources: [String: String]
+        var cefrLevel: String?
+        var cefrIsAuto: Bool
+    }
+
+    private var edits: Edits {
+        Edits(tags: word.tags, notes: word.notes, llmOutputs: word.llmOutputs,
+              fieldSources: word.fieldSources, cefrLevel: word.cefrLevel, cefrIsAuto: word.cefrIsAuto)
+    }
+
+    /// Writes only what changed between `old` and `new` — a field changed
+    /// elsewhere meanwhile (a level set from the list) keeps its new value.
+    private func saveEdits(from old: Edits, to new: Edits) {
+        guard var latest = store.word(withID: word.id) else { return }
+        let before = latest
+        if old.tags != new.tags { latest.tags = new.tags }
+        if old.notes != new.notes { latest.notes = new.notes }
+        if old.llmOutputs != new.llmOutputs { latest.llmOutputs = new.llmOutputs }
+        if old.fieldSources != new.fieldSources { latest.fieldSources = new.fieldSources }
+        if old.cefrLevel != new.cefrLevel || old.cefrIsAuto != new.cefrIsAuto {
+            latest.cefrLevel = new.cefrLevel
+            latest.cefrIsAuto = new.cefrIsAuto
+        }
+        if latest != before { store.update(latest) }
+    }
+
+    /// The memory read-out follows the stored word in the pane: reviews
+    /// happen elsewhere while it's open.
+    private var current: SavedWord {
+        isPane ? (store.word(withID: word.id) ?? word) : word
+    }
+
+    private var paneBody: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                pageSections
+                    .padding(DS.Spacing.lg)
+            }
+            Divider()
+            HStack {
+                Button("Delete…", role: .destructive) { confirmDelete = true }
+                Spacer()
+                Text("Changes are saved as you make them.")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+            .padding(.horizontal, DS.Spacing.lg)
+            .padding(.vertical, DS.Spacing.sm)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onChange(of: edits) { old, new in saveEdits(from: old, to: new) }
+        .confirmationDialog("Delete “\(word.term)”?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { store.delete(word) }
+        } message: {
+            Text("Its reviews and sentences go with it.")
+        }
+    }
+
+    private var pageSections: some View {
+        VStack(alignment: .leading, spacing: DS.Spacing.lg) {
+            hero
+            cardSection
+            memoryCard
+            encountersSection
+            if !word.sentence.isEmpty { savedContext }
+            detailsSection
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Sheet
+
+    private var sheetBody: some View {
         VStack(spacing: 0) {
             HStack {
                 Spacer()
@@ -338,7 +430,7 @@ struct SavedWordDetailSheet: View {
 
     private var memoryCard: some View {
         HStack(spacing: DS.Spacing.lg) {
-            if let recall = WordPageModel.recallNow(word) {
+            if let recall = WordPageModel.recallNow(current) {
                 Gauge(value: recall) {
                     EmptyView()
                 } currentValueLabel: {
@@ -375,7 +467,7 @@ struct SavedWordDetailSheet: View {
 
     @ViewBuilder
     private var nextReviewLine: some View {
-        if let next = word.nextReviewAt {
+        if let next = current.nextReviewAt {
             if next <= Date() {
                 Text("Due for review now")
                     .font(DS.Typography.caption)
@@ -386,7 +478,7 @@ struct SavedWordDetailSheet: View {
                     .foregroundStyle(DS.Color.textTertiary)
             }
         }
-        Text("\(word.reviewCount) reviews · \(word.incorrectCount) missed")
+        Text("\(current.reviewCount) reviews · \(current.incorrectCount) missed")
             .font(DS.Typography.caption)
             .foregroundStyle(DS.Color.textTertiary)
     }
@@ -438,7 +530,7 @@ struct SavedWordDetailSheet: View {
             isEPUB: encounter.isEPUB
         )
         DocumentJump.prepare(location)
-        dismiss()
+        if !isPane { dismiss() }   // in a window, dismiss would close it
         openWindow(value: location.url)
         DocumentJump.announce(location)
     }

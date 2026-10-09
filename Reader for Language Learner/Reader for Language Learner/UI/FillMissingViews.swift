@@ -72,7 +72,9 @@ struct FillMissingStrip: View {
     private func running(_ run: WordEnricher.Run) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
             HStack(spacing: DS.Spacing.sm) {
-                Text("Filling · \(run.completed) / \(run.total)")
+                Text(run.phase == .dictionary
+                     ? String(localized: "Dictionary · \(run.completed) / \(run.total)")
+                     : String(localized: "Models · \(run.completed) / \(run.total)"))
                     .font(DS.Typography.caption.weight(.semibold))
                     .monospacedDigit()
                 Text(run.currentTerm)

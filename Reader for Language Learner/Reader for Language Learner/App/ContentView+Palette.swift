@@ -66,6 +66,9 @@ extension ContentView {
             items.append(PaletteItem(id: "cmd-\(id)", kind: .command, title: title, icon: icon, isEnabled: enabled, perform: action))
         }
         command("review", String(localized: "Study Room"), "rectangle.stack") { openWindow(id: StudyRoom.windowID) }
+        command("notebook", String(localized: "Word Notebook"), "character.book.closed") {
+            WordNotebook.open { openWindow(id: $0) }
+        }
         command("import", String(localized: "Import Web Article…"), "globe") {
             NotificationCenter.default.post(name: .importWebArticleCommand, object: nil)
         }
@@ -116,18 +119,15 @@ extension ContentView {
             }
         }
 
-        if hasDocument {
-            let target = Language.storedTarget.rawValue
-            for word in savedWordsStore.words where word.language == nil || word.language == target {
-                items.append(PaletteItem(
-                    id: "word-\(word.id)", kind: .word, title: word.term,
-                    subtitle: word.masteryLevel.localizedTitle, icon: "character.book.closed",
-                    perform: {
-                        if !commands.isSidebarVisible { commands.toggleSidebar() }
-                        NotificationCenter.default.post(name: .revealSavedWordCommand, object: word.id)
-                    }
-                ))
-            }
+        // A word opens in the word notebook (v16 S2) — every word, from
+        // the home screen too, not only the open book's.
+        let target = Language.storedTarget.rawValue
+        for word in savedWordsStore.words where word.language == nil || word.language == target {
+            items.append(PaletteItem(
+                id: "word-\(word.id)", kind: .word, title: word.term,
+                subtitle: word.masteryLevel.localizedTitle, icon: "character.book.closed",
+                perform: { WordNotebook.open(on: word.id) { openWindow(id: $0) } }
+            ))
         }
 
         for document in recentDocumentStore.documents {

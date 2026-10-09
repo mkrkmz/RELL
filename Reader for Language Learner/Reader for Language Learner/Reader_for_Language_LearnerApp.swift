@@ -86,6 +86,11 @@ struct Reader_for_Language_LearnerApp: App {
 
         // Fills written before the v15 S1 live-pass fixes, read again once.
         enricher.repairEarlierFills()
+        // A fill cut short by quitting goes on (v16 S2), once the app is up.
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            enricher.resumePendingFill()
+        }
 
         // Launch-time Spotlight sync — catches edits/deletes made since the
         // last run that the per-mutation hooks may have missed.
@@ -146,6 +151,20 @@ struct Reader_for_Language_LearnerApp: App {
                 .rellAccentTint()
         }
         .defaultSize(width: 1100, height: 720)
+
+        // The word notebook (v16 S2): every saved word, by book and deck.
+        Window("Word Notebook", id: WordNotebook.windowID) {
+            WordNotebookView(store: savedWordsStore)
+                .environment(savedWordsStore)
+                .environment(encounterStore)
+                .environment(wordEnricher)
+                .environment(cefrEstimator)
+                .environment(ankiPrefs)
+                .environment(recentDocumentStore)
+                .frame(minWidth: 820, minHeight: 560)
+                .rellAccentTint()
+        }
+        .defaultSize(width: 1180, height: 760)
 
         // Quick Lookup from the menu bar, even with no window open.
         MenuBarExtra(

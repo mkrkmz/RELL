@@ -232,9 +232,8 @@ struct ContentView: View {
                 case .document(let url):
                     openDocument(url)
                 case .word(let id):
-                    // Reveal the card: Words tab in the sidebar + detail sheet.
-                    model.columnVisibility = .all
-                    NotificationCenter.default.post(name: .revealSavedWordCommand, object: id)
+                    // The word's page in the word notebook (v16 S2).
+                    WordNotebook.open(on: id) { openWindow(id: $0) }
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: .inspectorRunLastModule)) { _ in

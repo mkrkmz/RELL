@@ -203,6 +203,7 @@ private struct DashboardHeader: View {
 /// Before, each was reachable only from a menu or ⌘K.
 private struct DashboardToolsRow: View {
     var onReview: (() -> Void)?
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
@@ -216,8 +217,11 @@ private struct DashboardToolsRow: View {
                 tile("Story From Your Words", detail: "A short story with the words due", icon: "text.book.closed") {
                     NotificationCenter.default.post(name: .wordStoryCommand, object: nil)
                 }
+                tile("Word Notebook", detail: "Every saved word, by book and deck", icon: "character.book.closed") {
+                    openWindow(id: WordNotebook.windowID)
+                }
                 if let onReview {
-                    tile("Review Window", detail: "Study cards in their own window", icon: "rectangle.stack", action: onReview)
+                    tile("Study Room", detail: "Study cards in their own window", icon: "rectangle.stack", action: onReview)
                 }
             }
         }
