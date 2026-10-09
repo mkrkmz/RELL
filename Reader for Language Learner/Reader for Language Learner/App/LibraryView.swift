@@ -376,7 +376,7 @@ struct LibraryCard: View {
         .animation(DS.Animation.fast, value: isHovered)
         .onHover { isHovered = $0 }
         .contextMenu { documentMenu }
-        .overlay(alignment: .bottomTrailing) { if style == .grid { wordsButton } }
+
         .accessibilityLabel("Open \(displayTitle), \(document.pageLabel)")
     }
 
@@ -445,29 +445,37 @@ struct LibraryCard: View {
         return parts.joined(separator: " · ")
     }
 
-    /// "232 words · 9" — opens the word notebook on the book (v16 S3).
+    /// "232 · 9" on the cover's corner — saved words and the ones waiting;
+    /// a click opens the word notebook on the book (v16 S3). On the cover,
+    /// in the coverage badge's dark style, so it reads on any picture and
+    /// never covers the title (live pass).
     @ViewBuilder
-    private var wordsButton: some View {
+    private var wordsBadge: some View {
         if let savedWords, savedWords > 0, let onShowWords {
-            Button(action: onShowWords) {
-                HStack(spacing: 3) {
-                    Image(systemName: "character.book.closed")
-                    Text("\(savedWords)")
-                    if let dueWords, dueWords > 0 {
-                        Text("· \(dueWords)").foregroundStyle(DS.Color.warning)
-                    }
+            HStack(spacing: 3) {
+                Image(systemName: "character.book.closed")
+                Text("\(savedWords)")
+                if let dueWords, dueWords > 0 {
+                    Text("· \(dueWords)").foregroundStyle(Color.orange)
                 }
-                .font(DS.Typography.caption2.weight(.semibold))
-                .monospacedDigit()
-                .foregroundStyle(DS.Color.textSecondary)
-                .padding(.horizontal, DS.Spacing.xs)
-                .padding(.vertical, 2)
-                .background(.regularMaterial, in: Capsule())
             }
-            .buttonStyle(.plain)
-            .padding(DS.Spacing.sm)
+            .font(DS.Typography.caption2.weight(.bold))
+            .monospacedDigit()
+            .foregroundStyle(.white)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            // DS-exempt: sits on the full-color cover photo, like CoverageBadge.
+            .background(.black.opacity(0.6), in: Capsule())
+            .padding(.trailing, 5)
+            .padding(.bottom, 9)   // clear of the reading-progress bar
+            .contentShape(Capsule())
+            // Over the card's own click: the badge opens the words.
+            .highPriorityGesture(TapGesture().onEnded { onShowWords() })
             .help("Show this book's words in the word notebook")
+            .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("\(savedWords) words from this book"))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { onShowWords() }
         }
     }
 
@@ -575,6 +583,7 @@ struct LibraryCard: View {
                     .padding(5)
             }
         }
+        .overlay(alignment: .bottomTrailing) { wordsBadge }
         .overlay(alignment: .bottom) {
             if let progress = document.readingProgress {
                 // DS-exempt track: dims directly against the cover photo,
