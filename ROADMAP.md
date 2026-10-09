@@ -159,7 +159,10 @@ turu, yarida kalan devam eder.
       Kindle'dan gelen 529 kelimenin yalniz 18'i dolmustu
 - [x] Testler: `WordNotebookTests` (6) — kitap kumeleri, kaynaklar, sozluk
       once, devam, durdur, pencere en kucuk boyutta buyumez
-- [ ] Tam test (yerel) + canli tur (kullanici)
+- [x] Tam test (yerel 706 yesil) + canli tur (2026-10-09, sorun yok).
+      CI'da macOS 15: tum split view test penceresinde arac cubugu kadar
+      (560 → 588) buyudu; sutunlar ayri ayri olculuyor (liste, tablo,
+      kelime sayfasi) — uygulamanin penceresinde arac cubugu bastan var
 
 ## Sprint 3 — "Duzen" (Should)
 
