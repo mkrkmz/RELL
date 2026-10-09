@@ -472,7 +472,8 @@ struct ContentView: View {
                         pdfFilename: selectionState.documentURL?.deletingPathExtension().lastPathComponent,
                         pageNumber: currentPageNumber,
                         savedWordsStore: savedWordsStore,
-                        circuitBreaker: circuitBreaker
+                        circuitBreaker: circuitBreaker,
+                        documentPath: selectionState.documentURL?.path
                     )
                     .inspectorColumnWidth(
                         min: DS.Layout.inspectorMin,

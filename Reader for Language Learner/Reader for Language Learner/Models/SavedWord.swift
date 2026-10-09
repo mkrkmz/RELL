@@ -185,6 +185,9 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
     /// `FillField.rawValue`, valued by `FillSource.stored` (v15 S1). A field
     /// without an entry was saved from the inspector or typed by you.
     var fieldSources: [String: String]
+    /// The file the word was saved from (v16 S0). Set for words saved from
+    /// now on; older words, and Kindle imports, have only `pdfFilename`.
+    var documentPath: String?
 
     init(
         id: UUID = UUID(),
@@ -211,7 +214,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         cefrLevel: String? = nil,
         cefrIsAuto: Bool = false,
         language: String? = nil,
-        fieldSources: [String: String] = [:]
+        fieldSources: [String: String] = [:],
+        documentPath: String? = nil
     ) {
         self.id = id
         self.term = term
@@ -238,6 +242,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         self.cefrIsAuto = cefrIsAuto
         self.language = language
         self.fieldSources = fieldSources
+        self.documentPath = documentPath
     }
 
     /// A real saved definition — the studied-language one when it exists,
@@ -301,6 +306,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         case cefrIsAuto
         case language
         case fieldSources
+        case documentPath
     }
 
     init(from decoder: Decoder) throws {
@@ -330,6 +336,7 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
         cefrIsAuto = try container.decodeIfPresent(Bool.self, forKey: .cefrIsAuto) ?? false
         language = try container.decodeIfPresent(String.self, forKey: .language)
         fieldSources = try container.decodeIfPresent([String: String].self, forKey: .fieldSources) ?? [:]
+        documentPath = try container.decodeIfPresent(String.self, forKey: .documentPath)
     }
 
     /// Where `field`'s value came from, or nil when you saved or typed it.

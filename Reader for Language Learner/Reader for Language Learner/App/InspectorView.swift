@@ -16,6 +16,8 @@ struct InspectorView: View {
     var savedWordsStore: SavedWordsStore
     /// Owned by ContentView so the toolbar status item shares the same instance.
     var circuitBreaker: CircuitBreaker
+    /// The open document's file, recorded on saved words (v16 S0).
+    var documentPath: String? = nil
 
     // MARK: State
 
@@ -537,7 +539,8 @@ struct InspectorView: View {
                 mode: explainMode.rawValue,
                 domain: domainPreference.rawValue,
                 llmOutputs: outputs,
-                language: targetLanguage.rawValue
+                language: targetLanguage.rawValue,
+                documentPath: documentPath
             ))
             showToastBriefly("Word saved!")
         }

@@ -38,6 +38,10 @@ enum EPUBScheme {
 /// the ZIP archive. WebKit's protocol is main-actor isolated, so these run
 /// on the main actor like the rest of the reader.
 final class EPUBSchemeHandler: NSObject, WKURLSchemeHandler {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
 
     var document: EPUBDocument?
 

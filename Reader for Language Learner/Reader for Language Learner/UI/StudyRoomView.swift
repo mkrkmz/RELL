@@ -47,6 +47,10 @@ private struct StudyRoomWindowConfigurator: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {}
 
     final class WindowProbe: NSView {
+        /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+        /// task crashes when it releases another one (v16 S0, CI crash reports).
+        nonisolated deinit {}
+
         private var observers: [NSObjectProtocol] = []
         private var isClosing = false
 

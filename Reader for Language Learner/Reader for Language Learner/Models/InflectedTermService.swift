@@ -20,6 +20,10 @@ import Foundation
 
 @MainActor
 final class InflectedTermService {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
 
     private var cache = LRUCache<String, [String]>(capacity: 60)
     /// Passages whose pass is running, so a re-entrant refresh (the callback

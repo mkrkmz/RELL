@@ -16,6 +16,10 @@ import os
 @MainActor
 @Observable
 final class CEFREstimator {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
 
     private let savedWordsStore: SavedWordsStore
     /// Single-slot gate: estimation is background nicety traffic and must

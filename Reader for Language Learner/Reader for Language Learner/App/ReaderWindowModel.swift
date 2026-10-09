@@ -19,6 +19,10 @@ import SwiftUI
 @MainActor
 @Observable
 final class ReaderWindowModel {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
 
     // MARK: Managers (one set per window)
 
@@ -321,6 +325,10 @@ final class ReaderWindowModel {
 /// block can reach it from its `@Sendable` closure.
 @MainActor
 private final class PageRestoreAttempt {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
     var observer: NSObjectProtocol?
     private var didRestore = false
     private let tryRestore: () -> Bool

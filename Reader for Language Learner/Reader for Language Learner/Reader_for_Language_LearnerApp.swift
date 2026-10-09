@@ -11,6 +11,10 @@ import SwiftUI
 /// Registers the Services provider once AppKit is fully up — the Services
 /// menu ("Look Up in RELL") has no SwiftUI-native registration point.
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = ServicesProvider.shared
         NSUpdateDynamicServices()

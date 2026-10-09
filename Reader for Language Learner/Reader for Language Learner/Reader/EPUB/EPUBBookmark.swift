@@ -36,6 +36,10 @@ struct EPUBBookmark: Identifiable, Codable, Hashable {
 @MainActor
 @Observable
 final class EPUBBookmarkStore: UndoableStore {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
 
     private(set) var bookmarks: [EPUBBookmark] = []
     @ObservationIgnored weak var undoManager: UndoManager?

@@ -231,7 +231,8 @@ extension ContentView {
             pdfFilename: currentDocumentName,
             pageNumber: currentPageNumber,
             llmOutputs: [module.rawValue: word.definition],
-            language: target.rawValue
+            language: target.rawValue,
+            documentPath: selectionState.documentURL?.path
         ))
     }
 }

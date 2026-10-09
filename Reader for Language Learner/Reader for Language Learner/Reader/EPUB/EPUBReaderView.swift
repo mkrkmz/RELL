@@ -18,6 +18,10 @@ import WebKit
 /// Adds the reader's right-click actions to WebKit's own menu when text is
 /// selected — the EPUB counterpart of RELLPDFView's menu.
 final class RELLEPUBWebView: WKWebView {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
 
     var selectionProvider: (() -> String)?
     /// Current reading font size, mirrored from the appearance settings so a
@@ -268,7 +272,8 @@ struct EPUBReaderView: NSViewRepresentable {
                 mode: ExplainMode.word.rawValue,
                 domain: "general",
                 llmOutputs: [:],
-                language: Language.storedTarget.rawValue
+                language: Language.storedTarget.rawValue,
+                documentPath: manager.loadedURL?.path
             ))
             toastCenter.show(String(localized: "Word saved!"))
         }

@@ -10,6 +10,10 @@ import SwiftUI
 /// page. PDFKit exposes no page-at-point API, so items act on the page the
 /// viewer is on — titles carry the page label to make the target explicit.
 final class RELLThumbnailView: PDFThumbnailView {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
     var isPageBookmarked: ((Int) -> Bool)?
     var onToggleBookmark: ((Int, String) -> Void)?
     var onCopyPageText:   ((Int) -> Void)?

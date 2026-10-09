@@ -80,18 +80,24 @@ CloudKit, Kisayollar).
 
 ## Sprint 0 — "Kitap kimligi ve zemin" (Must, kisa)
 
-- [ ] **Kitap kimligi** — `BookIdentity`: dosya adi / Kindle basligi →
-      karsilastirma anahtari (yazar, "PhD", isbn, "Anna's Archive", `_`,
-      yil gibi gurultu atilir; baslik on eki eslesmesi). `SavedWord`'e
-      istege bagli `documentPath` (yeni kayitlarda; eski kayitlar
-      `pdfFilename`'den eslesir). Olcum: 590 kelime × 7 belge × Kindle
-      basliklari — dogru/yanlis eslesme tablosu, ROADMAP'e islenir
-- [ ] **macOS 15 deinit cokmesi** (Should) — v15'te bekleyen gorev: ic ice
-      izole deinit'ler (`ReaderWindowModel` → yoneticiler,
-      `SavedWordsStore` → `DebouncedFileWriter`) okuyucu penceresi
-      kapanirken macOS 15'te cokebilir; `nonisolated deinit`, CI'da
-      senkron test ile kanit, `WindowLayoutTests` okuyucu testi macOS
-      15'te yeniden acilir
+- [x] **Kitap kimligi** — `BookIdentity` (Models/): ad → sozcukler
+      (" -- " sonrasi, "_", "(2017)"/"(1)", "PhD" atilir); kisa adin
+      sozcukleri uzun adin icinde art arda geciyorsa ayni kitap; tek sozcuk
+      ve 30 sozcukten uzun "baslik" yalniz tam eslesir. `SavedWord.documentPath`
+      (istege bagli; okuyucudaki kaydetme yollari yazar), once dosya sonra ad.
+      **Olcum** (590 kelime, 7 belge, Kindle basliklari; ayni kural
+      Python'da, RELL acikti): 8 eslesme, hepsi dogru, yanlis yok.
+      Why We Sleep: dosya adiyla 6/12 → basliktan **232**; Harry Potter 12
+      (+26 karsilasilan), Crime and Punishment 12 (+6). Bir hikaye
+      karsilasmasinin "basligi" metnin tamami (eski surumun dosyasi;
+      hikaye basligi v13'te duzeltilmis) — 30 sozcuk siniri bunu eler.
+      `BookIdentityTests` (gercek adlarla)
+- [x] **macOS 15 deinit cokmesi** — 48 ana aktor sinifina
+      `nonisolated deinit {}` (hicbirinin deinit govdesi yoktu); ikili
+      dosyada yalniz uretilen `ResourceBundleClass` kaldi.
+      `DeinitIsolationTests` bilerek senkron (store → yazici, servis →
+      store, pencere modelleri); `WindowLayoutTests` okuyucu testi macOS
+      15'te yeniden acik — CI kaniti
 - [ ] v15 takibi (Should): soguk acilis olcumu (S0 v15: ortanca 498 ms)
 
 ## Sprint 1 — "Kitabin kelimeleri" (Must, **maketle baslar**)

@@ -16,6 +16,10 @@ import Foundation
 @MainActor
 @Observable
 final class WordEncounterStore {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
 
     static let fileName = "word_encounters.json"
     /// Newest encounters kept per word. Enough for a timeline and for cloze

@@ -134,6 +134,10 @@ enum ClosureMenuItem {
 }
 
 final class MenuAction: NSObject, NSMenuItemValidation {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
     private let handler: () -> Void
     /// Answers validation too, so a disabled item stays disabled in a menu
     /// that enables its items itself (WebKit's).

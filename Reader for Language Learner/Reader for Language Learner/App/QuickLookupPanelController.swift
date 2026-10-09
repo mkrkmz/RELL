@@ -13,6 +13,10 @@ import SwiftUI
 /// Borderless panels refuse key status by default — accept it so the
 /// search field can take typing without activating the app.
 private final class KeyableHUDPanel: NSPanel {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
     override var canBecomeKey: Bool { true }
 
     override func cancelOperation(_ sender: Any?) {
@@ -22,6 +26,10 @@ private final class KeyableHUDPanel: NSPanel {
 
 @MainActor
 final class QuickLookupPanelController: NSObject, NSWindowDelegate {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
     static let shared = QuickLookupPanelController()
 
     private var panel: KeyableHUDPanel?
@@ -159,6 +167,10 @@ final class QuickLookupPanelController: NSObject, NSWindowDelegate {
 /// Handles the system Services menu: select text in any app →
 /// Services → "Look Up in RELL" → the Quick Lookup HUD opens with it.
 final class ServicesProvider: NSObject {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
     static let shared = ServicesProvider()
 
     @objc func lookUpInRELL(

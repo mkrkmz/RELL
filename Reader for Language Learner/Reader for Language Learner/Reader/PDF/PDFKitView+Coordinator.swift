@@ -714,6 +714,7 @@ extension PDFKitView {
 
             let sentence = extractContext() ?? ""
             let filename = loadedDocumentURL?.deletingPathExtension().lastPathComponent
+            let documentPath = loadedDocumentURL?.path
             let pageNum: Int?
             if let page = pdfView.currentPage {
                 pageNum = (pdfView.document?.index(for: page)).map { $0 + 1 }
@@ -729,7 +730,8 @@ extension PDFKitView {
                     mode: ExplainMode.word.rawValue,
                     domain: "general",
                     llmOutputs: [:],
-                    language: Language.storedTarget.rawValue
+                    language: Language.storedTarget.rawValue,
+                    documentPath: documentPath
                 ))
                 self.toastCenter.show(String(localized: "Word saved!"))
             }

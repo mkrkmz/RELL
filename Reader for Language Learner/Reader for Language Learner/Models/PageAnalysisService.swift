@@ -15,6 +15,10 @@ import NaturalLanguage
 @MainActor
 @Observable
 final class PageAnalysisService {
+    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
+    /// task crashes when it releases another one (v16 S0, CI crash reports).
+    nonisolated deinit {}
+
 
     @ObservationIgnored private var currentTask: Task<Void, Never>?
 
