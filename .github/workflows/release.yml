@@ -21,7 +21,7 @@ concurrency:
 jobs:
   build-release:
     name: Build & Release
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       PROJECT_PATH: Reader for Language Learner/Reader for Language Learner.xcodeproj
       SCHEME_NAME: Reader for Language Learner

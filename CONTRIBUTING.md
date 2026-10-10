@@ -107,7 +107,8 @@ make clean
 Veya dogrudan Xcode ile: `Cmd + B` (derle), `Cmd + U` (secilen scheme testleri).
 
 Push'tan once `make ci-test` — CI'daki test komutunun aynisi (macOS 15
-hedefi, temiz derleme klasoru). Her sprint sonunda `main` push edilir ve CI
+dagitim hedefi, temiz derleme klasoru). CI macOS 26 calisanlarinda kosar:
+katmanli `AppIcon.icon` yalniz macOS 26'daki Xcode araclariyla derlenir. Her sprint sonunda `main` push edilir ve CI
 testi gecmeden sprint kapanmaz.
 
 ### Xcode 26 uyumu
