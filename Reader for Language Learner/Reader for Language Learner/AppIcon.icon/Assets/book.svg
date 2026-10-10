@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="book" x1="336" y1="435" x2="346" y2="674" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7CD3BC"/>
+      <stop offset=".46" stop-color="#44B7BC"/>
+      <stop offset="1" stop-color="#2481A6"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(130.14 171.54) scale(0.97412)">
+    <path d="M216 436L235 434V590C296 590 347 606 381 635V462L401 473V635C428 612 460 600 493 594L507 612C470 617 441 628 418 646C449 632 479 631 522 631L546 650H460C430 650 414 654 399 666C389 674 378 678 365 674C344 667 337 650 307 650H195V631H307C333 631 351 636 364 646C323 618 280 609 216 609Z" fill="url(#book)"/>
+    <path d="M195 645H307C337 645 350 653 365 666C373 673 384 676 396 670C417 653 431 645 460 645H539L546 650H460C430 650 414 654 399 666C389 674 378 678 365 674C344 667 337 650 307 650H195Z" fill="#237D9F" opacity=".38"/>
+  </g>
+</svg>

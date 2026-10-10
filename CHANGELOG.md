@@ -4,6 +4,21 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.46.0] - 2026-10-11
+
+A new app icon and a README that matches the app as it is now.
+
+### Changed
+
+- **New app icon.** An open book with a speech bubble rising from a highlighted
+  word, built as an Icon Composer document, so macOS draws it in every
+  appearance: default, dark, clear and tinted, with Liquid Glass.
+- **New logo.** The ribbon R with the A and 文 bubbles and the open book, in
+  the same palette as the icon. The old logo is kept in `docs/brand/`.
+- **README rewritten** for the current app: the promo video, screenshots of
+  the word notebook, study room and reading statistics, the full feature list,
+  AI providers, keyboard shortcuts and the project structure.
+
 ## [1.45.0] - 2026-10-09
 
 Words in their book, every word in one place. Roadmap v16 (Sprints 0–4):

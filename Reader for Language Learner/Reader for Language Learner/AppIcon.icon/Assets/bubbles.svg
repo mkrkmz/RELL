@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="tealBubble" x1="340" y1="109" x2="255" y2="281" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#84D6BC"/>
+      <stop offset=".55" stop-color="#54BEC1"/>
+      <stop offset="1" stop-color="#278CAC"/>
+    </linearGradient>
+    <linearGradient id="goldBubble" x1="463" y1="146" x2="399" y2="307" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFDA66"/>
+      <stop offset=".45" stop-color="#F8BD59"/>
+      <stop offset="1" stop-color="#EE8B4D"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(130.14 171.54) scale(0.97412)">
+    <path fill-rule="evenodd" d="M309 107C362 107 405 141 405 185C405 230 362 268 309 268C299 268 291 267 283 265L242 281C236 284 233 282 234 276L240 240C225 226 216 207 216 185C216 141 257 107 309 107ZM309 125C267 125 235 151 235 185C235 204 243 220 257 231L254 254L281 243C290 247 300 249 309 249C351 249 385 220 385 185C385 150 351 125 309 125Z" fill="url(#tealBubble)"/>
+    <path d="M409 153C425 147 443 145 460 147C507 150 542 182 542 223C542 244 534 263 520 278L526 310C528 319 524 321 518 317L475 302C459 307 441 307 424 303C382 294 356 264 356 226C356 207 364 189 377 175C372 197 372 220 379 241C390 270 419 286 449 286C459 287 468 285 475 283L502 294L499 274C516 261 524 244 524 224C523 191 495 167 460 165C443 163 428 166 414 173Z" fill="url(#goldBubble)"/>
+  </g>
+</svg>

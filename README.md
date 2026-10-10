@@ -1,13 +1,14 @@
 <p align="center">
-  <img src="docs/rell-logo.png" width="280" alt="RELL Logo" />
+  <img src="docs/brand/rell-icon-1024.png" width="160" alt="RELL app icon" />
 </p>
 
 <h1 align="center">RELL</h1>
 <p align="center"><strong>Reader for Language Learner</strong></p>
 
 <p align="center">
-  A native macOS reader for PDFs and EPUBs with built-in AI-powered vocabulary analysis.<br/>
-  Look up any word or sentence while reading — definitions, collocations, etymology, mnemonics, and more — powered by local or cloud LLMs.
+  A native macOS reader for PDFs and EPUBs. Select a word while you read, get its meaning
+  in the sentence you met it in, and review it later in a study room.<br/>
+  Works offline with a local model, or with Apple Intelligence, LM Studio, Ollama or a cloud API.
 </p>
 
 <p align="center">
@@ -17,192 +18,182 @@
   <img src="https://img.shields.io/badge/dependencies-zero-brightgreen" alt="Zero Dependencies" />
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/reader.jpg" width="900" alt="RELL in action: a word in context in the Inspector" />
+</p>
+
 ---
 
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/1.jpg" width="900" alt="RELL screenshot 1" />
+  <img src="docs/screenshots/reader.jpg" width="900" alt="Reading a PDF with the Inspector showing a word in context" />
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/2.jpg" width="900" alt="RELL screenshot 2" />
+  <img src="docs/screenshots/word-notebook.jpg" width="900" alt="Word notebook: every saved word, by book and deck" />
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/3.jpg" width="900" alt="RELL screenshot 3" />
+  <img src="docs/screenshots/study-room.jpg" width="900" alt="Study room session setup" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/study-card.jpg" width="900" alt="A study card with the sentence the word came from" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/reading-stats.jpg" width="900" alt="Reading statistics: time, streak, mastery and book coverage" />
 </p>
 
 ## Features
 
-- **PDF & EPUB Reader** — Full-featured PDF viewer built on PDFKit (page navigation, search, bookmarks, zoom) plus a dependency-free EPUB 2/3 engine (chapters, table of contents, in-book search) — both share reading position memory
-- **10 Analysis Modules** — Definition, native-language meaning, collocations, examples, pronunciation (IPA), etymology, mnemonics, synonyms, word family, usage notes
-- **Works without setup** — On a Mac with Apple Intelligence, definitions, meanings, examples and synonyms come from Apple's on-device model; sentences translate offline with Apple Translation
-- **Multi-LLM Support** — LM Studio, Ollama, OpenAI-compatible APIs, and Anthropic Claude for everything else
-- **12 Languages** — English, Turkish, German, French, Spanish, Japanese, Korean, Chinese, Arabic, Portuguese, Russian, Italian
-- **Anki Export** — Save words and export as TSV, CSV or Quizlet flashcards (single or bulk) with context sentences
-- **Your data, safe** — Daily backups (last seven kept), one-click restore, export/import of everything
-- **Reading Stats** — Daily/weekly reading time tracking, unique documents count
-- **Text-to-Speech** — Listen to selected text with system voices
-- **Themes** — Light/dark/system app theme, page themes for both PDFs and EPUBs (original, sepia, dark)
-- **Privacy-First** — Works fully offline with local LLMs, no telemetry, no cloud dependency required
+**Reading**
+- **PDF and EPUB** — PDFKit viewer (search, bookmarks, zoom, page themes) and a dependency-free EPUB 2/3 engine (chapters, table of contents, in-book search). Both remember where you stopped.
+- **Zen mode**, page themes (original, sepia, dark), and an Inspector that can follow the page's colours.
+- **Import a web article** and read it like a book. **Kindle import** brings in the words you looked up on a connected Kindle.
+- **Reading recap and chapter warm-up** — opening a book after a break sums up where you left off and shows the hard words of the chapter first.
+
+**Word analysis**
+- **10 analysis modules** — definition, meaning in your language, collocations, examples, pronunciation (IPA), etymology, memory hook, synonyms and antonyms, word family, usage notes.
+- **Word or sentence** — one word is explained as a word, a longer selection as a sentence, with simplify and retell.
+- **Fill Missing** — saved words without a meaning get one: Apple's dictionary first, then the on-device model, then your AI provider if you allow it. Nothing you wrote is replaced.
+
+**Words and review**
+- **Word notebook** (⌥⌘K) — every saved word in one window: sort by level, status or next review, grouped by book and deck. Duplicate forms ("gleam" and "gleaming") merge when you ask.
+- **Study room** (⌥⌘V) — choose how many words, from where, and which exercise: flashcards, choice, typing, listening, matching, or *By Stage*, which picks the exercise to match how well you know each word.
+- **New words are introduced** before they are asked. Words you keep forgetting get a memory hook.
+- **Reading statistics** — daily and weekly reading time, streak, mastery and how much of each book you know.
+
+**Export and your data**
+- **Anki** — TSV, CSV or Quizlet export, single or bulk, with context sentences. A deck per book is available.
+- **Daily backups** (the last seven are kept), one-click restore, and export/import of everything.
+
+**AI providers**
+- **Apple Intelligence** (macOS 26 with Apple Intelligence on) — answers the core modules on-device with nothing to install. Sentence translation works offline with Apple Translation.
+- **LM Studio**, **Ollama** — local, no API key.
+- **OpenAI-compatible APIs** and **Anthropic Claude** — cloud, with the API key stored in the Keychain.
+- **Settings ▸ AI** lists every feature and where its text goes.
+
+**Languages:** English, Turkish, German, French, Spanish, Japanese, Korean, Chinese, Arabic, Portuguese, Russian, Italian. The interface is in English and Turkish.
+
+**Privacy:** no telemetry. With a local model or Apple Intelligence, RELL works fully offline.
 
 ## Installation
 
-### Download (Recommended)
+### Download (recommended)
 
-1. Download the latest `.dmg` from [Releases](../../releases)
-2. Open the DMG and drag **Reader for Language Learner** to Applications
-3. On first launch: **Right-click > Open** (required for unsigned apps on macOS)
+1. Download the latest `.dmg` from [Releases](../../releases).
+2. Open it and drag **Reader for Language Learner** into Applications.
+3. On first launch use **Right-click ▸ Open**. The app is not notarized yet, so macOS asks once.
 
-### Build from Source
+### Build from source
 
 ```bash
 git clone https://github.com/mkrkmz/RELL.git
 cd RELL
-make build
-# or open in Xcode:
-make open
+make build      # Debug build
+make open       # open in Xcode
 ```
 
-> Requires Xcode 16+ and macOS 15+
-
-### Verify Locally
+Requires Xcode 16+ and macOS 15+.
 
 ```bash
-make build    # Debug build
-make test     # Unit tests, same scope as CI
-make ui-test  # macOS launch/performance UI tests
+make test       # unit tests, same scope as CI
+make ui-test    # launch and performance UI tests
 ```
 
-## Getting Started
+## Getting started
 
-### 1. Set Up an LLM Backend
+1. **Choose an AI provider** — on macOS 26 with Apple Intelligence, nothing to set up. Otherwise install [LM Studio](https://lmstudio.ai/) (Developer ▸ Start Server; RELL connects automatically at `http://127.0.0.1:1234`) or [Ollama](https://ollama.com/).
+2. **Set your languages** in Settings (`⌘,`): your language and the language you are learning.
+3. **Open a book** with `⌘O` or drop a PDF or EPUB on the window.
+4. **Select a word** and choose a module in the Inspector. Save it.
+5. **Study** in the study room (⌥⌘V) or export to Anki.
 
-On macOS 26 with Apple Intelligence on, RELL answers the core modules on-device with nothing to install. For pronunciation, etymology, mnemonics, collocations and word family — or on older Macs — pick one of four backends:
-
-| Backend | Local | API Key | Default URL |
-|---------|-------|---------|-------------|
-| [LM Studio](https://lmstudio.ai/) | Yes | No | `http://127.0.0.1:1234` |
-| [Ollama](https://ollama.com/) | Yes | No | `http://127.0.0.1:11434` |
-| OpenAI-compatible API | No | Yes | `https://api.openai.com` |
-| [Anthropic Claude](https://console.anthropic.com/) | No | Yes | `https://api.anthropic.com` |
-
-**Quick start with LM Studio (recommended for privacy):**
-1. Download [LM Studio](https://lmstudio.ai/) and install a model (e.g. `gemma-3-4b`)
-2. Start the local server: **Developer > Start Server**
-3. RELL connects automatically — no configuration needed
-
-### 2. Configure in Settings
-
-Open **Settings** (`Cmd + ,`) to:
-- **General** — Set your native and target language
-- **LLM** — Choose backend, server URL, model, API key
-- **Appearance** — App theme and page theme
-
-### 3. Start Reading
-
-1. **Open a document** — `Cmd + O` or drag-and-drop a PDF or EPUB
-2. **Select text** — Highlight a word or sentence as you read
-3. **Analyze** — Click any module in the inspector panel:
-
-| Module | Description |
-|--------|-------------|
-| Definition | English definition with part of speech |
-| Meaning | Translation in your native language |
-| Collocations | Common word combinations |
-| Examples | Example sentences in context |
-| Pronunciation | IPA transcription and respelling |
-| Etymology | Word origin and history |
-| Mnemonic | Memory aid for retention |
-| Synonyms | Synonyms and antonyms |
-| Word Family | Related word forms (noun, verb, adj, adv) |
-| Usage Notes | Register, frequency, and common mistakes |
-
-4. **Save & Export** — Save words to your list, export to Anki as TSV flashcards
-
-## Keyboard Shortcuts
+## Keyboard shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| `Cmd + O` | Open a PDF or EPUB |
-| `Cmd + F` | Find in document |
-| `Cmd + B` | Toggle bookmark (PDF) |
-| `Cmd + L` | Focus inspector & run last module |
-| `Cmd + ,` | Settings |
-| `Cmd + +/-` | Zoom in/out |
-| `Cmd + 0` | Fit to width |
-| `Cmd + Opt + S` | Toggle sidebar |
-| `Cmd + Opt + I` | Toggle inspector |
+| `⌘O` | Open a PDF or EPUB |
+| `⌘F` | Find in the document |
+| `⌘B` | Toggle bookmark |
+| `⌘L` | Focus the Inspector and run the last module |
+| `⌘K` | Command palette |
+| `⌥⌘K` | Word notebook |
+| `⌥⌘V` | Study room |
+| `⌘,` | Settings |
+| `⌘+` / `⌘-` / `⌘0` | Zoom in / out / fit to width |
+| `⌥⌘S` | Toggle sidebar |
+| `⌥⌘I` | Toggle Inspector |
 
-## Project Structure
+## Project structure
 
 ```
 Reader for Language Learner/
-  App/            Main views (ContentView, InspectorView, SidebarView)
-  Models/         Data models & state management (@Observable)
-  LLM/            LLM clients, configuration, prompt templates
-  Reader/         Reader components — PDF/ (PDFKit wrapper), EPUB/ (in-house ZIP + OPF engine, WKWebView)
-  UI/             Design system (DS namespace), result rendering
-  Settings/       Settings views
-  Export/         Anki TSV export
-  Speech/         Text-to-speech manager
+  App/        Main views (ContentView, InspectorView, SidebarView, home, notebook, study room)
+  Models/     State and persistence (@Observable): words, books, stats, backups
+  LLM/        Providers (Apple Intelligence, LM Studio, Ollama, OpenAI-compatible, Anthropic), prompts
+  Reader/     PDF/ (PDFKit) and EPUB/ (in-house ZIP and OPF engine, WKWebView)
+  UI/         Design system (DS namespace) and shared components
+  Settings/   Settings tabs
+  Export/     Anki and other exports
+  Speech/     Text-to-speech
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the technical details.
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Swift (Swift 6.2 toolchain, Swift 5 language mode; the app target also compiles in Swift 6 mode) |
-| UI | SwiftUI |
+| Language | Swift (Swift 6.2 toolchain, Swift 5 language mode) |
+| UI | SwiftUI with AppKit where needed |
 | PDF | PDFKit |
-| EPUB | In-house ZIP decoder + EPUB 2/3 parser, rendered via WKWebView |
-| LLM | OpenAI-compatible API + Anthropic Messages API |
-| Speech | AVFoundation |
+| EPUB | In-house ZIP decoder + EPUB 2/3 parser, rendered in WKWebView |
+| AI | Apple Intelligence, OpenAI-compatible and Anthropic APIs, LM Studio, Ollama |
 | State | `@Observable` + `@AppStorage` |
-| Storage | JSON file-based (`~/Library/Application Support/RELL/`) |
+| Storage | JSON files in `~/Library/Application Support/RELL/` |
 | Dependencies | None — Apple system frameworks only |
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code standards, and PR guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, code standards and pull request guidelines.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+Licensed under the [MIT License](LICENSE).
 
 ---
 
 <details>
-<summary><strong>Turkce / Turkish</strong></summary>
+<summary><strong>Türkçe</strong></summary>
 
-## RELL - Dil Ogrencileri icin PDF ve EPUB Okuyucu
+## RELL — Dil öğrencileri için PDF ve EPUB okuyucu
 
-Yerlesik yapay zeka destekli kelime analizi sunan macOS PDF ve EPUB okuyucu uygulamasi.
+Okurken seçtiğiniz kelimenin anlamını, karşılaştığınız cümle bağlamında gösteren macOS okuyucusu. Kelimeleri sonra çalışma odasında tekrar edersiniz.
 
-Okurken sectiginiz kelime veya cumleleri aninda analiz eder: tanim, anlam, kolokasyon, ornek cumle, etimoloji, telaffuz, mnemonik, es anlamli, kelime ailesi ve kullanim notlari. LM Studio, Ollama, OpenAI uyumlu API'ler ve Anthropic Claude destekler.
+Yerel bir model, Apple Intelligence, LM Studio, Ollama veya bulut API'leriyle çalışır; yerel modellerle tamamen çevrimdışı kullanılabilir.
 
-### Ozellikler
+### Özellikler
 
-- **PDF ve EPUB Okuyucu** — PDFKit tabanli PDF goruntuleyici (sayfa navigasyonu, arama, yer imi, zoom) ve bagimsiz bir EPUB 2/3 motoru (bolumler, icindekiler, kitap ici arama) — ikisi de okuma pozisyonu hafizasi paylasir
-- **10 Analiz Modulu** — Tanim, ana dilde anlam, kolokasyonlar, ornekler, telaffuz (IPA), etimoloji, mnemonik, es anlamlilar, kelime ailesi, kullanim notlari
-- **Multi-LLM Destegi** — LM Studio, Ollama, OpenAI uyumlu API'ler ve Anthropic Claude
-- **12 Dil** — Ingilizce, Turkce, Almanca, Fransizca, Ispanyolca, Japonca, Korece, Cince, Arapca, Portekizce, Rusca, Italyanca
-- **Anki Entegrasyonu** — Kelimeleri Anki kartlarina aktar (tekli ve toplu), baglam cumleleri ile
-- **Okuma Istatistikleri** — Gunluk/haftalik okuma suresi, belge sayisi takibi
-- **Sesli Okuma** — Secilen metni text-to-speech ile dinleme
-- **Temalar** — Acik/koyu/sistem temasi, hem PDF hem EPUB icin sayfa temasi (orijinal, sepya, koyu)
-- **Gizlilik Oncelikli** — Yerel LLM'ler ile tamamen cevrimdisi calisir
+- **PDF ve EPUB okuyucu** — arama, yer imi, yakınlaştırma ve sayfa temaları; EPUB 2/3 motoru kitap içi arama ve bölümleri destekler. İkisi de okuma konumunu hatırlar.
+- **10 analiz modülü** — tanım, anadilde anlam, kolokasyonlar, örnekler, telaffuz (IPA), etimoloji, anımsatıcı, eş ve zıt anlamlılar, kelime ailesi, kullanım notları.
+- **Kelime defteri (⌥⌘K)** — tüm kayıtlı kelimeler tek pencerede; seviyeye, duruma ya da sonraki tekrara göre sıralama. Aynı kelimenin farklı biçimleri birleştirilebilir.
+- **Çalışma odası (⌥⌘V)** — kart, seçme, yazma, dinleme, eşleştirme ve kelimeyi bildiğinize göre egzersiz seçen *By Stage* modu.
+- **Fill Missing** — anlamı olmayan kayıtlara önce Apple sözlüğünden, sonra yerel modelden, izin verirseniz sağlayıcınızdan anlam eklenir.
+- **Kindle içe aktarma**, **web makalesi içe aktarma**, **okuma istatistikleri** ve **günlük yedekler**.
+- **Anki** — TSV, CSV veya Quizlet olarak, tekli ya da toplu; kitap başına deste seçeneğiyle.
+- **AI sağlayıcıları** — Apple Intelligence, LM Studio, Ollama, OpenAI uyumlu API'ler ve Anthropic Claude.
+- **12 dil**, arayüz İngilizce ve Türkçe. Telemetri yok.
 
 ### Kurulum
 
-1. [Releases](../../releases) sayfasindan son `.dmg` dosyasini indirin
-2. DMG'yi acin ve uygulamayi Applications klasorune surukleyin
-3. Ilk acilista: **Sag tik > Ac** (imzasiz uygulama icin gerekli)
+1. [Releases](../../releases) sayfasından son `.dmg` dosyasını indirin.
+2. Uygulamayı Applications klasörüne sürükleyin.
+3. İlk açılışta **Sağ tık ▸ Aç** yapın (uygulama henüz notarize edilmedi).
 
-### Kaynak Koddan Derleme
+### Kaynak koddan derleme
 
 ```bash
 git clone https://github.com/mkrkmz/RELL.git
@@ -210,17 +201,17 @@ cd RELL
 make build
 ```
 
-> Xcode 16+ ve macOS 15+ gerektirir
+> Xcode 16+ ve macOS 15+ gerektirir.
 
-### Hizli Baslangic
+### Hızlı başlangıç
 
-1. [LM Studio](https://lmstudio.ai/) indirin, bir model yukleyin ve sunucuyu baslatin
-2. RELL'i acin, bir PDF veya EPUB yukleyin
-3. Bir kelime secin ve sag paneldeki modullerden birini tiklayin
-4. Kelimeyi kaydedin, Anki'ye aktarin
+1. Apple Intelligence yoksa [LM Studio](https://lmstudio.ai/) kurun, bir model yükleyin ve sunucuyu başlatın.
+2. RELL'de bir PDF veya EPUB açın.
+3. Bir kelime seçin ve Inspector'daki modüllerden birini çalıştırın.
+4. Kelimeyi kaydedin; çalışma odasında tekrar edin veya Anki'ye aktarın.
 
 ### Lisans
 
-Bu proje [MIT Lisansi](LICENSE) altinda lisanslanmistir.
+[MIT Lisansı](LICENSE) altında lisanslanmıştır.
 
 </details>

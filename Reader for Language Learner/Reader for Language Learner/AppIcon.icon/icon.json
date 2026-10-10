@@ -1,0 +1,53 @@
+{
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [ "srgb:1.00000,1.00000,1.00000,1.00000", "srgb:0.87059,0.95686,0.94118,1.00000" ]
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "linear-gradient" : [ "srgb:0.20392,0.20784,0.21961,1.00000", "srgb:0.09412,0.09412,0.10196,1.00000" ]
+      }
+    }
+  ],
+  "groups" : [
+    {
+      "name" : "Bubbles",
+      "layers" : [
+        {
+          "name" : "glyphs",
+          "image-name" : "glyphs.svg",
+          "fill-specializations" : [
+            { "appearance" : "dark", "value" : { "solid" : "srgb:0.90980,0.96471,0.96863,1.00000" } }
+          ],
+          "glass" : true
+        },
+        { "name" : "bubbles", "image-name" : "bubbles.svg", "glass" : true }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.4 },
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    },
+    {
+      "name" : "Ribbon",
+      "layers" : [
+        { "name" : "ribbon-front", "image-name" : "ribbon-front.svg", "glass" : true },
+        { "name" : "ribbon-back", "image-name" : "ribbon-back.svg", "glass" : true }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    },
+    {
+      "name" : "Book",
+      "layers" : [
+        { "name" : "book", "image-name" : "book.svg", "glass" : true }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.3 },
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [ "macOS" ]
+  }
+}

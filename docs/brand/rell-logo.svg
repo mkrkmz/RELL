@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="764" viewBox="0 0 780 764" fill="none">
+  <title>Dil öğrenme logosu</title>
+  <desc>Turkuaz ve altın renkli R, iki konuşma balonu ve açık kitap. Altında yazı yoktur.</desc>
+  <defs>
+    <linearGradient id="background" x1="390" y1="20" x2="390" y2="751" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset=".42" stop-color="#EFFBFA" stop-opacity=".48"/>
+      <stop offset="1" stop-color="#E3F7F5"/>
+    </linearGradient>
+    <linearGradient id="rearBowl" x1="500" y1="22" x2="585" y2="428" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFDB70"/>
+      <stop offset=".46" stop-color="#FBBB58"/>
+      <stop offset="1" stop-color="#EE8847"/>
+    </linearGradient>
+    <linearGradient id="upperRibbon" x1="258" y1="21" x2="310" y2="405" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#91DEC2"/>
+      <stop offset=".43" stop-color="#65CEC3"/>
+      <stop offset="1" stop-color="#36A7BE"/>
+    </linearGradient>
+    <linearGradient id="upperInset" x1="305" y1="63" x2="324" y2="366" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#54C3C2"/>
+      <stop offset="1" stop-color="#2E9CB8"/>
+    </linearGradient>
+    <linearGradient id="frontBowl" x1="422" y1="130" x2="239" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#53BFC0"/>
+      <stop offset=".55" stop-color="#298EB4"/>
+      <stop offset="1" stop-color="#2C9BBB"/>
+    </linearGradient>
+    <linearGradient id="innerBowl" x1="534" y1="150" x2="224" y2="539" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#65CEC5"/>
+      <stop offset=".43" stop-color="#83D8C3"/>
+      <stop offset=".72" stop-color="#40B2BC"/>
+      <stop offset="1" stop-color="#2C96B4"/>
+    </linearGradient>
+    <linearGradient id="leg" x1="420" y1="426" x2="588" y2="648" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9C564"/>
+      <stop offset=".48" stop-color="#F8AC58"/>
+      <stop offset="1" stop-color="#ED884C"/>
+    </linearGradient>
+    <linearGradient id="legFold" x1="467" y1="451" x2="656" y2="644" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFDB76"/>
+      <stop offset="1" stop-color="#F9AD58"/>
+    </linearGradient>
+    <linearGradient id="stem" x1="164" y1="457" x2="194" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EF8B4C"/>
+      <stop offset=".52" stop-color="#F8B65E"/>
+      <stop offset="1" stop-color="#FFDA78"/>
+    </linearGradient>
+    <linearGradient id="book" x1="336" y1="435" x2="346" y2="674" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7CD3BC"/>
+      <stop offset=".46" stop-color="#44B7BC"/>
+      <stop offset="1" stop-color="#2481A6"/>
+    </linearGradient>
+    <linearGradient id="tealBubble" x1="340" y1="109" x2="255" y2="281" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#84D6BC"/>
+      <stop offset=".55" stop-color="#54BEC1"/>
+      <stop offset="1" stop-color="#278CAC"/>
+    </linearGradient>
+    <linearGradient id="goldBubble" x1="463" y1="146" x2="399" y2="307" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFDA66"/>
+      <stop offset=".45" stop-color="#F8BD59"/>
+      <stop offset="1" stop-color="#EE8B4D"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded icon background; the surrounding canvas is transparent. -->
+  <rect x="15" y="10" width="750" height="743" rx="175" fill="url(#background)"/>
+
+  <!-- Golden ribbon behind the rounded upper bowl. -->
+  <path d="M456 21C579 21 674 110 674 225C674 337 596 418 486 433H447L459 347C525 347 575 295 575 227C575 159 525 107 459 107Z" fill="url(#rearBowl)"/>
+
+  <!-- Diagonal leg and its folded, lighter face. -->
+  <path d="M359 432H483C515 432 538 449 558 480L672 650H611C572 650 547 637 525 608L457 510C430 473 403 445 359 432Z" fill="url(#leg)"/>
+  <path d="M411 451H491C522 451 544 467 564 497L672 650H662C617 627 587 609 560 570L502 491C479 459 450 452 411 451Z" fill="url(#legFold)"/>
+
+  <!-- Open book, drawn entirely with paths. -->
+  <path d="M216 436L235 434V590C296 590 347 606 381 635V462L401 473V635C428 612 460 600 493 594L507 612C470 617 441 628 418 646C449 632 479 631 522 631L546 650H460C430 650 414 654 399 666C389 674 378 678 365 674C344 667 337 650 307 650H195V631H307C333 631 351 636 364 646C323 618 280 609 216 609Z" fill="url(#book)"/>
+  <path d="M195 645H307C337 645 350 653 365 666C373 673 384 676 396 670C417 653 431 645 460 645H539L546 650H460C430 650 414 654 399 666C389 674 378 678 365 674C344 667 337 650 307 650H195Z" fill="#237D9F" opacity=".38"/>
+
+  <!-- Front upper ribbon and the darker inner fold. -->
+  <path d="M110 406V160C110 82 171 21 247 21H457C552 21 625 104 631 255C614 172 554 107 459 107H253C219 107 195 133 195 170V334C158 349 131 377 110 406Z" fill="url(#upperRibbon)"/>
+  <!-- The fold's lower end is the first part of the ribbon's own end curve (split at x=153),
+       so both layers finish on one continuous edge. -->
+  <path d="M153 359.1V164C153 107 195 63 247 63H458C556 63 625 141 631 255C610 171 550 107 459 107H253C219 107 195 133 195 170V334C179.35 340.35 165.49 349.02 153 359.1Z" fill="url(#upperInset)"/>
+
+  <!-- Bowl flowing into the lower vertical stem. -->
+  <path d="M459 107C528 107 612 174 612 294C612 374 563 433 486 433H258C199 433 153 480 153 548V650H110V481C110 405 166 347 245 347H459C525 347 575 295 575 227C575 160 527 107 459 107Z" fill="url(#frontBowl)"/>
+  <path d="M459 107C528 107 592 169 592 249C592 329 539 390 449 390H260C203 390 153 438 153 513V650H110V481C110 405 166 347 245 347H459C525 347 575 295 575 227C575 160 527 107 459 107Z" fill="url(#innerBowl)"/>
+  <path d="M153 650V548C153 480 199 433 258 433L235 436C209 451 195 488 195 542V650Z" fill="url(#stem)"/>
+
+  <!-- Latin speech balloon. -->
+  <path fill-rule="evenodd" d="M309 107C362 107 405 141 405 185C405 230 362 268 309 268C299 268 291 267 283 265L242 281C236 284 233 282 234 276L240 240C225 226 216 207 216 185C216 141 257 107 309 107ZM309 125C267 125 235 151 235 185C235 204 243 220 257 231L254 254L281 243C290 247 300 249 309 249C351 249 385 220 385 185C385 150 351 125 309 125Z" fill="url(#tealBubble)"/>
+  <path d="M280 214L305 154C306 150 310 150 312 154L337 214M288 197H329" stroke="#125372" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Translation speech balloon, crossing over the first. -->
+  <path d="M409 153C425 147 443 145 460 147C507 150 542 182 542 223C542 244 534 263 520 278L526 310C528 319 524 321 518 317L475 302C459 307 441 307 424 303C382 294 356 264 356 226C356 207 364 189 377 175C372 197 372 220 379 241C390 270 419 286 449 286C459 287 468 285 475 283L502 294L499 274C516 261 524 244 524 224C523 191 495 167 460 165C443 163 428 166 414 173Z" fill="url(#goldBubble)"/>
+  <g stroke="#125372" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M453 191V203M422 205H485"/>
+    <path d="M469 207C463 229 450 247 430 259M440 223C448 238 461 251 478 259"/>
+  </g>
+</svg>

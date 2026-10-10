@@ -3,224 +3,253 @@
 //  generate-appicon.swift
 //  RELL
 //
-//  Reproducible app-icon pipeline: renders the 1024×1024 master with
-//  CoreGraphics (no external tools), then emits every mac-idiom size via
-//  `sips`, and rewrites the appiconset's Contents.json.
+//  Reproducible app-icon pipeline: splits the brand logo (docs/brand/rell-logo.svg)
+//  into the layers of an Icon Composer document (AppIcon.icon), so macOS can
+//  render every icon style itself — Default, Dark, Clear and Tinted, with
+//  Liquid Glass. Xcode also derives the legacy AppIcon.icns (macOS 15) from it.
+//  No external tools beyond Xcode's own ictool, used only for the preview PNG.
 //
 //  Run from the repo root:
 //      swift scripts/generate-appicon.swift
 //
-//  Design: text-free, macOS Big Sur grid (824pt squircle on a 1024 canvas),
-//  an open book with a rising "lookup spark" — geometric shapes only so the
-//  16px slot stays legible.
+//  Layers, front to back:
+//    Bubbles  the A / 文 balloons (glyphs turn light in Dark, or they vanish on navy)
+//    Ribbon   the teal front of the R, then its orange back face and leg
+//    Book     the open book under the bowl
+//  Fill: white → mint; in Dark the neutral graphite of Apple's own dark icons.
+//
+//  The .icon can be fine-tuned in Icon Composer afterwards; rerunning this
+//  script overwrites those edits.
 //
 
 import AppKit
-import CoreGraphics
-
-// MARK: - Canvas
-
-let canvas: CGFloat = 1024
-guard let ctx = CGContext(
-    data: nil, width: Int(canvas), height: Int(canvas),
-    bitsPerComponent: 8, bytesPerRow: 0,
-    space: CGColorSpace(name: CGColorSpace.sRGB)!,
-    bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-) else { fatalError("CGContext creation failed") }
-
-func rgb(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ a: CGFloat = 1) -> CGColor {
-    CGColor(srgbRed: r / 255, green: g / 255, blue: b / 255, alpha: a)
-}
-
-// MARK: - Background squircle (macOS grid: 824×824 centered, r≈186)
-
-let plateRect = CGRect(x: 100, y: 100, width: 824, height: 824)
-let plate = CGPath(roundedRect: plateRect, cornerWidth: 186, cornerHeight: 186, transform: nil)
-
-// Rich blue-indigo vertical gradient — the app's "reading at dusk" identity.
-ctx.saveGState()
-ctx.addPath(plate)
-ctx.clip()
-let bgGradient = CGGradient(
-    colorsSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
-    colors: [rgb(64, 120, 242), rgb(36, 62, 166)] as CFArray,
-    locations: [0, 1]
-)!
-ctx.drawLinearGradient(
-    bgGradient,
-    start: CGPoint(x: canvas / 2, y: plateRect.maxY),
-    end: CGPoint(x: canvas / 2, y: plateRect.minY),
-    options: []
-)
-
-// Subtle top-edge sheen for depth.
-let sheen = CGGradient(
-    colorsSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
-    colors: [CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.18),
-             CGColor(srgbRed: 1, green: 1, blue: 1, alpha: 0.0)] as CFArray,
-    locations: [0, 1]
-)!
-ctx.drawLinearGradient(
-    sheen,
-    start: CGPoint(x: canvas / 2, y: plateRect.maxY),
-    end: CGPoint(x: canvas / 2, y: plateRect.maxY - 240),
-    options: []
-)
-ctx.restoreGState()
-
-// MARK: - Open book
-
-// Geometry relative to the plate center. The book sits slightly below
-// center; pages rise outward with gentle top curves.
-let cx = canvas / 2
-let bookBottom: CGFloat = 340
-let bookTopOuter: CGFloat = 560     // outer page corners
-let bookTopSpine: CGFloat = 500     // spine dip
-let halfWidth: CGFloat = 250        // spine → outer edge
-let pageCurve: CGFloat = 60         // top-edge curve depth
-
-func pagePath(mirrored: Bool) -> CGMutablePath {
-    // Right-hand page; mirrored=true flips across the spine.
-    let sign: CGFloat = mirrored ? -1 : 1
-    let p = CGMutablePath()
-    p.move(to: CGPoint(x: cx, y: bookBottom))                       // spine bottom
-    p.addLine(to: CGPoint(x: cx + sign * halfWidth, y: bookBottom + 40))  // outer bottom
-    p.addLine(to: CGPoint(x: cx + sign * halfWidth, y: bookTopOuter))     // outer top
-    // Top edge curving down into the spine dip.
-    p.addQuadCurve(
-        to: CGPoint(x: cx, y: bookTopSpine),
-        control: CGPoint(x: cx + sign * halfWidth * 0.45, y: bookTopOuter + pageCurve)
-    )
-    p.closeSubpath()
-    return p
-}
-
-// Soft shadow under the book so it floats off the plate.
-ctx.saveGState()
-ctx.setShadow(offset: CGSize(width: 0, height: -14), blur: 36,
-              color: CGColor(srgbRed: 0, green: 0, blue: 0, alpha: 0.28))
-ctx.addPath(pagePath(mirrored: true))
-ctx.addPath(pagePath(mirrored: false))
-ctx.setFillColor(rgb(246, 248, 252))
-ctx.fillPath()
-ctx.restoreGState()
-
-// Slight tint on the left page so the spread reads as two pages at a glance.
-ctx.addPath(pagePath(mirrored: true))
-ctx.setFillColor(rgb(226, 232, 244))
-ctx.fillPath()
-
-// Spine line.
-ctx.setStrokeColor(rgb(150, 165, 200))
-ctx.setLineWidth(6)
-ctx.move(to: CGPoint(x: cx, y: bookBottom + 8))
-ctx.addLine(to: CGPoint(x: cx, y: bookTopSpine - 4))
-ctx.strokePath()
-
-// Text lines — three per page, following each page's slant.
-ctx.setStrokeColor(rgb(160, 175, 210))
-ctx.setLineWidth(14)
-ctx.setLineCap(.round)
-for (i, y) in [400, 452, 504].enumerated() {
-    let yF = CGFloat(y)
-    let inset: CGFloat = 58
-    let shorten: CGFloat = i == 2 ? 46 : 0   // top line shorter for rhythm
-    // Right page
-    ctx.move(to: CGPoint(x: cx + 44, y: yF + 10))
-    ctx.addLine(to: CGPoint(x: cx + halfWidth - inset - shorten, y: yF + 26))
-    // Left page
-    ctx.move(to: CGPoint(x: cx - 44, y: yF + 10))
-    ctx.addLine(to: CGPoint(x: cx - halfWidth + inset + shorten, y: yF + 26))
-}
-ctx.strokePath()
-
-// MARK: - Lookup spark (the "language learner" mark)
-
-// A four-point star floating above the spine dip — echoes the app's
-// AI/lookup affordances. Warm gold so it reads against the blue.
-func starPath(center: CGPoint, radius: CGFloat, waist: CGFloat) -> CGMutablePath {
-    let p = CGMutablePath()
-    p.move(to: CGPoint(x: center.x, y: center.y + radius))
-    p.addQuadCurve(to: CGPoint(x: center.x + radius, y: center.y),
-                   control: CGPoint(x: center.x + waist, y: center.y + waist))
-    p.addQuadCurve(to: CGPoint(x: center.x, y: center.y - radius),
-                   control: CGPoint(x: center.x + waist, y: center.y - waist))
-    p.addQuadCurve(to: CGPoint(x: center.x - radius, y: center.y),
-                   control: CGPoint(x: center.x - waist, y: center.y - waist))
-    p.addQuadCurve(to: CGPoint(x: center.x, y: center.y + radius),
-                   control: CGPoint(x: center.x - waist, y: center.y + waist))
-    p.closeSubpath()
-    return p
-}
-
-ctx.saveGState()
-ctx.setShadow(offset: .zero, blur: 30, color: rgb(255, 214, 120, 0.55))
-ctx.addPath(starPath(center: CGPoint(x: cx, y: 668), radius: 74, waist: 20))
-ctx.setFillColor(rgb(255, 205, 92))
-ctx.fillPath()
-// Small companion spark, offset — asymmetry keeps it lively.
-ctx.addPath(starPath(center: CGPoint(x: cx + 122, y: 726), radius: 34, waist: 10))
-ctx.setFillColor(rgb(255, 224, 150))
-ctx.fillPath()
-ctx.restoreGState()
-
-// MARK: - Write master + sizes
-
-guard let image = ctx.makeImage() else { fatalError("makeImage failed") }
-let rep = NSBitmapImageRep(cgImage: image)
-guard let master = rep.representation(using: .png, properties: [:]) else {
-    fatalError("PNG encode failed")
-}
+import Foundation
 
 let fm = FileManager.default
-let assetDir = "Reader for Language Learner/Reader for Language Learner/Assets.xcassets/AppIcon.appiconset"
-guard fm.fileExists(atPath: assetDir) else {
-    fatalError("Run from the repo root — \(assetDir) not found")
+let logoPath = "docs/brand/rell-logo.svg"
+let iconDir = "Reader for Language Learner/Reader for Language Learner/AppIcon.icon"
+let previewPath = "docs/brand/rell-icon-1024.png"
+guard fm.fileExists(atPath: logoPath), fm.fileExists(atPath: "Reader for Language Learner/Reader for Language Learner") else {
+    fatalError("Run from the repo root — \(logoPath) not found")
+}
+guard let logo = try? String(contentsOfFile: logoPath, encoding: .utf8) else { fatalError("\(logoPath) unreadable") }
+
+// MARK: - Pull the pieces out of the logo
+
+func matches(_ pattern: String, in text: String) -> [String] {
+    let re = try! NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators])
+    return re.matches(in: text, range: NSRange(text.startIndex..., in: text)).map {
+        String(text[Range($0.range, in: text)!])
+    }
 }
 
-let masterPath = assetDir + "/icon_512x512@2x.png"
-try master.write(to: URL(fileURLWithPath: masterPath))
-print("master 1024 written")
+func gradient(_ id: String) -> String {
+    guard let g = matches(#"<linearGradient id="\#(id)".*?</linearGradient>"#, in: logo).first else {
+        fatalError("gradient \(id) missing from \(logoPath)")
+    }
+    return g
+}
 
-// filename → pixel size (the 1024 master doubles as 512@2x).
-let slots: [(String, Int)] = [
-    ("icon_16x16.png", 16), ("icon_16x16@2x.png", 32),
-    ("icon_32x32.png", 32), ("icon_32x32@2x.png", 64),
-    ("icon_128x128.png", 128), ("icon_128x128@2x.png", 256),
-    ("icon_256x256.png", 256), ("icon_256x256@2x.png", 512),
-    ("icon_512x512.png", 512),
+let paths = matches(#"<path [^>]*?/>"#, in: logo)
+func path(_ marker: String) -> String {
+    let hits = paths.filter { $0.contains(marker) }
+    guard hits.count == 1 else { fatalError("expected one path with \(marker) in \(logoPath), found \(hits.count)") }
+    return hits[0]
+}
+guard let glyphZh = matches(##"<g stroke="#125372".*?</g>"##, in: logo).first else { fatalError("文 glyph group missing") }
+
+// MARK: - Glyph outlines
+//
+// The A / 文 glyphs are strokes in the logo. A layer fill (how Dark recolours them)
+// paints a path's interior too, so an open stroke like the A's legs turns into a
+// solid triangle. Outlining the strokes into filled shapes keeps them glyphs in
+// every style. Handles the absolute M/L/H/V/C commands the glyphs use.
+
+func cgPath(fromSVG d: String) -> CGPath {
+    let tokens = matches(#"[MLHVCZmlhvcz]|-?\d*\.?\d+"#, in: d)
+    let p = CGMutablePath()
+    var i = 0, cmd = "M", cur = CGPoint.zero
+    func num() -> CGFloat { defer { i += 1 }; return CGFloat(Double(tokens[i])!) }
+    while i < tokens.count {
+        if tokens[i].first!.isLetter { cmd = tokens[i]; i += 1 }
+        switch cmd {
+        case "M": cur = CGPoint(x: num(), y: num()); p.move(to: cur); cmd = "L"
+        case "L": cur = CGPoint(x: num(), y: num()); p.addLine(to: cur)
+        case "H": cur.x = num(); p.addLine(to: cur)
+        case "V": cur.y = num(); p.addLine(to: cur)
+        case "C":
+            let c1 = CGPoint(x: num(), y: num()), c2 = CGPoint(x: num(), y: num())
+            cur = CGPoint(x: num(), y: num()); p.addCurve(to: cur, control1: c1, control2: c2)
+        case "Z", "z": p.closeSubpath()
+        default: fatalError("glyph path uses unsupported SVG command \(cmd)")
+        }
+    }
+    return p
+}
+
+func svgD(_ path: CGPath) -> String {
+    var d = ""
+    func f(_ p: CGPoint) -> String { String(format: "%.2f %.2f", p.x, p.y) }
+    path.applyWithBlock { el in
+        let pts = el.pointee.points
+        switch el.pointee.type {
+        case .moveToPoint: d += "M\(f(pts[0]))"
+        case .addLineToPoint: d += "L\(f(pts[0]))"
+        case .addQuadCurveToPoint: d += "Q\(f(pts[0])) \(f(pts[1]))"
+        case .addCurveToPoint: d += "C\(f(pts[0])) \(f(pts[1])) \(f(pts[2]))"
+        case .closeSubpath: d += "Z"
+        @unknown default: break
+        }
+    }
+    return d
+}
+
+func outlinedGlyph(_ element: String) -> String {
+    // every d="…" in the element, stroked at the logo's width with round caps and joins
+    matches(#"d="[^"]+""#, in: element).map { attr in
+        let d = String(attr.dropFirst(3).dropLast())
+        let outline = cgPath(fromSVG: d).copy(strokingWithWidth: 10, lineCap: .round, lineJoin: .round, miterLimit: 10)
+        return ##"<path d="\##(svgD(outline))" fill="#125372"/>"##
+    }.joined(separator: "\n    ")
+}
+
+// MARK: - Layer SVGs (1024 pt Icon Composer canvas)
+
+// Artwork bbox (110,21)–(674,678) in logo units → 640 pt tall, centred
+let scale = 640.0 / 657.0
+let tx = 512 - 392 * scale, ty = 512 - 349.5 * scale
+
+func layerSVG(_ items: [String], gradients: [String]) -> String {
+    let body = items.joined(separator: "\n    ")
+    let defs = gradients.map(gradient).joined(separator: "\n    ")
+    return """
+    <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+      <defs>
+        \(defs)
+      </defs>
+      <g transform="translate(\(String(format: "%.2f %.2f", tx, ty))) scale(\(String(format: "%.5f", scale)))">
+        \(body)
+      </g>
+    </svg>
+
+    """
+}
+
+let layers: [(String, String)] = [
+    // Glyphs get a layer of their own so Dark can recolour them with a layer fill:
+    // actool drops image-name-specializations, so a separate dark SVG never ships.
+    ("glyphs.svg", layerSVG([outlinedGlyph(path(##"stroke="#125372" stroke-width="10""##)), outlinedGlyph(glyphZh)],
+                            gradients: [])),
+    ("bubbles.svg", layerSVG([path("url(#tealBubble)"), path("url(#goldBubble)")], gradients: ["tealBubble", "goldBubble"])),
+    ("ribbon-front.svg", layerSVG([path("url(#upperRibbon)"), path("url(#upperInset)"),
+                                   path("url(#frontBowl)"), path("url(#innerBowl)")],
+                                  gradients: ["upperRibbon", "upperInset", "frontBowl", "innerBowl"])),
+    ("ribbon-back.svg", layerSVG([path("url(#rearBowl)"), path("url(#leg)"), path("url(#legFold)"), path("url(#stem)")],
+                                 gradients: ["rearBowl", "leg", "legFold", "stem"])),
+    ("book.svg", layerSVG([path("url(#book)"), path(##"fill="#237D9F""##)], gradients: ["book"])),
 ]
-for (name, px) in slots {
-    let out = assetDir + "/" + name
-    let task = Process()
-    task.executableURL = URL(fileURLWithPath: "/usr/bin/sips")
-    task.arguments = ["-z", "\(px)", "\(px)", masterPath, "--out", out]
-    task.standardOutput = FileHandle.nullDevice
-    try task.run()
-    task.waitUntilExit()
-    guard task.terminationStatus == 0 else { fatalError("sips failed for \(name)") }
-    print("\(name) (\(px)px) written")
+
+// MARK: - icon.json
+
+func srgb(_ r: Double, _ g: Double, _ b: Double) -> String {
+    String(format: "srgb:%.5f,%.5f,%.5f,1.00000", r / 255, g / 255, b / 255)
 }
 
-// MARK: - Contents.json (clean 10-slot mac idiom set)
-
-let contents = """
+let iconJSON = """
 {
-  "images" : [
-    { "filename" : "icon_16x16.png",      "idiom" : "mac", "scale" : "1x", "size" : "16x16" },
-    { "filename" : "icon_16x16@2x.png",   "idiom" : "mac", "scale" : "2x", "size" : "16x16" },
-    { "filename" : "icon_32x32.png",      "idiom" : "mac", "scale" : "1x", "size" : "32x32" },
-    { "filename" : "icon_32x32@2x.png",   "idiom" : "mac", "scale" : "2x", "size" : "32x32" },
-    { "filename" : "icon_128x128.png",    "idiom" : "mac", "scale" : "1x", "size" : "128x128" },
-    { "filename" : "icon_128x128@2x.png", "idiom" : "mac", "scale" : "2x", "size" : "128x128" },
-    { "filename" : "icon_256x256.png",    "idiom" : "mac", "scale" : "1x", "size" : "256x256" },
-    { "filename" : "icon_256x256@2x.png", "idiom" : "mac", "scale" : "2x", "size" : "256x256" },
-    { "filename" : "icon_512x512.png",    "idiom" : "mac", "scale" : "1x", "size" : "512x512" },
-    { "filename" : "icon_512x512@2x.png", "idiom" : "mac", "scale" : "2x", "size" : "512x512" }
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [ "\(srgb(255, 255, 255))", "\(srgb(222, 244, 240))" ]
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "linear-gradient" : [ "\(srgb(52, 53, 56))", "\(srgb(24, 24, 26))" ]
+      }
+    }
   ],
-  "info" : { "author" : "xcode", "version" : 1 }
+  "groups" : [
+    {
+      "name" : "Bubbles",
+      "layers" : [
+        {
+          "name" : "glyphs",
+          "image-name" : "glyphs.svg",
+          "fill-specializations" : [
+            { "appearance" : "dark", "value" : { "solid" : "\(srgb(232, 246, 247))" } }
+          ],
+          "glass" : true
+        },
+        { "name" : "bubbles", "image-name" : "bubbles.svg", "glass" : true }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.4 },
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    },
+    {
+      "name" : "Ribbon",
+      "layers" : [
+        { "name" : "ribbon-front", "image-name" : "ribbon-front.svg", "glass" : true },
+        { "name" : "ribbon-back", "image-name" : "ribbon-back.svg", "glass" : true }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    },
+    {
+      "name" : "Book",
+      "layers" : [
+        { "name" : "book", "image-name" : "book.svg", "glass" : true }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.3 },
+      "translucency" : { "enabled" : true, "value" : 0.3 }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [ "macOS" ]
+  }
 }
+
 """
-try contents.write(toFile: assetDir + "/Contents.json", atomically: true, encoding: .utf8)
-print("Contents.json rewritten (mac idiom only)")
+
+// MARK: - Write the document
+
+let assetsDir = iconDir + "/Assets"
+try? fm.removeItem(atPath: assetsDir)                 // no stale layers left behind
+try fm.createDirectory(atPath: assetsDir, withIntermediateDirectories: true)
+for (name, svg) in layers {
+    try svg.write(toFile: assetsDir + "/" + name, atomically: true, encoding: .utf8)
+    print("\(name) written")
+}
+try iconJSON.write(toFile: iconDir + "/icon.json", atomically: true, encoding: .utf8)
+print("icon.json written")
+
+// MARK: - Preview PNG for docs, the README and the promo video
+
+func developerDir() -> String? {
+    let p = Process(), pipe = Pipe()
+    p.executableURL = URL(fileURLWithPath: "/usr/bin/xcode-select")
+    p.arguments = ["-p"]
+    p.standardOutput = pipe
+    guard (try? p.run()) != nil else { return nil }
+    p.waitUntilExit()
+    return String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+if let dev = developerDir() {
+    let ictool = URL(fileURLWithPath: dev).deletingLastPathComponent()
+        .appendingPathComponent("Applications/Icon Composer.app/Contents/Executables/ictool").path
+    if fm.isExecutableFile(atPath: ictool) {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: ictool)
+        p.arguments = [iconDir, "--export-image", "--output-file", previewPath, "--platform", "macOS",
+                       "--rendition", "Default", "--width", "1024", "--height", "1024", "--scale", "1"]
+        p.standardOutput = FileHandle.nullDevice
+        try p.run(); p.waitUntilExit()
+        print(p.terminationStatus == 0 ? "\(previewPath) written" : "ictool failed — preview not updated")
+    } else {
+        print("ictool not found (Xcode 26+ needed) — preview not updated")
+    }
+}
 print("Done.")

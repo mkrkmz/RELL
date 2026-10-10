@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="rearBowl" x1="500" y1="22" x2="585" y2="428" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFDB70"/>
+      <stop offset=".46" stop-color="#FBBB58"/>
+      <stop offset="1" stop-color="#EE8847"/>
+    </linearGradient>
+    <linearGradient id="leg" x1="420" y1="426" x2="588" y2="648" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9C564"/>
+      <stop offset=".48" stop-color="#F8AC58"/>
+      <stop offset="1" stop-color="#ED884C"/>
+    </linearGradient>
+    <linearGradient id="legFold" x1="467" y1="451" x2="656" y2="644" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFDB76"/>
+      <stop offset="1" stop-color="#F9AD58"/>
+    </linearGradient>
+    <linearGradient id="stem" x1="164" y1="457" x2="194" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EF8B4C"/>
+      <stop offset=".52" stop-color="#F8B65E"/>
+      <stop offset="1" stop-color="#FFDA78"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(130.14 171.54) scale(0.97412)">
+    <path d="M456 21C579 21 674 110 674 225C674 337 596 418 486 433H447L459 347C525 347 575 295 575 227C575 159 525 107 459 107Z" fill="url(#rearBowl)"/>
+    <path d="M359 432H483C515 432 538 449 558 480L672 650H611C572 650 547 637 525 608L457 510C430 473 403 445 359 432Z" fill="url(#leg)"/>
+    <path d="M411 451H491C522 451 544 467 564 497L672 650H662C617 627 587 609 560 570L502 491C479 459 450 452 411 451Z" fill="url(#legFold)"/>
+    <path d="M153 650V548C153 480 199 433 258 433L235 436C209 451 195 488 195 542V650Z" fill="url(#stem)"/>
+  </g>
+</svg>
