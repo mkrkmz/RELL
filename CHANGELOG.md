@@ -4,12 +4,17 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
-## [1.46.0] - 2026-10-11
+## [1.46.1] - 2026-10-11
 
-A new app icon and a README that matches the app as it is now.
+A new app icon and a README that matches the app as it is now. (1.46.0 was
+tagged but never published: its release build failed on a macOS 15 runner,
+which can't compile the new icon.)
 
 ### Changed
 
+- **CI runs on macOS 26.** Build, test and release now use `macos-26` runners,
+  because the layered icon needs Xcode's Icon Composer compiler. The app still
+  supports macOS 15.
 - **New app icon.** An open book with a speech bubble rising from a highlighted
   word, built as an Icon Composer document, so macOS draws it in every
   appearance: default, dark, clear and tinted, with Liquid Glass.
