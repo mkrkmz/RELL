@@ -1,10 +1,9 @@
 # RELL Roadmap v16 — Kelimeler Kitabinda, Hepsi Bir Yerde (S0 + 4 sprint)
 
-Olusturulma: 2026-10-09 (v1.44.0 sonrasi). Kullanicinin istegi: bir kitabin
-kenar cubugunda **yalniz o kitabin kelimeleri** olsun; **tum kayitli
-kelimeler** ana ekrandaki Tools'tan acilan ayri bir alanda, calisma odasi
-gibi kendi penceresinde dursun. Kullanici bu duzeni tamamlayan alti oneriyi
-de secti (asagida). Tek surum: **1.45.0**. v15 roadmap'i:
+Olusturulma: 2026-10-09 (v1.44.0 sonrasi). Hedef: bir kitabin kenar
+cubugunda **yalniz o kitabin kelimeleri** olsun; **tum kayitli kelimeler**
+ana ekrandaki Tools'tan acilan ayri bir alanda, calisma odasi gibi kendi
+penceresinde dursun. Bu duzeni tamamlayan alti ek kalem asagida. Tek surum: **1.45.0**. v15 roadmap'i:
 `docs/archive/ROADMAP-v15.md`.
 
 v15 kapandi: S0–S4 tek surum olarak **v1.44.0** (2026-10-09) — Eksikleri
@@ -12,27 +11,23 @@ doldur (Apple sozlugu → cihaz ici model → saglayici, kaynak isaretli,
 kaydederken doldurma), Calisma odasi (tam ekran pencere, oturum kurulumu,
 buyuk kart, ←/→/S, ozet), yeni kelime tanitimi, "Asamaya gore" mod, i+1
 cumleler, zorlu kelimeler + akilda tutma ipucu, Kindle kelime defteri
-aktarimi. 689 test. Dersler: ayristiricilar kullanicinin gercek verisinde
+aktarimi. 689 test. Dersler: ayristiricilar gercek kullanim verisinde
 denenir; macOS 15'te ic ice izole deinit coker (testler async); App Intents
 takim kimligi ister.
 
-## Durum (2026-10-09, kullanicinin verisi, salt okunur)
+## Durum (2026-10-09)
 
-| Olcu | Deger |
-|---|---|
-| Kayitli kelime | 590 |
-| Kaynagi kitaplikta acik bir belge olan | **55** |
-| Kindle'dan gelen (kitap adi, dosya degil) | ~530 (The Hunger Games 293, Why We Sleep 214, …) |
-| Kitaplikta belge | 7 (ayni "Why We Sleep" iki dosya: `Matthew Walker PhD - Why We Sleep_…`, `Why We Sleep_ Unlocking…`) |
-| Okurken karsilasma kaydi | 212 |
+Temsili bir kitaplikta (birkac yuz kelime, cogu Kindle'dan; ayni kitabin
+farkli adli iki dosyasi) kelimelerin yalniz kucuk bir kismi kitaplikta
+acik bir belgeye baglanabiliyordu.
 
 - Kelime listesi bugun yalniz okuyucunun kenar cubugunda (`WordsView` →
   `SavedWordsListView`) ve **tum** kelimeleri gosterir; "This Document"
   yalniz bir filtre. Ana ekranda kenar cubugu yok: tum kelimelere ana
   ekrandan ulasilamiyor.
 - Kelimenin kitabi yalniz `SavedWord.pdfFilename` (uzantisiz dosya adi;
-  Kindle'da kitap basligi). Tam esleme: Kindle'daki 214 "Why We Sleep"
-  kelimesi RELL'deki ayni kitapla eslesmez; ayni kitabin iki kopyasi
+  Kindle'da kitap basligi). Tam esleme: Kindle'dan gelen bir kitabin
+  kelimeleri RELL'deki ayni kitapla eslesmez; ayni kitabin iki kopyasi
   birbirinin kelimelerini gormez.
 - Karsilasmalar (`WordEncounterStore`) belge yolu + baslik tasir: "baska
   yerde kaydedip bu kitapta yeniden gordugun" kelimeler hazir.
@@ -46,7 +41,7 @@ dokunulmaz; **once maket** (her UI sprinti HTML maketle baslar, onaysiz kod
 yok); sutunlarda yerlesim kurali + "pencereyi buyutmez" testleri; metin
 ustunde `.dsReadingOverlay()`; erisilebilirlik taramasi; her push'tan sonra
 `gh run list` ile Test ve Build; her sprint sonu canli tur; ayristirici /
-esleyici kullanicinin gercek verisinde denenir (gecici salt okunur test).
+esleyici gercek kullanim verisinde denenir (gecici salt okunur test).
 Eklenenler:
 
 - **Kitap kimligi tek yerde.** "Bu kelime hangi kitabin?" sorusu tek bir
@@ -62,7 +57,7 @@ CloudKit, Kisayollar).
 
 ---
 
-## Kararlar (2026-10-09, kullanici onayi)
+## Kararlar (2026-10-09)
 
 1. Kitabin kelime listesi: **bu kitaptan kaydedilenler** ustte, **baska
    yerde kaydedilip bu kitapta yeniden karsilasilanlar** ayri grup olarak
@@ -85,13 +80,12 @@ CloudKit, Kisayollar).
       sozcukleri uzun adin icinde art arda geciyorsa ayni kitap; tek sozcuk
       ve 30 sozcukten uzun "baslik" yalniz tam eslesir. `SavedWord.documentPath`
       (istege bagli; okuyucudaki kaydetme yollari yazar), once dosya sonra ad.
-      **Olcum** (590 kelime, 7 belge, Kindle basliklari; ayni kural
-      Python'da, RELL acikti): 8 eslesme, hepsi dogru, yanlis yok.
-      Why We Sleep: dosya adiyla 6/12 → basliktan **232**; Harry Potter 12
-      (+26 karsilasilan), Crime and Punishment 12 (+6). Bir hikaye
+      **Olcum** (temsili kitaplik, Kindle basliklari dahil): tum
+      eslesmeler dogru, yanlis eslesme yok; bir kitabin bulunan kelimeleri
+      dosya adiyla eslemeye gore onlarca kat artti. Bir hikaye
       karsilasmasinin "basligi" metnin tamami (eski surumun dosyasi;
       hikaye basligi v13'te duzeltilmis) — 30 sozcuk siniri bunu eler.
-      `BookIdentityTests` (gercek adlarla)
+      `BookIdentityTests` (gercekci adlarla)
 - [x] **macOS 15 deinit cokmesi** — 48 ana aktor sinifina
       `nonisolated deinit {}` (hicbirinin deinit govdesi yoktu); ikili
       dosyada yalniz uretilen `ResourceBundleClass` kaldi.
@@ -116,12 +110,11 @@ yalniz bu kitap.
 - [x] **Kenar cubugunda kitap kelimeleri** — `BookWords` (saf): bu
       kitaptan kaydedilenler (dosya yolu, dosya adi, basliktan esleşen
       kopyalar ve Kindle) + bu kitapta yeniden karsilasilanlar; ayri adlar
-      bir kez eslenir (~1 ms/kitap, 590 kelime). Liste: kitap basligi +
+      bir kez eslenir (~1 ms/kitap). Liste: kitap basligi +
       sayilar + ••• (birlestirme anahtari, kaynaklar, bu kitabi calis, bu
       kitabin kelimelerini disa aktar); iki bolum; arama/filtre/eksikleri
       doldur/disa aktarma kitap icinde; "This Document" filtresi kalkti;
-      satirda Kindle etiketi. Gercek veri: Why We Sleep 232 + 10 (Kindle
-      214, diger kopya 12/6, bu dosya 6/12), Harry Potter 12 + 26
+      satirda Kindle etiketi
 - [x] **Bu kitabi calis** — kenar cubugundaki Tekrar yalniz bu kitabin
       kelimeleri; bekleyen yoksa "Tumunu calis (N)"; "Bu kitabi tam
       ekranda calis" calisma odasini kaynak "Bu kitap" ile acar
@@ -142,7 +135,7 @@ turu, yarida kalan devam eder.
 - [x] **Kelime defteri** — `Window("Word Notebook", id: "words")`,
       `WordNotebookView`: sol sutun durumlar (tumu, tekrar bekleyen, hic
       calisilmamis, sik unutulan, anlami eksik) + kitaplar (`WordNotebook.books`,
-      adlar basliktan kumelenir: Why We Sleep tek satir) + desteler; orta
+      adlar basliktan kumelenir: ayni kitap tek satir) + desteler; orta
       `SavedWordsListView` (havuz + secim + tablo modu; tek tik secer, cift
       tik sayfa acar); sag `SavedWordDetailSheet(isPane:)` — degisen alanlar
       depodaki en guncel kelimenin uzerine yazilir. Girisler: ana ekran
@@ -166,7 +159,7 @@ turu, yarida kalan devam eder.
 
 ## Sprint 3 — "Duzen" (Should)
 
-Kullanici maketsiz kodlanmasini istedi (2026-10-09).
+Maket adimi atlandi; dogrudan kodlandi (2026-10-09).
 
 - [x] **Kitaplikta kelime sayilari** — `documentStats` artik `BookWords`
       ile (kopyalar ve Kindle dahil) kayitli + tekrar bekleyen; izgara
@@ -199,9 +192,9 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-09).
 
 - [x] Kapanis (Must): tam test (713 yesil), performans (ayni oturumda
       donusumlu: 1.44.0 ortanca ~568/579 ms, simdi ~594/592 ms — fark
-      olcum yayilimi icinde), canli turlar (S1–S3, kullanici), CHANGELOG
+      olcum yayilimi icinde), canli turlar (S1–S3), CHANGELOG
       1.45.0 + Yenilikler 1.45
-- [x] **1.45.0** yayinlandi (2026-10-09, kullanicinin onayiyla; Release is akisi yesil, DMG + zip, Latest)
+- [x] **1.45.0** yayinlandi (2026-10-09; Release is akisi yesil, DMG + zip, Latest)
 
 ---
 
@@ -209,5 +202,5 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-09).
 
 Tam test paketi (CI komutuyla birebir, `make ci-test`), regresyon testleri
 mutasyonla dogrulanir, push sonrasi Test ve Build is akislari yesil,
-kullanicinin canli turu (RELL acikken ikinci kopya calistirilmaz),
+canli tur (RELL acikken ikinci kopya calistirilmaz),
 xcstrings TR tamamlama.

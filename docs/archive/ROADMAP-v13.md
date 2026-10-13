@@ -1,7 +1,7 @@
 # RELL Roadmap v13 — Okumak, Sadece Bakmak Degil (S0 + 4 sprint, v1.42 → v1.45)
 
-Olusturulma: 2026-09-30 (v1.41.0 sonrasi). Kullanici istegi: "tamamen taze
-fikirler, hem ozellik hem UI". Oneri onaylandi; sprint ici kapsam her sprint
+Olusturulma: 2026-09-30 (v1.41.0 sonrasi). Kapsam: taze fikirler, hem
+ozellik hem arayuz. Plan onaylandi; sprint ici kapsam her sprint
 basinda yeniden teyit edilir.
 
 v12 roadmap kapandi: S1 **v1.39.0 "Guven"** (bozuk dosya karantinasi, gunluk
@@ -12,7 +12,7 @@ sekli, EPUB JS kapali + `EPUBLinkPolicy`), S2 **v1.40.0 "Sifir kurulum"**
 ozeti) ve S3 **v1.41.0 "Pencere modeli"** (`ReaderWindowModel`, ContentView
 1504 → 669, Inspector yaris duzeltmesi, `StorageKey`, uyari 29 → 0). Uc surum
 tag'lendi, CI yesil, DMG'ler uretildi; 533 test. **Acik kalan:** uc sprintin
-canli turu kullanicida, Swift 6 dil modu bayragi — ikisi de S0'a devredildi.
+canli turu, Swift 6 dil modu bayragi — ikisi de S0'a devredildi.
 
 Tani: 1.5 → 1.41 arasindaki neredeyse her ozellik **tek bir kelimeye tepki**
 veriyor (hover, Inspector modulleri, kaydet, tekrar et). Uygulamada eksik
@@ -50,7 +50,7 @@ sandbox'a dokunulmaz). Eklenenler:
   saglayiciya duser (v1.40 deseni, modul bazinda karar).
 - **Her sprint bir spike ile baslar** (asagida); spike kapisi gecilmezse kalem
   bir sonraki sprinte veya Won't'a gider — sessizce kucultulmez.
-- **Canli tur tek kopyayla:** kullanicinin Xcode'dan acik kopyasi varken ikinci
+- **Canli tur tek kopyayla:** Xcode'dan acik bir kopya varken ikinci
   kopya calistirilmaz (ayni bundle id, ayni veri).
 
 **Bilincli olarak v13 disinda:** `.apkg` export (Won't), sayfali EPUB,
@@ -69,8 +69,8 @@ sandbox/bundle id) uyelik gelene kadar Won't.
       cumle seridinde dil paketi istemi; odak/zen giris-cikis; PDF'i yeniden
       acinca son sayfa; calisan modulu yeniden baslatma. **Swift 6 icin
       ekle:** gunluk hatirlatmayi ac/kaydet (bildirim zamanlama yolu),
-      ⌃⌥Space, TTS ile sayfa okuma. (2026-09-30: kullanici tam ekran bir
-      uygulamadaydi, pencere gorunur Space'e alinamadi — gorsel tur yapilamadi)
+      ⌃⌥Space, TTS ile sayfa okuma. (2026-09-30: pencere gorunur Space'e
+      alinamadi — gorsel tur yapilamadi)
 - [x] **Swift 6 dil modu** (uygulama hedefi `SWIFT_VERSION = 6.0`, test
       hedefleri 5'te): arka plan kuyrugunda cagrilan iki ObjC tamamlama
       blogu ana-aktor izolasyonunu miras aliyordu — Swift 6'da calisma
@@ -125,7 +125,7 @@ Yazma: okunan sayfa basina en fazla bir kez (ayni kelime/yer/gun tekillesir).
       dondurur, kaynagi kartta gosterir. Yalniz kelimenin kaydedildigi
       bicimde gectigi cumleler — cevap o bicime gore notlaniyor. FSRS yolu
       degismedi (Type zaten yaziyordu)
-- [ ] Should: **Cumle madenciligi** — ertelendi (kullanici karari bekliyor).
+- [ ] Should: **Cumle madenciligi** — ertelendi (karar bekliyor).
       Etki alani genis: `SavedWord` cumle olunca vurgulama (butun cumle alti
       cizili), kapsama/lemma anahtarlari, CEFR tahmini, coktan secmeli ve
       eslestirme modlari, Anki disa aktarimi ayri ele alinmali
@@ -155,7 +155,7 @@ LM Studio (gemma-4-e4b) 3–11 sn; dusunen model 300 token'da bos cevap
 dondu → 1200 token payi. Hazirlik: uygulama yalniz kayitli kelimeleri
 biliyor; siklik siralamasi kolay kelime veriyor (understand, moment) →
 adaylar nadir icerik lemmalari (≥6 harf, isim degil), zoru model seciyor.
-Kullanici karari: seviye ayari, varsayilan B1.
+Karar: seviye ayari, varsayilan B1.
 
 - [x] **Seviyen** — Ayarlar ▸ Genel (`StorageKey.learnerLevel`, varsayilan
       B1); ozet ve hazirlik bu seviyeye gore yazilir (S3 "Seviyeye Indir"
@@ -194,7 +194,7 @@ Kullanici karari: seviye ayari, varsayilan B1.
       S1'den kalan zamana bagli bir test (iki yazilis mikro saniye arayla)
       aralikli dusuyordu — tarihler sabitlendi
 - [x] Dogrulama: tam paket **570 test, 0 hata, 1 atlanan** (iki kez); 0
-      uyari. Canli: Bugun ekrani, Why We Sleep EPUB'da ozet karti (dogru B1
+      uyari. Canli: Bugun ekrani, bir EPUB'da ozet karti (dogru B1
       ozet) + "5 kelime" cipi. **Dogrulanmadi:** hazirlik listesinin
       gorunumu — pencere baska bir Space'teydi, popover acilmadi
 
@@ -235,7 +235,7 @@ cikti bicimi temiz: `sleep | uyku`), oturum boyu onbellek.
       hover sozlugunun onbellekli tek satirlik anlami ("Yanit Dili"ne uyar),
       "N kez karsilastin". **Sapma:** modul izgarasi "daha fazla" altina
       alinmadi — otomatik calistirma ayarini ve yerlesik akisi degistirir,
-      kullaniciyla konusulacak. **Canli dogrulanmadi** (ayni neden)
+      ayrica karar verilecek. **Canli dogrulanmadi** (ayni neden)
 - [ ] Should: **Dilbilgisi Mercegi**, **Komut Paleti (⌘K)**, S2'den
       **Karakter & Yer Rehberi** — alinmadi
 - [ ] Could: **Okuma Cetveli** — alinmadi
@@ -286,8 +286,8 @@ El Pais; Ars ve Spiegel JS/ucretli). **(a) yapilmadi** — asagiya bakin.
       cift br'den bolunur; `<br>` iceren satir ici `<font>` kapsayici sayilir)
 - [ ] Should: **Golgeleme** — alinmadi. Spike (a) proje yapi ayarlarina
       (Info.plist izin aciklamalari) ve macOS izin istemlerine dokunuyor;
-      ustune kayit + cihaz-ici transkript + hizalama arayuzu. Kullanici
-      karariyla ayri ele alinacak
+      ustune kayit + cihaz-ici transkript + hizalama arayuzu. Ayri
+      bir kararla ele alinacak
 - [x] Should: **Kelimelerinden Hikaye** — Git ▸ Kelimelerinden Hikaye…:
       tekrar zamani gelen (sonra kuyruktaki) 4–12 kelime, seviyende ~300
       kelimelik oyku → mini EPUB (Application Support/RELL/Stories), RELL'de
@@ -307,9 +307,9 @@ El Pais; Ars ve Spiegel JS/ucretli). **(a) yapilmadi** — asagiya bakin.
       Retell (sentetik cift tiklama WKWebView'da secim olusturmuyor).
       Canli denemeler kutuphaneye ya da diske iz birakmadi
 
-## Sprint 5 — kapanis (kullanici karari: S5 bitince tek surum)
+## Sprint 5 — kapanis (karar: S5 bitince tek surum)
 
-Kapsam (kullanici secimi, 2026-09-30): test izolasyonu + canli tur, Komut
+Kapsam (2026-09-30): test izolasyonu + canli tur, Komut
 Paleti + Dilbilgisi Mercegi, bildirim/menu cubugu tekrari. Golgeleme, cumle
 kaydetme ve modul izgarasini gizleme **v14'e ertelendi**; Karakter Rehberi
 ve Okuma Cetveli alinmadi.
@@ -330,7 +330,7 @@ ve Okuma Cetveli alinmadi.
 - [x] **Menu cubugunda siradaki kelime** — Hizli Arama penceresinin altinda
       kart: anlami goster, "Henuz Degil / Bildim" → FSRS
 - [x] Testler: 598 → **604**, 0 hata, 0 uyari; 39 yeni TR metin
-- [x] **Canli tur (kullanici, 2026-09-30 → 10-01)** — tum S1–S5 ozellikleri
+- [x] **Canli tur (2026-09-30 → 10-01)** — tum S1–S5 ozellikleri
       calisiyor. Turda bulunan ve yayindan once duzeltilenler:
       - Dilbilgisi Mercegi uygulamayi cokertti (iki kez). Ilk teshis
         (FlowLayout) yanlisti; gercek neden: Inspector'in sabit bolgesindeki
@@ -346,7 +346,7 @@ ve Okuma Cetveli alinmadi.
         `<a short title>` yer tutucusunu kopyalayip hikayeyi baslik satirina
         yazdi) → yalniz baslik satiri, yeni istem; 6/6 olcum temiz
       - Sadelestir/Yeniden Anlat zor bulunuyordu → ⌘K'ye eklendi
-- [x] **Yayin 1.42.0** (2026-10-01, kullanici onayiyla) — ilk release run'i
+- [x] **Yayin 1.42.0** (2026-10-01) — ilk release run'i
       CI'in Xcode 26.3 derleyicisinde iki Swift 6 veri yarisi hatasiyla dustu
       (`ReadingLoopModel`: yakalanan cache-key closure'i ve logger
       interpolation'indaki `var`; Xcode 27 kabul ediyordu). Duzeltme

@@ -1,9 +1,9 @@
 # RELL Roadmap v14 — Ayni Ozellikler, Cok Daha Iyi Bir Uygulama (S0 + 4 sprint)
 
-Olusturulma: 2026-10-01 (v1.42.0 sonrasi). Kullanici karari: **yeni ozellik
+Olusturulma: 2026-10-01 (v1.42.0 sonrasi). Ilke: **yeni ozellik
 yok** — mevcut ozellikleri daha kullanisli ve estetik bir arayuzle sunmak,
 deneyimi ust seviyeye cikarmak ve uygulamayi saglamlastirmak. Golgeleme v14'te
-yok (kullanici karari). v13 roadmap'i: `docs/archive/ROADMAP-v13.md`.
+yok. v13 roadmap'i: `docs/archive/ROADMAP-v13.md`.
 
 v13 kapandi: S0–S5 tek surum olarak **v1.42.0** (2026-10-01) — Swift 6 modu,
 karsilasma gunlugu + kelime sayfasi + baglam rotasyonlu cloze, donuste ozet,
@@ -14,7 +14,7 @@ izolasyonu. 608 test. Surum notlari artik CHANGELOG'dan "What's new" ile
 basliyor; eski 42 surum geriye donuk guncellendi.
 
 **v13'un dersleri (bu roadmap'in sebebi):** ozellikler calisiyor ama
-kullanici bazilarini **bulamadi** (Sadelestir/Yeniden Anlat yalniz 6+
+bazilari **kesfedilemiyordu** (Sadelestir/Yeniden Anlat yalniz 6+
 kelimelik secimde 7 adsiz ikonlu bir cubukta); arayuz **kalabaliklasti**
 (baglam seridinde 8 oge, Inspector'da 6 katman); Inspector'in sabit bolgesi
 **iki kez cokme** uretti (AppKit constraint dongusu); kodun tamami ilk kez
@@ -44,10 +44,10 @@ dokunulmaz). Eklenenler:
 
 - **Once tasarim, sonra kod.** Her UI sprinti, degisecek ekranlarin onceki/
   sonraki halini gosteren bir **gorsel maket** (HTML artifact) ile baslar;
-  kullanici onaylamadan kod yazilmaz. Maket DS token'larinin gercek
+  maket onaylanmadan kod yazilmaz. Maket DS token'larinin gercek
   degerleriyle cizilir.
 - **Yeni ozellik yok.** Bir ekran yeniden duzenlenirken davranis korunur;
-  ozellik ekleme/cikarma yalniz kullanici karariyla. Bir ozelligin yeri
+  ozellik ekleme/cikarma yalniz acik kararla. Bir ozelligin yeri
   degisirse eski yolu bir surum boyunca calismaya devam eder (menu, kisayol).
 - **Sutunlarda yerlesim kurali (v13 dersi):** Inspector, okuyucu ve kenar
   cubugu gibi AppKit'in boyutlandirdigi sutunlarda yuksekligi degisen her
@@ -56,8 +56,8 @@ dokunulmaz). Eklenenler:
   sheet'lerde. Her yeniden duzenlenen yuzey icin **"pencereyi buyutmez"**
   testi (S0'daki yardimci ile).
 - **Her sprint sonu:** `main` push edilir ve CI testi (Xcode 26.x) gecmeden
-  sprint kapanmaz; kullanici **canli turu** sprint icindeki bir kontrol
-  listesiyle yapar.
+  sprint kapanmaz; **canli tur** sprint icindeki bir kontrol
+  listesiyle yapilir.
 - **Erisilebilirlik varsayilan:** yeni ya da yeniden duzenlenen her ikon
   dugmesinin `accessibilityLabel`'i ve `.help`'i olur; renk tek bilgi
   tasiyicisi degildir; ana akislar klavyeyle yapilabilir.
@@ -102,7 +102,7 @@ Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
       ¹ Ana thread disinda, okunan sayfa basina bir kez — sorun degil; maliyet
       her taramada kelimelerin kok anahtarlarinin yeniden hesaplanmasi
       (onbellege alinabilir). XCUITest, ayni bundle id'li calisan uygulamayi
-      kapatir — `make ui-test` kullanicinin RELL'i kapaliyken kosulur
+      kapatir — `make ui-test` calisan RELL kapaliyken kosulur
       (ad-hoc imzayla; imzasiz calistirici macOS'ta baslatilamiyor). UI
       testleri `-RELLTestHost` ile acilir (gecici veri)
 - [x] **CI esitligi** — `make ci-test` CI'daki komutun aynisi (macOS 15 hedefi,
@@ -121,7 +121,7 @@ Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
       tanimliyor
 - [x] Dogrulama: `make ci-test` 618 test, 0 hata; CI (Xcode 26.x) 618 test,
       0 hata, 7 atlanan (makineye bagli)
-- [x] **Canli tur (kullanici)** — tamam (2026-10-01). Ilk turda okuyucu
+- [x] **Canli tur** — tamam (2026-10-01). Ilk turda okuyucu
       penceresi en kucuk boyutta coktu: baglam seridinin sag tarafi dar
       genislikte kesilen ciplerle yeniden pazarlik ediyordu + 900 pt sabit
       minimum bolunmus gorunumun kendi minimumunun altindaydi. Duzeltme
@@ -133,7 +133,7 @@ Amac: UI degisikliklerini guvenle yapabilmek icin olcum ve guvenlik agi.
       gorunum degismemeli. (2) EPUB'da betik tasimasinin etkiledigi her sey:
       kayitli kelime alt cizgisi, vurgular, uzerine gelme sozlugu, secim
       cubugu, karaoke (Seslendir), ⌥⌘G anlamlar
-- [x] Soguk acilis olcumu — 549 ms (kullanicinin RELL'i kapaliyken; gercek
+- [x] Soguk acilis olcumu — 549 ms (calisan RELL kapaliyken; gercek
       veri dosyalarina dokunulmadi)
 
 ## Sprint 1 — "Okuyucu kabugu" (Must)
@@ -187,7 +187,7 @@ araclar istenince bulunabilsin. **Maketle baslar.**
       Zen cubugu eski yerinde kaldi → Zen cubugu okuma sutununa overlay,
       ikisi birlikte `padding(.top, screen.safeAreaInsets.top)` (centik
       yuksekligi; centiksiz ekranda 0) + ust guvenli alan yok sayilir.
-      Olcum (gecici NSLog, kullanicinin Zen'i, 1512x982 ekran): tam ekran
+      Olcum (gecici NSLog, Zen modu, centikli ekran): tam ekran
       pencere 949 pt — centigin (32 pt) altindan basliyor; contentView ust
       guvenli alani 52 pt (gizli arac cubugu). Yani centik boslugu cift
       sayiliyordu → kaldirildi; son hal: Zen cubugu overlay + yalniz
@@ -199,7 +199,7 @@ araclar istenince bulunabilsin. **Maketle baslar.**
       arac cubugu gizlenmiyor, icerigi Zen kontrolleriyle degisiyor
       (`ZenToolbar.swift`, `windowToolbarContent`), tam ekranda
       `.onHover` — Safari gibi menu cubuguyla birlikte iner
-- [x] **Canli tur (kullanici)** — tamam (2026-10-02; bulgular yukarida: cam
+- [x] **Canli tur** — tamam (2026-10-02; bulgular yukarida: cam
       ustu metin, Zen boslugu, Zen dugmeleri). Kontrol listesi: (1) serit: genis ve dar pencerede "Bu
       bolum" hapi, tiklayinca panel, "N kelimeyi gor" → liste → "Ozete don";
       (2) secim cubugu: kelime ve paragraf secimi, Araclar menusu (pasif
@@ -218,7 +218,7 @@ cumle secildiginde o cumle icin araclar. **Maketle baslar.**
       Yeniden Anlat) → modul sonucu
 - [x] **Modul izgarasi** — sik kullanilan modullerin gorunur, digerlerinin
       "Daha fazla" altinda olmasi; otomatik calistirma ayari ayni kalir
-      (v13'te kullanici kararina birakilmisti — maket asamasinda onaylanir)
+      (v13'te acik birakilmisti — maket asamasinda onaylanir)
 - [x] **Sonuc okunabilirligi** — modul ciktilarinda baslik/govde tipografisi,
       ornek cumlelerde kelime vurgusu, kopyala/kaydet eylemleri tek yerde
 - [x] **Saglamlik** — tum sabit bolge yeni kurala gore (esnek ya da sinirli
@@ -240,7 +240,7 @@ cumle secildiginde o cumle icin araclar. **Maketle baslar.**
       davranis olurdu; kaydet karttan. Testler: `InspectorLayoutTests` (3),
       LayoutGuard +2 (cumle+ceviri+araclar, tema uyumu). Gorsel kontrol
       gecici render ile. `make ci-test` 632 test, 0 hata
-- [x] **Canli tur (kullanici)** — tamam (2026-10-02, sorunsuz). (1) kelime sec: kart dugmeleri (Kaydet ⌘D,
+- [x] **Canli tur** — tamam (2026-10-02, sorunsuz). (1) kelime sec: kart dugmeleri (Kaydet ⌘D,
       Dinle/Durdur ⇧⌘S/⇧⌘X, Anki), saat menusu (son terimler), ⋯ menusu
       ("Soyle Acikla"); (2) cumle sec: ceviri kartta (serit aciksa),
       Araclar: Dilbilgisi, Sadelestir, Yeniden Anlat; (3) 4 cip + Daha fazla
@@ -282,7 +282,7 @@ araclar bir yerde. **Maketle baslar.**
       `WhatsNewSheet`. xcstrings: kacisli tirnakli anahtarlar icin bos nesne
       deseni duzeltildi. Testler `HomeLibraryWordsTests` (6). Gorsel kontrol
       gecici render ile. `make ci-test` 638 test, 0 hata
-- [x] **Canli tur (kullanici)** — tamam (2026-10-02, sorunsuz). (1) ana ekran: Devam, tekrar + hedef yan
+- [x] **Canli tur** — tamam (2026-10-02, sorunsuz). (1) ana ekran: Devam, tekrar + hedef yan
       yana, Araclar satiri (uc dugme); (2) kitaplik: Tumunu gor ›, izgara/
       liste, raflar (Makaleler, Hikayeler; bos raf dugmesi); (3) kelimeler:
       satir, Filtre menusu, etkin filtre cipi kaldirma, bos liste dugmeleri;
@@ -316,7 +316,7 @@ Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
       izleyen Inspector tutarli. Supheli: koyu temalarda modul ciplerinin
       yazisi soluk — cipler cam efektli, render cami gercek pencere gibi
       cizmiyor olabilir; canli turda bakilacak
-- [x] **Hitap** (kullanici karari "sen"): "siz" kalibindaki 24 TR metin
+- [x] **Hitap** (karar: "sen"): "siz" kalibindaki 24 TR metin
       "sen"e cevrildi (emir ve -iniz ekleri taranarak; iyelik ekli
       yanlis alarmlar elendi)
 - [x] Uygulama (maket onayi 2026-10-02; kararlar: 6 sekme, tur yeni
@@ -350,8 +350,7 @@ Amac: ilk acilistan Ayarlar'a kadar butunluk; herkes icin kullanilabilirlik.
       kurulan NSWindow'da; korudugu kisit dongusu degil. Test macOS 15'te
       gerekceli XCTSkip, macOS 26+'da calisir. Ders: her push'tan sonra
       `gh run list` ile Test is akisi kontrol edilir
-- [x] Kapanis (2026-10-02): canli tur temiz, CI yesil (433e067), tek surum 1.43.0 (onayli;
-      tag oncesi kullaniciya sorulur)
+- [x] Kapanis (2026-10-02): canli tur temiz, CI yesil (433e067), tek surum 1.43.0
 
 ---
 
@@ -367,5 +366,5 @@ anlama kontrolu, kenar notlari, seviye testi.
   kotulesmez
 - `main` push, CI testi yesil (Xcode 26.x)
 - Maketle karsilastirmali ekran gorselleri (acik/koyu)
-- Kullanici canli turu (kontrol listesiyle)
+- Canli tur (kontrol listesiyle)
 - `Localizable.xcstrings`: yeni metinler TR ile

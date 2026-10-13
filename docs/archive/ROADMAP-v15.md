@@ -1,11 +1,10 @@
 # RELL Roadmap v15 — Kaydettigin Kelimeyi Ogren (S0 + 4 sprint)
 
-Olusturulma: 2026-10-08 (v1.43.0 sonrasi). Kullanici karari: okuma ve kelime
-kaydetme deneyimi yeterince iyilesti; **tek odak kaydedilen kelimelerin
+Olusturulma: 2026-10-08 (v1.43.0 sonrasi). Okuma ve kelime kaydetme
+deneyimi olgunlastigi icin bu surumde **tek odak kaydedilen kelimelerin
 calisilmasi, ogrenilmesi ve tekrar edilmesi**. Taze fikir katalogundan
-yalniz uc fikir alindi: A1 (i+1 cumleler — "kullanisli olursa"), C2 (Kindle
-kelime defteri; kullanicinin Kindle'i var), D1 (Kisayollar — Apple
-Developer hesabi olmadan calisirsa). Tek surum: **1.44.0**. v14 roadmap'i:
+yalniz uc fikir alindi: A1 (i+1 cumleler), C2 (Kindle kelime defteri),
+D1 (Kisayollar — Apple Developer hesabi olmadan calisirsa). Tek surum: **1.44.0**. v14 roadmap'i:
 `docs/archive/ROADMAP-v14.md`.
 
 v14 kapandi: S0–S4 tek surum olarak **v1.43.0** (2026-10-02) — sakin baglam
@@ -16,7 +15,7 @@ Yenilikler, 6 sekmeli Ayarlar, okuma dongusu turu, VoiceOver taramasi,
 tutarli Turkce ("Inspector", "tekrar bekleyen", "sen"). 642 test. Ders: CI
 Test is akisi 9 commit kirmizi kaldi — her push'tan sonra kontrol edilir.
 
-## Durum (2026-10-08, kullanicinin verisi, salt okunur)
+## Durum (2026-10-08, ornek kelime kumesi, salt okunur)
 
 | Olcu | Deger |
 |---|---|
@@ -65,9 +64,9 @@ kalemler (notarization, widget, App Group, CloudKit).
 
 ## Sprint 0 — "Zemin ve olcumler" (Must, kisa)
 
-Amac: kod yazmadan once belirsizlikleri kullanicinin verisiyle kapatmak.
+Amac: kod yazmadan once belirsizlikleri gercek kullanim verisiyle kapatmak.
 
-- [x] **Doldurma kaynaklari olcumu** (2026-10-08, kullanicinin 59 kelimesi,
+- [x] **Doldurma kaynaklari olcumu** (2026-10-08, 59 kelimelik ornek kume,
       salt okunur):
       - Apple sozlugu (`DCSCopyTextDefinition`, varsayilan sozluk kumesi):
         **59/59 bulundu**; cevap dili ilk eslesen sozluge bagli — 38 Turkce
@@ -80,10 +79,10 @@ Amac: kod yazmadan once belirsizlikleri kullanicinin verisiyle kapatmak.
         `gemma-4-e4b` ilk istek 13 sn, sonra ~0,5 sn, **1 bos cevap**, 1
         yazim hatasi. Karar: tanim icin once cihaz ici model, yedek
         saglayici; bos/yanlis dilde cevap kaydedilmez, yeniden denenir
-- [x] **Kindle vocab.db** — S4'e ertelendi (2026-10-08: cihaz kullanicinin
-      yaninda degil). Ice aktarma bilinen semayla (WORDS, LOOKUPS,
-      BOOK_INFO) ve test fiksturuyle yazilir; surumden once kullanicinin
-      gercek dosyasiyla salt okunur dogrulanir
+- [x] **Kindle vocab.db** — S4'e ertelendi (2026-10-08: test cihazi
+      hazir degildi). Ice aktarma bilinen semayla (WORDS, LOOKUPS,
+      BOOK_INFO) ve test fiksturuyle yazilir; surumden once gercek bir
+      dosyayla salt okunur dogrulanir
 - [ ] **Kisayollar denemesi** — DUZELTME: Kisayollar **zaten var** (7925d86,
       ilk surumler): "Add Word to RELL", "Start Vocabulary Review", "Look Up
       in RELL" (`App/RELLIntents.swift`); Servisler menusu de var ("Look Up
@@ -93,7 +92,7 @@ Amac: kod yazmadan once belirsizlikleri kullanicinin verisiyle kapatmak.
       indeksliyor ama her acilista "Unable to get teamId" hatasi veriyor —
       ad-hoc imzada takim kimligi yok. Ucretli hesap olmadan tek yol Xcode'da
       ucretsiz Apple ID ("Personal Team") ile yerel imza; CI'nin DMG'si yine
-      ad-hoc kalir. Karar (kullanicinin kosulu: "hesap olmadan calisirsa"):
+      ad-hoc kalir. Karar (kosul: hesap olmadan calismasi):
       Kisayollar v15'ten cikar, mevcut eylemler oldugu gibi kalir; Servisler
       menusu imzasiz calisiyor
 - [x] **Temizlik** — "word"/"Word": dort kaydetme yolu (PDF ve EPUB sag tik,
@@ -183,7 +182,7 @@ Amac: kelime calismasi ayri, odakli ve tam ekran bir yere tasinsin
 Amac: tekrar, kelimenin asamasina gore dogru alistirmayi secsin.
 **Maketle baslar.**
 
-Kullanici maketsiz kodlanmasini istedi (2026-10-08).
+Maket adimi atlandi; dogrudan kodlandi (2026-10-08).
 
 - [x] **Yeni kelime tanitimi** — Calisma odasinda hic calisilmamis kelime
       once tanitilir (anlam, tanim, telaffuz, cumle, ses; "Anladim, sonra
@@ -212,9 +211,8 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-08).
 
 ## Sprint 4 — "Kelime getiren kapilar ve kapanis"
 
-- [x] **Kindle kelime defteri** (Must) — gercek dosya (2026-10-09,
-      kullanicinin Kindle'i, kopyadan salt okunur): 559 kelime (550 en, 9 tr),
-      597 arama, 15 kitap; sema beklenen (WORDS / LOOKUPS / BOOK_INFO).
+- [x] **Kindle kelime defteri** (Must) — gercek bir dosya (2026-10-09,
+      kopyadan salt okunur): ~560 kelime, ~600 arama, 15 kitap; sema beklenen (WORDS / LOOKUPS / BOOK_INFO).
       `KindleVocabulary` dosyayi gecici klasore kopyalar, kopyayi
       `immutable=1` ile acar (Kindle'a hicbir sey yazilmaz, kilit dosyasi
       bile olusmaz); her kelime en yeni aramasinin cumlesi ve kitabiyla.
@@ -224,26 +222,26 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-08).
       Kindle'da "ogrenildi" olanlar istege bagli; "Kindle" destesine
       `addImported` ile tek kayitta eklenir (kelime basina doldurma/CEFR
       tetiklenmez), ardindan sozluk + cihaz ici modelle toplu doldurma.
-      Gercek dosyada (kopyadan, salt okunur) plan: 528 yeni, 6 zaten
-      kayitli, 9 Turkce, 16 cok sik kelime (it, the, have…) alinmiyor;
+      Gercek dosyada (kopyadan, salt okunur) plan: yeni kelimelerin yaninda
+      zaten kayitli, baska dilde ve cok sik (it, the, have…) olanlar alinmiyor;
       tek basina etiketlenince "thalamus"/"anthem" islev sozcugu sayiliyordu
       → cumlesi icinde etiketlenir, yalniz ≤5 harfliler ("albeit" kalir);
       cumle basi buyuk harfi kuculur ("It" → "it", "Komodo" kalir).
       `KindleImportTests` (7, sema fiksturu). Tam paket 689 yesil
 - [x] ~~Kisayollar~~ — S0 olumsuz (takim kimligi gerekir); v15 disi
 - [x] Kapanis (Must): tam test (689 yesil, CI yesil), canli turlar
-      (S1–S4, kullanici), CHANGELOG 1.44.0 + Yenilikler 1.44; **1.44.0**
-      kullanicinin onayiyla yayinlandi (2026-10-09)
+      (S1–S4), CHANGELOG 1.44.0 + Yenilikler 1.44; **1.44.0**
+      yayinlandi (2026-10-09)
 
 ---
 
-## Kararlar (2026-10-08, kullanici onayi)
+## Kararlar (2026-10-08)
 
 1. Kaydederken doldurma: Apple sozlugu + cihaz ici model (+ yerel sunucu)
    kendiliginden; bulut saglayici yalniz "Eksikleri doldur" ile.
 2. Tam ekran: ayri Calisma penceresi.
 3. Kenar cubugundaki Tekrar sekmesi kalir + "Tam ekranda calis".
-4. Kindle: dosya yalniz okunur; cihaz S4'te baglanir (S0'da yanda degildi).
+4. Kindle: dosya yalniz okunur; gercek cihazla dogrulama S4'te.
 
 ## Fikir havuzu (v15'e alinmadi)
 
@@ -259,5 +257,5 @@ Servisler menusu, haftalik ozet, okuma hizi.
   kotulesmez
 - `main` push, `gh run list` ile Test **ve** Build is akisi yesil
 - Maketle karsilastirmali ekran gorselleri (acik/koyu)
-- Kullanici canli turu (kontrol listesiyle)
+- Canli tur (kontrol listesiyle)
 - `Localizable.xcstrings`: yeni metinler TR ile ("sen" hitabi)
