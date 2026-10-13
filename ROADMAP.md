@@ -124,6 +124,15 @@ yeni okuma ozellikleri, iOS.
       yerel modelle eszamanli uzun is olcumu gelistirme makinesini
       kilitledi; bundan sonra yalniz kucuk model, tek kisa istek, sert zaman
       siniri
+- [x] **Ollama bulut modeli** (2026-10-14, Ollama 0.40.3,
+      `gemma4:31b-cloud`, tek kisa istek x4): ilk kelime 0,3–1,0 sn, toplam
+      0,6–1,2 sn; `reasoning_effort` olsun olmasin dusunme parcasi yok.
+      Bulut modelinde yerel yukleme/GPU yarisi yok — yavaslik baska yerde
+      aranir: Ollama surumu (dusunme ve `reasoning_effort` davranisi),
+      Ollama hesabinin bulut kullanim sinirlari, ag. RELL tarafinda iki
+      tutarsizlik: `…-cloud` modeller panelde yerel sayiliyor (2'lik kapi)
+      ve arka plan isleri (Apple modeli yokken) buluta da gider, kotayi
+      tuketir. S1'de ele alinir; tani raporu (S3) Ollama surumunu da yazar
 - [ ] **Uygulama ici taklit** — gelistirme Mac'inde (tek kopya) Apple modeli
       acik/kapali, ayni kitap ve kelimeler: kelime tikla, bolum degistir,
       kitaba geri don senaryolari. Rapor: hangi
