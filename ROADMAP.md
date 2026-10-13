@@ -115,6 +115,15 @@ yeni okuma ozellikleri, iOS.
       saglayiciya gider) kelime yanitini ~5 kat geciktiriyor. Apple modeli
       (v12 olcumu, ortanca 0,9 sn) bu islerin cogunu saglayicidan aliyor —
       yapilandirmalar arasindaki farki aciklar. Hipotez 3 ve 2 dogrulandi
+- [x] **Ollama** — varsayilan `keep_alive` **5 dk** (`/api/ps`
+      `expires_at`, yukleme + 5 dk), baglam 4096. Okurken iki bakis arasi
+      5 dakikayi kolayca gecer: Ollama'da model LM Studio'dakinden (60 dk)
+      cok daha sik bosaltilir ve ilk istek yeniden yukleme bekler. RELL
+      Ollama'ya OpenAI uyumlu `/v1` yolundan gider; `keep_alive` bu yolda
+      gonderilemiyor olabilir — S1'de yerel API ile dogrulanir. Ders: buyuk
+      yerel modelle eszamanli uzun is olcumu gelistirme makinesini
+      kilitledi; bundan sonra yalniz kucuk model, tek kisa istek, sert zaman
+      siniri
 - [ ] **Uygulama ici taklit** — gelistirme Mac'inde (tek kopya) Apple modeli
       acik/kapali, ayni kitap ve kelimeler: kelime tikla, bolum degistir,
       kitaba geri don senaryolari. Rapor: hangi
