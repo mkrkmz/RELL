@@ -168,6 +168,7 @@ struct RetellSheet: View {
         Task {
             do {
                 let raw = try await AppleOnDevice.chatWithFallback(
+                    origin: .retell,
                     system: Retell.systemPrompt(
                         target: Language.storedTarget,
                         native: Language.storedNative,

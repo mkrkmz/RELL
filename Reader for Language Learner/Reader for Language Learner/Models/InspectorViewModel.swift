@@ -218,6 +218,7 @@ final class InspectorViewModel {
             } catch {
                 failure = error
             }
+            (provider as? RecordedLLMProvider)?.dropIfNotSent()
             guard let self, self.currentRunIDs[module] == runID else { return }
             self.finish(run, finishReason: finishReason, failure: failure, cancelled: Task.isCancelled)
         }
@@ -291,6 +292,7 @@ final class InspectorViewModel {
             } catch {
                 failure = error
             }
+            (provider as? RecordedLLMProvider)?.dropIfNotSent()
             guard let self else { return }
             if let index = self.followUpIndex(exchangeID) {
                 if let failure, !Task.isCancelled {

@@ -111,7 +111,10 @@ struct GrammarLensView: View {
                 // named simple-present sentences as past or continuous (see
                 // `GrammarLens.systemPrompt`). No fallback to it either — a
                 // wrong grammar explanation is worse than none.
-                let raw = try await LLMConfiguration().makeProvider().chat(
+                let provider = LLMRequestLog.shared.recording(
+                    LLMConfiguration().makeProvider(), origin: .grammar, route: .configured
+                )
+                let raw = try await provider.chat(
                     system: GrammarLens.systemPrompt(
                         target: language, native: Language.storedNative, level: CEFRLevel.storedLearnerLevel
                     ),

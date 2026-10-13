@@ -77,18 +77,28 @@ enum AppleOnDevice {
         }
     }
 
+    /// `provider(for:)`, recorded in `LLMRequestLog` as one request from
+    /// `origin`. Make it before the request waits for its turn.
+    @MainActor
+    static func recordedProvider(for module: ModuleType?, origin: LLMRequestOrigin) -> RecordedLLMProvider {
+        LLMRequestLog.shared.recording(
+            provider(for: module), origin: origin, detail: module?.rawValue, route: currentRoute(for: module)
+        )
+    }
+
     /// Free-form work that must not stop at a refusal: Apple's model first
     /// when it's on, the configured provider if that fails. The v13 spike
     /// found the on-device guardrail declining one recap in three for a
     /// classic novel — dark scenes are ordinary in fiction.
     @MainActor
     static func chatWithFallback(
+        origin: LLMRequestOrigin,
         system: String,
         user: String,
         temperature: Double,
         maxTokens: Int
     ) async throws -> String {
-        let primary = provider(for: nil)
+        let primary = recordedProvider(for: nil, origin: origin)
         do {
             return try await primary.chat(
                 system: system, user: user, temperature: temperature, maxTokens: maxTokens, topP: 0.9
@@ -96,7 +106,10 @@ enum AppleOnDevice {
         } catch {
             guard currentRoute(for: nil) == .appleOnDevice, !Task.isCancelled else { throw error }
             AppLogger.llm.info("On-device request failed, using the configured provider: \(error.localizedDescription, privacy: .public)")
-            return try await LLMConfiguration().makeProvider().chat(
+            let fallback = LLMRequestLog.shared.recording(
+                LLMConfiguration().makeProvider(), origin: origin, route: .configured
+            )
+            return try await fallback.chat(
                 system: system, user: user, temperature: temperature, maxTokens: maxTokens, topP: 0.9
             )
         }

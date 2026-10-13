@@ -135,11 +135,14 @@ final class QuickLookupService {
         let user = module.userPrompt(term: term, mode: .word, detail: .short, nativeLanguage: native)
         let maxTokens = module.recommendedMaxTokens(mode: .word, detail: .short, modelIdentifier: LLMConfiguration().model)
 
+        let provider = AppleOnDevice.recordedProvider(for: module, origin: .quickLookup)
         let local = isLocalProvider(for: module)
         if local { await gate.acquire() }
-        defer { if local { gate.release() } }
+        defer {
+            if local { gate.release() }
+            provider.dropIfNotSent()
+        }
 
-        let provider = AppleOnDevice.provider(for: module)
         var accumulated = ""
         _ = try await provider.stream(
             system: system,
@@ -223,11 +226,14 @@ final class QuickLookupService {
     private func run(
         system: String, user: String, maxTokens: Int, temperature: Double, module: ModuleType?
     ) async throws -> String {
+        let provider = AppleOnDevice.recordedProvider(for: module, origin: .quickLookup)
         let local = isLocalProvider(for: module)
         if local { await gate.acquire() }
-        defer { if local { gate.release() } }
+        defer {
+            if local { gate.release() }
+            provider.dropIfNotSent()
+        }
 
-        let provider = AppleOnDevice.provider(for: module)
         return try await provider.chat(
             system: system,
             user: user,

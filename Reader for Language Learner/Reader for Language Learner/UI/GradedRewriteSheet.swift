@@ -105,6 +105,7 @@ struct GradedRewriteSheet: View {
         defer { isLoading = false }
         do {
             let raw = try await AppleOnDevice.chatWithFallback(
+                origin: .rewrite,
                 system: GradedRewrite.systemPrompt(language: Language.storedTarget, level: level),
                 user: GradedRewrite.userPrompt(passage: GradedRewrite.input(source)),
                 temperature: 0.3,

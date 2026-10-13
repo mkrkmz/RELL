@@ -92,6 +92,7 @@ struct WordStorySheet: View {
         Task {
             do {
                 let raw = try await AppleOnDevice.chatWithFallback(
+                    origin: .story,
                     system: WordStory.systemPrompt(target: target, level: CEFRLevel.storedLearnerLevel),
                     user: WordStory.userPrompt(words: chosen),
                     temperature: 0.8,

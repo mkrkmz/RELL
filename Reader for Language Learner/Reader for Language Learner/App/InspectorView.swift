@@ -80,10 +80,17 @@ struct InspectorView: View {
     /// Apple's on-device model is used directly — retries and the circuit
     /// breaker exist for a network server, and an on-device failure must not
     /// mark the configured server as down.
+    /// Each call is one request in `LLMRequestLog` (v17 S0): call it where
+    /// the request is decided, before it waits for its turn.
     func llmProvider(for module: ModuleType?) -> any LLMProvider {
-        let provider = AppleOnDevice.provider(for: module)
-        guard AppleOnDevice.currentRoute(for: module) == .configured else { return provider }
-        return ResilientLLMProvider(provider: provider, circuitBreaker: circuitBreaker)
+        let route = AppleOnDevice.currentRoute(for: module)
+        var provider = AppleOnDevice.provider(for: module)
+        if route == .configured {
+            provider = ResilientLLMProvider(provider: provider, circuitBreaker: circuitBreaker)
+        }
+        return LLMRequestLog.shared.recording(
+            provider, origin: module == nil ? .askAI : .module, detail: module?.rawValue, route: route
+        )
     }
 
     /// Provider part of the output cache key. Apple's layer changes which

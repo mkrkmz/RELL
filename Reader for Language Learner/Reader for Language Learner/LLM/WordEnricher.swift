@@ -490,7 +490,7 @@ final class WordEnricher {
         else { return nil }
         let gate = gate
         return { request in
-            await Self.ask(AppleOnDeviceClient(), request, gate: gate, label: "on-device")
+            await Self.ask(AppleOnDeviceClient(), request, gate: gate, route: .appleOnDevice)
         }
         #else
         return nil
@@ -507,7 +507,7 @@ final class WordEnricher {
         let provider = configuration.makeProvider()
         let gate = gate
         return (configuration.providerType.localizedTitle, { request in
-            await Self.ask(provider, request, gate: gate, label: "provider")
+            await Self.ask(provider, request, gate: gate, route: .configured)
         })
     }
 
@@ -546,11 +546,16 @@ final class WordEnricher {
         return !model.lowercased().contains("cloud")
     }
 
-    private static func ask(_ provider: any LLMProvider, _ request: FillRequest, gate: AsyncLimiter, label: String) async -> String? {
+    private static func ask(_ base: any LLMProvider, _ request: FillRequest, gate: AsyncLimiter, route: LLMRoute) async -> String? {
         guard let module = request.field.module else { return nil }
+        let provider = LLMRequestLog.shared.recording(base, origin: .fill, detail: module.rawValue, route: route)
         await gate.acquire()
-        defer { gate.release() }
+        defer {
+            gate.release()
+            provider.dropIfNotSent()
+        }
         guard !Task.isCancelled else { return nil }
+        let label = route == .appleOnDevice ? "on-device" : "provider"
         // No context sentence: with one, the definition prompt asks for two
         // paragraphs, the first about the sentence — the card wants the
         // general meaning (v15 S1 live pass).

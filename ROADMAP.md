@@ -89,14 +89,33 @@ yeni okuma ozellikleri, iOS.
 
 ## Sprint 0 — "Once olc" (Must, kisa)
 
-- [ ] **Istek defteri** — her yapay zeka istegi bellekte (son ~200) bir
-      kayit: kaynak (panel modulu, hizli bakis, CEFR, doldurma, isinma,
-      ozet, satir arasi, Ask AI, yeniden yaz…), rota (Apple / yapilandirilmis
-      saglayici + model), sirada bekleme, ilk kelimeye kadar sure, toplam,
-      sonuc (bitti / iptal / hata / onbellek). Saf kayit tipi + tek giris
-      noktasi; diske yazmaz. S2'nin sonuc satiri ve hiz testi, S3'un tani
-      raporu bunu okur
-- [ ] **Taklit ve olcum** — gelistirme Mac'inde (tek kopya) Apple modeli
+- [x] **Istek defteri** — `LLMRequestLog` (bellekte son 200, diske
+      yazmaz, metin tutmaz): kaynak (`LLMRequestOrigin`: panel modulu, Ask
+      AI, hizli bakis, CEFR, doldurma, isinma, ozet, satir arasi, dilbilgisi,
+      sadelestirme, yeniden anlatma, hikaye), motor + model, sirada bekleme,
+      ilk kelime, toplam, sonuc (bitti / iptal / hata / hic gonderilmedi).
+      `RecordedLLMProvider` sarmalayicisi istegin karar verildigi yerde,
+      kuyruktan once kurulur; butun istek yollari (`AppleOnDevice.
+      recordedProvider`, `chatWithFallback(origin:)`, doldurma, dilbilgisi)
+      bundan gecer. Biten her istek `com.rell.app`/`llm` gunlugune tek satir.
+      `LLMRequestLogTests` (7)
+- [x] **Dogrudan olcum** (2026-10-14, LM Studio, `gemma-4-e4b` Q4_K_M,
+      RELL'e benzer tanim istemi, akisli):
+
+      | Durum | Ilk kelime | Toplam |
+      |---|---|---|
+      | Model yuklu degil (ilk istek) | 12,4 sn | 12,8 sn |
+      | Model yuklu, tek basina (5 kelime ortanca) | 0,29 sn | 0,73 sn |
+      | Model yuklu, arkada 3 uzun is (1200 token) varken | 3,6 sn | 4,1 sn |
+
+      LM Studio API'den yuklenen modeli **60 dk** bosta kalinca bosaltiyor
+      (`lms ps`: TTL 60m, paralel 4); acik RELL'e ragmen model yuklu
+      degildi. Sonuc: (1) ilk istekteki model yuklemesi tek basina ~12 sn;
+      (2) arka plan isleri (isinma, ozet, satir arasi — Apple modeli yokken
+      saglayiciya gider) kelime yanitini ~5 kat geciktiriyor. Apple modeli
+      (v12 olcumu, ortanca 0,9 sn) bu islerin cogunu saglayicidan aliyor —
+      yapilandirmalar arasindaki farki aciklar. Hipotez 3 ve 2 dogrulandi
+- [ ] **Uygulama ici taklit** — gelistirme Mac'inde (tek kopya) Apple modeli
       acik/kapali, ayni kitap ve kelimeler: kelime tikla, bolum degistir,
       kitaba geri don senaryolari. Rapor: hangi
       istek ne kadar bekledi, model yuklemesi var mi (bosta 5+ dk sonra

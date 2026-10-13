@@ -61,8 +61,12 @@ final class CEFREstimator {
     /// One micro-request → one strict-parsed token. Any failure or format
     /// drift returns nil; nothing is stored.
     func estimate(term: String) async -> CEFRLevel? {
+        let provider = AppleOnDevice.recordedProvider(for: nil, origin: .cefr)
         await gate.acquire()
-        defer { gate.release() }
+        defer {
+            gate.release()
+            provider.dropIfNotSent()
+        }
         guard !Task.isCancelled else { return nil }
 
         let target = Language.storedTarget
@@ -74,7 +78,6 @@ final class CEFREstimator {
         let user = "CEFR level of \"\(term)\" for a learner of \(target.rawValue):"
 
         do {
-            let provider = AppleOnDevice.provider(for: nil)
             let raw = try await provider.chat(
                 system: system,
                 user: user,

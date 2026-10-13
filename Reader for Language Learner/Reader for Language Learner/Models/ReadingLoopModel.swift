@@ -112,6 +112,7 @@ final class ReadingLoopModel {
             }
             do {
                 let raw = try await AppleOnDevice.chatWithFallback(
+                    origin: .recap,
                     system: ReadingRecap.systemPrompt(language: language, level: level),
                     user: ReadingRecap.userPrompt(passage: text),
                     temperature: 0.3,
@@ -183,6 +184,7 @@ final class ReadingLoopModel {
             }
             do {
                 let raw = try await AppleOnDevice.chatWithFallback(
+                    origin: .warmUp,
                     system: ChapterWarmUp.systemPrompt(target: target, answerIn: answerIn, level: level),
                     user: ChapterWarmUp.userPrompt(candidates: candidates),
                     temperature: 0.2,
@@ -284,6 +286,7 @@ final class ReadingLoopModel {
                 let words = Array(missing[batch..<min(batch + InterlinearGloss.maxBatch, missing.count)])
                 do {
                     let raw = try await AppleOnDevice.chatWithFallback(
+                        origin: .gloss,
                         system: InterlinearGloss.systemPrompt(target: target, answerIn: answerIn, level: level),
                         user: InterlinearGloss.userPrompt(words: words),
                         temperature: 0.1,
