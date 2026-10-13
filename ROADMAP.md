@@ -1,207 +1,165 @@
-# RELL Roadmap v16 — Kelimeler Kitabinda, Hepsi Bir Yerde (S0 + 4 sprint)
+# RELL Roadmap v17 — Her Mac'te Hizli ve Anlasilir (S0 + 4 sprint)
 
-Olusturulma: 2026-10-09 (v1.44.0 sonrasi). Kullanicinin istegi: bir kitabin
-kenar cubugunda **yalniz o kitabin kelimeleri** olsun; **tum kayitli
-kelimeler** ana ekrandaki Tools'tan acilan ayri bir alanda, calisma odasi
-gibi kendi penceresinde dursun. Kullanici bu duzeni tamamlayan alti oneriyi
-de secti (asagida). Tek surum: **1.45.0**. v15 roadmap'i:
-`docs/archive/ROADMAP-v15.md`.
+Olusturulma: 2026-10-13 (v1.46.1 sonrasi). Amac: yapay zeka yanit
+suresini farkli donanim ve sistem yapilandirmalarinda tutarli ve hizli
+kilmak, sure farklarinin sebebini kullaniciya gorunur kilmak ve RELL'i ilk
+kez kuran birinin sorunsuz baslamasini saglamak. Iki odak: **"Her Mac'te
+iyi"** ve **"Daha hizli yapay zeka"**. Tek surum: **1.47.0**. v16 roadmap'i:
+`docs/archive/ROADMAP-v16.md`.
 
-v15 kapandi: S0–S4 tek surum olarak **v1.44.0** (2026-10-09) — Eksikleri
-doldur (Apple sozlugu → cihaz ici model → saglayici, kaynak isaretli,
-kaydederken doldurma), Calisma odasi (tam ekran pencere, oturum kurulumu,
-buyuk kart, ←/→/S, ozet), yeni kelime tanitimi, "Asamaya gore" mod, i+1
-cumleler, zorlu kelimeler + akilda tutma ipucu, Kindle kelime defteri
-aktarimi. 689 test. Dersler: ayristiricilar kullanicinin gercek verisinde
-denenir; macOS 15'te ic ice izole deinit coker (testler async); App Intents
-takim kimligi ister.
+v16 kapandi: S0–S4 tek surum olarak **v1.45.0** (2026-10-09) — kitabin
+kenar cubugunda yalniz o kitabin kelimeleri (basliktan eslesen kopyalar ve
+Kindle dahil), Kelime defteri penceresi (⌥⌘K; kaynaklar | liste/tablo |
+kelime sayfasi), ayni kelimeyi birlestirme (yedekle), Kindle'da yeni kelime
+bildirimi, kitap basina Anki destesi, kitaplik kartlarinda kelime sayisi,
+macOS 15 deinit cokmesi. 713 test. Ardindan 1.46.1 (2026-10-11): yeni ikon
+(Icon Composer), logo, README; CI `macos-26`'ya tasindi.
 
-## Durum (2026-10-09, kullanicinin verisi, salt okunur)
+## Mevcut durum ve hipotezler (2026-10-13, kod incelemesi)
 
-| Olcu | Deger |
-|---|---|
-| Kayitli kelime | 590 |
-| Kaynagi kitaplikta acik bir belge olan | **55** |
-| Kindle'dan gelen (kitap adi, dosya degil) | ~530 (The Hunger Games 293, Why We Sleep 214, …) |
-| Kitaplikta belge | 7 (ayni "Why We Sleep" iki dosya: `Matthew Walker PhD - Why We Sleep_…`, `Why We Sleep_ Unlocking…`) |
-| Okurken karsilasma kaydi | 212 |
+Ayni ayarlar ve ayni saglayiciyla calisan iki Mac arasinda yanit suresi
+birkac kat farkli olabiliyor. Asagidaki hipotezler olcumle (S0)
+dogrulanacak; cozumler tahmine degil rakama dayanacak:
 
-- Kelime listesi bugun yalniz okuyucunun kenar cubugunda (`WordsView` →
-  `SavedWordsListView`) ve **tum** kelimeleri gosterir; "This Document"
-  yalniz bir filtre. Ana ekranda kenar cubugu yok: tum kelimelere ana
-  ekrandan ulasilamiyor.
-- Kelimenin kitabi yalniz `SavedWord.pdfFilename` (uzantisiz dosya adi;
-  Kindle'da kitap basligi). Tam esleme: Kindle'daki 214 "Why We Sleep"
-  kelimesi RELL'deki ayni kitapla eslesmez; ayni kitabin iki kopyasi
-  birbirinin kelimelerini gormez.
-- Karsilasmalar (`WordEncounterStore`) belge yolu + baslik tasir: "baska
-  yerde kaydedip bu kitapta yeniden gordugun" kelimeler hazir.
+1. **Apple'in cihaz ici modeli.** `AppleOnDevice` varsayilan acik;
+   kullanilabildiginde 5 modul (tanim, anlam, ornekler, es anlamlilar,
+   kullanim notlari) ve serbest isler (isinma, ozet, satir arasi anlam,
+   CEFR, Ask AI) ona gider — v12 spike'inda ortanca 0,9 sn. Apple
+   Intelligence kapali / model inmemis / dil desteklenmiyor / macOS 26
+   oncesi ise **hepsi** yapilandirilmis saglayiciya gider. Bu bir RELL
+   ayari degil, sistem durumu: RELL ayarlari ayni iken fark buradan dogabilir.
+   Ayarlar'daki sebep metni (`AppleOnDevice.unavailableReason`) tek yer.
+2. **Koordinasyonsuz istekler.** Yalniz inceleme paneli
+   `localRequestGate`'ten (LM Studio/Ollama, en fazla 2) gecer.
+   `ReadingLoopModel` (bolum isinmasi, "onceki bolumde" ozeti, satir arasi
+   anlam partileri) `chatWithFallback` ile kapisiz gider; `CEFREstimator`,
+   `WordEnricher`, `QuickLookupService` her biri kendi 1'lik kapisinda.
+   Apple modeli yokken bunlarin hepsi ayni yerel GPU'da panelle yarisir;
+   tek tek yanitlarin beklenmedik uzunlukta gecikmesini aciklayabilir.
+3. **Model yuklemesi.** LM Studio (JIT yukleme + bosta bekleme suresi) ve
+   Ollama (`keep_alive`, varsayilan 5 dk) bosta kalan modeli bellekten
+   atabilir; sonraki ilk istek modeli yeniden yukler. RELL bugun
+   `keep_alive` gondermiyor, onceden isitma yok.
+4. **Donanim.** Fansiz modellerde uzun yukte isil kisma; dusuk bellekte
+   buyuk model takasa dusebilir. RELL'in kontrolunde degil, ama gorunur kilinabilir
+   (S2 hiz testi, S3 bellege gore model onerisi).
+
+Yan bulgular: `LLMSessionPool` oturumlari zaten paylasiyor (baglanti
+yeniden kullanimi var). Otomatik calistirma yalniz son kullanilan modulu
+calistirir; hepsini calistir ayri kisayol.
 
 ## Teknik cerceve (tum sprintler icin gecerli)
 
-v15 cercevesi aynen devralinir: sifir dis bagimlilik, macOS 15 hedefi, tam
+v16 cercevesi aynen devralinir: sifir dis bagimlilik, macOS 15 hedefi, tam
 test paketi, **async testler**, makineye bagli test `XCTSkip`,
 `Text(String)` katalogu atlar, DS token'lari, bundle id/sandbox'a
-dokunulmaz; **once maket** (her UI sprinti HTML maketle baslar, onaysiz kod
-yok); sutunlarda yerlesim kurali + "pencereyi buyutmez" testleri; metin
-ustunde `.dsReadingOverlay()`; erisilebilirlik taramasi; her push'tan sonra
-`gh run list` ile Test ve Build; her sprint sonu canli tur; ayristirici /
-esleyici kullanicinin gercek verisinde denenir (gecici salt okunur test).
+dokunulmaz; **once maket** (UI sprintleri HTML maketle baslar, onaysiz kod
+yok); "pencereyi buyutmez" testleri; erisilebilirlik taramasi; her
+push'tan sonra `gh run list` ile Test ve Build; her sprint sonu canli tur;
+olcumler ayni makinede, temel commit'le yan yana (git worktree).
 Eklenenler:
 
-- **Kitap kimligi tek yerde.** "Bu kelime hangi kitabin?" sorusu tek bir
-  saf fonksiyondan cevaplanir (S0); kenar cubugu, calisma odasi, kelime
-  defteri, kitaplik sayilari ve Anki ayni cevabi kullanir.
-- **Veri bicimi** degisirse eski dosya kayipsiz okunur; yeni alanlar
-  istege bagli (decode testleri). Birlestirme gibi geri donulmez islemler
-  onay ister ve oncesinde yedek alinir.
+- **Hiz iddiasi olcumle.** Her "daha hizli" degisikligi S0'in olcum
+  duzeniyle once/sonra rakam verir (ilk kelimeye kadar sure, toplam sure,
+  sirada bekleme). Rakam yoksa degisiklik yok.
+- **Gizlilik.** Yeni her ag istegi (guncelleme kontrolu) gizlilik
+  tablosunda (`PrivacySummarySection`) ayri satir. Tani raporu kelime,
+  cumle, kitap adi, API anahtari icermez; hicbir sey kendiliginden
+  gonderilmez.
+- **Farkli yapilandirmalarda dogrulama.** Apple modeli kapatilarak
+  modelsiz yapilandirma gelistirme Mac'inde taklit edilir; sprint
+  sonlarinda yayin derlemesi ikinci bir Mac'te de denenir.
 
-**Bilincli olarak v16 disinda:** yeni okuma ozellikleri, iOS,
-Apple-Developer-kilitli kalemler (notarization, widget, App Group,
-CloudKit, Kisayollar).
-
----
-
-## Kararlar (2026-10-09, kullanici onayi)
-
-1. Kitabin kelime listesi: **bu kitaptan kaydedilenler** ustte, **baska
-   yerde kaydedilip bu kitapta yeniden karsilasilanlar** ayri grup olarak
-   altta.
-2. Ayni kitap farkli kaynaklardan (Kindle basligi, ayni kitabin iki dosyasi)
-   **basliktan eslestirilir**; yanlis eslesmeye karsi kitap basina
-   kapatilabilir.
-3. Tum kelimeler **ayri pencere** ("Kelime defteri"): solda liste, sagda
-   secili kelimenin sayfasi; ana ekran Tools, ⌘K ve menuden acilir.
-4. Secilen oneriler: tablo gorunumu, kitaplikta kelime sayilari, bu kitabi
-   calis, ayni kelimeyi birlestir, Kindle'da yeni kelime bildirimi, kitap
-   bazinda Anki alt destesi.
+**Bilincli olarak v17 disinda:** notarization ve otomatik kurulum
+(Apple Developer hesabi gerekiyor), konusma/golgeleme, cumle madenciligi,
+yeni okuma ozellikleri, iOS.
 
 ---
 
-## Sprint 0 — "Kitap kimligi ve zemin" (Must, kisa)
+## Kararlar (2026-10-13)
 
-- [x] **Kitap kimligi** — `BookIdentity` (Models/): ad → sozcukler
-      (" -- " sonrasi, "_", "(2017)"/"(1)", "PhD" atilir); kisa adin
-      sozcukleri uzun adin icinde art arda geciyorsa ayni kitap; tek sozcuk
-      ve 30 sozcukten uzun "baslik" yalniz tam eslesir. `SavedWord.documentPath`
-      (istege bagli; okuyucudaki kaydetme yollari yazar), once dosya sonra ad.
-      **Olcum** (590 kelime, 7 belge, Kindle basliklari; ayni kural
-      Python'da, RELL acikti): 8 eslesme, hepsi dogru, yanlis yok.
-      Why We Sleep: dosya adiyla 6/12 → basliktan **232**; Harry Potter 12
-      (+26 karsilasilan), Crime and Punishment 12 (+6). Bir hikaye
-      karsilasmasinin "basligi" metnin tamami (eski surumun dosyasi;
-      hikaye basligi v13'te duzeltilmis) — 30 sozcuk siniri bunu eler.
-      `BookIdentityTests` (gercek adlarla)
-- [x] **macOS 15 deinit cokmesi** — 48 ana aktor sinifina
-      `nonisolated deinit {}` (hicbirinin deinit govdesi yoktu); ikili
-      dosyada yalniz uretilen `ResourceBundleClass` kaldi.
-      `DeinitIsolationTests` bilerek senkron (store → yazici, servis →
-      store, pencere modelleri); `WindowLayoutTests` okuyucu testi macOS
-      15'te yeniden acik — CI kaniti
-- [x] Soguk acilis (2026-10-09) — ayni makinede, ayni oturumda yan yana
-      (`testLaunchPerformance`, 5 olcum): v15 basi a81fcd3 ortanca ~355 ms,
-      1.44.0 ~410 ms, S0 (6ad3336) ~390–410 ms. v15 + S0 en fazla ~40–50 ms
-      ekledi, olcumlerin yayilimi (330–430) icinde. RELL kapatildiktan hemen
-      sonraki ilk uc tur ~600 ms cikti — arka plan isleri; ayni kod biraz
-      sonra 410 ms. Ders: tarihsel sayiyla degil, temel commit'i ayni anda
-      olcerek karsilastir (git worktree)
+1. Odak: **Her Mac'te iyi** + **Daha hizli yapay zeka**.
+2. Guncelleme kontrolu **varsayilan acik, kapatilabilir**: gunde en fazla
+   bir kez GitHub'a yalniz son surum numarasi sorulur; kurmaz, bildirir.
+3. Oncelik sirasi: panelde yanit beklenirken arka plan isi **yeni istek
+   baslatmaz**, baslamis istegi kesmez. Yalniz LM Studio / Ollama icin;
+   bulut ve Apple paralel kalir.
 
-## Sprint 1 — "Kitabin kelimeleri" (Must, **maketle baslar**)
+---
 
-Maket onayi (2026-10-09, onerilerle): birlestirme anahtari ••• menusunde
-kaynak listesiyle; "yeniden karsilasilan" ilk 5; bekleyen yoksa "Tumunu
-calis"; Kindle aktarimi S2'de pencereye; kenar cubugunda disa aktarma
-yalniz bu kitap.
+## Sprint 0 — "Once olc" (Must, kisa)
 
-- [x] **Kenar cubugunda kitap kelimeleri** — `BookWords` (saf): bu
-      kitaptan kaydedilenler (dosya yolu, dosya adi, basliktan esleşen
-      kopyalar ve Kindle) + bu kitapta yeniden karsilasilanlar; ayri adlar
-      bir kez eslenir (~1 ms/kitap, 590 kelime). Liste: kitap basligi +
-      sayilar + ••• (birlestirme anahtari, kaynaklar, bu kitabi calis, bu
-      kitabin kelimelerini disa aktar); iki bolum; arama/filtre/eksikleri
-      doldur/disa aktarma kitap icinde; "This Document" filtresi kalkti;
-      satirda Kindle etiketi. Gercek veri: Why We Sleep 232 + 10 (Kindle
-      214, diger kopya 12/6, bu dosya 6/12), Harry Potter 12 + 26
-- [x] **Bu kitabi calis** — kenar cubugundaki Tekrar yalniz bu kitabin
-      kelimeleri; bekleyen yoksa "Tumunu calis (N)"; "Bu kitabi tam
-      ekranda calis" calisma odasini kaynak "Bu kitap" ile acar
-      (`studyRoomPresetBookPath`); `StudySource.book` artik basliktan eslesir
-- [x] **Eslesmeyi kapatma** — kitap basina, `bookTitleMatchingOff`
-- [x] Testler: `BookWordsTests` (4) — kopyalar ve Kindle, yeniden
-      karsilasilanlar, anahtar, baslik gorunumu, liste en dar kenar
-      cubugunda pencereyi buyutmez. Tam paket 700 yesil
-- [x] Canli tur (2026-10-09, sorun yok)
+- [ ] **Istek defteri** — her yapay zeka istegi bellekte (son ~200) bir
+      kayit: kaynak (panel modulu, hizli bakis, CEFR, doldurma, isinma,
+      ozet, satir arasi, Ask AI, yeniden yaz…), rota (Apple / yapilandirilmis
+      saglayici + model), sirada bekleme, ilk kelimeye kadar sure, toplam,
+      sonuc (bitti / iptal / hata / onbellek). Saf kayit tipi + tek giris
+      noktasi; diske yazmaz. S2'nin sonuc satiri ve hiz testi, S3'un tani
+      raporu bunu okur
+- [ ] **Taklit ve olcum** — gelistirme Mac'inde (tek kopya) Apple modeli
+      acik/kapali, ayni kitap ve kelimeler: kelime tikla, bolum degistir,
+      kitaba geri don senaryolari. Rapor: hangi
+      istek ne kadar bekledi, model yuklemesi var mi (bosta 5+ dk sonra
+      ilk istek)
+- [ ] Kapi: rakamlar yapilandirmalar arasindaki sure farkini aciklar.
+      Aciklamazsa S1 kapsami rakamlara gore yeniden yazilir, sessizce
+      kucultulmez
 
-## Sprint 2 — "Kelime defteri penceresi" (Must, **maketle baslar**)
+## Sprint 1 — "Daha hizli yapay zeka" (Must)
 
-Maket onayi (2026-10-09, onerilerle): uc sutun; pencerede degisiklik
-hemen kaydedilir (silme onay ister), kenar cubugundaki sayfa Kaydet/Iptal
-ile kalir; acilis liste, secim hatirlanir; ⌥⌘K; toplu doldurma once sozluk
-turu, yarida kalan devam eder.
+- [ ] **Tek oncelik sirasi** — butun istekler tek planlayicidan gecer
+      (bugunku `localRequestGate` + daginik kapilarin yerine). Oncelik:
+      ekrandaki panel modulu > hizli bakis / kayit anindaki CEFR > isinma,
+      ozet, satir arasi > toplu doldurma. Karar 3: panel beklerken arka
+      plan yeni istek baslatmaz. Saf siralama mantigi testli (oncelik,
+      adalet, iptal, yerel/bulut ayrimi)
+- [ ] **Eskiyen istegi birak** — secim degisince onceki kelimenin panel
+      istekleri sirada bekliyorsa hic gonderilmez, akiyorsa kesilir
+      (bugun `resetAll` + gorev iptali; sirada bekleyenin durumu olculur)
+- [ ] **Model sicak kalsin** — Ollama istegine `keep_alive`; kitap
+      acilinca (yerel saglayicida, Apple modeli kapsamiyorsa) tek tokenlik
+      onceden isitma. LM Studio'nun bosta bosaltmasi olculur; RELL'den
+      etkilenemiyorsa S2'deki oneri metnine gider. Kazanc S0 duzeniyle
+      rakamla
+- [ ] **Yanit uzunluklari** — modul basina `maxTokens` ve istem
+      uzunluklari gozden gecirilir; kisaltma yalniz cikti kalitesi ayni
+      kalirsa (ornek kelimelerle yan yana)
+- [ ] Testler + olcum raporu (once/sonra, Apple acik/kapali)
 
-- [x] **Kelime defteri** — `Window("Word Notebook", id: "words")`,
-      `WordNotebookView`: sol sutun durumlar (tumu, tekrar bekleyen, hic
-      calisilmamis, sik unutulan, anlami eksik) + kitaplar (`WordNotebook.books`,
-      adlar basliktan kumelenir: Why We Sleep tek satir) + desteler; orta
-      `SavedWordsListView` (havuz + secim + tablo modu; tek tik secer, cift
-      tik sayfa acar); sag `SavedWordDetailSheet(isPane:)` — degisen alanlar
-      depodaki en guncel kelimenin uzerine yazilir. Girisler: ana ekran
-      Tools karosu, ⌘K (komut + kelime sonuclari artik defterde acilir),
-      Git menusu ⌥⌘K, kitabin "Tum kelimeler…", Spotlight. Kindle aktarimi
-      ve "Tumunu sil" yalniz defterde; kitabin kenar cubugunda "Tum
-      kelimeler…"
-- [x] **Tablo gorunumu** — `WordTable`: kelime, anlam, seviye, durum,
-      sonraki tekrar, kitap; her sutun siralanir
-- [x] **Doldurma (karar 5)** — once butun kelimelerde sozluk turu, sonra
-      model turu ("Sozluk · x / y", "Modeller · x / y"); yarida kalan
-      `fillPendingWordIDs` ile acilista yalniz yerel kaynaklarla surer,
-      Durdur unutturur (test sureci kendi defaults'unu kullanir). Neden:
-      Kindle'dan gelen 529 kelimenin yalniz 18'i dolmustu
-- [x] Testler: `WordNotebookTests` (6) — kitap kumeleri, kaynaklar, sozluk
-      once, devam, durdur, pencere en kucuk boyutta buyumez
-- [x] Tam test (yerel 706 yesil) + canli tur (2026-10-09, sorun yok).
-      CI'da macOS 15: tum split view test penceresinde arac cubugu kadar
-      (560 → 588) buyudu; sutunlar ayri ayri olculuyor (liste, tablo,
-      kelime sayfasi) — uygulamanin penceresinde arac cubugu bastan var
+## Sprint 2 — "Neden yavas, gorunur" (Must, **maketle baslar**)
 
-## Sprint 3 — "Duzen" (Should)
+- [ ] **Sonucun alt satiri** — panel sonucunun altinda kucuk satir: kim
+      yanitladi (Apple / LM Studio · model / OpenRouter · model), ilk
+      kelime ve toplam sure, onbellekten mi. Istek defterinden
+- [ ] **Ayarlar ▸ Hiz** — Apple Intelligence durumu acikca (sebep +
+      Sistem Ayarlari'na git); **Hiz testi**: sabit kisa istem her rotada,
+      ilk kelimeye kadar sure ve saniyedeki token; sonuca gore oneri
+      ("Apple Intelligence kapali — acarsan 5 modul ~1 sn'de gelir",
+      "Model bosta bellekten atiliyor", "Bu model bu Mac icin buyuk")
+- [ ] Toolbar durum isiginin ipucunda siradaki istek sayisi
+- [ ] Yerlesim / erisilebilirlik testleri, TR ceviriler
 
-Kullanici maketsiz kodlanmasini istedi (2026-10-09).
+## Sprint 3 — "Her Mac'te iyi" (Must, **maketle baslar**)
 
-- [x] **Kitaplikta kelime sayilari** — `documentStats` artik `BookWords`
-      ile (kopyalar ve Kindle dahil) kayitli + tekrar bekleyen; izgara
-      kartinda tiklanir rozet ("232 · 9") kelime defterini o kitapla acar
-      (`WordNotebook.open(onBookNamed:)`, adi tasimayan dosya basliktan
-      bulur); liste kartinda alt satirda sayi, sag tikta "Bu kitabin
-      kelimelerini goster"
-- [x] **Ayni kelimeyi birlestir** — `WordMerge` (saf): ayni dilde ayni kok
-      (`LemmaMatcher`); kalacak olan once en cok tekrar edilen, sonra en
-      eski. Birlesim: bos kart alanlari kaynagiyla, desteler, notlar, diger
-      cumleler notlara, tekrar gecmisinin tamami, FSRS durumu daha ileride
-      olandan, en eski kayit tarihi; karsilasmalar tasinir
-      (`WordEncounterStore.reassign`). Defterde "Iki kez kaydedilen"
-      kaynagi + `DuplicateWordsView` (radyo ile secim, onayli birlestirme);
-      oncesinde `PersistenceBackup.snapshotBeforeChange` (son 5 tutulur).
-      Gercek veri: 8 cift (drenched/drench, scowled/scowl…), hepsi dogru, 89 ms
-- [x] **Kindle'da yeni kelime var** — `KindleNoticeBanner` ana ekranda:
-      acilista ve Kindle takilinca (`didMountNotification`) aktarimin
-      getirecegi sayi; "Aktar…" Kindle penceresini acar, kapatinca daha
-      fazlasi olana kadar gizli
-- [x] **Kitap bazinda Anki** — "Her kitap icin ayri Anki destesi":
-      Deck sutunu + `#deck column:5`, `RELL::<kitap>` (basliktaki ":"
-      alt deste yaratmasin diye "-")
-- [x] Testler: `OrganizeTests` (7). Tam paket 713 yesil
-- [x] Canli tur (2026-10-09) — kitaplik rozeti basligin ustune biniyordu
-      (kartin tamamina bindirilmisti, beyaz zeminde gri); kapagin sag alt
-      kosesine, kapsama rozeti gibi koyu zemine tasindi (4bd55e1)
+- [ ] **Acilis rehberi** — Apple Intelligence adimi (durum, Sistem
+      Ayarlari baglantisi); saglayici testi hizi da olcer; Mac'in bellegine
+      gore model boyutu onerisi (`ProcessInfo.physicalMemory`; ör. 16 GB →
+      7–8B Q4)
+- [ ] **Guncelleme kontrolu** (karar 2) — GitHub releases/latest; yeni
+      surum varsa notlari + indirme baglantisi (Yardim menusunde elle
+      "Guncellemeleri Denetle" de). Ayarlar'da kapatma, gizlilik satiri.
+      Ag yok testleri (yerel JSON), surum karsilastirma saf
+- [ ] **Tani raporunu kopyala** — surum, macOS, cip, bellek, Apple
+      Intelligence durumu, saglayici turu + model, son isteklerin sureleri
+      (istek defterinden, metinsiz). Panoya; kullanici kendisi gonderir
+- [ ] Testler, TR ceviriler
 
 ## Sprint 4 — "Kapanis"
 
-- [x] Kapanis (Must): tam test (713 yesil), performans (ayni oturumda
-      donusumlu: 1.44.0 ortanca ~568/579 ms, simdi ~594/592 ms — fark
-      olcum yayilimi icinde), canli turlar (S1–S3, kullanici), CHANGELOG
-      1.45.0 + Yenilikler 1.45
-- [x] **1.45.0** yayinlandi (2026-10-09, kullanicinin onayiyla; Release is akisi yesil, DMG + zip, Latest)
+- [ ] Kapanis (Must): tam test, soguk acilis olcumu (1.46.1 ile yan yana),
+      ikinci bir Mac'te dogrulama (once/sonra sureler), canli tur,
+      CHANGELOG 1.47.0 + Yenilikler 1.47
+- [ ] **1.47.0** yayini
 
 ---
 
@@ -209,5 +167,5 @@ Kullanici maketsiz kodlanmasini istedi (2026-10-09).
 
 Tam test paketi (CI komutuyla birebir, `make ci-test`), regresyon testleri
 mutasyonla dogrulanir, push sonrasi Test ve Build is akislari yesil,
-kullanicinin canli turu (RELL acikken ikinci kopya calistirilmaz),
+canli tur (RELL acikken ikinci kopya calistirilmaz),
 xcstrings TR tamamlama.
