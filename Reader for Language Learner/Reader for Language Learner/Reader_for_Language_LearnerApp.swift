@@ -91,6 +91,11 @@ struct Reader_for_Language_LearnerApp: App {
             try? await Task.sleep(for: .seconds(3))
             enricher.resumePendingFill()
         }
+        // Is there a newer RELL? At most once a day (v17 S3).
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(5))
+            UpdateChecker.shared.checkIfDue()
+        }
 
         // Launch-time Spotlight sync — catches edits/deletes made since the
         // last run that the per-mutation hooks may have missed.
@@ -208,6 +213,9 @@ extension Notification.Name {
     static let openPDFCommand = Notification.Name("openPDFCommand")
     /// Help ▸ What's New in RELL — the key window shows the page.
     static let whatsNewCommand = Notification.Name("whatsNewCommand")
+    /// Help ▸ Check for Updates… / Diagnostic Report… (v17 S3).
+    static let checkForUpdatesCommand = Notification.Name("checkForUpdatesCommand")
+    static let diagnosticReportCommand = Notification.Name("diagnosticReportCommand")
     /// Help ▸ Reading Tour — the key window shows the four-page tour.
     static let readingTourCommand = Notification.Name("readingTourCommand")
     /// An empty Bookmarks list's button — the key window toggles a bookmark

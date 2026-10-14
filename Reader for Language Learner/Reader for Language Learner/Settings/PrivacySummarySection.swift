@@ -14,6 +14,8 @@ struct PrivacySummarySection: View {
     @AppStorage(LLMConfiguration.providerTypeKey) private var providerTypeRaw = LLMConfiguration.defaultProviderType.rawValue
     @AppStorage(LLMConfiguration.serverURLKey) private var serverURL = LLMConfiguration.defaultServerURL
     @AppStorage(SentenceTranslationEngine.storageKey) private var engineRaw = SentenceTranslationEngine.default.rawValue
+    @AppStorage(LLMConfiguration.modelKey) private var model = LLMConfiguration.defaultModel
+    @AppStorage(StorageKey.updateCheckEnabled) private var updateCheckEnabled = true
 
     struct Row: Identifiable {
         let feature: LocalizedStringKey
@@ -23,7 +25,7 @@ struct PrivacySummarySection: View {
     }
 
     var body: some View {
-        let _ = (appleEnabled, providerTypeRaw, engineRaw)
+        let _ = (appleEnabled, providerTypeRaw, engineRaw, model, updateCheckEnabled)
         Section {
             ForEach(rows) { row in
                 LabeledContent {
@@ -52,7 +54,11 @@ struct PrivacySummarySection: View {
             translationRow,
             Row(feature: "Web article import",
                 destination: String(localized: "Only the site you import from"), onDevice: false),
-        ]
+        ] + (updateCheckEnabled ? [
+            // v17 S3: a request, nothing of yours in it.
+            Row(feature: "Update check",
+                destination: String(localized: "GitHub — reads the version number, sends nothing"), onDevice: false),
+        ] : [])
     }
 
     private func row(_ feature: LocalizedStringKey, module: ModuleType?) -> Row {
@@ -76,14 +82,16 @@ struct PrivacySummarySection: View {
         URL(string: serverURL)?.host?.lowercased()
     }
 
-    /// LM Studio / Ollama on localhost never leave the machine.
+    /// LM Studio / Ollama on localhost never leave the machine — unless
+    /// the model is one of Ollama's cloud models (v17 S1).
     private var providerIsLocal: Bool {
-        guard let host = providerHost else { return false }
-        return host == "127.0.0.1" || host == "localhost" || host == "::1"
+        LLMConfiguration.runsOnThisMac(type: LLMProviderType(rawValue: providerTypeRaw) ?? .lmStudio,
+                                       serverURL: serverURL, model: model)
     }
 
     private var providerDestination: String {
         if providerIsLocal { return String(localized: "This Mac (local server)") }
+        if DiagnosticReport.localAddress(serverURL) != nil { return String(localized: "Ollama's cloud (through the local server)") }
         return providerHost ?? serverURL
     }
 }

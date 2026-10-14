@@ -14,7 +14,8 @@ import SwiftUI
 struct SpeedSection: View {
     static let anchor = "speed"
 
-    @State private var test = SpeedTest()
+    private var test: SpeedTest { .shared }
+    @State private var showReport = false
     private var log: LLMRequestLog { .shared }
 
     /// Rows in "Recent requests".
@@ -59,6 +60,17 @@ struct SpeedSection: View {
                 ForEach(advice) { item in
                     adviceRow(item)
                 }
+            }
+
+            HStack {
+                Text("Describing a problem? The report shows what's set up and how long the last requests took.")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+                Spacer()
+                Button("Diagnostic Report…") { showReport = true }
+            }
+            .sheet(isPresented: $showReport) {
+                DiagnosticReportSheet { showReport = false }
             }
         } header: {
             Text("Speed")

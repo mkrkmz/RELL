@@ -54,6 +54,9 @@ final class ReaderWindowModel {
     var whatsNewPage: WhatsNew?
     /// Help ▸ Reading Tour on screen (v14 S4).
     var showReadingTour = false
+    /// Help ▸ Check for Updates… and Diagnostic Report… (v17 S3).
+    var showUpdateCheck = false
+    var showDiagnosticReport = false
     /// The passage being rewritten at the reader's level (v13 Sprint 3).
     var gradedRewriteSource: String?
     /// File ▸ Import Web Article… sheet (v13 Sprint 4).

@@ -164,6 +164,21 @@ enum AppleOnDevice {
         return false
     }
 
+    /// This Mac can run the model but it isn't ready: Apple Intelligence is
+    /// off, or its model is still downloading. The first-run flow asks for
+    /// it then (v17 S3); a Mac that can't run it isn't asked.
+    static var couldBeReady: Bool {
+        #if canImport(FoundationModels)
+        if #available(macOS 26.0, *) {
+            switch SystemLanguageModel.default.availability {
+            case .unavailable(.appleIntelligenceNotEnabled), .unavailable(.modelNotReady): return true
+            default: return false
+            }
+        }
+        #endif
+        return false
+    }
+
     /// System Settings ▸ Apple Intelligence & Siri.
     static let appleIntelligenceSettingsURL = URL(string: "x-apple.systempreferences:com.apple.Siri-Settings.extension")!
 

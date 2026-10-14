@@ -23,6 +23,13 @@ struct ReaderMenuCommands: Commands {
             Button("Reading Tour") {
                 NotificationCenter.default.post(name: .readingTourCommand, object: nil)
             }
+            Divider()
+            Button("Check for Updates…") {
+                NotificationCenter.default.post(name: .checkForUpdatesCommand, object: nil)
+            }
+            Button("Diagnostic Report…") {
+                NotificationCenter.default.post(name: .diagnosticReportCommand, object: nil)
+            }
         }
 
         // ── File ──────────────────────────────────────────────────────

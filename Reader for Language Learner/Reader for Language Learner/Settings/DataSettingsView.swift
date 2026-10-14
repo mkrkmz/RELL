@@ -15,6 +15,8 @@ struct DataSettingsView: View {
         Form {
             BackupSettingsSection()
 
+            UpdatesSettingsSection()
+
             Section {
                 Button("Show Welcome Tour Again") {
                     hasCompletedOnboarding = false

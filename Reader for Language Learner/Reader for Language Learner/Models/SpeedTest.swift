@@ -19,6 +19,9 @@ final class SpeedTest {
     /// task crashes when it releases another one (v16 S0, CI crash reports).
     nonisolated deinit {}
 
+    /// One for the app: Settings shows it, the diagnostic report reads it.
+    static let shared = SpeedTest()
+
     nonisolated struct Result: Identifiable, Equatable, Sendable {
         var id: String { engine + (model ?? "") }
         let engine: String
@@ -164,6 +167,19 @@ nonisolated enum SpeedAdvice {
 
     /// Words a second below which a local model feels slow.
     static let slowWordsPerSecond = 12.0
+
+    /// The model size this Mac runs well (first-run flow, v17 S3).
+    static func modelSizeHint(memoryBytes: UInt64) -> String {
+        let gigabytes = Int((Double(memoryBytes) / 1_073_741_824).rounded())
+        let size: String
+        switch gigabytes {
+        case ..<12:  size = "1–4B"
+        case ..<24:  size = "4–8B"
+        case ..<48:  size = "8–14B"
+        default:     size = "14–32B"
+        }
+        return String(localized: "This Mac has \(gigabytes) GB of memory: a \(size) model (Q4) runs fast here. Bigger ones answer slowly; cloud models (…-cloud) don't use this Mac at all.")
+    }
 
     static func items(apple: AppleState, results: [SpeedTest.Result], physicalMemory: UInt64) -> [Item] {
         var items: [Item] = []

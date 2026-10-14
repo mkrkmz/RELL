@@ -216,18 +216,40 @@ kisa istemle; son istekler metinsiz.
 
 ## Sprint 3 — "Her Mac'te iyi" (Must, **maketle baslar**)
 
-- [ ] **Acilis rehberi** — Apple Intelligence adimi (durum, Sistem
-      Ayarlari baglantisi); saglayici testi hizi da olcer; Mac'in bellegine
-      gore model boyutu onerisi (`ProcessInfo.physicalMemory`; ör. 16 GB →
-      7–8B Q4)
-- [ ] **Guncelleme kontrolu** (karar 2) — GitHub releases/latest; yeni
-      surum varsa notlari + indirme baglantisi (Yardim menusunde elle
-      "Guncellemeleri Denetle" de). Ayarlar'da kapatma, gizlilik satiri.
-      Ag yok testleri (yerel JSON), surum karsilastirma saf
-- [ ] **Tani raporunu kopyala** — surum, macOS, cip, bellek, Apple
-      Intelligence durumu, saglayici turu + model, son isteklerin sureleri
-      (istek defterinden, metinsiz). Panoya; kullanici kendisi gonderir
-- [ ] Testler, TR ceviriler
+Maket onayi (2026-10-14): bes karar — Apple Intelligence adimi yalniz
+gerektiginde; baglanti adiminda saglayici secimi + hiz + bellege gore
+model onerisi; guncelleme denetimi gunde en fazla bir kez, varsayilan
+acik, yerel derlemede yok; tani raporu once gosterilir; raporda metin,
+anahtar ve uzak sunucu adresi yok.
+
+- [x] **Acilis rehberi** — adimlar artik listeden: dil → **Apple
+      Intelligence** (yalniz Mac calistirabiliyor ama kapali ya da model
+      iniyorsa — `AppleOnDevice.couldBeReady`; Sistem Ayarlari'ni Ac +
+      Yeniden Kontrol Et) → **yapay zekani bagla** (bugune kadar yalniz LM
+      Studio anlatiliyordu: dort saglayici, sunucu, model, gerekirse API
+      anahtari; test ilk kelime ve kelime/sn soyler, yavassa uyarir; bu
+      Mac'teki model icin bellege gore boyut onerisi
+      `SpeedAdvice.modelSizeHint`) → okuma turu. Adim icerigi kaydirilabilir,
+      pencere 560×600 (gecici render ile kontrol edildi)
+- [x] **Guncelleme denetimi** — `UpdateChecker`: GitHub releases/latest,
+      acilistan 5 sn sonra, gunde en fazla bir kez; taslak ve on surum
+      sayilmaz; yerel derleme (1.0) ve test sunucusu hic denetlemez. Ana
+      ekran seridi (`UpdateNoticeBanner`, surum basina gizlenir), Yardim ▸
+      Guncellemeleri Denetle… (notlarla), Ayarlar ▸ Veri ▸ Guncellemeler
+      (anahtar + Simdi Denetle), gizlilik tablosunda satir. Indir tarayicida
+      surum sayfasini acar; RELL hicbir sey indirmez ya da kurmaz
+- [x] **Tani raporu** — `DiagnosticReport` (saf metin + toplama): surum,
+      macOS, cip, bellek, Apple Intelligence, saglayici + model + bu Mac /
+      uzak, yalniz yerel sunucu adresi, Ollama surumu (`/api/version`),
+      zaman asimi, son hiz testi, son 20 istek. Yardim ▸ Tani Raporu… ve
+      Hiz bolumunde dugme; once tamami gosterilir, Kopyala panoya koyar
+- [x] Yan duzeltme: gizlilik tablosu Ollama'nin bulut modellerini "Bu Mac"
+      sayiyordu → "Ollama bulutu (yerel sunucu uzerinden)"
+- [x] Testler: `EveryMacTests` (10) — surum karsilastirma, yerel derleme,
+      gunde bir, GitHub yaniti, on surum/taslak, rapor icerigi, uzak adresin
+      girmemesi (mutasyonla dogrulandi), bellek onerisi. 51 yeni TR metin.
+      Tam paket 754 yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 4 — "Kapanis"
 

@@ -129,6 +129,8 @@ struct EmptyStateView: View {
                 }
             }
 
+            UpdateNoticeBanner()
+
             if let savedWordsStore {
                 KindleNoticeBanner(store: savedWordsStore)
             }

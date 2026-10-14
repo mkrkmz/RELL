@@ -2,9 +2,10 @@
 //  OnboardingView.swift
 //  Reader for Language Learner
 //
-//  First-run flow: language pair → AI server check → the reading-loop tour
-//  (four pages, v14 S4). Skippable at any point; can be reopened from
-//  Settings ▸ Data, and the tour alone from Help ▸ Reading Tour.
+//  First-run flow: language pair → Apple Intelligence, when this Mac could
+//  use it but it's off (v17 S3) → your AI provider, tested for speed → the
+//  reading-loop tour (four pages, v14 S4). Skippable at any point; can be
+//  reopened from Settings ▸ Data, and the tour alone from Help ▸ Reading Tour.
 //
 
 import SwiftUI
@@ -12,7 +13,12 @@ import SwiftUI
 struct OnboardingView: View {
     let onFinish: () -> Void
 
-    @State private var step = 0
+    @State private var step: Int
+
+    init(startingAt step: Int = 0, onFinish: @escaping () -> Void) {
+        self.onFinish = onFinish
+        _step = State(initialValue: step)
+    }
     /// Which edge the next step slides in from — flipped by Continue/Back so
     /// the transition always matches the direction the user is navigating.
     @State private var direction: Edge = .trailing
@@ -23,24 +29,54 @@ struct OnboardingView: View {
 
     @State private var connectionStatus: OnboardingConnectionStatus = .idle
 
+    @AppStorage(LLMConfiguration.providerTypeKey) private var providerTypeRaw = LLMConfiguration.defaultProviderType.rawValue
+    @AppStorage(LLMConfiguration.serverURLKey) private var serverURL = LLMConfiguration.defaultServerURL
+    @AppStorage(LLMConfiguration.modelKey) private var model = LLMConfiguration.defaultModel
+    @State private var apiKey = LLMConfiguration.storedAPIKey
+
+    /// Decided once: the step stays even after you turn it on.
+    @State private var asksForAppleIntelligence = AppleOnDevice.couldBeReady
+    /// Bumped by "Check Again" to read the model's state anew.
+    @State private var appleCheck = 0
+
+    private enum Step: Hashable {
+        case language, appleIntelligence, server, tour(Int)
+    }
+
+    private var steps: [Step] {
+        [.language] + (asksForAppleIntelligence ? [.appleIntelligence] : []) + [.server]
+            + (0..<ReadingLoopTour.pageCount).map(Step.tour)
+    }
+
+    private var providerType: LLMProviderType {
+        LLMProviderType(rawValue: providerTypeRaw) ?? .lmStudio
+    }
+
     private var target: Language { Language(rawValue: targetRaw) ?? .english }
     private var native: Language { Language(rawValue: nativeRaw) ?? .turkish }
 
-    private static let stepCount = 2 + ReadingLoopTour.pageCount
+    private var stepCount: Int { steps.count }
 
     var body: some View {
         VStack(spacing: 0) {
-            Group {
-                switch step {
-                case 0:  languageStep
-                case 1:  serverStep
-                default: ReadingLoopTourPage(index: step - 2)
+            // Scrolls when a step is taller than the sheet (the provider
+            // step with an API key field, large text sizes).
+            ScrollView {
+                Group {
+                    switch steps[min(step, stepCount - 1)] {
+                    case .language:          languageStep
+                    case .appleIntelligence: appleIntelligenceStep
+                    case .server:            serverStep
+                    case .tour(let index):   ReadingLoopTourPage(index: index)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .top)
+                .padding(.horizontal, DS.Spacing.xxl)
+                .padding(.vertical, DS.Spacing.xxl)
             }
+            .scrollBounceBehavior(.basedOnSize)
             .id(step)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .padding(.horizontal, DS.Spacing.xxl)
-            .padding(.top, DS.Spacing.xxl)
             .transition(stepTransition)
             .animation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion), value: step)
 
@@ -106,14 +142,56 @@ struct OnboardingView: View {
         .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
     }
 
-    // MARK: - Step 2: AI Server
+    // MARK: - Apple Intelligence (v17 S3)
+
+    private var appleIntelligenceStep: some View {
+        let _ = appleCheck
+        let ready = AppleOnDevice.isModelAvailable
+        return VStack(spacing: DS.Spacing.xl) {
+            stepHeader(
+                icon: "apple.intelligence",
+                title: "Turn On Apple Intelligence",
+                subtitle: "This Mac can run Apple's on-device model. With it, definitions, meanings, examples and synonyms come in about a second — no setup, no internet, no cost."
+            )
+
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                HStack {
+                    Text("Apple Intelligence")
+                        .font(DS.Typography.callout.weight(.semibold))
+                    Spacer()
+                    Text(ready ? String(localized: "Ready") : (AppleOnDevice.unavailableReason ?? ""))
+                        .font(DS.Typography.caption.weight(.semibold))
+                        .foregroundStyle(ready ? DS.Color.success : DS.Color.warning)
+                        .multilineTextAlignment(.trailing)
+                }
+                if !ready {
+                    HStack(spacing: DS.Spacing.sm) {
+                        Button("Open System Settings") {
+                            NSWorkspace.shared.open(AppleOnDevice.appleIntelligenceSettingsURL)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        Button("Check Again") { appleCheck += 1 }
+                    }
+                    Text("After you turn it on, the model can take a few minutes to download. RELL starts using it as soon as it's ready.")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: 420)
+            .padding(DS.Spacing.xl)
+            .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
+        }
+    }
+
+    // MARK: - AI Provider
 
     private var serverStep: some View {
         VStack(spacing: DS.Spacing.xl) {
             stepHeader(
                 icon: "server.rack",
                 title: "Connect your AI",
-                subtitle: "RELL uses a local LLM via LM Studio by default — private and free. Start LM Studio, load a model, and enable the local server."
+                subtitle: "Choose a provider for what Apple's model doesn't do — pronunciation, etymology, mnemonics, collocations and word family. A local server is private and free."
             )
 
             // With Apple's model there, the reader works before any server
@@ -131,39 +209,79 @@ struct OnboardingView: View {
                     Image(systemName: "apple.intelligence")
                         .foregroundStyle(DS.Color.success)
                 }
-                .frame(maxWidth: 420, alignment: .leading)
+                .frame(maxWidth: 440, alignment: .leading)
             }
 
-            VStack(spacing: DS.Spacing.md) {
-                HStack(spacing: DS.Spacing.sm) {
-                    Image(systemName: "link")
-                        .font(DS.Typography.icon(11))
-                        .foregroundStyle(DS.Color.textTertiary)
-                    Text(UserDefaults.standard.string(forKey: LLMConfiguration.serverURLKey) ?? LLMConfiguration.defaultServerURL)
-                        .font(DS.Typography.mono)
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-
-                Button {
-                    Task { await testConnection() }
-                } label: {
-                    if connectionStatus == .testing {
-                        Label("Connecting…", systemImage: "circle.dotted")
-                    } else {
-                        Label("Test Connection", systemImage: "bolt")
+            VStack(alignment: .leading, spacing: DS.Spacing.md) {
+                Picker("Provider", selection: $providerTypeRaw) {
+                    ForEach(LLMProviderType.allCases) { type in
+                        Text(type.localizedTitle).tag(type.rawValue)
                     }
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(connectionStatus == .testing)
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .onChange(of: providerTypeRaw) { _, newValue in
+                    guard let type = LLMProviderType(rawValue: newValue) else { return }
+                    serverURL = type.defaultServerURL
+                    model = type.defaultModel
+                    connectionStatus = .idle
+                }
 
-                connectionFeedback
+                Grid(alignment: .leading, horizontalSpacing: DS.Spacing.sm, verticalSpacing: DS.Spacing.sm) {
+                    GridRow {
+                        Text("Server").foregroundStyle(DS.Color.textTertiary)
+                        TextField(providerType.defaultServerURL, text: $serverURL)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    GridRow {
+                        Text("Model").foregroundStyle(DS.Color.textTertiary)
+                        TextField(providerType.defaultModel, text: $model)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    if providerType.requiresAPIKey {
+                        GridRow {
+                            Text("API Key").foregroundStyle(DS.Color.textTertiary)
+                            SecureField("", text: $apiKey)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: apiKey) { _, newValue in
+                                    LLMConfiguration.setAPIKey(newValue)
+                                    NotificationCenter.default.post(name: .llmAPIKeyChanged, object: nil)
+                                }
+                        }
+                    }
+                }
+                .font(DS.Typography.callout)
+                .onChange(of: serverURL) { connectionStatus = .idle }
+                .onChange(of: model) { connectionStatus = .idle }
+
+                HStack(spacing: DS.Spacing.md) {
+                    Button {
+                        Task { await testConnection() }
+                    } label: {
+                        if connectionStatus == .testing {
+                            Label("Connecting…", systemImage: "circle.dotted")
+                        } else {
+                            Label("Test Connection", systemImage: "bolt")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(connectionStatus == .testing)
+
+                    connectionFeedback
+                }
+
+                if LLMConfiguration().runsOnThisMac {
+                    Text(SpeedAdvice.modelSizeHint(memoryBytes: ProcessInfo.processInfo.physicalMemory))
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: 460)
             .padding(DS.Spacing.xl)
             .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
 
-            Text("No server right now? Continue anyway — you can set up a provider later in Settings → AI Provider.")
+            Text("No server right now? Continue anyway — you can set up a provider later in Settings → AI.")
                 .font(DS.Typography.caption)
                 .foregroundStyle(DS.Color.textTertiary)
                 .multilineTextAlignment(.center)
@@ -178,31 +296,49 @@ struct OnboardingView: View {
             EmptyView()
         case .testing:
             ProgressView().controlSize(.small)
-        case .success:
-            Label("Connected — you're ready to read", systemImage: "checkmark.circle.fill")
-                .font(DS.Typography.caption.weight(.semibold))
-                .foregroundStyle(DS.Color.success)
+        case .success(let firstWord, let wordsPerSecond):
+            let slow = LLMConfiguration().runsOnThisMac && (wordsPerSecond ?? .infinity) < SpeedAdvice.slowWordsPerSecond
+            VStack(alignment: .leading, spacing: 2) {
+                Label(speedLine(firstWord: firstWord, wordsPerSecond: wordsPerSecond),
+                      systemImage: slow ? "tortoise.fill" : "checkmark.circle.fill")
+                    .font(DS.Typography.caption.weight(.semibold))
+                    .foregroundStyle(slow ? DS.Color.warning : DS.Color.success)
+                if slow {
+                    Text("This model is slow on this Mac. A smaller one answers faster.")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textTertiary)
+                }
+            }
         case .failure(let message):
             Label(message, systemImage: "xmark.circle.fill")
                 .font(DS.Typography.caption)
                 .foregroundStyle(DS.Color.danger)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 360)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
+    private func speedLine(firstWord: TimeInterval?, wordsPerSecond: Double?) -> String {
+        var parts = [String(localized: "Connected")]
+        if let firstWord { parts.append(String(localized: "first word \(AnswerFooter.seconds(firstWord))")) }
+        if let wordsPerSecond { parts.append(String(localized: "\(Int(wordsPerSecond.rounded())) words/s")) }
+        return parts.joined(separator: " · ")
+    }
+
+    /// One short request, timed like the speed test: the first word (with
+    /// any model load) and how fast it writes.
     private func testConnection() async {
         connectionStatus = .testing
-        let provider = LLMConfiguration().makeProvider()
+        let configuration = LLMConfiguration()
+        let provider = LLMRequestLog.shared.recording(configuration.makeProvider(), origin: .speedTest, route: .configured)
+        var answer = ""
         do {
-            _ = try await provider.chat(
-                system: "You are a test assistant.",
-                user: "Reply with one word: OK",
-                temperature: 0,
-                maxTokens: 8,
-                topP: 1
+            try await provider.stream(system: SpeedTest.system, user: SpeedTest.prompt, temperature: 0,
+                                      maxTokens: SpeedTest.maxTokens, topP: 1) { answer += $0 }
+            let record = LLMRequestLog.shared.record(provider.id)
+            connectionStatus = .success(
+                firstWord: record?.firstToken,
+                wordsPerSecond: record.flatMap { SpeedTest.wordsPerSecond(answer: answer, record: $0) }
             )
-            connectionStatus = .success
         } catch {
             connectionStatus = .failure(LLMErrorMessage.userMessage(for: error))
         }
@@ -237,7 +373,7 @@ struct OnboardingView: View {
 
     private var footer: some View {
         HStack(spacing: DS.Spacing.md) {
-            if step < Self.stepCount - 1 {
+            if step < stepCount - 1 {
                 Button("Skip", action: onFinish)
                     .buttonStyle(.borderless)
                     .foregroundStyle(DS.Color.textTertiary)
@@ -245,7 +381,7 @@ struct OnboardingView: View {
 
             Spacer()
 
-            ReadingLoopTourDots(current: step, count: Self.stepCount)
+            ReadingLoopTourDots(current: step, count: stepCount)
 
             Spacer()
 
@@ -254,7 +390,7 @@ struct OnboardingView: View {
                     .buttonStyle(.bordered)
             }
 
-            if step < Self.stepCount - 1 {
+            if step < stepCount - 1 {
                 Button("Continue") { direction = .trailing; step += 1 }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
@@ -272,6 +408,6 @@ struct OnboardingView: View {
 private enum OnboardingConnectionStatus: Equatable {
     case idle
     case testing
-    case success
+    case success(firstWord: TimeInterval?, wordsPerSecond: Double?)
     case failure(String)
 }

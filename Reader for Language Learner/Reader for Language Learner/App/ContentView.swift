@@ -139,7 +139,7 @@ struct ContentView: View {
     // (`the compiler is unable to type-check this expression in reasonable
     // time`) even though a warm local cache let it slide.
     var body: some View {
-        withCommandPalette(withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent))))))))
+        withHelpSheets(withCommandPalette(withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))))))))
             .dataRecoveryAlert()
     }
 
@@ -401,7 +401,7 @@ struct ContentView: View {
                 set: { hasCompletedOnboarding = !$0 }
             )) {
                 OnboardingView { hasCompletedOnboarding = true }
-                    .frame(width: 560, height: 540)
+                    .frame(width: 560, height: 600)
             }
             .sheet(item: Bindable(model).whatsNewPage) { page in
                 WhatsNewSheet(page: page) { model.whatsNewPage = nil }
