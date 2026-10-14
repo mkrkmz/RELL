@@ -334,6 +334,14 @@ struct InspectorView: View {
     /// Result panel height when the whole inspector scrolls.
     static let compactResultHeight: CGFloat = 260
 
+    /// What the result panel asks for when the layout checks whether it
+    /// fits; it then stretches to fill the column. Without it the panel's
+    /// own content counted, so a long word card or answer (and, since
+    /// 1.47.0, the answer's footer line) tipped the inspector into the
+    /// scrolling fallback even in a tall window: a 260 pt panel, empty space
+    /// below and the whole inspector to scroll (1.47.1 live pass).
+    static let resultIdealHeight: CGFloat = 120
+
     private func selectionStack(resultHeight: CGFloat?) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.lg) {
             // v14 S2 — first the selection and what you can do with it, then
@@ -349,8 +357,14 @@ struct InspectorView: View {
             moduleGrid
 
             // ── Zone 4: result — the one zone that stretches ─────────────────
-            resultPanel
-                .frame(height: resultHeight)
+            Group {
+                if let resultHeight {
+                    resultPanel.frame(height: resultHeight)
+                } else {
+                    resultPanel.frame(minHeight: Self.resultIdealHeight, idealHeight: Self.resultIdealHeight,
+                                      maxHeight: .infinity)
+                }
+            }
 
             // ── Zone 5: ask a follow-up ──────────────────────────────────────
             askAISection

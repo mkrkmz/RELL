@@ -286,6 +286,17 @@ S1'de Apple'in paralel calistigi varsayimi yanlisti.
 - [x] **1.47.1** yayinlandi (2026-10-14; Release is akisi yesil, DMG + zip,
       Latest; 1.47.0'in guncelleme denetimi bunu gosterir)
 
+## Yayin sonrasi — 1.47.2 (2026-10-14)
+
+- [x] Canli tur: uzun sonuclarda (es dizimler) Inspector yedek duzene
+      dusuyordu (sonuc 260 pt, Ask AI yukarida, alti bos, butun Inspector
+      kayiyor). Sebep: `ViewThatFits` "sigiyor mu"yu ideal boyla olcuyor ve
+      kaydirma alaninin ideal boyu icerigin tamami. Gecici deneme: uzun
+      icerikte bugunku duzen "kayar", sabit ideal boyla "sigar"; alt satir
+      sebep degil. Duzeltme: sonuc paneli olcumde 120 pt
+      (`InspectorView.resultIdealHeight`), sonra sutunu doldurur. Kisa
+      sutun / en kucuk pencere testleri yesil; tam paket 759
+
 ## Genel dogrulama (her sprint sonu)
 
 Tam test paketi (CI komutuyla birebir, `make ci-test`), regresyon testleri

@@ -4,6 +4,18 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.47.2] - 2026-10-14
+
+### Fixed
+
+- **A long answer no longer squeezes the Inspector.** With a long result
+  (collocations, for one) or a long word card, the Inspector switched to
+  its short-window layout even in a tall window: the result shrank to a
+  small box, "Ask about this word" moved up, empty space was left below
+  and the whole Inspector had to be scrolled. The result now fills the
+  column again and scrolls on its own; the short-window layout is kept
+  for windows that are really short.
+
 ## [1.47.1] - 2026-10-14
 
 Apple's on-device model, seen on another Mac: it answers one request at a
