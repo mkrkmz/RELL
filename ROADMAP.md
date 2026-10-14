@@ -262,6 +262,28 @@ anahtar ve uzak sunucu adresi yok.
 
 ---
 
+## Yayin sonrasi — 1.47.1 (2026-10-14)
+
+Ikinci bir Mac'ten gelen tani raporu yavasligin Ollama'da degil, **Apple'in
+cihaz ici modelinde** oldugunu gosterdi: isinma (uzun is) + kelime + hizli
+bakis ayni anda Apple'a gitmis, ilk kelime ~107 sn, sonra 13–27 sn. Olcum
+(gelistirme Mac'i, kucuk istek): Apple modeli istekleri **tek tek** isliyor —
+kisa istek tek basina 3,6 sn, uzun bir isin yaninda 9,1 sn (uzun is bitince).
+S1'de Apple'in paralel calistigi varsayimi yanlisti.
+
+- [x] Apple icin ayri kuyruk (`LLMScheduler.apple`, tek yer); calisan arka
+      plan isi (yalniz tek seferde yanit alan `chat`) senin istegin icin
+      durur ve sonra bastan baslar (kullanici karari). Yerel sunucularda
+      baslamis is kesilmez. Saf `LLMQueuePolicy.toPreempt`
+- [x] Kitap acilinca `LanguageModelSession.prewarm()`; Apple kayitlari "bu
+      Mac" sayilir (alt satirda "model yuklendi"); hiz testinde Apple icin
+      yukleme ve "Apple'in modeli bu Mac'te su an yavas" onerisi
+- [x] Kart dili: acilis rehberinde "Kisa anlamlar" secimi, varsayilan ana
+      dil (kullanici karari); mevcut ayarlar degismez
+- [x] Testler: `AppleQueueTests` (5) — politika, isinmanin kelime icin
+      durup yeniden baslamasi, yerel sunucuda durmamasi, Apple seridi, Apple
+      onerisi. Mutasyon: durdurma ve yeniden baslatma. Tam paket 759 yesil
+
 ## Genel dogrulama (her sprint sonu)
 
 Tam test paketi (CI komutuyla birebir, `make ci-test`), regresyon testleri

@@ -106,7 +106,7 @@ final class SpeedTest {
             engine: isApple ? AppleOnDevice.providerLabel : configuration.providerType.rawValue,
             model: isApple ? nil : configuration.model,
             isApple: isApple, onThisMac: onThisMac,
-            load: onThisMac ? Self.loadTime(cold: cold, warm: warm) : nil,
+            load: onThisMac || isApple ? Self.loadTime(cold: cold, warm: warm) : nil,
             firstToken: warm,
             wordsPerSecond: records.last.flatMap { Self.wordsPerSecond(answer: lastAnswer, record: $0) },
             modelBytes: bytes,
@@ -192,6 +192,13 @@ nonisolated enum SpeedAdvice {
         case .unavailable(let reason):
             items.append(Item(kind: .warning, title: String(localized: "Apple's on-device model isn't available"),
                               detail: "\(reason) \(benefit)"))
+        }
+
+        // Apple's model answers one request at a time on this Mac (1.47.1).
+        if let apple = results.first(where: \.isApple), apple.failure == nil,
+           let first = apple.firstToken, first > AnswerFooter.loadThreshold {
+            items.append(Item(kind: .warning, title: String(localized: "Apple's model is slow on this Mac right now"),
+                              detail: String(localized: "Its first word took \(AnswerFooter.seconds(first)) even once loaded. It answers one request at a time; if it stays slow, turn it off above and RELL uses your AI provider for everything.")))
         }
 
         for result in results where !result.isApple {

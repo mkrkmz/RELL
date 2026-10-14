@@ -174,7 +174,10 @@ struct RecordedLLMProvider: LLMProvider {
     var priority: LLMPriority = .interactive
 
     func chat(system: String, user: String, temperature: Double, maxTokens: Int, topP: Double) async throws -> String {
-        try await whenItsTurn {
+        let base = base
+        // A whole answer at once: background work can stop for yours and
+        // start over (Apple's queue) — nothing was shown yet.
+        return try await whenItsTurn(canRestart: true) {
             try await base.chat(system: system, user: user, temperature: temperature,
                                 maxTokens: maxTokens, topP: topP)
         }
@@ -187,7 +190,8 @@ struct RecordedLLMProvider: LLMProvider {
     ) async throws -> LLMFinishReason? {
         let id = id
         let log = log
-        return try await whenItsTurn {
+        let base = base
+        return try await whenItsTurn(canRestart: false) {
             try await base.stream(system: system, user: user, temperature: temperature,
                                   maxTokens: maxTokens, topP: topP) { token in
                 log.firstToken(id)
@@ -197,19 +201,49 @@ struct RecordedLLMProvider: LLMProvider {
     }
 
     /// Waits for the queue (if any), then sends — timing both.
-    private func whenItsTurn<Result>(_ send: () async throws -> Result) async throws -> Result {
+    /// `canRestart`: a background request on a queue that preempts may be
+    /// stopped for yours; it then waits its turn again and starts over.
+    private func whenItsTurn<Result: Sendable>(
+        canRestart: Bool,
+        _ send: @escaping () async throws -> Result
+    ) async throws -> Result {
         do {
-            let ticket = try await queue?.acquire(priority)
-            defer { if let ticket { queue?.release(ticket) } }
-            log.started(id)
-            let result = try await send()
-            log.finish(id, .finished)
-            if queue != nil { LocalModelWarmth.requestFinished() }
-            return result
+            while true {
+                let ticket = try await queue?.acquire(priority)
+                log.started(id)
+                guard let queue, let ticket, canRestart, queue.preempts, priority.yieldsToYou else {
+                    defer { if let ticket { queue?.release(ticket) } }
+                    let result = try await send()
+                    return finished(result)
+                }
+                let work = Task { try await send() }
+                queue.setStop(ticket) { work.cancel() }
+                do {
+                    let result = try await withTaskCancellationHandler {
+                        try await work.value
+                    } onCancel: {
+                        work.cancel()
+                    }
+                    queue.release(ticket)
+                    return finished(result)
+                } catch where queue.wasStopped(ticket) && !Task.isCancelled {
+                    queue.release(ticket)   // yours goes out; this one starts over
+                    continue
+                } catch {
+                    queue.release(ticket)
+                    throw error
+                }
+            }
         } catch {
             log.finish(id, Self.outcome(for: error))
             throw error
         }
+    }
+
+    private func finished<Result: Sendable>(_ result: Result) -> Result {
+        log.finish(id, .finished)
+        if let queue, !queue.preempts { LocalModelWarmth.requestFinished() }   // a local server
+        return result
     }
 
     /// Ends the record of a request that was dropped before it went out.
@@ -243,29 +277,34 @@ extension LLMRequestLog {
 
     /// `provider` recorded as one request from `origin`. `route` names the
     /// engine: Apple's model, or the configured provider and its model. A
-    /// model on this Mac waits its turn in `queue` (v17 S1).
+    /// model on this Mac waits its turn in `queue` (v17 S1); Apple's model
+    /// in `appleQueue` (1.47.1).
     func recording(
         _ provider: any LLMProvider,
         origin: LLMRequestOrigin,
         detail: String? = nil,
         route: LLMRoute,
-        queue: LLMScheduler = .shared
+        queue: LLMScheduler = .shared,
+        appleQueue: LLMScheduler = .apple
     ) -> RecordedLLMProvider {
         let engine: String
         let model: String?
-        var onThisMac = false
+        let onThisMac: Bool
+        let lane: LLMScheduler?
         switch route {
         case .appleOnDevice:
             engine = AppleOnDevice.providerLabel
             model = nil
+            onThisMac = true
+            lane = appleQueue
         case .configured:
             let configuration = LLMConfiguration()
             engine = configuration.providerType.rawValue
             model = configuration.model
             onThisMac = configuration.runsOnThisMac
+            lane = onThisMac ? queue : nil
         }
         let id = begin(origin: origin, detail: detail, engine: engine, model: model, onThisMac: onThisMac)
-        return RecordedLLMProvider(base: provider, id: id, log: self,
-                                   queue: onThisMac ? queue : nil, priority: origin.priority)
+        return RecordedLLMProvider(base: provider, id: id, log: self, queue: lane, priority: origin.priority)
     }
 }

@@ -2,15 +2,20 @@
 //  LLMScheduler.swift
 //  Reader for Language Learner
 //
-//  One queue for every request to a model running on this Mac (Roadmap v17
-//  Sprint 1). LM Studio and Ollama answer on one GPU: two requests at once
+//  A queue for each model running on this Mac (Roadmap v17 Sprint 1, Apple
+//  in 1.47.1). LM Studio and Ollama answer on one GPU: two requests at once
 //  each run slower, and a long background job — a chapter warm-up, a recap,
 //  a batch of glosses — made the word you clicked wait behind it (S0: a word
 //  took 5× longer). Requests go out by priority; the app's own work doesn't
-//  start while anything you asked for is waiting or running (decision 3), but
-//  what has started is never cut off, and one slot stays free for you. A request cancelled while waiting —
-//  you clicked another word — leaves the queue at once and is never sent.
-//  Apple's model and cloud servers don't queue here.
+//  start while anything you asked for is waiting or running (decision 3) and
+//  one of the two slots stays free for you; what has started is not cut off.
+//
+//  Apple's on-device model answers one request at a time (measured: a short
+//  request beside a long one waited until it finished), so it has its own
+//  queue with one slot — and there a running background job gives way: it
+//  stops when you ask for something and starts over after (1.47.1, user's
+//  decision). A request cancelled while waiting — you clicked another word —
+//  leaves the queue at once and is never sent. Cloud servers don't queue.
 //
 
 import Foundation
@@ -45,6 +50,17 @@ extension LLMRequestOrigin {
 
 /// Which waiting request goes out next. Pure.
 nonisolated enum LLMQueuePolicy {
+    /// The running request to stop so yours can go out: when something of
+    /// yours waits, every slot is taken and one is the app's own work that
+    /// may stop (`preemptible`). Index into `running`.
+    static func toPreempt(waiting: [LLMPriority], running: [(priority: LLMPriority, preemptible: Bool)],
+                          limit: Int) -> Int? {
+        guard waiting.contains(where: { !$0.yieldsToYou }), running.count >= max(1, limit) else { return nil }
+        return running.indices
+            .filter { running[$0].preemptible && running[$0].priority.yieldsToYou }
+            .min { running[$0].priority < running[$1].priority }
+    }
+
     /// The index in `waiting` (oldest first) of the request to start now, or
     /// nil to keep everyone waiting.
     static func next(waiting: [LLMPriority], running: [LLMPriority], limit: Int) -> Int? {
@@ -72,10 +88,15 @@ final class LLMScheduler {
     /// task crashes when it releases another one (v16 S0, CI crash reports).
     nonisolated deinit {}
 
+    /// LM Studio / Ollama on this Mac.
     static let shared = LLMScheduler()
+    /// Apple's on-device model: one at a time, the app's work gives way.
+    static let apple = LLMScheduler(limit: 1, preempts: true)
 
-    /// Requests a local server answers at once.
+    /// Requests the model answers at once.
     @ObservationIgnored let limit: Int
+    /// A running background request stops for yours.
+    @ObservationIgnored let preempts: Bool
 
     private struct Waiter {
         let id: UUID
@@ -83,11 +104,18 @@ final class LLMScheduler {
         let continuation: CheckedContinuation<Void, Error>
     }
 
-    private var waiting: [Waiter] = []
-    private var running: [UUID: LLMPriority] = [:]
+    private struct Running {
+        let priority: LLMPriority
+        var stop: (@MainActor () -> Void)?
+        var stopped = false
+    }
 
-    init(limit: Int = 2) {
+    private var waiting: [Waiter] = []
+    private var running: [UUID: Running] = [:]
+
+    init(limit: Int = 2, preempts: Bool = false) {
         self.limit = limit
+        self.preempts = preempts
     }
 
     var waitingCount: Int { waiting.count }
@@ -115,6 +143,19 @@ final class LLMScheduler {
         pump()
     }
 
+    /// How to stop the request holding `ticket` if yours needs the slot.
+    /// Only on a queue that `preempts`, and only background work.
+    func setStop(_ ticket: UUID, _ stop: @escaping @MainActor () -> Void) {
+        guard preempts, running[ticket] != nil else { return }
+        running[ticket]?.stop = stop
+        pump()
+    }
+
+    /// True when the request holding `ticket` was stopped for yours.
+    func wasStopped(_ ticket: UUID) -> Bool {
+        running[ticket]?.stopped == true
+    }
+
     /// A cancelled request still waiting: out of the queue, never sent.
     private func leave(_ id: UUID) {
         guard let index = waiting.firstIndex(where: { $0.id == id }) else { return }
@@ -124,10 +165,21 @@ final class LLMScheduler {
 
     private func pump() {
         while let index = LLMQueuePolicy.next(waiting: waiting.map(\.priority),
-                                              running: Array(running.values), limit: limit) {
+                                              running: running.values.map(\.priority), limit: limit) {
             let waiter = waiting.remove(at: index)
-            running[waiter.id] = waiter.priority
+            running[waiter.id] = Running(priority: waiter.priority)
             waiter.continuation.resume()
+        }
+        guard preempts else { return }
+        let entries = Array(running.filter { !$0.value.stopped })
+        if let index = LLMQueuePolicy.toPreempt(
+            waiting: waiting.map(\.priority),
+            running: entries.map { ($0.value.priority, $0.value.stop != nil) },
+            limit: limit
+        ) {
+            let ticket = entries[index].key
+            running[ticket]?.stopped = true
+            running[ticket]?.stop?()
         }
     }
 }

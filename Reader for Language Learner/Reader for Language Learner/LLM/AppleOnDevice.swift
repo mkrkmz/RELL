@@ -179,6 +179,26 @@ enum AppleOnDevice {
         return false
     }
 
+    #if canImport(FoundationModels)
+    /// Kept so the loaded model isn't let go right away.
+    @available(macOS 26.0, *)
+    private static var warmSession: LanguageModelSession?
+    #endif
+
+    /// Loads Apple's model before the first word when a book opens
+    /// (1.47.1: a cold start took over 100 s on one Mac). Apple's own
+    /// `prewarm`; nothing is generated.
+    @MainActor
+    static func prewarm() {
+        #if canImport(FoundationModels)
+        if #available(macOS 26.0, *), currentRoute(for: nil) == .appleOnDevice {
+            let session = LanguageModelSession()
+            session.prewarm()
+            warmSession = session
+        }
+        #endif
+    }
+
     /// System Settings ▸ Apple Intelligence & Siri.
     static let appleIntelligenceSettingsURL = URL(string: "x-apple.systempreferences:com.apple.Siri-Settings.extension")!
 

@@ -4,6 +4,32 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.47.1] - 2026-10-14
+
+Apple's on-device model, seen on another Mac: it answers one request at a
+time, so a word you clicked waited behind the chapter warm-up — up to
+nearly two minutes with a cold model.
+
+### Fixed
+
+- **Your word no longer waits behind Apple's model's other work.** Apple's
+  model now has its own queue: one request at a time, yours first. A
+  background job that's running (a warm-up, a recap, glosses, a level
+  estimate, a fill) stops when you ask for something and starts over
+  after it.
+- **Apple's model is loaded when you open a book,** so a cold start no
+  longer lands on your first word.
+- **The answer's footer and the speed test explain a slow Apple model:**
+  "waited in line" or "model loaded" under the answer, and advice to turn
+  Apple's model off in RELL if it stays slow on your Mac.
+
+### Changed
+
+- **Short meanings in your language by default.** The first run asks
+  which language the one-line meaning on the word card and in the hover
+  dictionary uses, your own language first. Existing settings are kept
+  (Settings ▸ Reading ▸ Answer Language).
+
 ## [1.47.0] - 2026-10-14
 
 Fast and clear on every Mac. Roadmap v17 (Sprints 0–4): AI answers no

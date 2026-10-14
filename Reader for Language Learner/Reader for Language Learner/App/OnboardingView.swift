@@ -26,6 +26,9 @@ struct OnboardingView: View {
 
     @AppStorage(Language.targetLanguageKey) private var targetRaw = Language.defaultTarget.rawValue
     @AppStorage(Language.nativeLanguageKey) private var nativeRaw = Language.defaultNative.rawValue
+    /// Short meanings (word card, hover dictionary) — asked here, your own
+    /// language first (1.47.1: a reader who chose Turkish saw English).
+    @AppStorage(HoverDictionaryLanguage.storageKey) private var shortMeaningsRaw = HoverDictionaryLanguage.native.rawValue
 
     @State private var connectionStatus: OnboardingConnectionStatus = .idle
 
@@ -115,6 +118,27 @@ struct OnboardingView: View {
                 languagePicker(role: "My native language", selection: $nativeRaw, exclude: target)
             }
             .frame(maxWidth: .infinity)
+
+            VStack(spacing: DS.Spacing.sm) {
+                Text("SHORT MEANINGS")
+                    .dsOverlineLabel()
+                Picker("Short meanings", selection: $shortMeaningsRaw) {
+                    Text(native.nativeName).tag(HoverDictionaryLanguage.native.rawValue)
+                    Text(target.nativeName).tag(HoverDictionaryLanguage.target.rawValue)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 260)
+                Text("The one-line meaning on the word card and in the hover dictionary.")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+            .onAppear {
+                // Stored now, so the choice shown is the one used.
+                if UserDefaults.standard.string(forKey: HoverDictionaryLanguage.storageKey) == nil {
+                    shortMeaningsRaw = HoverDictionaryLanguage.native.rawValue
+                }
+            }
 
             Text("Definitions stay in \(target.nativeName); meanings and translations use \(native.nativeName). You can change this anytime in Settings.")
                 .font(DS.Typography.caption)

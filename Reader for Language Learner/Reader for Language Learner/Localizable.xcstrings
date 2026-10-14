@@ -1891,6 +1891,16 @@
         }
       }
     },
+    "Apple's model is slow on this Mac right now" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın modeli bu Mac'te şu an yavaş"
+          }
+        }
+      }
+    },
     "Apple's on-device model declined to answer this one." : {
       "localizations" : {
         "tr" : {
@@ -6011,6 +6021,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İlk tekrarından sonra onu ne kadar iyi hatırladığın izlenmeye başlar."
+          }
+        }
+      }
+    },
+    "Its first word took %@ even once loaded. It answers one request at a time; if it stays slow, turn it off above and RELL uses your AI provider for everything." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yüklendikten sonra bile ilk kelimesi %@ sürdü. İstekleri tek tek yanıtlar; yavaş kalırsa yukarıdan kapat, RELL her şey için yapay zekâ sağlayıcını kullanır."
           }
         }
       }
@@ -11363,6 +11383,26 @@
         }
       }
     },
+    "Short meanings" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısa anlamlar"
+          }
+        }
+      }
+    },
+    "SHORT MEANINGS" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KISA ANLAMLAR"
+          }
+        }
+      }
+    },
     "Show %lld more modules" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12613,6 +12653,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Model yazar; çoğu kelimenin kitaptan cümlesi zaten var"
+          }
+        }
+      }
+    },
+    "The one-line meaning on the word card and in the hover dictionary." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelime kartındaki ve imleç sözlüğündeki tek satırlık anlam."
           }
         }
       }

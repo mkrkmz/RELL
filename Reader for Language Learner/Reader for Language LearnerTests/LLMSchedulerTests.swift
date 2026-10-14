@@ -151,3 +151,106 @@ final class LLMSchedulerTests: XCTestCase {
         }
     }
 }
+
+// MARK: - Apple's model: one at a time, the app's work gives way (1.47.1)
+
+@MainActor
+final class AppleQueueTests: XCTestCase {
+
+    /// Answers after `delay`, counting its calls; stops when cancelled.
+    private final class Slow: LLMProvider {
+        var calls = 0
+        let delay: Duration
+        let answer: String
+        init(_ answer: String, delay: Duration) { self.answer = answer; self.delay = delay }
+        func chat(system: String, user: String, temperature: Double, maxTokens: Int, topP: Double) async throws -> String {
+            calls += 1
+            try await Task.sleep(for: delay)
+            return answer
+        }
+        func stream(system: String, user: String, temperature: Double, maxTokens: Int, topP: Double,
+                    onToken: @MainActor @escaping (String) -> Void) async throws -> LLMFinishReason? {
+            onToken(try await chat(system: system, user: user, temperature: temperature, maxTokens: maxTokens, topP: topP))
+            return .stop
+        }
+    }
+
+    private final class Order { var items: [String] = [] }
+
+    private func waitUntil(_ condition: () -> Bool) async throws {
+        for _ in 0..<400 where !condition() { try await Task.sleep(for: .milliseconds(5)) }
+    }
+
+    func testPolicyStopsTheAppsWorkOnlyWhenYoursWaitsForTheLastSlot() {
+        XCTAssertEqual(LLMQueuePolicy.toPreempt(waiting: [.interactive], running: [(.background, true)], limit: 1), 0)
+        XCTAssertNil(LLMQueuePolicy.toPreempt(waiting: [.background], running: [(.background, true)], limit: 1),
+                     "the app's work doesn't stop the app's work")
+        XCTAssertNil(LLMQueuePolicy.toPreempt(waiting: [.interactive], running: [(.soon, true)], limit: 1),
+                     "a quick lookup is yours too")
+        XCTAssertNil(LLMQueuePolicy.toPreempt(waiting: [.interactive], running: [(.background, false)], limit: 1),
+                     "a stream already showing words isn't stopped")
+        XCTAssertEqual(LLMQueuePolicy.toPreempt(waiting: [.soon], running: [(.background, true), (.bulk, true)], limit: 2), 1,
+                       "the least urgent one stops")
+    }
+
+    func testAWarmUpStopsForYourWordAndStartsOverAfter() async throws {
+        let queue = LLMScheduler(limit: 1, preempts: true)
+        let log = LLMRequestLog()
+        let warmUpModel = Slow("warm-up", delay: .milliseconds(400))
+        let wordModel = Slow("word", delay: .milliseconds(30))
+        let warmUp = RecordedLLMProvider(base: warmUpModel, id: log.begin(origin: .warmUp, detail: nil, engine: "Apple", model: nil),
+                                         log: log, queue: queue, priority: .background)
+        let word = RecordedLLMProvider(base: wordModel, id: log.begin(origin: .module, detail: nil, engine: "Apple", model: nil),
+                                       log: log, queue: queue, priority: .interactive)
+        let order = Order()
+        let background = Task { let a = try await warmUp.chat(system: "", user: "", temperature: 0, maxTokens: 1, topP: 1); order.items.append(a) }
+        try await waitUntil { warmUpModel.calls == 1 }
+        let mine = Task { let a = try await word.chat(system: "", user: "", temperature: 0, maxTokens: 1, topP: 1); order.items.append(a) }
+
+        try await waitUntil { order.items.count == 2 }
+        guard order.items.count == 2 else {
+            XCTFail("both should finish; got \(order.items)")
+            background.cancel(); mine.cancel(); return
+        }
+        XCTAssertEqual(order.items, ["word", "warm-up"], "your word didn't wait for the warm-up")
+        XCTAssertEqual(warmUpModel.calls, 2, "the warm-up started over")
+        XCTAssertEqual(log.records.map(\.outcome), [.finished, .finished])
+        XCTAssertEqual(queue.runningCount, 0)
+    }
+
+    func testOnALocalServerTheAppsWorkIsNotStopped() async throws {
+        let queue = LLMScheduler(limit: 1)
+        let log = LLMRequestLog()
+        let warmUpModel = Slow("warm-up", delay: .milliseconds(150))
+        let warmUp = RecordedLLMProvider(base: warmUpModel, id: log.begin(origin: .warmUp, detail: nil, engine: "x", model: nil),
+                                         log: log, queue: queue, priority: .background)
+        let word = RecordedLLMProvider(base: Slow("word", delay: .milliseconds(10)),
+                                       id: log.begin(origin: .module, detail: nil, engine: "x", model: nil),
+                                       log: log, queue: queue, priority: .interactive)
+        let order = Order()
+        let background = Task { let a = try await warmUp.chat(system: "", user: "", temperature: 0, maxTokens: 1, topP: 1); order.items.append(a) }
+        try await waitUntil { warmUpModel.calls == 1 }
+        let mine = Task { let a = try await word.chat(system: "", user: "", temperature: 0, maxTokens: 1, topP: 1); order.items.append(a) }
+        try await waitUntil { order.items.count == 2 }
+        guard order.items.count == 2 else { XCTFail("\(order.items)"); background.cancel(); mine.cancel(); return }
+        XCTAssertEqual(order.items, ["warm-up", "word"])
+        XCTAssertEqual(warmUpModel.calls, 1)
+    }
+
+    func testAppleRequestsGoThroughAppleQueue() {
+        let log = LLMRequestLog()
+        let apple = LLMScheduler(limit: 1, preempts: true)
+        let provider = log.recording(Slow("a", delay: .zero), origin: .warmUp, route: .appleOnDevice, appleQueue: apple)
+        XCTAssertTrue(provider.queue === apple)
+        XCTAssertEqual(provider.priority, .background)
+        XCTAssertTrue(log.records[0].onThisMac, "Apple's model runs on this Mac: a slow first word is a load")
+    }
+
+    func testASlowAppleModelIsSaid() {
+        let apple = SpeedTest.Result(engine: AppleOnDevice.providerLabel, model: nil, isApple: true, onThisMac: false,
+                                     load: 90, firstToken: 13, wordsPerSecond: 20, modelBytes: nil, failure: nil)
+        let items = SpeedAdvice.items(apple: .on, results: [apple], physicalMemory: 16 * 1_073_741_824)
+        XCTAssertEqual(items.first?.kind, .warning)
+        XCTAssertFalse(items.contains { $0.kind == .good })
+    }
+}

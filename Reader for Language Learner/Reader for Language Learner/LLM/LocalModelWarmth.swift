@@ -26,6 +26,7 @@ enum LocalModelWarmth {
     /// A book opened: load the model now.
     static func documentOpened(configuration: LLMConfiguration = LLMConfiguration(), now: Date = Date()) {
         guard !RELLProcess.isTestHost else { return }
+        AppleOnDevice.prewarm()
         warm(configuration, now: now)
     }
 
