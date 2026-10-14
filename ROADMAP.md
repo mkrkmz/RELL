@@ -283,6 +283,8 @@ S1'de Apple'in paralel calistigi varsayimi yanlisti.
 - [x] Testler: `AppleQueueTests` (5) — politika, isinmanin kelime icin
       durup yeniden baslamasi, yerel sunucuda durmamasi, Apple seridi, Apple
       onerisi. Mutasyon: durdurma ve yeniden baslatma. Tam paket 759 yesil
+- [x] **1.47.1** yayinlandi (2026-10-14; Release is akisi yesil, DMG + zip,
+      Latest; 1.47.0'in guncelleme denetimi bunu gosterir)
 
 ## Genel dogrulama (her sprint sonu)
 
