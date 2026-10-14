@@ -30,7 +30,7 @@ enum AppleOnDevice {
     /// `@AppStorage` key for the Settings toggle. On by default: when the
     /// model is there, a new user gets answers without installing anything.
     static let enabledKey = "appleOnDeviceEnabled"
-    static let providerLabel = "Apple On-Device"
+    nonisolated static let providerLabel = "Apple On-Device"
 
     /// Modules the spike found reliable on the on-device model.
     static let reliableModules: Set<ModuleType> = [
@@ -152,6 +152,21 @@ enum AppleOnDevice {
 
     /// Why the model can't be used right now, or nil when it can. Shown in
     /// Settings next to the toggle.
+    /// True when Apple Intelligence is only switched off in System
+    /// Settings — the one reason the reader can fix right away.
+    static var needsAppleIntelligenceTurnedOn: Bool {
+        #if canImport(FoundationModels)
+        if #available(macOS 26.0, *),
+           case .unavailable(.appleIntelligenceNotEnabled) = SystemLanguageModel.default.availability {
+            return true
+        }
+        #endif
+        return false
+    }
+
+    /// System Settings ▸ Apple Intelligence & Siri.
+    static let appleIntelligenceSettingsURL = URL(string: "x-apple.systempreferences:com.apple.Siri-Settings.extension")!
+
     static var unavailableReason: String? {
         #if canImport(FoundationModels)
         if #available(macOS 26.0, *) {

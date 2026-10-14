@@ -46,7 +46,7 @@ enum LocalModelWarmth {
             guard let request = ollamaKeepAlive(serverURL: configuration.serverURL, model: configuration.model) else { return }
             let log = LLMRequestLog.shared
             let id = log.begin(origin: .prewarm, detail: nil, engine: configuration.providerType.rawValue,
-                               model: configuration.model)
+                               model: configuration.model, onThisMac: true)
             Task {
                 log.started(id)
                 do {

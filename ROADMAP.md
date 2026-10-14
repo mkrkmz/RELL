@@ -180,16 +180,39 @@ yeni okuma ozellikleri, iOS.
 
 ## Sprint 2 — "Neden yavas, gorunur" (Must, **maketle baslar**)
 
-- [ ] **Sonucun alt satiri** — panel sonucunun altinda kucuk satir: kim
-      yanitladi (Apple / LM Studio · model / OpenRouter · model), ilk
-      kelime ve toplam sure, onbellekten mi. Istek defterinden
-- [ ] **Ayarlar ▸ Hiz** — Apple Intelligence durumu acikca (sebep +
-      Sistem Ayarlari'na git); **Hiz testi**: sabit kisa istem her rotada,
-      ilk kelimeye kadar sure ve saniyedeki token; sonuca gore oneri
-      ("Apple Intelligence kapali — acarsan 5 modul ~1 sn'de gelir",
-      "Model bosta bellekten atiliyor", "Bu model bu Mac icin buyuk")
-- [ ] Toolbar durum isiginin ipucunda siradaki istek sayisi
-- [ ] Yerlesim / erisilebilirlik testleri, TR ceviriler
+Maket onayi (2026-10-14): bes karar — sure basliktan alt satira; sirada
+bekleme / model yukleme turuncu etiket + "Neden?"; Hiz bolumu AI
+sekmesinde Apple bolumunun altinda; hiz testi yalniz dugmeyle, sirayla,
+kisa istemle; son istekler metinsiz.
+
+- [x] **Sonucun alt satiri** — `AnswerFooter` (saf) + `AnswerFooterView`:
+      motor · model · ilk kelime · toplam; kayitli yanitta "Kayitli yanit ·
+      motor · model". Etiket onceligi: >= 1 sn sirada bekleme > bu Mac'te
+      onunde is yokken ilk kelime > 5 sn ("model yuklendi") > bulutta ilk
+      kelime > 3 sn ("bulut gec basladi"); Apple'a hic. "Neden?" Ayarlar ▸
+      Yapay Zeka ▸ Hiz'i acip bolume kaydirir. Tek satir, sabit yukseklik,
+      kaydirma alaninin disinda (sutunu buyutmez — testli). Yanitin kaynagi
+      `InspectorViewModel.answerSources` (istek kimligi ya da onbellek);
+      basliktaki "1.4s" kalkti
+- [x] **Ayarlar ▸ Yapay Zeka ▸ Hiz** — `SpeedSection` Apple bolumunun
+      hemen altinda. Apple Intelligence kapaliysa sebep + "Sistem
+      Ayarlari'ni Ac". **Hiz testi** (`SpeedTest`): her motora sabit bir
+      cumleyle iki kisa istek, sirayla, arka plan onceliginde; yukleme
+      (ilk − ikinci istek, >= 2 sn), ilk kelime, kelime/sn; Ollama'da model
+      boyutu `/api/ps`. **Oneriler** (`SpeedAdvice`, saf): Apple kapali /
+      kullanilamiyor, bu Mac'te yavas model (< 12 kelime/sn, boyut ve
+      bellek), ilk istek modeli yukledi, bulut gec basladi, motor yanit
+      vermedi; uyari yoksa "Her sey yolunda". **Son istekler**: son 8,
+      metinsiz
+- [x] Durum isigi penceresi: kuyruk (yalniz bu Mac'teki modelde) ve son
+      istek; "Hiz…" dugmesi. `LLMScheduler` gozlenebilir
+- [x] Testler: `SpeedVisibilityTests` (13) — alt satir ve etiket
+      oncelikleri, basarisiz/bitmemis istekte satir yok, dar sutunda tek
+      satir, yanitin kaynagi (istek / onbellek), yukleme ve kelime/sn
+      hesabi, Ollama boyutu, oneriler. Mutasyon: satirin tek satir kalmasi
+      ve "bekledi"nin onceligi. 62 yeni TR metin (xcstrings bos nesne
+      bicimi korundu). Tam paket 742 yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 3 — "Her Mac'te iyi" (Must, **maketle baslar**)
 

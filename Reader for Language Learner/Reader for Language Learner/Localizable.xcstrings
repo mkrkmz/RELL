@@ -158,6 +158,16 @@
         }
       }
     },
+    "%@ didn't answer" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ yanıt vermedi"
+          }
+        }
+      }
+    },
     "%@ meaning" : {
       "localizations" : {
         "tr" : {
@@ -180,6 +190,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%2$@ içinde %1$@ not"
+          }
+        }
+      }
+    },
+    "%@ s" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sn"
           }
         }
       }
@@ -597,6 +617,22 @@
         }
       }
     },
+    "%lld running · %lld waiting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld running · %2$lld waiting"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld çalışıyor · %lld bekliyor"
+          }
+        }
+      }
+    },
     "%lld saved" : {
       "localizations" : {
         "tr" : {
@@ -751,6 +787,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yarın %lld kelime bekleyecek."
+          }
+        }
+      }
+    },
+    "%lld words/s" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kelime/sn"
           }
         }
       }
@@ -1420,6 +1466,16 @@
         }
       }
     },
+    "All good" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her şey yolunda"
+          }
+        }
+      }
+    },
     "All languages" : {
       "localizations" : {
         "tr" : {
@@ -1665,6 +1721,16 @@
         }
       }
     },
+    "Answers start in about a second." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yanıtlar yaklaşık bir saniyede başlıyor."
+          }
+        }
+      }
+    },
     "Anthropic Claude API" : {
       "localizations" : {
         "tr" : {
@@ -1711,6 +1777,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Görünüm"
+          }
+        }
+      }
+    },
+    "Apple" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple"
           }
         }
       }
@@ -1781,6 +1857,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple'ın cihaz içi modeli hazır"
+          }
+        }
+      }
+    },
+    "Apple's on-device model isn't available" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın cihaz içi modeli kullanılamıyor"
           }
         }
       }
@@ -1872,6 +1958,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu kelime hakkında sor…"
+          }
+        }
+      }
+    },
+    "Ask AI" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takip sorusu"
           }
         }
       }
@@ -2542,6 +2638,16 @@
         }
       }
     },
+    "Chapter warm-up" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bölüm hazırlığı"
+          }
+        }
+      }
+    },
     "Chapter Warm-Up" : {
       "localizations" : {
         "tr" : {
@@ -2889,6 +2995,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tekrarı kapat (Esc)"
+          }
+        }
+      }
+    },
+    "cloud slow to start · %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bulut geç başladı · %@"
           }
         }
       }
@@ -3720,6 +3836,16 @@
         }
       }
     },
+    "done" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bitti"
+          }
+        }
+      }
+    },
     "Done" : {
       "localizations" : {
         "tr" : {
@@ -4007,6 +4133,16 @@
         }
       }
     },
+    "Engine" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motor"
+          }
+        }
+      }
+    },
     "Enter Focus Mode" : {
       "localizations" : {
         "tr" : {
@@ -4276,6 +4412,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anki'ye aktarıldı!"
+          }
+        }
+      }
+    },
+    "failed" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hata"
           }
         }
       }
@@ -4593,6 +4739,26 @@
         }
       }
     },
+    "First Word" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk Kelime"
+          }
+        }
+      }
+    },
+    "first word %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ilk kelime %@"
+          }
+        }
+      }
+    },
     "Fit to Width" : {
       "localizations" : {
         "tr" : {
@@ -4876,6 +5042,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genel Kısayol  ⌃⌥Space"
+          }
+        }
+      }
+    },
+    "Glosses" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Satır arası anlamlar"
           }
         }
       }
@@ -5532,6 +5708,16 @@
         }
       }
     },
+    "Inspector" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspector"
+          }
+        }
+      }
+    },
     "Inspector follows the page theme" : {
       "localizations" : {
         "tr" : {
@@ -5558,6 +5744,32 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "açılamadı"
+          }
+        }
+      }
+    },
+    "It takes %@ of this Mac's %@ and writes about %lld words a second. A smaller model (4–8B) answers faster." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "It takes %1$@ of this Mac's %2$@ and writes about %3$lld words a second. A smaller model (4–8B) answers faster."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac'in %2$@ belleğinin %1$@ kadarını kullanıyor ve saniyede yaklaşık %3$lld kelime yazıyor. Daha küçük bir model (4–8B) daha hızlı yanıt verir."
+          }
+        }
+      }
+    },
+    "It writes about %lld words a second. A smaller model (4–8B) answers faster." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saniyede yaklaşık %lld kelime yazıyor. Daha küçük bir model (4–8B) daha hızlı yanıt verir."
           }
         }
       }
@@ -5726,6 +5938,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Daha büyük metin (⌘+)"
+          }
+        }
+      }
+    },
+    "Last" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son istek"
           }
         }
       }
@@ -6024,12 +6246,52 @@
         }
       }
     },
+    "Load" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleme"
+          }
+        }
+      }
+    },
+    "Load: how long the first request took to load the model into memory. The test waits while you ask for something." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleme: ilk isteğin modeli belleğe yüklemesi için geçen süre. Sen bir şey sorarken test bekler."
+          }
+        }
+      }
+    },
     "Loading" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yükleniyor"
+          }
+        }
+      }
+    },
+    "Loading the model" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model yükleme"
+          }
+        }
+      }
+    },
+    "Loading took %@. RELL now loads the model when you open a book and asks the server to keep it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleme %@ sürdü. RELL artık kitap açılınca modeli yüklüyor ve sunucudan onu bellekte tutmasını istiyor."
           }
         }
       }
@@ -6529,6 +6791,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Model"
+          }
+        }
+      }
+    },
+    "model loaded · %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "model yüklendi · %@"
           }
         }
       }
@@ -7129,6 +7401,16 @@
         }
       }
     },
+    "No requests yet in this session." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu oturumda henüz istek yok."
+          }
+        }
+      }
+    },
     "No results" : {
       "localizations" : {
         "tr" : {
@@ -7338,6 +7620,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Henüz tekrar edilmedi"
+          }
+        }
+      }
+    },
+    "not sent" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gönderilmedi"
           }
         }
       }
@@ -7784,6 +8076,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kayıtlı Kelimeleri Aç"
+          }
+        }
+      }
+    },
+    "Open Settings ▸ AI ▸ Speed" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar ▸ Yapay Zekâ ▸ Hız'ı aç"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Ayarları'nı Aç"
           }
         }
       }
@@ -8602,6 +8914,16 @@
         }
       }
     },
+    "Queue" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kuyruk"
+          }
+        }
+      }
+    },
     "Queue for Review" : {
       "localizations" : {
         "tr" : {
@@ -8835,6 +9157,16 @@
         }
       }
     },
+    "Recap" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özet"
+          }
+        }
+      }
+    },
     "Recap When You Return" : {
       "localizations" : {
         "tr" : {
@@ -8881,6 +9213,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Son Kullanılanlar"
+          }
+        }
+      }
+    },
+    "Recent Requests" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son İstekler"
           }
         }
       }
@@ -8932,6 +9274,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yenile (⌘R)"
+          }
+        }
+      }
+    },
+    "refresh for a new one" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "yenisi için yenile"
           }
         }
       }
@@ -9384,6 +9736,16 @@
         }
       }
     },
+    "Result" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonuç"
+          }
+        }
+      }
+    },
     "Results will stay here while you switch between modules." : {
       "localizations" : {
         "tr" : {
@@ -9773,6 +10135,16 @@
         }
       }
     },
+    "Run Again" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Çalıştır"
+          }
+        }
+      }
+    },
     "Run All" : {
       "localizations" : {
         "tr" : {
@@ -9831,6 +10203,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Açıklama üretmek için bu modülü çalıştır."
+          }
+        }
+      }
+    },
+    "running" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "çalışıyor"
           }
         }
       }
@@ -10051,6 +10433,16 @@
         }
       }
     },
+    "Saved answer" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıtlı yanıt"
+          }
+        }
+      }
+    },
     "Saved from %@ · %@" : {
       "localizations" : {
         "en" : {
@@ -10242,6 +10634,16 @@
         }
       }
     },
+    "Seconds. The last 200 requests are kept in memory and cleared when RELL quits. No words or sentences are kept." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saniye. Son 200 istek bellekte tutulur, RELL kapanınca silinir. Kelime ya da cümle tutulmaz."
+          }
+        }
+      }
+    },
     "See %lld words" : {
       "localizations" : {
         "tr" : {
@@ -10413,6 +10815,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seçili kelime: %@"
+          }
+        }
+      }
+    },
+    "Sends a short sentence to each engine, one after the other. About 20 seconds." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her motora sırayla kısa bir cümle gönderir. Yaklaşık 20 saniye."
           }
         }
       }
@@ -11002,6 +11414,46 @@
         }
       }
     },
+    "Speed" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hız"
+          }
+        }
+      }
+    },
+    "Speed test" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hız testi"
+          }
+        }
+      }
+    },
+    "Speed Test" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hız Testi"
+          }
+        }
+      }
+    },
+    "Speed…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hız…"
+          }
+        }
+      }
+    },
     "Start reading" : {
       "localizations" : {
         "tr" : {
@@ -11018,6 +11470,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tekrara Başla"
+          }
+        }
+      }
+    },
+    "Start Test" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testi Başlat"
           }
         }
       }
@@ -11166,6 +11628,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Seslendirmeyi durdur (⇧⌘X)"
+          }
+        }
+      }
+    },
+    "stopped" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "durduruldu"
           }
         }
       }
@@ -11572,6 +12044,16 @@
         }
       }
     },
+    "The cloud model was slow to answer" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulut modeli geç yanıt verdi"
+          }
+        }
+      }
+    },
     "The deck will be added to all %lld selected words." : {
       "localizations" : {
         "tr" : {
@@ -11588,6 +12070,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sözlükte ve modellerde boş alanlar için bir şey yoktu. Alanın menüsünden kendin yazabilirsin."
+          }
+        }
+      }
+    },
+    "The first request loaded the model" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk istek modeli yükledi"
+          }
+        }
+      }
+    },
+    "The first word took %@. This usually comes from the provider — your account's limits or its load — or from the network. With Ollama, updating Ollama can help." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk kelime %@ sürdü. Bu genellikle sağlayıcıdan (hesabının sınırları ya da sunucunun yükü) veya ağdan kaynaklanır. Ollama kullanıyorsan Ollama'yı güncellemek işe yarayabilir."
           }
         }
       }
@@ -11628,6 +12130,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kindle kelime dosyası okunamadı: %@"
+          }
+        }
+      }
+    },
+    "The model is slow on this Mac" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model bu Mac'te yavaş"
           }
         }
       }
@@ -12003,6 +12515,26 @@
         }
       }
     },
+    "Total" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toplam"
+          }
+        }
+      }
+    },
+    "total %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "toplam %@"
+          }
+        }
+      }
+    },
     "Total read" : {
       "comment" : "A label displayed in a reading stats grid.",
       "isCommentAutoGenerated" : true,
@@ -12093,6 +12625,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kullanmak için Sistem Ayarları'nda Apple Intelligence'ı aç."
+          }
+        }
+      }
+    },
+    "Turn on Apple's on-device model" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple'ın cihaz içi modelini aç"
           }
         }
       }
@@ -12361,6 +12903,36 @@
         }
       }
     },
+    "Wait" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekleme"
+          }
+        }
+      }
+    },
+    "waited %@ in line" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sırada bekledi"
+          }
+        }
+      }
+    },
+    "waiting" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bekliyor"
+          }
+        }
+      }
+    },
     "waiting for review" : {
       "localizations" : {
         "tr" : {
@@ -12397,6 +12969,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uyarı: token sınırı nedeniyle çıktı eksik olabilir"
+          }
+        }
+      }
+    },
+    "was loaded" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "yüklüydü"
           }
         }
       }
@@ -12439,6 +13021,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "RELL'e hoş geldin"
+          }
+        }
+      }
+    },
+    "What" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne"
           }
         }
       }
@@ -12533,6 +13125,16 @@
         }
       }
     },
+    "Why?" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neden?"
+          }
+        }
+      }
+    },
     "Wide" : {
       "localizations" : {
         "tr" : {
@@ -12549,6 +13151,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genişlik"
+          }
+        }
+      }
+    },
+    "With it, definitions, meanings, examples, synonyms and usage notes — and the chapter warm-up, recap and glosses — answer in about a second, and your AI provider is left free for the rest." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Açık olunca tanımlar, anlamlar, örnekler, eş anlamlılar ve kullanım notları, ayrıca bölüm hazırlığı, özet ve satır arası anlamlar yaklaşık bir saniyede gelir; yapay zekâ sağlayıcın da geri kalanına ayrılır."
           }
         }
       }
@@ -12591,6 +13203,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kelime kelime hazinene kaydedildi. Tekrar durumu: %@"
+          }
+        }
+      }
+    },
+    "Word level" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelime seviyesi"
           }
         }
       }

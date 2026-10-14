@@ -55,7 +55,6 @@ extension InspectorView {
     func activeResultView(for module: ModuleType) -> some View {
         let output          = viewModel.outputs[module] ?? ""
         let isLoading       = viewModel.loading[module] == true
-        let elapsed         = viewModel.moduleElapsed[module]
         let isTruncated     = viewModel.wasTruncated[module] == true
         let renderedOutput  = isLoading ? output : MarkdownUtils.sanitizeLLMOutput(output)
         let sectionTitle    = isLoading ? "Live Output" : "Result"
@@ -85,17 +84,9 @@ extension InspectorView {
 
                 Spacer(minLength: 0)
 
-                if (elapsed != nil || isTruncated) && !isLoading {
-                    HStack(spacing: DS.Spacing.xs) {
-                        if let elapsed {
-                            Text(String(format: "%.1fs", elapsed))
-                                .font(DS.Typography.caption2.weight(.medium))
-                                .foregroundStyle(DS.Color.textTertiary)
-                        }
-                        if isTruncated {
-                            truncationWarningBadge
-                        }
-                    }
+                // How long it took moved to the footer (v17 S2, decision 1).
+                if isTruncated && !isLoading {
+                    truncationWarningBadge
 
                     Divider()
                         .frame(height: 14)
@@ -151,8 +142,34 @@ extension InspectorView {
                 module: module,
                 showSourceContext: hasSourceContext
             )
+
+            if !isLoading, viewModel.errors[module] == nil, !renderedOutput.isEmpty,
+               let footer = answerFooter(for: module) {
+                AnswerFooterView(footer: footer, onExplain: openSpeedSettings)
+            }
         }
         .dsPanel()
+    }
+
+    /// Engine, timing and why it was slow (v17 S2).
+    func answerFooter(for module: ModuleType) -> AnswerFooter? {
+        switch viewModel.answerSources[module] {
+        case .request(let id):
+            return LLMRequestLog.shared.record(id).flatMap(AnswerFooter.make)
+        case .cached:
+            let engine: AnswerFooter.Engine = AppleOnDevice.currentRoute(for: module) == .appleOnDevice
+                ? .apple
+                : .provider(name: llmProviderTypeRaw, model: llmModel)
+            return .cached(engine: engine)
+        case nil:
+            return nil
+        }
+    }
+
+    func openSpeedSettings() {
+        SpeedSection.requestReveal()
+        settingsSelectedTab = SettingsTab.llm.rawValue
+        openSettings()
     }
 
     private func resultToolbarButton(

@@ -61,8 +61,8 @@ struct InspectorView: View {
     @Environment(WordEncounterStore.self) var encounterStore: WordEncounterStore?
     /// One-line meaning on the word card (v13 Sprint 3).
     @State var inspectorQuickMeaning: String?
-    @Environment(\.openSettings) private var openSettings
-    @AppStorage(StorageKey.settingsSelectedTab) private var settingsSelectedTab = SettingsTab.general.rawValue
+    @Environment(\.openSettings) var openSettings
+    @AppStorage(StorageKey.settingsSelectedTab) var settingsSelectedTab = SettingsTab.general.rawValue
 
     var speechManager: SpeechManager { SpeechManager.shared }
 

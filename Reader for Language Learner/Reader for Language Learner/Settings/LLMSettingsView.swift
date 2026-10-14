@@ -29,8 +29,29 @@ struct LLMSettingsView: View {
     // MARK: - Body
 
     var body: some View {
+        ScrollViewReader { proxy in
+            form
+                .onAppear { revealSpeedIfAsked(proxy) }
+                .onReceive(NotificationCenter.default.publisher(for: .revealSpeedSettings)) { _ in
+                    revealSpeedIfAsked(proxy)
+                }
+        }
+    }
+
+    /// "Why?" under an answer lands on Speed (v17 S2).
+    private func revealSpeedIfAsked(_ proxy: ScrollViewProxy) {
+        guard SpeedSection.revealPending else { return }
+        SpeedSection.revealPending = false
+        Task { @MainActor in
+            withAnimation(DS.Animation.standard) { proxy.scrollTo(SpeedSection.anchor, anchor: .top) }
+        }
+    }
+
+    private var form: some View {
         Form {
             AppleOnDeviceSection()
+
+            SpeedSection()
 
             Section {
                 providerRow

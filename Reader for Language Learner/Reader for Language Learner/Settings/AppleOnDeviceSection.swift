@@ -29,9 +29,19 @@ struct AppleOnDeviceSection: View {
             .disabled(reason != nil)
 
             if let reason {
-                Label(reason, systemImage: "info.circle")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
+                HStack(alignment: .firstTextBaseline) {
+                    Label(reason, systemImage: "info.circle")
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textTertiary)
+                    if AppleOnDevice.needsAppleIntelligenceTurnedOn {
+                        Spacer()
+                        // v17 S2: the one fix the reader can make right away.
+                        Button("Open System Settings") {
+                            NSWorkspace.shared.open(AppleOnDevice.appleIntelligenceSettingsURL)
+                        }
+                        .controlSize(.small)
+                    }
+                }
             }
         } header: {
             Text("On-Device")

@@ -35,8 +35,16 @@ final class InspectorViewModel {
     /// Cancellable task handles per module.
     var activeTasks: [ModuleType: Task<Void, Never>] = [:]
 
-    /// How long each finished module took, shown in the result header.
+    /// How long each finished module took.
     var moduleElapsed: [ModuleType: Double] = [:]
+
+    /// Where a module's answer came from (v17 S2): a request in
+    /// `LLMRequestLog`, or the saved answers. The result's footer reads it.
+    enum AnswerSource: Equatable {
+        case request(UUID)
+        case cached
+    }
+    private(set) var answerSources: [ModuleType: AnswerSource] = [:]
     private var moduleStartTimes: [ModuleType: Date] = [:]
     /// The live request per module. A cancelled request finishes after its
     /// replacement has started; it may only touch state while it's current.
@@ -82,6 +90,7 @@ final class InspectorViewModel {
         loading.removeAll()
         errors.removeAll()
         wasTruncated.removeAll()
+        answerSources.removeAll()
         followUpTask?.cancel()
         followUpTask = nil
         followUps.removeAll()
@@ -141,6 +150,7 @@ final class InspectorViewModel {
         guard let cached = cache.get(key), !cached.isEmpty else { return false }
         for (module, value) in cached {
             outputs[module] = value
+            answerSources[module] = .cached
         }
         return true
     }
@@ -184,6 +194,7 @@ final class InspectorViewModel {
         let module = run.module
         cancel(module: module)
         moduleStartTimes[module] = Date()
+        answerSources[module] = (provider as? RecordedLLMProvider).map { .request($0.id) }
         loading[module] = true
         errors[module] = nil
         wasTruncated[module] = nil

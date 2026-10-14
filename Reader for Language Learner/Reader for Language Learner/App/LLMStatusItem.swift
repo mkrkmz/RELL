@@ -86,6 +86,8 @@ private struct LLMStatusPopover: View {
 
     @Environment(\.openSettings) private var openSettings
     @AppStorage(StorageKey.settingsSelectedTab) private var settingsSelectedTab = SettingsTab.general.rawValue
+    private var queue: LLMScheduler { .shared }
+    private var log: LLMRequestLog { .shared }
 
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
@@ -113,6 +115,13 @@ private struct LLMStatusPopover: View {
                     value: checkedAt.formatted(date: .omitted, time: .standard)
                 )
             }
+            // v17 S2: the queue exists only for a model on this Mac.
+            if LLMConfiguration().runsOnThisMac {
+                detailRow(label: "Queue", value: String(localized: "\(queue.runningCount) running · \(queue.waitingCount) waiting"))
+            }
+            if let last = log.records.last(where: { $0.outcome == .finished && $0.origin != .prewarm }), let total = last.total {
+                detailRow(label: "Last", value: "\(last.origin.localizedTitle(detail: last.detail)) · \(AnswerFooter.seconds(total))")
+            }
 
             Divider()
 
@@ -122,6 +131,12 @@ private struct LLMStatusPopover: View {
                     health.scheduleCheck()
                 }
                 Spacer()
+                Button("Speed…") {
+                    SpeedSection.requestReveal()
+                    settingsSelectedTab = SettingsTab.llm.rawValue
+                    openSettings()
+                }
+                .help("Open Settings ▸ AI ▸ Speed")
                 Button("Open LLM Settings…") {
                     settingsSelectedTab = SettingsTab.llm.rawValue
                     openSettings()

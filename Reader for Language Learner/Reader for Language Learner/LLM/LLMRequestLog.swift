@@ -31,13 +31,15 @@ nonisolated enum LLMRequestOrigin: String, Sendable, CaseIterable {
     case story
     /// Loading the model before the first word (v17 S1).
     case prewarm
+    /// Settings ▸ AI ▸ Speed (v17 S2).
+    case speedTest
 
     /// Work you're waiting for on screen, as opposed to work the app does
     /// on its own while you read.
     var isForeground: Bool {
         switch self {
         case .module, .askAI, .quickLookup, .grammar, .rewrite, .retell, .story: return true
-        case .cefr, .fill, .warmUp, .recap, .gloss, .prewarm: return false
+        case .cefr, .fill, .warmUp, .recap, .gloss, .prewarm, .speedTest: return false
         }
     }
 }
@@ -56,6 +58,9 @@ nonisolated struct LLMRequestRecord: Identifiable, Equatable, Sendable {
     /// "Apple On-Device", "LM Studio", "OpenAI Compatible"…
     let engine: String
     let model: String?
+    /// A model on this Mac (LM Studio / Ollama on localhost), which loads
+    /// and queues; not Apple's model, not a cloud server.
+    var onThisMac = false
     let queuedAt: Date
     var startedAt: Date?
     var firstTokenAt: Date?
@@ -92,9 +97,10 @@ final class LLMRequestLog {
         self.clock = clock
     }
 
-    func begin(origin: LLMRequestOrigin, detail: String?, engine: String, model: String?) -> UUID {
+    func begin(origin: LLMRequestOrigin, detail: String?, engine: String, model: String?,
+               onThisMac: Bool = false) -> UUID {
         let record = LLMRequestRecord(id: UUID(), origin: origin, detail: detail, engine: engine,
-                                      model: model, queuedAt: clock())
+                                      model: model, onThisMac: onThisMac, queuedAt: clock())
         records.append(record)
         if records.count > Self.capacity { records.removeFirst(records.count - Self.capacity) }
         return record.id
@@ -225,6 +231,10 @@ struct RecordedLLMProvider: LLMProvider {
 extension LLMRequestLog {
     /// Marks a request that never went out as cancelled; one that did is
     /// left to finish on its own.
+    func record(_ id: UUID) -> LLMRequestRecord? {
+        records.last { $0.id == id }
+    }
+
     func dropIfNotSent(_ id: UUID) {
         guard let record = records.last(where: { $0.id == id }),
               record.startedAt == nil, record.outcome == nil else { return }
@@ -254,7 +264,7 @@ extension LLMRequestLog {
             model = configuration.model
             onThisMac = configuration.runsOnThisMac
         }
-        let id = begin(origin: origin, detail: detail, engine: engine, model: model)
+        let id = begin(origin: origin, detail: detail, engine: engine, model: model, onThisMac: onThisMac)
         return RecordedLLMProvider(base: provider, id: id, log: self,
                                    queue: onThisMac ? queue : nil, priority: origin.priority)
     }

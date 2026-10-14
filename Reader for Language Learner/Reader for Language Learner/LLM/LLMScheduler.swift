@@ -37,7 +37,7 @@ extension LLMRequestOrigin {
         switch self {
         case .module, .askAI, .grammar, .rewrite, .retell, .story: return .interactive
         case .quickLookup, .cefr:                                  return .soon
-        case .warmUp, .recap, .gloss, .prewarm:                    return .background
+        case .warmUp, .recap, .gloss, .prewarm, .speedTest:        return .background
         case .fill:                                                return .bulk
         }
     }
@@ -66,6 +66,7 @@ nonisolated enum LLMQueuePolicy {
 }
 
 @MainActor
+@Observable
 final class LLMScheduler {
     /// Off the main actor: on macOS 15 a main-actor deinit run outside a
     /// task crashes when it releases another one (v16 S0, CI crash reports).
@@ -74,7 +75,7 @@ final class LLMScheduler {
     static let shared = LLMScheduler()
 
     /// Requests a local server answers at once.
-    let limit: Int
+    @ObservationIgnored let limit: Int
 
     private struct Waiter {
         let id: UUID
