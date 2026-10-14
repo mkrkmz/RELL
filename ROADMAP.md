@@ -258,7 +258,7 @@ anahtar ve uzak sunucu adresi yok.
       fark olcum yayilimi icinde. Canli turlar (S1–S3, kullanici).
       CHANGELOG 1.47.0 + Yenilikler 1.47 (5 madde, TR). Ikinci bir Mac'te
       once/sonra dogrulama yayindan sonra (yayin derlemesiyle)
-- [ ] **1.47.0** yayini
+- [x] **1.47.0** yayinlandi (2026-10-14; Release is akisi yesil, DMG + zip, Latest; GitHub releases/latest 1.47.0 donduruyor)
 
 ---
 
