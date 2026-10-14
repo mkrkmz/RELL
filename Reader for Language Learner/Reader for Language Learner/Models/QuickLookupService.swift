@@ -25,7 +25,6 @@ final class QuickLookupService {
     /// Bumped whenever a translation is cached, so views that read the cache
     /// (the inspector's sentence card) update when the strip finishes.
     private(set) var translationRevision = 0
-    @ObservationIgnored private let gate = AsyncLimiter(limit: 1)
     /// System-dictionary hits and misses alike — a miss is worth remembering
     /// too, so a word the dictionaries don't cover isn't looked up on every
     /// hover of it.
@@ -135,13 +134,10 @@ final class QuickLookupService {
         let user = module.userPrompt(term: term, mode: .word, detail: .short, nativeLanguage: native)
         let maxTokens = module.recommendedMaxTokens(mode: .word, detail: .short, modelIdentifier: LLMConfiguration().model)
 
+        // A model on this Mac waits its turn with everything else
+        // (`LLMScheduler`); Apple's model and cloud servers don't queue.
         let provider = AppleOnDevice.recordedProvider(for: module, origin: .quickLookup)
-        let local = isLocalProvider(for: module)
-        if local { await gate.acquire() }
-        defer {
-            if local { gate.release() }
-            provider.dropIfNotSent()
-        }
+        defer { provider.dropIfNotSent() }
 
         var accumulated = ""
         _ = try await provider.stream(
@@ -226,13 +222,10 @@ final class QuickLookupService {
     private func run(
         system: String, user: String, maxTokens: Int, temperature: Double, module: ModuleType?
     ) async throws -> String {
+        // A model on this Mac waits its turn with everything else
+        // (`LLMScheduler`); Apple's model and cloud servers don't queue.
         let provider = AppleOnDevice.recordedProvider(for: module, origin: .quickLookup)
-        let local = isLocalProvider(for: module)
-        if local { await gate.acquire() }
-        defer {
-            if local { gate.release() }
-            provider.dropIfNotSent()
-        }
+        defer { provider.dropIfNotSent() }
 
         return try await provider.chat(
             system: system,
@@ -241,14 +234,6 @@ final class QuickLookupService {
             maxTokens: maxTokens,
             topP: 0.9
         )
-    }
-
-    /// Local servers get one request at a time; Apple's model and remote
-    /// APIs don't need the gate.
-    private func isLocalProvider(for module: ModuleType?) -> Bool {
-        guard AppleOnDevice.currentRoute(for: module) == .configured else { return false }
-        let type = LLMConfiguration().providerType
-        return type == .lmStudio || type == .ollama
     }
 
     private func normalize(_ string: String) -> String {

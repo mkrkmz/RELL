@@ -144,24 +144,39 @@ yeni okuma ozellikleri, iOS.
 
 ## Sprint 1 — "Daha hizli yapay zeka" (Must)
 
-- [ ] **Tek oncelik sirasi** — butun istekler tek planlayicidan gecer
-      (bugunku `localRequestGate` + daginik kapilarin yerine). Oncelik:
-      ekrandaki panel modulu > hizli bakis / kayit anindaki CEFR > isinma,
-      ozet, satir arasi > toplu doldurma. Karar 3: panel beklerken arka
-      plan yeni istek baslatmaz. Saf siralama mantigi testli (oncelik,
-      adalet, iptal, yerel/bulut ayrimi)
-- [ ] **Eskiyen istegi birak** — secim degisince onceki kelimenin panel
-      istekleri sirada bekliyorsa hic gonderilmez, akiyorsa kesilir
-      (bugun `resetAll` + gorev iptali; sirada bekleyenin durumu olculur)
-- [ ] **Model sicak kalsin** — Ollama istegine `keep_alive`; kitap
-      acilinca (yerel saglayicida, Apple modeli kapsamiyorsa) tek tokenlik
-      onceden isitma. LM Studio'nun bosta bosaltmasi olculur; RELL'den
-      etkilenemiyorsa S2'deki oneri metnine gider. Kazanc S0 duzeniyle
-      rakamla
-- [ ] **Yanit uzunluklari** — modul basina `maxTokens` ve istem
-      uzunluklari gozden gecirilir; kisaltma yalniz cikti kalitesi ayni
-      kalirsa (ornek kelimelerle yan yana)
-- [ ] Testler + olcum raporu (once/sonra, Apple acik/kapali)
+- [x] **Tek oncelik sirasi** — `LLMScheduler` (+ saf `LLMQueuePolicy`):
+      bu Mac'teki modele (LM Studio / Ollama, localhost, `…-cloud` haric)
+      giden her istek tek kuyrukta, ayni anda en fazla 2. Oncelik
+      (`LLMPriority`): panel / Ask AI / araclar > hizli bakis, kayit anindaki
+      CEFR > isinma, ozet, satir arasi, onceden yukleme > toplu doldurma.
+      Karar 3: senin istegin beklerken ya da calisirken arka plan yeni
+      istek baslatmaz, baslamisi kesilmez; ayrica **bir yer hep sana
+      ayrilir** — arka plan en fazla limit−1 yer kullanir, tikladigin kelime
+      bir uzun isin arkasinda beklemez. Kuyruk `RecordedLLMProvider`'in
+      icinde: kayit + sira tek giris noktasi, bekleme suresi deftere girer.
+      Eski `localRequestGate` (panel) ve hizli bakisin kapisi kalkti.
+      Apple modeli ve bulut kuyruga girmez. Bulut modelleri artik yerel
+      sayilmiyor (`LLMConfiguration.runsOnThisMac`, doldurmayla ortak kural)
+- [x] **Eskiyen istegi birak** — kuyruk iptale duyarli: kelime degisince
+      sirada bekleyen panel istegi aninda cikar, hic gonderilmez
+      (defterde "hic gonderilmedi"); akmakta olan gorev iptaliyle kesilir
+- [x] **Model sicak kalsin** — `LocalModelWarmth`: kitap acilinca model
+      arka planda yuklenir (LM Studio: kuyruktan tek token; Ollama: kendi
+      API'si `/api/generate`, istemsiz — yalniz yukler). Ollama'nin OpenAI
+      uyumlu yolu `keep_alive` desteklemiyor (belgesi); bu yuzden her
+      istekten sonra ayni cagriyla `keep_alive: 30m` — 5 dk yerine 30 dk.
+      Model basina dakikada en fazla bir kez; test sunucusunda kapali
+- [ ] **Yanit uzunluklari** — ertelendi: kaliteyi ayni tutarak kisaltmak
+      ornek kelimelerle yan yana model calistirmayi gerektiriyor; yerel
+      buyuk modelle yapilacak her olcum once onaylanir
+- [x] Testler: `LLMSchedulerTests` (9) — oncelik + sira, arka planin
+      beklemesi, ayrilmis yer, iptalde kuyruktan cikma, bekleme kaydi ve
+      gonderilmeyen istek, yalniz bu Mac'teki model, Ollama istegi,
+      dakikada bir. Iki kural mutasyonla dogrulandi (ayrilmis yer, arka
+      planin beklemesi); bekleyen testler sureli — bozuk kuyruk testi
+      kilitlemez. Tam paket 729 yesil
+- [ ] Canli dogrulama: yerel modelle (kucuk model, tek kisa istek)
+      once/sonra — onayla
 
 ## Sprint 2 — "Neden yavas, gorunur" (Must, **maketle baslar**)
 

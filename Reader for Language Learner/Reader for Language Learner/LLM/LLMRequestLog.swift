@@ -29,13 +29,15 @@ nonisolated enum LLMRequestOrigin: String, Sendable, CaseIterable {
     case rewrite
     case retell
     case story
+    /// Loading the model before the first word (v17 S1).
+    case prewarm
 
     /// Work you're waiting for on screen, as opposed to work the app does
     /// on its own while you read.
     var isForeground: Bool {
         switch self {
         case .module, .askAI, .quickLookup, .grammar, .rewrite, .retell, .story: return true
-        case .cefr, .fill, .warmUp, .recap, .gloss: return false
+        case .cefr, .fill, .warmUp, .recap, .gloss, .prewarm: return false
         }
     }
 }
@@ -160,17 +162,15 @@ struct RecordedLLMProvider: LLMProvider {
     let base: any LLMProvider
     let id: UUID
     let log: LLMRequestLog
+    /// The queue for a model on this Mac (v17 S1); nil: no queue (Apple's
+    /// model, a cloud server).
+    var queue: LLMScheduler? = nil
+    var priority: LLMPriority = .interactive
 
     func chat(system: String, user: String, temperature: Double, maxTokens: Int, topP: Double) async throws -> String {
-        log.started(id)
-        do {
-            let answer = try await base.chat(system: system, user: user, temperature: temperature,
-                                             maxTokens: maxTokens, topP: topP)
-            log.finish(id, .finished)
-            return answer
-        } catch {
-            log.finish(id, Self.outcome(for: error))
-            throw error
+        try await whenItsTurn {
+            try await base.chat(system: system, user: user, temperature: temperature,
+                                maxTokens: maxTokens, topP: topP)
         }
     }
 
@@ -179,17 +179,27 @@ struct RecordedLLMProvider: LLMProvider {
         system: String, user: String, temperature: Double, maxTokens: Int, topP: Double,
         onToken: @MainActor @escaping (String) -> Void
     ) async throws -> LLMFinishReason? {
-        log.started(id)
         let id = id
         let log = log
-        do {
-            let reason = try await base.stream(system: system, user: user, temperature: temperature,
-                                               maxTokens: maxTokens, topP: topP) { token in
+        return try await whenItsTurn {
+            try await base.stream(system: system, user: user, temperature: temperature,
+                                  maxTokens: maxTokens, topP: topP) { token in
                 log.firstToken(id)
                 onToken(token)
             }
+        }
+    }
+
+    /// Waits for the queue (if any), then sends — timing both.
+    private func whenItsTurn<Result>(_ send: () async throws -> Result) async throws -> Result {
+        do {
+            let ticket = try await queue?.acquire(priority)
+            defer { if let ticket { queue?.release(ticket) } }
+            log.started(id)
+            let result = try await send()
             log.finish(id, .finished)
-            return reason
+            if queue != nil { LocalModelWarmth.requestFinished() }
+            return result
         } catch {
             log.finish(id, Self.outcome(for: error))
             throw error
@@ -222,15 +232,18 @@ extension LLMRequestLog {
     }
 
     /// `provider` recorded as one request from `origin`. `route` names the
-    /// engine: Apple's model, or the configured provider and its model.
+    /// engine: Apple's model, or the configured provider and its model. A
+    /// model on this Mac waits its turn in `queue` (v17 S1).
     func recording(
         _ provider: any LLMProvider,
         origin: LLMRequestOrigin,
         detail: String? = nil,
-        route: LLMRoute
+        route: LLMRoute,
+        queue: LLMScheduler = .shared
     ) -> RecordedLLMProvider {
         let engine: String
         let model: String?
+        var onThisMac = false
         switch route {
         case .appleOnDevice:
             engine = AppleOnDevice.providerLabel
@@ -239,8 +252,10 @@ extension LLMRequestLog {
             let configuration = LLMConfiguration()
             engine = configuration.providerType.rawValue
             model = configuration.model
+            onThisMac = configuration.runsOnThisMac
         }
         let id = begin(origin: origin, detail: detail, engine: engine, model: model)
-        return RecordedLLMProvider(base: provider, id: id, log: self)
+        return RecordedLLMProvider(base: provider, id: id, log: self,
+                                   queue: onThisMac ? queue : nil, priority: origin.priority)
     }
 }

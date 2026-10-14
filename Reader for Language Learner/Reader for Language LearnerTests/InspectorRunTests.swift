@@ -59,7 +59,7 @@ final class InspectorRunTests: XCTestCase {
     private func run(_ module: ModuleType = .definitionEN, maxTokens: Int = 200, isFallback: Bool = false) -> InspectorViewModel.ModuleRun {
         InspectorViewModel.ModuleRun(
             module: module, system: "s", user: "u", temperature: 0.1, maxTokens: maxTokens,
-            cacheKey: key, isFallback: isFallback, usesLocalGate: false
+            cacheKey: key, isFallback: isFallback
         )
     }
 
@@ -132,7 +132,7 @@ final class InspectorRunTests: XCTestCase {
 
     func testFollowUpStreamsIntoItsExchange() async {
         let viewModel = makeViewModel()
-        viewModel.startFollowUp(question: "why?", system: "s", provider: SlowProvider(["because ", "of that"]), usesLocalGate: false)
+        viewModel.startFollowUp(question: "why?", system: "s", provider: SlowProvider(["because ", "of that"]))
         XCTAssertTrue(viewModel.isAskingFollowUp)
         for _ in 0..<100 where viewModel.isAskingFollowUp { try? await Task.sleep(for: .milliseconds(10)) }
 
@@ -144,8 +144,8 @@ final class InspectorRunTests: XCTestCase {
 
     func testANewFollowUpKeepsItsTaskWhenTheOldOneEnds() async {
         let viewModel = makeViewModel()
-        viewModel.startFollowUp(question: "one", system: "s", provider: SlowProvider(["1", "1"], pause: .milliseconds(20)), usesLocalGate: false)
-        viewModel.startFollowUp(question: "two", system: "s", provider: SlowProvider(["2", "2"], pause: .milliseconds(60)), usesLocalGate: false)
+        viewModel.startFollowUp(question: "one", system: "s", provider: SlowProvider(["1", "1"], pause: .milliseconds(20)))
+        viewModel.startFollowUp(question: "two", system: "s", provider: SlowProvider(["2", "2"], pause: .milliseconds(60)))
         try? await Task.sleep(for: .milliseconds(70))
 
         XCTAssertNotNil(viewModel.followUpTask, "the first exchange ending must not clear the second's task")

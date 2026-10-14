@@ -183,7 +183,6 @@ extension InspectorView {
             .suffix(4)
 
         let client = llmProvider(for: nil)
-        let route = AppleOnDevice.currentRoute(for: nil)
         let native = nativeLanguage
 
         var contextLines = ["Term/phrase: \(trimmedSelection)"]
@@ -210,8 +209,7 @@ extension InspectorView {
         viewModel.startFollowUp(
             question: question,
             system: system,
-            provider: client,
-            usesLocalGate: route == .configured && configuredProviderIsLocal
+            provider: client
         )
     }
 }

@@ -478,18 +478,9 @@ struct InspectorView: View {
                 provider: cacheProviderLabel, model: llmModel,
                 native: nativeLanguageRaw, target: targetLanguageRaw
             ),
-            isFallback: AppleOnDevice.isFallback(module),
-            // Local servers process requests on one GPU context — running many
-            // streams at once slows all of them, so gate their concurrency.
-            usesLocalGate: route == .configured && configuredProviderIsLocal
+            isFallback: AppleOnDevice.isFallback(module)
         )
         viewModel.start(run, provider: llmProvider(for: module))
-    }
-
-    /// LM Studio / Ollama — the servers `localRequestGate` exists for.
-    var configuredProviderIsLocal: Bool {
-        llmProviderTypeRaw == LLMProviderType.lmStudio.rawValue
-            || llmProviderTypeRaw == LLMProviderType.ollama.rawValue
     }
 
     /// Word or sentence from the selection itself (v14 S2; before, a

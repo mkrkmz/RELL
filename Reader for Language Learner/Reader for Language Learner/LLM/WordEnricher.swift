@@ -535,15 +535,11 @@ final class WordEnricher {
     /// A local server on this Mac, not a cloud model reached through it
     /// (Ollama's `…-cloud` models run remotely).
     static func runsOnThisMac(_ configuration: LLMConfiguration) -> Bool {
-        runsOnThisMac(type: configuration.providerType, serverURL: configuration.serverURL, model: configuration.model)
+        configuration.runsOnThisMac
     }
 
     static func runsOnThisMac(type: LLMProviderType, serverURL: String, model: String) -> Bool {
-        guard type == .lmStudio || type == .ollama,
-              let host = URL(string: serverURL)?.host?.lowercased(),
-              ["127.0.0.1", "localhost", "::1", "[::1]"].contains(host)
-        else { return false }
-        return !model.lowercased().contains("cloud")
+        LLMConfiguration.runsOnThisMac(type: type, serverURL: serverURL, model: model)
     }
 
     private static func ask(_ base: any LLMProvider, _ request: FillRequest, gate: AsyncLimiter, route: LLMRoute) async -> String? {

@@ -99,6 +99,24 @@ struct LLMConfiguration {
         defaults.removeObject(forKey: apiKeyKey)
     }
 
+    // MARK: - Where it runs
+
+    /// A server on this Mac — LM Studio or Ollama on localhost — and not a
+    /// cloud model reached through it (Ollama's `…-cloud` models run
+    /// remotely). These share one GPU: their requests queue
+    /// (`LLMScheduler`) and their model can be kept loaded.
+    var runsOnThisMac: Bool {
+        Self.runsOnThisMac(type: providerType, serverURL: serverURL, model: model)
+    }
+
+    static func runsOnThisMac(type: LLMProviderType, serverURL: String, model: String) -> Bool {
+        guard type == .lmStudio || type == .ollama,
+              let host = URL(string: serverURL)?.host?.lowercased(),
+              ["127.0.0.1", "localhost", "::1", "[::1]"].contains(host)
+        else { return false }
+        return !model.lowercased().contains("cloud")
+    }
+
     // MARK: - Factory
 
     /// Returns a fully configured LLMProvider using the current settings.

@@ -51,10 +51,6 @@ final class InspectorViewModel {
         followUps.last?.isLoading == true
     }
 
-    /// Caps concurrent requests to local LLM servers (LM Studio / Ollama),
-    /// which serialize on a single GPU context anyway.
-    let localRequestGate = AsyncLimiter(limit: 2)
-
     /// LRU output cache — survives word-to-word navigation and, via the disk
     /// snapshot in Application Support, app restarts.
     var cache: LRUCache<OutputCacheKey, [ModuleType: String]>
@@ -179,8 +175,6 @@ final class InspectorViewModel {
         /// Sent to the configured provider only because Apple's model isn't
         /// reliable for this module — said so if that provider fails.
         let isFallback: Bool
-        /// LM Studio / Ollama: share `localRequestGate`.
-        let usesLocalGate: Bool
     }
 
     /// Streams `run.module` from `provider` into `outputs`, then records the
@@ -197,14 +191,13 @@ final class InspectorViewModel {
 
         let runID = UUID()
         currentRunIDs[module] = runID
-        let gate = localRequestGate
+        // A model on this Mac waits its turn inside the provider
+        // (`LLMScheduler`, v17 S1); cancelling this task takes it out of
+        // the queue.
         let task = Task { [weak self] in
             var finishReason: LLMFinishReason?
             var failure: Error?
             do {
-                if run.usesLocalGate { await gate.acquire() }
-                defer { if run.usesLocalGate { gate.release() } }
-                try Task.checkCancellation()
                 finishReason = try await provider.stream(
                     system: run.system,
                     user: run.user,
@@ -265,8 +258,7 @@ final class InspectorViewModel {
     func startFollowUp(
         question: String,
         system: String,
-        provider: any LLMProvider,
-        usesLocalGate: Bool
+        provider: any LLMProvider
     ) {
         followUpTask?.cancel()
         let exchangeID = UUID()
@@ -275,13 +267,9 @@ final class InspectorViewModel {
         )
         let runID = UUID()
         currentFollowUpRunID = runID
-        let gate = localRequestGate
         followUpTask = Task { [weak self] in
             var failure: Error?
             do {
-                if usesLocalGate { await gate.acquire() }
-                defer { if usesLocalGate { gate.release() } }
-                try Task.checkCancellation()
                 _ = try await provider.stream(
                     system: system, user: question, temperature: 0.3, maxTokens: 400, topP: 0.9
                 ) { token in

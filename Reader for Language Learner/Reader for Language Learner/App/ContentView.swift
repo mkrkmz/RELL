@@ -255,6 +255,8 @@ struct ContentView: View {
                         previous: recentDocumentStore.documents.first { $0.path == newURL.path }
                     )
                     recentDocumentStore.registerOpen(url: newURL)
+                    // Load a model on this Mac before the first word (v17 S1).
+                    LocalModelWarmth.documentOpened()
                 }
                 // Multi-window session rule: the store tracks one active session;
                 // only touch it when it belongs to (or should belong to) this window.
