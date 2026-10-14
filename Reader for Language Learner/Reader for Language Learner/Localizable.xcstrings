@@ -1116,6 +1116,16 @@
         }
       }
     },
+    "A speed test with advice, the last requests' timings and a diagnostic report you can copy." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önerili bir hız testi, son isteklerin süreleri ve kopyalayabileceğin bir tanı raporu."
+          }
+        }
+      }
+    },
     "A Story From Your Words" : {
       "localizations" : {
         "tr" : {
@@ -5959,6 +5969,16 @@
         }
       }
     },
+    "It loads when you open a book, and Ollama keeps it for half an hour instead of five minutes." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kitabı açınca yükleniyor; Ollama onu beş dakika yerine yarım saat bellekte tutuyor."
+          }
+        }
+      }
+    },
     "It takes %@ of this Mac's %@ and writes about %lld words a second. A smaller model (4–8B) answers faster." : {
       "localizations" : {
         "en" : {
@@ -9730,6 +9750,16 @@
         }
       }
     },
+    "RELL tells you when a new version is out, and the first run sets up Apple Intelligence and any AI provider." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni sürüm çıkınca RELL haber veriyor; ilk açılış Apple Intelligence'ı ve dilediğin yapay zekâ sağlayıcısını kuruyor."
+          }
+        }
+      }
+    },
     "RELL translates and explains %@ content into %@." : {
       "localizations" : {
         "en" : {
@@ -11027,6 +11057,16 @@
         }
       }
     },
+    "See who answered, and how fast" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kimin yanıtladığını ve ne kadar sürdüğünü gör"
+          }
+        }
+      }
+    },
     "Select" : {
       "localizations" : {
         "tr" : {
@@ -11279,6 +11319,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sunucu URL'si"
+          }
+        }
+      }
+    },
+    "Settings ▸ AI ▸ Speed" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar ▸ Yapay Zekâ ▸ Hız"
           }
         }
       }
@@ -12507,6 +12557,16 @@
         }
       }
     },
+    "The model is ready when you are" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model seninle birlikte hazır"
+          }
+        }
+      }
+    },
     "The model is slow on this Mac" : {
       "localizations" : {
         "tr" : {
@@ -13168,6 +13228,16 @@
         }
       }
     },
+    "Under each answer: Apple, your provider or a saved answer, and how long it took — with the reason when it was slow." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her yanıtın altında: Apple, sağlayıcın ya da kayıtlı yanıt ve ne kadar sürdüğü; yavaşsa sebebiyle birlikte."
+          }
+        }
+      }
+    },
     "Understand it in the Inspector" : {
       "localizations" : {
         "tr" : {
@@ -13266,6 +13336,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Güncellemeler"
+          }
+        }
+      }
+    },
+    "Updates and a better first run" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemeler ve daha iyi bir ilk açılış"
           }
         }
       }
@@ -13630,6 +13710,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Genişlik"
+          }
+        }
+      }
+    },
+    "With a model on this Mac, the word you click no longer waits behind warm-ups and glosses." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model bu Mac'teyse tıkladığın kelime artık bölüm hazırlığının ve satır arası anlamların arkasında beklemiyor."
           }
         }
       }
@@ -14054,6 +14144,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "METNİN, DÜZELTİLMİŞ"
+          }
+        }
+      }
+    },
+    "Your word goes first" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önce senin kelimen"
           }
         }
       }

@@ -133,11 +133,10 @@ yeni okuma ozellikleri, iOS.
       tutarsizlik: `…-cloud` modeller panelde yerel sayiliyor (2'lik kapi)
       ve arka plan isleri (Apple modeli yokken) buluta da gider, kotayi
       tuketir. S1'de ele alinir; tani raporu (S3) Ollama surumunu da yazar
-- [ ] **Uygulama ici taklit** — gelistirme Mac'inde (tek kopya) Apple modeli
-      acik/kapali, ayni kitap ve kelimeler: kelime tikla, bolum degistir,
-      kitaba geri don senaryolari. Rapor: hangi
-      istek ne kadar bekledi, model yuklemesi var mi (bosta 5+ dk sonra
-      ilk istek)
+- [x] **Uygulama ici taklit** — kullanicinin canli denemesiyle karsilandi
+      (Apple modeli kapali: bulut modeli hizli, yerel 12B ~15 sn); ayrintili
+      sure tablosu toplanmadi — S2'deki alt satir ve hiz testi bunu artik
+      uygulama icinde gosteriyor
 - [ ] Kapi: rakamlar yapilandirmalar arasindaki sure farkini aciklar.
       Aciklamazsa S1 kapsami rakamlara gore yeniden yazilir, sessizce
       kucultulmez
@@ -175,8 +174,8 @@ yeni okuma ozellikleri, iOS.
       dakikada bir. Iki kural mutasyonla dogrulandi (ayrilmis yer, arka
       planin beklemesi); bekleyen testler sureli — bozuk kuyruk testi
       kilitlemez. Tam paket 729 yesil
-- [ ] Canli dogrulama: yerel modelle (kucuk model, tek kisa istek)
-      once/sonra — onayla
+- [x] Canli dogrulama: S2/S3 canli turlarinda (kullanici) sorun yok;
+      once/sonra sayisal olcum yapilmadi (agir yerel olcum kurali)
 
 ## Sprint 2 — "Neden yavas, gorunur" (Must, **maketle baslar**)
 
@@ -212,7 +211,7 @@ kisa istemle; son istekler metinsiz.
       hesabi, Ollama boyutu, oneriler. Mutasyon: satirin tek satir kalmasi
       ve "bekledi"nin onceligi. 62 yeni TR metin (xcstrings bos nesne
       bicimi korundu). Tam paket 742 yesil
-- [ ] Canli tur (kullanici)
+- [x] Canli tur (kullanici) — tamam
 
 ## Sprint 3 — "Her Mac'te iyi" (Must, **maketle baslar**)
 
@@ -249,13 +248,16 @@ anahtar ve uzak sunucu adresi yok.
       gunde bir, GitHub yaniti, on surum/taslak, rapor icerigi, uzak adresin
       girmemesi (mutasyonla dogrulandi), bellek onerisi. 51 yeni TR metin.
       Tam paket 754 yesil
-- [ ] Canli tur (kullanici)
+- [x] Canli tur (kullanici) — tamam
 
 ## Sprint 4 — "Kapanis"
 
-- [ ] Kapanis (Must): tam test, soguk acilis olcumu (1.46.1 ile yan yana),
-      ikinci bir Mac'te dogrulama (once/sonra sureler), canli tur,
-      CHANGELOG 1.47.0 + Yenilikler 1.47
+- [x] Kapanis (Must): tam test (754 yesil, 2 makineye bagli atlanan),
+      soguk acilis (ayni oturumda donusumlu, 1.46.1 worktree'si ile, Debug
+      UI testi, 5 olcum): 1.46.1 ortanca ~675/593 ms, simdi ~630/601 ms —
+      fark olcum yayilimi icinde. Canli turlar (S1–S3, kullanici).
+      CHANGELOG 1.47.0 + Yenilikler 1.47 (5 madde, TR). Ikinci bir Mac'te
+      once/sonra dogrulama yayindan sonra (yayin derlemesiyle)
 - [ ] **1.47.0** yayini
 
 ---

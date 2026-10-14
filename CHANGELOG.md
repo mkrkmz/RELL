@@ -4,6 +4,61 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.47.0] - 2026-10-14
+
+Fast and clear on every Mac. Roadmap v17 (Sprints 0–4): AI answers no
+longer wait behind the app's own work or for a model to load, every
+answer says which engine gave it and how long it took, and a new
+Settings ▸ AI ▸ Speed explains a slow setup. The first run sets up
+Apple Intelligence and any AI provider, and RELL now tells you when a
+new version is out.
+
+### Added
+
+- **Who answered, and how fast.** Under every Inspector answer: Apple,
+  your provider and model, or a saved answer — with the first word's and
+  the whole answer's time. When it was slow, an orange tag says why: it
+  waited in line, the model had to load, or a cloud model was slow to
+  start. "Why?" opens the new Speed settings.
+- **Settings ▸ AI ▸ Speed.** A speed test on demand (two short requests
+  to each engine, one after the other): how long loading the model took,
+  the first word and words per second, with advice — turn on Apple
+  Intelligence, a smaller model for this Mac, a slow cloud provider. The
+  last requests' timings are listed without any text.
+- **Diagnostic report.** Help ▸ Diagnostic Report… (or the button in
+  Speed) shows the version, the Mac, Apple Intelligence, the provider and
+  model, the Ollama version, the last speed test and the last requests'
+  timings — in full, before you copy it. No words, sentences, book titles
+  or keys, and no remote server addresses; nothing is sent.
+- **Update check.** At most once a day RELL asks GitHub for the latest
+  version; a newer one shows a banner on the home screen. Download opens
+  the release page — nothing is installed for you. Help ▸ Check for
+  Updates…; turn it off in Settings ▸ Data ▸ Updates.
+- **A better first run.** A step for Apple Intelligence when this Mac
+  could use it but it's off, and the AI step now covers LM Studio, Ollama,
+  OpenAI-compatible servers and Anthropic, tests speed and suggests a
+  model size for this Mac's memory.
+
+### Changed
+
+- **Your word goes first.** Every request to a model on this Mac (LM
+  Studio, Ollama) goes through one queue: what you're waiting for first,
+  the chapter warm-up, recap and glosses after it, and one slot always
+  kept free for you. A request for a word you've moved on from is dropped
+  before it's sent.
+- **The model stays loaded.** Opening a book loads the model in the
+  background, and Ollama is asked to keep it for 30 minutes instead of 5 —
+  the first word no longer waits for a load (about 12 s in our tests).
+- **Ollama's cloud models count as cloud.** They no longer queue like a
+  model on this Mac, and the privacy table names Ollama's cloud.
+- The time an answer took moved from the result's header to its new
+  footer line.
+
+### Fixed
+
+- **A word looked up before opens on its answer.** Its saved answers
+  loaded but the panel stayed on "Choose a module" until you clicked one.
+
 ## [1.46.1] - 2026-10-11
 
 A new app icon and a README that matches the app as it is now. (1.46.0 was

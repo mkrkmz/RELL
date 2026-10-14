@@ -25,6 +25,23 @@ nonisolated struct WhatsNew: Equatable, Sendable, Identifiable {
     /// Newest first.
     static var releases: [WhatsNew] {
         [
+            WhatsNew(version: "1.47", items: [
+                Item(icon: "gauge.with.dots.needle.50percent",
+                     title: String(localized: "See who answered, and how fast"),
+                     detail: String(localized: "Under each answer: Apple, your provider or a saved answer, and how long it took — with the reason when it was slow.")),
+                Item(icon: "arrow.up.to.line",
+                     title: String(localized: "Your word goes first"),
+                     detail: String(localized: "With a model on this Mac, the word you click no longer waits behind warm-ups and glosses.")),
+                Item(icon: "bolt",
+                     title: String(localized: "The model is ready when you are"),
+                     detail: String(localized: "It loads when you open a book, and Ollama keeps it for half an hour instead of five minutes.")),
+                Item(icon: "speedometer",
+                     title: String(localized: "Settings ▸ AI ▸ Speed"),
+                     detail: String(localized: "A speed test with advice, the last requests' timings and a diagnostic report you can copy.")),
+                Item(icon: "arrow.down.circle",
+                     title: String(localized: "Updates and a better first run"),
+                     detail: String(localized: "RELL tells you when a new version is out, and the first run sets up Apple Intelligence and any AI provider.")),
+            ]),
             WhatsNew(version: "1.45", items: [
                 Item(icon: "book.closed",
                      title: String(localized: "A book shows its own words"),
