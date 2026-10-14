@@ -146,6 +146,19 @@ final class InspectorViewModel {
     }
 
     @discardableResult
+    /// Which module a word with saved answers opens on: the open one if it
+    /// has an answer, else the one used last, else the first in the grid's
+    /// order that has one (v17 S2 live pass: a word looked up before opened
+    /// blank until you clicked its module).
+    static func moduleToShow(
+        active: ModuleType?, lastUsed: ModuleType, primary: [ModuleType],
+        outputs: [ModuleType: String], isEnabled: (ModuleType) -> Bool
+    ) -> ModuleType? {
+        func hasAnswer(_ module: ModuleType) -> Bool { !(outputs[module] ?? "").isEmpty }
+        if let active, hasAnswer(active) { return active }
+        return ([lastUsed] + primary + ModuleType.allCases).first { isEnabled($0) && hasAnswer($0) } ?? active
+    }
+
     func loadFromCache(key: OutputCacheKey) -> Bool {
         guard let cached = cache.get(key), !cached.isEmpty else { return false }
         for (module, value) in cached {

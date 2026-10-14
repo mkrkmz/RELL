@@ -164,3 +164,37 @@ final class SpeedVisibilityTests: XCTestCase {
         }
     }
 }
+
+// MARK: - A word looked up before
+
+@MainActor
+final class SavedAnswerOpeningTests: XCTestCase {
+    private let all: (ModuleType) -> Bool = { _ in true }
+
+    func testAWordWithSavedAnswersOpensOnTheModuleUsedLast() {
+        let outputs: [ModuleType: String] = [.definitionEN: "a", .examplesEN: "b"]
+        XCTAssertEqual(InspectorViewModel.moduleToShow(active: nil, lastUsed: .examplesEN, primary: ModuleType.primary,
+                                                       outputs: outputs, isEnabled: all), .examplesEN)
+    }
+
+    func testOtherwiseOnTheFirstModuleThatHasAnAnswer() {
+        let outputs: [ModuleType: String] = [.examplesEN: "b"]
+        XCTAssertEqual(InspectorViewModel.moduleToShow(active: nil, lastUsed: .collocations, primary: ModuleType.primary,
+                                                       outputs: outputs, isEnabled: all), .examplesEN)
+        XCTAssertEqual(InspectorViewModel.moduleToShow(active: .collocations, lastUsed: .collocations, primary: ModuleType.primary,
+                                                       outputs: outputs, isEnabled: all), .examplesEN,
+                       "an open module without an answer gives way to one with")
+    }
+
+    func testAnOpenModuleWithAnAnswerStays() {
+        let outputs: [ModuleType: String] = [.definitionEN: "a", .examplesEN: "b"]
+        XCTAssertEqual(InspectorViewModel.moduleToShow(active: .definitionEN, lastUsed: .examplesEN, primary: ModuleType.primary,
+                                                       outputs: outputs, isEnabled: all), .definitionEN)
+    }
+
+    func testADisabledModuleIsSkipped() {
+        let outputs: [ModuleType: String] = [.etymologyEN: "a", .definitionEN: "b"]
+        XCTAssertEqual(InspectorViewModel.moduleToShow(active: nil, lastUsed: .etymologyEN, primary: ModuleType.primary,
+                                                       outputs: outputs, isEnabled: { $0 != .etymologyEN }), .definitionEN)
+    }
+}

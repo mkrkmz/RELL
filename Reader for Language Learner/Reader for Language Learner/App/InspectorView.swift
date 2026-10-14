@@ -416,9 +416,22 @@ struct InspectorView: View {
             native: nativeLanguageRaw, target: targetLanguageRaw
         )
         let loaded = viewModel.loadFromCache(key: key)
-        if !loaded, let activeModule, !activeModule.isEnabled(mode: explainMode) {
+        if loaded {
+            showSavedAnswer()
+        } else if let activeModule, !activeModule.isEnabled(mode: explainMode) {
             self.activeModule = nil
         }
+    }
+
+    /// A word looked up before opens on its saved answer, as a new word opens
+    /// on the one being fetched: the module you used last if it has one,
+    /// otherwise the first that does. Nothing is sent.
+    func showSavedAnswer() {
+        let mode = explainMode
+        activeModule = InspectorViewModel.moduleToShow(
+            active: activeModule, lastUsed: lastUsedModule, primary: primaryModules,
+            outputs: viewModel.outputs, isEnabled: { $0.isEnabled(mode: mode) }
+        )
     }
 
     func toggleModule(_ module: ModuleType) {
