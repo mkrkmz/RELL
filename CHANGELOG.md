@@ -28,7 +28,7 @@ nearly two minutes with a cold model.
 - **Short meanings in your language by default.** The first run asks
   which language the one-line meaning on the word card and in the hover
   dictionary uses, your own language first. Existing settings are kept
-  (Settings ▸ Reading ▸ Answer Language).
+  (Settings ▸ Reading ▸ Answer In).
 
 ## [1.47.0] - 2026-10-14
 
