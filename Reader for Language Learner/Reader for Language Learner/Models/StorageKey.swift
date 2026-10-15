@@ -64,6 +64,10 @@ nonisolated enum StorageKey {
     static let updateHiddenVersion = "updateHiddenVersion"
     /// 1.47.2: the floating bar over a text selection (default on).
     static let selectionBarEnabled = "selectionBarEnabled"
+    /// v18 S2: what the Inspector's word / sentence card shows, in order
+    /// (`InspectorCardLayout` ids); the rest waits in its ••• menu.
+    static let inspectorWordCard = "inspectorWordCard"
+    static let inspectorSentenceCard = "inspectorSentenceCard"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     /// The "major.minor" whose What's New page was last shown (v14 S3).

@@ -13,9 +13,11 @@ extension InspectorView {
 
     var resultPanel: some View {
         Group {
-            if let activeModule {
-                activeResultView(for: activeModule)
-                    .id(activeModule)
+            // A module is always open (v18 S2): the one you opened, else the
+            // one used last.
+            if let module = displayedModule {
+                activeResultView(for: module)
+                    .id(module)
                     .transition(.opacity)
             } else {
                 noModuleHint
@@ -57,7 +59,6 @@ extension InspectorView {
         let isLoading       = viewModel.loading[module] == true
         let isTruncated     = viewModel.wasTruncated[module] == true
         let renderedOutput  = isLoading ? output : MarkdownUtils.sanitizeLLMOutput(output)
-        let sectionTitle    = isLoading ? "Live Output" : "Result"
 
         VStack(alignment: .leading, spacing: 0) {
 
@@ -69,14 +70,13 @@ extension InspectorView {
                     .background(module.accentColor.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(sectionTitle)
-                        .dsOverlineLabel()
-                    Text(module.title(nativeLanguage: nativeLanguage))
-                        .font(DS.Typography.subhead.weight(.semibold))
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .lineLimit(1)
-                }
+                // One line (v18 S2): the module's name is the heading.
+                Text(module.title(nativeLanguage: nativeLanguage))
+                    .font(DS.Typography.subhead.weight(.semibold))
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .layoutPriority(-1)
 
                 if isLoading {
                     liveStatusBadge
@@ -92,6 +92,8 @@ extension InspectorView {
                         .frame(height: 14)
                         .padding(.horizontal, DS.Spacing.xxs)
                 }
+
+                detailPicker
 
                 HStack(spacing: DS.Spacing.xxs) {
                         resultToolbarButton(systemImage: "arrow.clockwise", label: "Refresh") {
@@ -114,12 +116,6 @@ extension InspectorView {
                                 viewModel.cancel(module: module)
                             }
                             .help("Cancel")
-                        } else {
-                            resultToolbarButton(systemImage: "xmark", label: "Close",
-                                                tint: DS.Color.textSecondary) {
-                                activeModule = nil
-                            }
-                            .help("Close (Esc)")
                         }
                 }
             }
@@ -182,6 +178,20 @@ extension InspectorView {
         }
         .buttonStyle(DSIconButtonStyle(tint: tint))
         .accessibilityLabel(label)
+    }
+
+    /// Short or detailed explanations (moved from the Explanations header,
+    /// v18 S2).
+    var detailPicker: some View {
+        Picker("Detail", selection: $explainDetail) {
+            Text("Short").tag(ExplainDetail.short)
+            Text("Detailed").tag(ExplainDetail.detailed)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .controlSize(.mini)
+        .fixedSize()
+        .help("How much the explanations say")
     }
 
     // MARK: - Result Body
@@ -373,9 +383,16 @@ extension InspectorView {
             Image(systemName: module.iconName)
                 .font(DS.Typography.icon(24, weight: .light))
                 .foregroundStyle(DS.Color.textTertiary)
-            Text("Run this module to generate an explanation.")
+            Text("Not asked yet.")
                 .font(DS.Typography.caption)
                 .foregroundStyle(DS.Color.textTertiary)
+            // v18 S2: a module is always open; with auto-run off, this asks.
+            Button("Get") {
+                activeModule = module
+                Task { await runModule(module, forceRefresh: false) }
+            }
+            .buttonStyle(.bordered)
+            .disabled(!isModuleEnabled(module))
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

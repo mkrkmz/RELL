@@ -81,6 +81,25 @@ struct ReadingSettingsView: View {
                     .foregroundStyle(DS.Color.textTertiary)
             }
 
+            // v18 S2: what the Inspector's card shows.
+            Section {
+                LabeledContent {
+                    Button("Edit Card…") { showCardEditor = true }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Inspector Card")
+                        Text("Which modules and actions sit on the word and sentence cards; the rest wait in •••.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+            } header: {
+                Text("Inspector")
+            }
+            .sheet(isPresented: $showCardEditor) {
+                InspectorCardEditor { showCardEditor = false }
+            }
+
             Section {
                 VStack(alignment: .leading, spacing: DS.Spacing.xs) {
                     HStack {
@@ -132,6 +151,7 @@ struct ReadingSettingsView: View {
 
     @AppStorage(StorageKey.hoverDictionaryEnabled) private var hoverDictionaryEnabled = true
     @AppStorage(StorageKey.selectionBarEnabled) private var selectionBarEnabled = true
+    @State private var showCardEditor = false
     @AppStorage(HoverDictionaryLanguage.storageKey)
     private var hoverDictionaryLanguageRaw = HoverDictionaryLanguage.default.rawValue
     @AppStorage(StorageKey.sentenceTranslationEnabled) private var sentenceTranslationEnabled = true

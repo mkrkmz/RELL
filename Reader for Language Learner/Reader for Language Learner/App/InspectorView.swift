@@ -33,6 +33,14 @@ struct InspectorView: View {
         DomainPreference(rawValue: domainRaw) ?? .general
     }
     @State var activeModule: ModuleType?
+    /// v18 S2: the card's list changed (editor, right-click, 📌).
+    @State var cardRevision = 0
+    /// Width of the card's lower row — what doesn't fit goes to •••.
+    @State var cardRowWidth: CGFloat = 320
+    @State var showCardEditor = false
+    /// Earlier Ask AI questions shown, or only the latest (v18 S2).
+    @State var showAllFollowUps = false
+    @AppStorage(StorageKey.grammarLensExpanded) var grammarLensExpanded = false
     @AppStorage(StorageKey.speechRate) var speechRate: Double = 0.5
     @State var lastUsedModule: ModuleType = .definitionEN
     @State var showAnkiExport = false
@@ -301,6 +309,13 @@ struct InspectorView: View {
                     contextSentence: contextSentence
                 )
             }
+            // v18 S2: what the card shows.
+            .sheet(isPresented: $showCardEditor) {
+                InspectorCardEditor(initialKind: cardKind) { showCardEditor = false }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .inspectorCardChanged)) { _ in
+                cardRevision += 1
+            }
     }
 
     // MARK: - Empty State
@@ -344,19 +359,17 @@ struct InspectorView: View {
 
     private func selectionStack(resultHeight: CGFloat?) -> some View {
         VStack(alignment: .leading, spacing: DS.Spacing.lg) {
-            // v14 S2 — first the selection and what you can do with it, then
-            // depth. ── Zone 1: word or sentence card, with its actions ──────
+            // v18 S2 — the card holds the selection, what you can do with it
+            // and the modules you chose for it (no separate Explanations
+            // section any more). ── Zone 1: word or sentence card ─────────────
             selectionHeader
 
-            // ── Zone 2: passage tools (phrase or sentence only) ──────────────
-            if !isSingleWordSelection {
-                sentenceTools
+            // ── Zone 2: the grammar lens, when its card button is on ─────────
+            if !isSingleWordSelection, grammarLensExpanded {
+                grammarLensSection
             }
 
-            // ── Zone 3: explanations ─────────────────────────────────────────
-            moduleGrid
-
-            // ── Zone 4: result — the one zone that stretches ─────────────────
+            // ── Zone 3: result — the one zone that stretches ─────────────────
             Group {
                 if let resultHeight {
                     resultPanel.frame(height: resultHeight)
@@ -366,7 +379,7 @@ struct InspectorView: View {
                 }
             }
 
-            // ── Zone 5: ask a follow-up ──────────────────────────────────────
+            // ── Zone 4: ask a follow-up ──────────────────────────────────────
             askAISection
         }
         .padding(DS.Spacing.md)
@@ -448,8 +461,16 @@ struct InspectorView: View {
         )
     }
 
+    /// The module whose result is shown: the open one, else the one used
+    /// last — a module is always open (v18 S2).
+    var displayedModule: ModuleType? {
+        guard hasSelection else { return activeModule }
+        if let activeModule { return activeModule }
+        return lastUsedModule.isEnabled(mode: explainMode) ? lastUsedModule : .definitionEN
+    }
+
+    /// Opens `module` (clicking the open one again keeps it open — v18 S2).
     func toggleModule(_ module: ModuleType) {
-        if activeModule == module { activeModule = nil; return }
         activeModule = module
         lastUsedModule = module
         if (viewModel.outputs[module] ?? "").isEmpty {

@@ -3,8 +3,8 @@
 //  Reader for Language Learner
 //
 //  A phrase or sentence in the inspector (v14 S2): the sentence and its
-//  translation in a card with its actions, then the tools that work on a
-//  passage — the grammar lens, Simplify and Retell — in one place.
+//  translation in a card with its actions. Since v18 S2 the passage tools —
+//  Grammar, Simplify, Retell — are buttons on the card like the modules.
 //
 
 import SwiftUI
@@ -40,8 +40,10 @@ extension InspectorView {
                     }
             }
 
-            quickActions
+            // v18 S2: the actions, then the modules and passage tools on the card.
+            cardActionsRow
                 .padding(.top, DS.Spacing.xxs)
+            cardModulesRow
         }
         .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -56,36 +58,5 @@ extension InspectorView {
     private var cardTranslation: String? {
         _ = quickLookup.translationRevision
         return quickLookup.cachedTranslation(for: trimmedSelection)
-    }
-
-    // MARK: - Tools
-
-    /// Passage tools, offered for a phrase or sentence only.
-    var sentenceTools: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            DSSectionHeader(String(localized: "Tools"))
-                .padding(.horizontal, DS.Spacing.xxs)
-
-            grammarLensSection
-
-            let isPassage = GradedRewrite.isEligible(trimmedSelection)
-            HStack(spacing: DS.Spacing.xs) {
-                Button {
-                    NotificationCenter.default.post(name: .simplifySelectionCommand, object: trimmedSelection)
-                } label: {
-                    Label("Simplify", systemImage: "text.badge.checkmark")
-                }
-                Button {
-                    NotificationCenter.default.post(name: .retellSelectionCommand, object: trimmedSelection)
-                } label: {
-                    Label("Retell", systemImage: "square.and.pencil")
-                }
-                Spacer(minLength: 0)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-            .disabled(!isPassage)
-            .help(isPassage ? Text("Simplify to your level, or retell it in your own words") : Text(SelectionMenu.passageOnlyReason))
-        }
     }
 }

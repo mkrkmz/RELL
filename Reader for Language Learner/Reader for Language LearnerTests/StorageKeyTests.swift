@@ -37,6 +37,8 @@ final class StorageKeyTests: XCTestCase {
             (StorageKey.updateLastCheck, "updateLastCheck"),
             (StorageKey.updateHiddenVersion, "updateHiddenVersion"),
             (StorageKey.selectionBarEnabled, "selectionBarEnabled"),
+            (StorageKey.inspectorWordCard, "inspectorWordCard"),
+            (StorageKey.inspectorSentenceCard, "inspectorSentenceCard"),
             (StorageKey.customSystemPreamble, "customSystemPreamble"),
             (StorageKey.dailyReadingGoalMinutes, "dailyReadingGoalMinutes"),
             (StorageKey.dailyReminderTime, "dailyReminderTime"),

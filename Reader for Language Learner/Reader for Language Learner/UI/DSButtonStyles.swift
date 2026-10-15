@@ -29,28 +29,35 @@ extension DS {
 
 // MARK: - Quiet
 
-/// No fill: the icon in the accent colour, the label in the text colour, a
-/// wash under the pointer. Use with `Label` (icon + title) or a plain title.
+/// No fill: the icon in `tint`, the label in the text colour, a wash under
+/// the pointer. `isOn` (the Inspector card's open module, v18 S2): a light
+/// fill and the label in `tint` too. Use with `Label` or a plain title.
 struct DSQuietButtonStyle: ButtonStyle {
+    var isOn = false
+    var tint: SwiftUI.Color = DS.Color.accent
+
     func makeBody(configuration: Configuration) -> some View {
         DSWashedButton(configuration: configuration, shape: Capsule()) { label in
             label
-                .labelStyle(DSQuietLabelStyle())
+                .labelStyle(DSQuietLabelStyle(tint: tint))
                 .font(DS.Typography.caption.weight(.semibold))
-                .foregroundStyle(DS.Color.textPrimary)
+                .foregroundStyle(isOn ? tint : DS.Color.textPrimary)
                 .padding(.horizontal, DS.Spacing.sm + DS.Spacing.xxs)
                 .frame(minHeight: 26)
+                .background(isOn ? tint.opacity(0.14) : .clear, in: Capsule())
         }
     }
 }
 
-/// Icon in the accent colour, title in the text colour.
+/// Icon in `tint`, title in the text colour.
 struct DSQuietLabelStyle: LabelStyle {
+    var tint: SwiftUI.Color = DS.Color.accent
+
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: DS.Spacing.xs) {
             configuration.icon
                 .font(DS.Typography.icon(12, weight: .semibold))
-                .foregroundStyle(DS.Color.accent)
+                .foregroundStyle(tint)
             configuration.title
         }
     }
@@ -148,6 +155,10 @@ struct DSWashedButton<S: Shape, Content: View>: View {
 extension ButtonStyle where Self == DSQuietButtonStyle {
     /// Save, Listen, Anki and other actions in a row.
     static var dsQuiet: DSQuietButtonStyle { DSQuietButtonStyle() }
+    /// A quiet button that can be on (the card's open module).
+    static func dsQuiet(isOn: Bool, tint: SwiftUI.Color = DS.Color.accent) -> DSQuietButtonStyle {
+        DSQuietButtonStyle(isOn: isOn, tint: tint)
+    }
 }
 
 extension ButtonStyle where Self == DSIconButtonStyle {

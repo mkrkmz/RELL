@@ -38,60 +38,6 @@ extension InspectorView {
         }
     }
 
-    // MARK: - Quick Actions (inside the card)
-
-    /// Save, listen, Anki and the rest — labelled, inside the card. Before
-    /// v14 S2 these were unlabelled icons in a row of their own; quiet since
-    /// v18 S1 (no fill, the icon in colour).
-    var quickActions: some View {
-        HStack(spacing: DS.Spacing.xs) {
-            if isSingleWordSelection {
-                Button(action: toggleSaveWord) {
-                    Label(isCurrentlySaved ? "Saved" : "Save", systemImage: isCurrentlySaved ? "star.fill" : "star")
-                }
-                .buttonStyle(.dsQuiet)
-                .keyboardShortcut("d", modifiers: [.command])
-                .help(isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)")
-            }
-
-            Button {
-                if speechManager.isSpeaking { speechManager.stop() } else { speakSelection() }
-            } label: {
-                Label(speechManager.isSpeaking ? "Stop" : "Listen",
-                      systemImage: speechManager.isSpeaking ? "stop.fill" : "play.fill")
-            }
-            .buttonStyle(.dsQuiet)
-            .keyboardShortcut("s", modifiers: [.command, .shift])
-            .help(speechManager.isSpeaking ? "Stop speaking (⇧⌘X)" : "Speak selected text (⇧⌘S)")
-
-            if isSingleWordSelection {
-                Button {
-                    Task { await quickExport() }
-                } label: {
-                    Label("Anki", systemImage: "square.and.arrow.up")
-                }
-                .buttonStyle(.dsQuiet)
-                .help("Quick Export to Anki")
-            } else {
-                Button {
-                    copyToClipboard(trimmedSelection, showFeedback: true)
-                } label: {
-                    Label("Copy", systemImage: "doc.on.doc")
-                }
-                .buttonStyle(.dsQuiet)
-                .help("Copy Text")
-            }
-
-            Spacer(minLength: 0)
-
-            overflowMenu
-        }
-        .lineLimit(1)
-        // Keeps ⌘E (export) and ⇧⌘X (stop) working while their menu is closed.
-        .background(exportShortcutButton)
-        .background(stopShortcutButton)
-    }
-
     /// The selection is saved — the save button lives in the overflow menu
     /// for a phrase or sentence, so its state shows here.
     @ViewBuilder
@@ -135,73 +81,7 @@ extension InspectorView {
         }
     }
 
-    // MARK: - Overflow Menu
-
-    var overflowMenu: some View {
-        Menu {
-            if !isSingleWordSelection {
-                Button(action: toggleSaveWord) {
-                    Label(isCurrentlySaved ? "Remove from Saved" : "Save to Vocabulary",
-                          systemImage: isCurrentlySaved ? "star.slash" : "star")
-                }
-                .disabled(!hasSelection)
-            }
-
-            Button {
-                copyToClipboard(trimmedSelection, showFeedback: true)
-            } label: {
-                Label("Copy Text", systemImage: "doc.on.doc")
-            }
-            .disabled(!hasSelection)
-
-            // Chosen from the selection now (one word: word, more: sentence);
-            // still yours to override for this selection.
-            Picker(selection: $explainMode) {
-                ForEach(ExplainMode.allCases) { mode in
-                    Text(mode.localizedTitle).tag(mode)
-                }
-            } label: {
-                Label("Explain As", systemImage: "text.magnifyingglass")
-            }
-
-            Section("Anki") {
-                Button {
-                    Task { await quickExport() }
-                } label: {
-                    Label("Quick Export to Anki", systemImage: "square.and.arrow.up")
-                }
-                .disabled(!hasSelection)
-
-                Button {
-                    showAnkiExport = true
-                } label: {
-                    Label("Export Fields… (⌘E)", systemImage: "slider.horizontal.3")
-                }
-                .disabled(!hasSelection)
-            }
-
-            Divider()
-
-            Button(role: .destructive) {
-                viewModel.resetAll(); activeModule = nil
-            } label: {
-                Label("Clear Outputs", systemImage: "trash")
-            }
-            .disabled(isAnyLoading)
-        } label: {
-            Image(systemName: "ellipsis.circle")
-                .font(DS.Typography.icon(13, weight: .medium))
-                .foregroundStyle(DS.Color.textSecondary)
-        }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .help("More actions")
-    }
-
-    /// Invisible button that keeps the ⌘E export shortcut active regardless of
-    /// the overflow menu's open/closed state.
-    private var exportShortcutButton: some View {
+    var exportShortcutButton: some View {
         Button { showAnkiExport = true } label: { Color.clear }
             .frame(width: 0, height: 0)
             .opacity(0)
@@ -210,7 +90,7 @@ extension InspectorView {
             .accessibilityHidden(true)
     }
 
-    private var stopShortcutButton: some View {
+    var stopShortcutButton: some View {
         Button { speechManager.stop() } label: { Color.clear }
             .frame(width: 0, height: 0)
             .opacity(0)

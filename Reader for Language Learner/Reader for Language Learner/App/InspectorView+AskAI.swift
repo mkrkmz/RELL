@@ -16,9 +16,21 @@ extension InspectorView {
     var askAISection: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             if !viewModel.followUps.isEmpty {
+                // v18 S2: the latest exchange; earlier ones behind a chip.
+                let earlier = viewModel.followUps.count - 1
+                if earlier > 0 {
+                    Button {
+                        withAnimation(DS.Animation.standard) { showAllFollowUps.toggle() }
+                    } label: {
+                        Label(showAllFollowUps ? String(localized: "Hide earlier questions")
+                                               : String(localized: "\(earlier) earlier questions"),
+                              systemImage: showAllFollowUps ? "chevron.down" : "chevron.right")
+                    }
+                    .buttonStyle(.dsChip(isOn: showAllFollowUps))
+                }
                 ScrollView {
                     VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-                        ForEach(viewModel.followUps) { exchange in
+                        ForEach(showAllFollowUps ? viewModel.followUps : Array(viewModel.followUps.suffix(1))) { exchange in
                             followUpRow(exchange)
                         }
                     }

@@ -153,16 +153,39 @@ yapida (Acikla, Dilbilgisi, Sadelestir, Yeniden Anlat), kendi listesiyle.
 Kart duzeni moduller icin genel kimlik kullanir: S3'teki kendi modullerin
 ayni yere takilir.
 
-- [ ] Kart duzeni modeli (saf): kartta / •••'de, sira, sigan sayisi
-- [ ] Kelime ve cumle karti; "Aciklamalar" bolumu ve kutucuk satiri kalkar
-- [ ] Karti Duzenle… sayfasi; sag tik ve 📌; Ayarlar ▸ Okuma ▸ Inspector
-- [ ] Sonuc basligi tek satir; bir modul hep acik ("Getir" otomatik
-      calistirma kapaliyken)
-- [ ] Ask AI acilir-kapanir
-- [ ] Modul kisa adlari katalogdan (bugun Turkce arayuzde Ingilizce)
-- [ ] Mevcut kisayollar (⌘R, ⇧⌘C, ⇧⌘R, ⌘D, ⇧⌘S) ve menuler korunur
-- [ ] `LayoutGuard` testleri (kisa sutun, en kucuk pencere, uzun sonuc,
-      Ask AI acik, cumle secimi)
+- [x] **Kart duzeni modeli** — `InspectorCardLayout` + `CardItem`
+      (dinle, Anki, kopyala, dilbilgisi, sadelestir, yeniden anlat, modul;
+      dizi kimlikleri `module.<raw>` — S3'te `custom.<id>` ayni yere);
+      kelime / cumle karti ayri liste, bilinmeyen ya da karta ait olmayan
+      kimlik okunurken atilir; satir icinde tasima; `fittingCount` ile
+      sigmayan •••'e
+- [x] **Kart** (`InspectorView+Card.swift`) — ust satir: Kaydet + kartta
+      tutulan islemler + •••; alt satir (ince cizgi): moduller ve parca
+      araclari, acik modul kendi renginde (`.dsQuiet(isOn:tint:)`), hazir
+      yanit noktasi, yuklenirken mini donme; sutun genisligi
+      `onGeometryChange` ile, satir sabit 26 pt (bolunmez). "Aciklamalar"
+      bolumu, kutucuk satiri (`InspectorView+Grid.swift` silindi) ve ayri
+      "Araclar" bolumu kalkti; dilbilgisi mercegi karttaki dugmeyle
+- [x] **Duzenleme** — Karti Duzenle… (`InspectorCardEditor`: kelime /
+      cumle, iki liste, surukle, onizleme, Varsayilana Don); sag tik
+      (Karttan Kaldir, Sola/Saga Tasi); ••• ▸ "Karta Ekle" alt menusu
+      (maketteki 📌: macOS menusu satir sonunda dugme tasimiyor);
+      Ayarlar ▸ Okuma ▸ Inspector
+- [x] **Sonuc basligi tek satir** — modul adi, Kisa/Ayrintili, Yenile,
+      Kopyala (Kapat kalkti); `displayedModule`: acik olan, yoksa son
+      kullanilan; otomatik calistirma kapaliysa "Getir"
+- [x] **Ask AI** — yalniz son soru-cevap; oncekiler "N onceki soru" cipinde
+- [x] **Turkce adlar** — `ModuleType.shortTitle` ve `title` katalogdan
+      (`Text(String)` katalogu atliyordu; "Define", "Colloc." Ingilizce
+      gorunuyordu); Anki kartindaki etiket de yerellesir (alan adi degil)
+- [x] Kisayollar korundu: ⌘D, ⇧⌘S (Dinle karttan kalksa da), ⌘E, ⇧⌘X,
+      ⇧⌘R, ⌘R, ⇧⌘C
+- [x] Testler: `InspectorCardTests` (9) — varsayilanlar, kimlik gidis-donus,
+      ileri/geri surum listeleri, kart + menu = tumu, ekle/cikar, satir ici
+      tasima, sigma (tam sinir dahil), hatirlama, Turkce adlar. Mutasyon:
+      satir disina tasima ve tam sinirda sigma. Mevcut `LayoutGuard`
+      testleri (kisa sutun, en kucuk pencere) yesil. Tam paket 770 yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 3 — "Kendi modullerin" (Should, **maketle baslar**)
 

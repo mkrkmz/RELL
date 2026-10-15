@@ -118,18 +118,20 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
     /// Raw values / CodingKeys keep their `…EN` names — they key persisted
     /// `SavedWord.llmOutputs` dictionaries and must never change.
     func title(nativeLanguage: Language, targetLanguage: Language = Language.storedTarget) -> String {
+        // Localized (v18 S2): shown with `Text(String)`, which skips the
+        // catalog, so these were English in every language until now.
         let code = targetLanguage.shortCode
         switch self {
-        case .definitionEN:    return "Definition (\(code))"
+        case .definitionEN:    return String(localized: "Definition (\(code))")
         case .meaningTR:       return "\(nativeLanguage.nativeName) \(nativeLanguage.meaningTitle)"
-        case .collocations:    return "Collocations (\(code)+\(nativeLanguage.flag))"
-        case .examplesEN:      return "Examples (\(code))"
-        case .etymologyEN:     return "Etymology (\(code))"
-        case .pronunciationEN: return "Pronunciation (\(code))"
-        case .mnemonicEN:      return "Mnemonic (\(code))"
-        case .synonymsEN:      return "Synonyms & Antonyms"
-        case .wordFamilyEN:    return "Word Family"
-        case .usageNotesEN:    return "Usage Notes"
+        case .collocations:    return String(localized: "Collocations (\(code)+\(nativeLanguage.flag))")
+        case .examplesEN:      return String(localized: "Examples (\(code))")
+        case .etymologyEN:     return String(localized: "Etymology (\(code))")
+        case .pronunciationEN: return String(localized: "Pronunciation (\(code))")
+        case .mnemonicEN:      return String(localized: "Mnemonic (\(code))")
+        case .synonymsEN:      return String(localized: "Synonyms & Antonyms")
+        case .wordFamilyEN:    return String(localized: "Word Family")
+        case .usageNotesEN:    return String(localized: "Usage Notes")
         }
     }
 
@@ -151,16 +153,16 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
     /// Compact label used in the module grid buttons.
     var shortTitle: String {
         switch self {
-        case .definitionEN:    return "Define"
+        case .definitionEN:    return String(localized: "Definition")
         case .meaningTR:       return Language.storedNative.nativeName
-        case .collocations:    return "Colloc."
-        case .examplesEN:      return "Examples"
-        case .etymologyEN:     return "Etymology"
-        case .pronunciationEN: return "Pronounce"
-        case .mnemonicEN:      return "Mnemonic"
-        case .synonymsEN:      return "Synonyms"
-        case .wordFamilyEN:    return "Word Form"
-        case .usageNotesEN:    return "Usage"
+        case .collocations:    return String(localized: "Collocations")
+        case .examplesEN:      return String(localized: "Examples")
+        case .etymologyEN:     return String(localized: "Etymology")
+        case .pronunciationEN: return String(localized: "Pronunciation")
+        case .mnemonicEN:      return String(localized: "Mnemonic")
+        case .synonymsEN:      return String(localized: "Synonyms")
+        case .wordFamilyEN:    return String(localized: "Word Family")
+        case .usageNotesEN:    return String(localized: "Usage")
         }
     }
 

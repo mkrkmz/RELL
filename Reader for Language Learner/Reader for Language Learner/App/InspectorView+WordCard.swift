@@ -59,7 +59,8 @@ extension InspectorView {
                 }
             }
             .font(DS.Typography.callout)
-            .lineLimit(2)
+            .lineLimit(1)
+            .help(inspectorQuickMeaning ?? "")
             .textSelection(.enabled)
 
             if let savedWord = currentlySavedWord,
@@ -69,8 +70,10 @@ extension InspectorView {
                     .foregroundStyle(DS.Color.textTertiary)
             }
 
-            quickActions
+            // v18 S2: the actions, then the modules on the card.
+            cardActionsRow
                 .padding(.top, DS.Spacing.xs)
+            cardModulesRow
         }
         .padding(DS.Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)

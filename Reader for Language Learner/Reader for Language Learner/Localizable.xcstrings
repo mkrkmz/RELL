@@ -421,6 +421,16 @@
         }
       }
     },
+    "%lld earlier questions" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld önceki soru"
+          }
+        }
+      }
+    },
     "%lld empty" : {
       "localizations" : {
         "tr" : {
@@ -1199,6 +1209,7 @@
       }
     },
     "Active module, tap to deselect" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -1354,6 +1365,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Desteye Ekle"
+          }
+        }
+      }
+    },
+    "Add to the card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karta ekle"
           }
         }
       }
@@ -1643,6 +1664,16 @@
         }
       }
     },
+    "always" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "her zaman"
+          }
+        }
+      }
+    },
     "Analyze" : {
       "localizations" : {
         "tr" : {
@@ -1745,6 +1776,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yanıt Dili"
+          }
+        }
+      }
+    },
+    "Answer ready" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yanıt hazır"
           }
         }
       }
@@ -2919,6 +2960,16 @@
         }
       }
     },
+    "Choose what the Inspector's card shows and drag to reorder. What doesn't fit the column waits in its ••• menu." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspector kartında nelerin görüneceğini seç, sürükleyerek sırala. Sütuna sığmayanlar ••• menüsünde bekler."
+          }
+        }
+      }
+    },
     "Choose where to save a copy of all your RELL data." : {
       "localizations" : {
         "tr" : {
@@ -3070,6 +3121,7 @@
       }
     },
     "Close (Esc)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -3165,6 +3217,32 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Koleksiyonlar"
+          }
+        }
+      }
+    },
+    "Collocations" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eş dizim"
+          }
+        }
+      }
+    },
+    "Collocations (%@+%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Collocations (%1$@+%2$@)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eş dizimler (%1$@+%2$@)"
           }
         }
       }
@@ -3741,6 +3819,26 @@
         }
       }
     },
+    "Definition" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanım"
+          }
+        }
+      }
+    },
+    "Definition (%@)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tanım (%@)"
+          }
+        }
+      }
+    },
     "Definition: %@" : {
       "localizations" : {
         "tr" : {
@@ -4254,6 +4352,26 @@
         }
       }
     },
+    "Edit Card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartı Düzenle"
+          }
+        }
+      }
+    },
+    "Edit Card…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartı Düzenle…"
+          }
+        }
+      }
+    },
     "Edit note" : {
       "localizations" : {
         "tr" : {
@@ -4365,6 +4483,7 @@
       }
     },
     "Error" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -4392,6 +4511,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tahmin ediliyor… %lld/%lld"
+          }
+        }
+      }
+    },
+    "Etymology" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Köken"
+          }
+        }
+      }
+    },
+    "Etymology (%@)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Köken (%@)"
           }
         }
       }
@@ -4432,6 +4571,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Örnekler"
+          }
+        }
+      }
+    },
+    "Examples (%@)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Örnekler (%@)"
           }
         }
       }
@@ -4496,6 +4645,16 @@
         }
       }
     },
+    "Explain" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Açıkla"
+          }
+        }
+      }
+    },
     "Explain As" : {
       "localizations" : {
         "tr" : {
@@ -4517,6 +4676,7 @@
       }
     },
     "Explanations" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -5217,6 +5377,16 @@
         }
       }
     },
+    "Get" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getir"
+          }
+        }
+      }
+    },
     "Get a nudge to review your words or hit your reading goal." : {
       "localizations" : {
         "tr" : {
@@ -5453,6 +5623,7 @@
       }
     },
     "Has output" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -5478,6 +5649,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gizle"
+          }
+        }
+      }
+    },
+    "Hide earlier questions" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki soruları gizle"
           }
         }
       }
@@ -5859,6 +6040,16 @@
         }
       }
     },
+    "In the ••• Menu" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "••• Menüsünde"
+          }
+        }
+      }
+    },
     "In this version" : {
       "localizations" : {
         "tr" : {
@@ -5945,6 +6136,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inspector"
+          }
+        }
+      }
+    },
+    "Inspector Card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspector Kartı"
           }
         }
       }
@@ -6548,6 +6749,7 @@
       }
     },
     "Loading" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7056,6 +7258,26 @@
         }
       }
     },
+    "Mnemonic" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akılda tutma"
+          }
+        }
+      }
+    },
+    "Mnemonic (%@)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akılda tutma (%@)"
+          }
+        }
+      }
+    },
     "Mode" : {
       "localizations" : {
         "tr" : {
@@ -7123,6 +7345,7 @@
       }
     },
     "More actions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7133,6 +7356,7 @@
       }
     },
     "More explanations" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7142,7 +7366,18 @@
         }
       }
     },
+    "More explanations and actions" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer açıklamalar ve işlemler"
+          }
+        }
+      }
+    },
     "More explanations and Run All (⇧⌘R)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7169,6 +7404,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Daha fazla kelime"
+          }
+        }
+      }
+    },
+    "Move Left" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sola Taşı"
+          }
+        }
+      }
+    },
+    "Move Right" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sağa Taşı"
+          }
+        }
+      }
+    },
+    "Move to •••" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "••• içine taşı"
+          }
+        }
+      }
+    },
+    "Move to the ••• menu" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "••• menüsüne taşı"
           }
         }
       }
@@ -7663,6 +7938,7 @@
       }
     },
     "No output" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -7862,6 +8138,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Normal"
+          }
+        }
+      }
+    },
+    "Not asked yet." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz sorulmadı."
           }
         }
       }
@@ -8157,6 +8443,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Açık"
+          }
+        }
+      }
+    },
+    "On the Card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartta"
           }
         }
       }
@@ -8778,6 +9074,16 @@
         }
       }
     },
+    "Parts of speech and how the sentence is built" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sözcük türleri ve cümlenin yapısı"
+          }
+        }
+      }
+    },
     "Paste it when you describe a problem. It holds no words, sentences, book titles or keys, and nothing is sent by itself." : {
       "localizations" : {
         "tr" : {
@@ -9085,6 +9391,16 @@
         }
       }
     },
+    "Preview of the card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kartın önizlemesi"
+          }
+        }
+      }
+    },
     "Previous Match" : {
       "localizations" : {
         "tr" : {
@@ -9192,6 +9508,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Telaffuz"
+          }
+        }
+      }
+    },
+    "Pronunciation (%@)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telaffuz (%@)"
           }
         }
       }
@@ -9887,6 +10213,16 @@
         }
       }
     },
+    "Remove from Card" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karttan Kaldır"
+          }
+        }
+      }
+    },
     "Remove from Collection" : {
       "localizations" : {
         "tr" : {
@@ -10125,6 +10461,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geri Yükle ve Yeniden Başlat"
+          }
+        }
+      }
+    },
+    "Restore Defaults" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varsayılana Dön"
           }
         }
       }
@@ -10569,6 +10915,7 @@
       }
     },
     "Run All" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -10579,7 +10926,6 @@
       }
     },
     "Run All (⇧⌘R)" : {
-      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -10621,6 +10967,7 @@
       }
     },
     "Run this module to generate an explanation." : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -12106,6 +12453,7 @@
       }
     },
     "Stop speaking (⇧⌘X)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -12307,6 +12655,26 @@
         }
       }
     },
+    "Synonyms" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eş anlamlılar"
+          }
+        }
+      }
+    },
+    "Synonyms & Antonyms" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eş ve zıt anlamlılar"
+          }
+        }
+      }
+    },
     "System" : {
       "localizations" : {
         "tr" : {
@@ -12408,6 +12776,7 @@
       }
     },
     "Tap to run %@ analysis" : {
+      "extractionState" : "stale",
       "localizations" : {
         "tr" : {
           "stringUnit" : {
@@ -13420,6 +13789,26 @@
         }
       }
     },
+    "Usage" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanım"
+          }
+        }
+      }
+    },
+    "Usage Notes" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanım notları"
+          }
+        }
+      }
+    },
     "Use New Note to capture a thought at your current position." : {
       "localizations" : {
         "tr" : {
@@ -13734,6 +14123,16 @@
         }
       }
     },
+    "Which modules and actions sit on the word and sentence cards; the rest wait in •••." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelime ve cümle kartında hangi modüllerin ve işlemlerin duracağı; gerisi ••• içinde bekler."
+          }
+        }
+      }
+    },
     "WHICH WORD FITS?" : {
       "localizations" : {
         "tr" : {
@@ -13832,6 +14231,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kelime karşılaşmaları"
+          }
+        }
+      }
+    },
+    "Word Family" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kelime ailesi"
           }
         }
       }
