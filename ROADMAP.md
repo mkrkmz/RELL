@@ -1,4 +1,4 @@
-# RELL Roadmap v18 — Sakin ve Tutarli Bir Arayuz (S0 + 5 sprint)
+# RELL Roadmap v18 — Sakin ve Tutarli Bir Arayuz (S0 + 6 sprint)
 
 Olusturulma: 2026-10-15 (v1.47.2 hazirligi sonrasi). Amac: islevleri
 olgunlasmis bir uygulamanin arayuzunu tek bir sakin, tutarli dile
@@ -74,6 +74,8 @@ CloudKit), iOS.
 2. Sira: tasarim sistemi once (S1), ardindan Inspector, okuma ekrani,
    kelime defteri.
 3. Tek surum 1.48.0; 1.47.2 S0'da ayri yayinlanir (onayla).
+4. (S2 maketi) Kendi modullerin S2'den hemen sonra ayri sprint (S3);
+   okuma ekrani S4, kelime defteri S5, kapanis S6.
 
 ---
 
@@ -140,26 +142,60 @@ ayni yerde kalan butonun stili S1'de, yerlesim S2–S4'te.
 
 ## Sprint 2 — "Inspector'i sadelestirmek" (Must, **maketle baslar**)
 
-- [ ] Moduller tek serit ya da sekmeler; sonuc tam yukseklikte; Ask AI
-      acilir-kapanir; kelime karti yenilenir — yedek duzen yalniz gercekten
-      kisa pencerede
-- [ ] Mevcut kisayollar (⌘R, ⇧⌘C, ⇧⌘R, Esc) ve menuler korunur
-- [ ] `LayoutGuard` testleri (kisa sutun, en kucuk pencere, uzun sonuc)
+Maket onayi (2026-10-15, 2. surum — kullanicinin onerisiyle): moduller
+kelime kartinin icinde, Kaydet/Dinle/Anki ile ayni sade dugmeler; kartta
+iki satir (ustte islemler, altta moduller); hangi modulun kartta, hangisinin
+••• menusunde duracagini kullanici secer (Karti Duzenle…, sag tik, 📌);
+sigmayan kendiliginden •••'e gecer, satir bolunmez; sonuc basligi tek
+satir (modul adi, Kisa/Ayrintili, Yenile, Kopyala); bir modul hep acik;
+Ask AI tek satir, kullaninca acilir; modul adlari Turkce. Cumle karti ayni
+yapida (Acikla, Dilbilgisi, Sadelestir, Yeniden Anlat), kendi listesiyle.
+Kart duzeni moduller icin genel kimlik kullanir: S3'teki kendi modullerin
+ayni yere takilir.
 
-## Sprint 3 — "Okuma ekrani ve yuzen ogeler" (Must, **maketle baslar**)
+- [ ] Kart duzeni modeli (saf): kartta / •••'de, sira, sigan sayisi
+- [ ] Kelime ve cumle karti; "Aciklamalar" bolumu ve kutucuk satiri kalkar
+- [ ] Karti Duzenle… sayfasi; sag tik ve 📌; Ayarlar ▸ Okuma ▸ Inspector
+- [ ] Sonuc basligi tek satir; bir modul hep acik ("Getir" otomatik
+      calistirma kapaliyken)
+- [ ] Ask AI acilir-kapanir
+- [ ] Modul kisa adlari katalogdan (bugun Turkce arayuzde Ingilizce)
+- [ ] Mevcut kisayollar (⌘R, ⇧⌘C, ⇧⌘R, ⌘D, ⇧⌘S) ve menuler korunur
+- [ ] `LayoutGuard` testleri (kisa sutun, en kucuk pencere, uzun sonuc,
+      Ask AI acik, cumle secimi)
+
+## Sprint 3 — "Kendi modullerin" (Should, **maketle baslar**)
+
+Karar (2026-10-15): S2'den hemen sonra, ayri sprint. Yerlesik moduller
+kapali bir liste (`ModuleType`) ve onbellek, kayitli kelimeler, Anki,
+Apple yonlendirmesi, Eksikleri Doldur, seviye tahmini, ozel ayristiricilar
+ve modul basina ayarlara bagli; kendi modullerin bunlara karismaz.
+
+- [ ] Ayri tur: ad, ikon, yer tutuculu istem (`{kelime}`, `{cumle}`, `{ana
+      dil}`, `{hedef dil}`), yanit dili, uzunluk, motor (varsayilan
+      saglayici; Apple istege bagli); kendi dosyasinda, yedeklerde
+- [ ] Ayarlar ▸ Istemler'de duzenleyici, ornek kelimeyle "Dene"; Inspector'da
+      yalniz Karti Duzenle… ▸ "Yeni Modul…"
+- [ ] Inspector karti, kuyruk ve alt satir; onbellek anahtari istemin
+      icerigini icerir; kelimeyle saklama (bicim degismez); Anki istege bagli
+- [ ] Girmez: Eksikleri Doldur, seviye tahmini, ozel ayristiricilar
+- [ ] Gizlilik tablosunda satir; yanit uzunlugu siniri; silinen modulun
+      kayitli yanitlari adiyla kalir
+
+## Sprint 4 — "Okuma ekrani ve yuzen ogeler" (Must, **maketle baslar**)
 
 - [ ] Imlec sozlugu balonu, baglam seridi, Zen arac cubugu, gorunum
       paneli (yazi tipi, tema), secim cubugu ayni sakin dilde
 - [ ] Uc sayfa temasinda okunurluk; yuzen ogeler metni kapatmaz
 
-## Sprint 4 — "Kelime defteri ve calisma odasi" (Should, **maketle baslar**)
+## Sprint 5 — "Kelime defteri ve calisma odasi" (Should, **maketle baslar**)
 
 - [ ] Kelime sayfasi (hafiza gucu, sonraki tekrar, karsilasmalar),
       defter listesi ve tablosu, calisma karti ve ozeti icin gorsel
       yenileme
 - [ ] Erisilebilirlik: renk tek bilgi tasiyicisi degil, klavye akislari
 
-## Sprint 5 — "Kapanis"
+## Sprint 6 — "Kapanis"
 
 - [ ] Kapanis (Must): tam test, soguk acilis (1.47.2 ile yan yana), canli
       tur, CHANGELOG 1.48.0 + Yenilikler 1.48
