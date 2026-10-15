@@ -13,8 +13,16 @@ import SwiftUI
 
 struct CustomModulesSection: View {
     private var store: CustomModuleStore { .shared }
-    @State private var editing: CustomModule?
-    @State private var isNew = false
+    /// The module being edited and whether it's new — together, so the
+    /// sheet never reads a stale "new" flag (a new module saved as an edit
+    /// of nothing was lost).
+    @State private var editing: EditorItem?
+
+    private struct EditorItem: Identifiable {
+        var module: CustomModule
+        var isNew: Bool
+        var id: UUID { module.id }
+    }
 
     /// Set by the Inspector before it opens Settings.
     @MainActor static var pending: CustomModuleEditorTarget?
@@ -76,8 +84,8 @@ struct CustomModulesSection: View {
             Text("Placeholders are filled in when you use the module. Your own modules don't take part in Fill Missing or the word-level estimate.")
                 .foregroundStyle(DS.Color.textTertiary)
         }
-        .sheet(item: $editing) { module in
-            CustomModuleEditor(module: module, isNew: isNew) { editing = nil }
+        .sheet(item: $editing) { item in
+            CustomModuleEditor(module: item.module, isNew: item.isNew) { editing = nil }
         }
         .onAppear(perform: takePending)
         .onReceive(NotificationCenter.default.publisher(for: .openCustomModuleEditor)) { _ in takePending() }
@@ -86,8 +94,7 @@ struct CustomModulesSection: View {
     private func open(_ module: CustomModule, isNew: Bool) {
         var module = module
         if isNew { module.id = UUID() }
-        self.isNew = isNew
-        editing = module
+        editing = EditorItem(module: module, isNew: isNew)
     }
 
     private func takePending() {
@@ -234,7 +241,7 @@ struct CustomModuleEditor: View {
                 Button("Cancel", action: onClose)
                     .keyboardShortcut(.cancelAction)
                 Button("Save") {
-                    if isNew { CustomModuleStore.shared.add(module) } else { CustomModuleStore.shared.update(module) }
+                    CustomModuleStore.shared.save(module)
                     onClose()
                 }
                 .keyboardShortcut(.defaultAction)

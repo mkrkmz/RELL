@@ -218,6 +218,17 @@ final class CustomModuleStore {
         return true
     }
 
+    /// Saves from the editor: updates the module, or adds it (pinned to its
+    /// cards) when it isn't in the list yet. False only at the limit.
+    @discardableResult
+    func save(_ module: CustomModule, defaults: UserDefaults = .standard) -> Bool {
+        if self.module(module.id) != nil {
+            update(module)
+            return true
+        }
+        return add(module, defaults: defaults)
+    }
+
     func update(_ module: CustomModule) {
         guard let index = modules.firstIndex(where: { $0.id == module.id }) else { return }
         var module = module

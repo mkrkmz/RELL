@@ -136,6 +136,19 @@ final class CustomModuleTests: XCTestCase {
                        "a deleted module leaves the card")
     }
 
+    func testSavingFromTheEditorAddsANewModuleAndUpdatesAnExistingOne() {
+        let defaults = scratchDefaults()
+        let store = temporaryStore()
+        var custom = module("First")
+        XCTAssertTrue(store.save(custom, defaults: defaults), "a module not in the list yet is added, never dropped")
+        XCTAssertEqual(store.modules.map(\.name), ["First"])
+        XCTAssertTrue(InspectorCardLayout.load(.word, defaults: defaults, customs: store.modules).contains(.custom(custom.id)))
+
+        custom.name = "Renamed"
+        XCTAssertTrue(store.save(custom, defaults: defaults))
+        XCTAssertEqual(store.modules.map(\.name), ["Renamed"], "the same id is updated, not added twice")
+    }
+
     // MARK: Card ids
 
     func testACustomItemsIdRoundTrips() {
