@@ -4,7 +4,7 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
-## [1.47.2] - 2026-10-14
+## [1.47.2] - 2026-10-15
 
 ### Fixed
 
