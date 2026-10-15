@@ -127,7 +127,8 @@ extension ContentView {
                     .buttonStyle(.link)
                     .font(DS.Typography.caption)
             }
-            .dsCard(padding: DS.Spacing.sm)
+            .padding(DS.Spacing.sm)
+            .dsReadingOverlay(RoundedRectangle(cornerRadius: DS.Radius.md))
             .transition(.opacity.combined(with: .move(edge: .top)))
         case .ready(let title, let text):
             RecapCard(title: title, text: text, onDismiss: { readingLoop.dismissRecap() })
@@ -274,14 +275,14 @@ private struct RecapCard: View {
                     .font(DS.Typography.caption2)
                     .foregroundStyle(DS.Color.textTertiary)
                 Spacer()
+                // v18 S4: over the page, so its surface and a quiet button.
                 Button("Continue reading", action: onDismiss)
-                    .controlSize(.small)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.link)
+                    .font(DS.Typography.caption.weight(.semibold))
             }
         }
         .padding(DS.Spacing.md)
-        .background(DS.Gradient.accentWash)
-        .dsCard(padding: nil)
+        .dsReadingOverlay(RoundedRectangle(cornerRadius: DS.Radius.md))
     }
 }
 

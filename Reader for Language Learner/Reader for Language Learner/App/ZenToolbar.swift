@@ -18,8 +18,6 @@ struct ZenControls {
     /// Nil where meanings can't show (PDF).
     var glossesOn: Bool?
     var toggleGlosses: () -> Void
-    var pageTheme: PageTheme
-    var setPageTheme: (PageTheme) -> Void
     var readAloud: () -> Void
     var exit: () -> Void
 }
@@ -38,7 +36,14 @@ extension ContentView {
     @ToolbarContentBuilder
     private var zenToolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigation) {
-            if !isEPUBDocument, pdfViewManager.pageCount > 1 {
+            if isEPUBDocument {
+                // v18 S4: where you are, as in the PDF's scrubber.
+                Text(pageStatusText)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .monospacedDigit()
+                    .lineLimit(1)
+            } else if pdfViewManager.pageCount > 1 {
                 HStack(spacing: DS.Spacing.sm) {
                     PageScrubberView(
                         currentPageIndex: pdfViewManager.currentPageIndex,
@@ -62,22 +67,15 @@ extension ContentView {
                 .help("Show Meanings Above Words")
             }
 
-            Menu {
-                ForEach(PageTheme.allCases) { theme in
-                    Button {
-                        controls.setPageTheme(theme)
-                    } label: {
-                        if controls.pageTheme == theme {
-                            Label(theme.localizedTitle, systemImage: "checkmark")
-                        } else {
-                            Text(theme.localizedTitle)
-                        }
-                    }
-                }
-            } label: {
-                Label("Page Theme", systemImage: "circle.lefthalf.filled")
+            // v18 S4: the reader's own "Aa" panel — theme and type
+            // without leaving Zen.
+            Button { showReadingAppearance.toggle() } label: {
+                Label("Reading Appearance", systemImage: "textformat.size")
             }
-            .help("Page Theme")
+            .help("Reading Appearance")
+            .popover(isPresented: Bindable(model).showReadingAppearance, arrowEdge: .bottom) {
+                ReadingAppearanceView(isEPUB: isEPUBDocument)
+            }
 
             Button(action: controls.readAloud) {
                 Label("Read Page Aloud", systemImage: "speaker.wave.2")

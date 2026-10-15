@@ -2,8 +2,10 @@
 //  ContentView+ContextStrip.swift
 //  Reader for Language Learner
 //
-//  The strip above the page: document, position, and how much of the
-//  passage and the book the reader already knows.
+//  The strip above the page: position, and how much of the passage the
+//  reader already knows. Part of the page since v18 S4 (approved mockup):
+//  no card, a hairline under it, the page theme's ink; the book's name is
+//  in the window title, so it isn't repeated here.
 //
 
 import AppKit
@@ -30,18 +32,17 @@ extension ContentView {
                         .frame(width: proxy.size.width, height: proxy.size.height)
                 }
             }
-            .dsCard(padding: nil, surface: DS.Color.surfaceElevated.opacity(0.94), radius: DS.Radius.sm)
+            .overlay(alignment: .bottom) {
+                Divider()
+            }
+            // Light or dark ink to match the page under it.
+            .environment(\.colorScheme, pageTheme.overlaySurface.isDark ? .dark : .light)
     }
 
     private static let contextStripHeight: CGFloat = 30
 
     private func readerContextStripContent(width: CGFloat) -> some View {
         HStack(spacing: DS.Spacing.sm) {
-            readerContextChip(
-                icon: "doc.text",
-                text: currentDocumentName ?? "Open"
-            )
-            readerContextDivider
             readerContextChip(
                 icon: "book.pages",
                 text: pageStatusText(short: width < 520)
@@ -51,7 +52,7 @@ extension ContentView {
 
             chapterPill(compact: width < 620)
         }
-        .padding(.horizontal, DS.Spacing.md)
+        .padding(.horizontal, DS.Spacing.xs)
     }
 
     /// Profiles the whole open book against the reader's vocabulary, unless

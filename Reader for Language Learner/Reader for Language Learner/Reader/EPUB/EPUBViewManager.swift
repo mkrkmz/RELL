@@ -198,8 +198,10 @@ final class EPUBViewManager: NSObject {
 
     // Hover dictionary — reuses the PDF side's popover UI and lookup flow.
     var hoverEnabled = true
-    @ObservationIgnored var hoverCachedLookup: ((String) -> String?)?
-    @ObservationIgnored var hoverLookup: ((String) async throws -> String)?
+    @ObservationIgnored var hoverCachedLookup: ((String) -> HoverAnswer?)?
+    @ObservationIgnored var hoverLookup: ((String) async throws -> HoverAnswer)?
+    /// Whether a hovered word is in the notebook (any form of it).
+    @ObservationIgnored var hoverIsSaved: ((String) -> Bool)?
     @ObservationIgnored private var hoverPopover: NSPopover?
     /// Floating selection action bar hosted over the web view (U1).
     @ObservationIgnored private var selectionBarHost: NSHostingView<SelectionActionBar>?
@@ -555,18 +557,13 @@ final class EPUBViewManager: NSObject {
     private func positionSelectionBar(_ host: NSHostingView<SelectionActionBar>, over rect: CGRect, in webView: WKWebView) {
         let barSize = host.fittingSize
         let bounds = webView.bounds
-        let gap: CGFloat = 8
-
-        var originX = rect.midX - barSize.width / 2
-        originX = min(max(originX, 4), max(4, bounds.width - barSize.width - 4))
-
-        // WKWebView is flipped (top-left origin, y grows down), so "above" the
-        // selection is a smaller y; drop below when there isn't room above.
-        var originY = rect.minY - gap - barSize.height
-        if originY < 4 {
-            originY = rect.maxY + gap
-        }
-        originY = min(originY, max(4, bounds.height - barSize.height - 4))
+        // WKWebView is flipped (top-left origin, y grows down), as the
+        // placement rule expects.
+        let originX = SelectionBarPlacement.originX(selectionMidX: rect.midX, barWidth: barSize.width,
+                                                    visibleLeft: 0, visibleRight: bounds.width)
+        let originY = SelectionBarPlacement.originY(selectionTop: rect.minY, selectionBottom: rect.maxY,
+                                                    barHeight: barSize.height,
+                                                    visibleTop: 0, visibleBottom: bounds.height)
 
         host.frame = CGRect(x: originX, y: originY, width: barSize.width, height: barSize.height)
     }
@@ -839,11 +836,7 @@ final class EPUBViewManager: NSObject {
         }
         currentHoverTerm = term
 
-        hoverModel.term = term
-        if let cached = hoverCachedLookup?(term) {
-            hoverModel.phase = .loaded(cached)
-        } else {
-            hoverModel.phase = .loading
+        if !hoverModel.begin(term: term, isSaved: hoverIsSaved?(term) ?? false, cached: hoverCachedLookup?(term)) {
             startHoverLookup(term: term)
         }
 
@@ -872,14 +865,14 @@ final class EPUBViewManager: NSObject {
         hoverTask = Task { @MainActor [weak self] in
             guard let self, let lookup = self.hoverLookup else { return }
             do {
-                let definition = try await lookup(term)
+                let answer = try await lookup(term)
                 guard !Task.isCancelled,
                       self.currentHoverTerm.lowercased() == term.lowercased() else { return }
-                self.hoverModel.phase = .loaded(definition)
+                self.hoverModel.show(answer)
             } catch {
                 guard !Task.isCancelled,
                       self.currentHoverTerm.lowercased() == term.lowercased() else { return }
-                self.hoverModel.phase = .failed
+                self.hoverModel.fail()
             }
         }
     }

@@ -172,7 +172,11 @@ extension PDFKitView {
                     object: clipView,
                     queue: .main
                 ) { [weak self] _ in
-                    Task { @MainActor [weak self] in self?.updateSelectionBar() }
+                    Task { @MainActor [weak self] in
+                        self?.updateSelectionBar()
+                        // v18 S4: the balloon doesn't ride along with a scroll.
+                        self?.cancelHover()
+                    }
                 }
             }
 
@@ -284,19 +288,15 @@ extension PDFKitView {
 
             let barSize = host.fittingSize
             let visible = pdfView.visibleRect
-            let gap: CGFloat = 8
 
-            // PDFView is not flipped: larger y is visually higher, so place the
-            // bar just above the selection's top edge, flipping below it when
-            // there isn't room, and clamp horizontally into the viewport.
-            var originX = viewRect.midX - barSize.width / 2
-            originX = min(max(originX, visible.minX + 4), visible.maxX - barSize.width - 4)
-
-            var originY = viewRect.maxY + gap
-            if originY + barSize.height > visible.maxY {
-                originY = viewRect.minY - gap - barSize.height
-            }
-            originY = max(originY, visible.minY + 4)
+            // PDFView is not flipped (larger y is higher), so the placement
+            // rule runs on mirrored y and its answer is mirrored back.
+            let originX = SelectionBarPlacement.originX(selectionMidX: viewRect.midX, barWidth: barSize.width,
+                                                        visibleLeft: visible.minX, visibleRight: visible.maxX)
+            let mirroredTop = SelectionBarPlacement.originY(selectionTop: -viewRect.maxY, selectionBottom: -viewRect.minY,
+                                                            barHeight: barSize.height,
+                                                            visibleTop: -visible.maxY, visibleBottom: -visible.minY)
+            let originY = -mirroredTop - barSize.height
 
             host.frame = CGRect(origin: CGPoint(x: originX, y: originY), size: barSize)
         }
@@ -644,11 +644,9 @@ extension PDFKitView {
 
             let viewRect = pdfView.convert(selection.bounds(for: page), from: page)
 
-            hoverModel.term = raw
-            if let cached = quickLookup.cachedHoverDefinition(for: raw, savedWordsStore: savedWordsStore) {
-                hoverModel.phase = .loaded(cached)
-            } else {
-                hoverModel.phase = .loading
+            let isSaved = savedWordsStore.lemmaMatchedWord(for: raw) != nil
+            if !hoverModel.begin(term: raw, isSaved: isSaved,
+                                 cached: quickLookup.cachedHoverAnswer(for: raw, savedWordsStore: savedWordsStore)) {
                 startHoverLookup(term: raw)
             }
             showHoverPopover(relativeTo: viewRect, in: pdfView)
@@ -665,14 +663,14 @@ extension PDFKitView {
             hoverTask = Task { @MainActor [weak self] in
                 guard let self else { return }
                 do {
-                    let definition = try await self.quickLookup.hoverDefinition(for: term)
+                    let answer = try await self.quickLookup.hoverAnswer(for: term)
                     guard !Task.isCancelled,
                           self.currentHoverTerm.lowercased() == term.lowercased() else { return }
-                    self.hoverModel.phase = .loaded(definition)
+                    self.hoverModel.show(answer)
                 } catch {
                     guard !Task.isCancelled,
                           self.currentHoverTerm.lowercased() == term.lowercased() else { return }
-                    self.hoverModel.phase = .failed
+                    self.hoverModel.fail()
                 }
             }
         }

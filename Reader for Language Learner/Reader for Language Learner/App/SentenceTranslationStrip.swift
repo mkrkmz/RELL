@@ -33,18 +33,25 @@ struct SentenceTranslationStrip: View {
                 .foregroundStyle(DS.Color.accent)
                 .padding(.top, DS.Spacing.hairline)
 
-            content
+            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                content
+                // v18 S4: who translated it, as under the hover balloon.
+                if case .loaded = phase, let source = service.cachedTranslationSource(for: sentence) {
+                    Text(source)
+                        .font(DS.Typography.caption2)
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            }
 
             Spacer(minLength: DS.Spacing.sm)
 
             Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(DS.Typography.icon(10, weight: .semibold))
-                    .foregroundStyle(DS.Color.textTertiary)
+                Label("Hide translation", systemImage: "xmark")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsIconSecondary)
             .help("Hide translation")
-            .accessibilityLabel("Hide translation")
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, DS.Spacing.sm)

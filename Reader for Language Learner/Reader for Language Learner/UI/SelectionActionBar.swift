@@ -116,3 +116,30 @@ struct SelectionActionBar: View {
         .accessibilityLabel("Tools")
     }
 }
+
+/// Where the selection bar goes (v18 S4, approved mockup): above the
+/// selection, below it when there's no room above, and never on the
+/// selected lines while either side has room. In a top-left coordinate
+/// space (y grows down); the PDF reader, which isn't flipped, mirrors in.
+nonisolated enum SelectionBarPlacement {
+    static let gap: CGFloat = 8
+    static let margin: CGFloat = 4
+
+    /// The bar's top edge.
+    static func originY(selectionTop: CGFloat, selectionBottom: CGFloat, barHeight: CGFloat,
+                        visibleTop: CGFloat, visibleBottom: CGFloat) -> CGFloat {
+        let above = selectionTop - gap - barHeight
+        if above >= visibleTop + margin { return above }
+        let below = selectionBottom + gap
+        if below + barHeight <= visibleBottom - margin { return below }
+        // A selection taller than the view: the top of what's visible.
+        return visibleTop + margin
+    }
+
+    /// The bar's left edge: centred on the selection, kept inside the view.
+    static func originX(selectionMidX: CGFloat, barWidth: CGFloat,
+                        visibleLeft: CGFloat, visibleRight: CGFloat) -> CGFloat {
+        let centred = selectionMidX - barWidth / 2
+        return min(max(centred, visibleLeft + margin), max(visibleLeft + margin, visibleRight - barWidth - margin))
+    }
+}

@@ -235,9 +235,41 @@ motor); yeni modul kartin sonuna eklenir, sigmazsa •••'e gecer.
 
 ## Sprint 4 — "Okuma ekrani ve yuzen ogeler" (Must, **maketle baslar**)
 
-- [ ] Imlec sozlugu balonu, baglam seridi, Zen arac cubugu, gorunum
-      paneli (yazi tipi, tema), secim cubugu ayni sakin dilde
-- [ ] Uc sayfa temasinda okunurluk; yuzen ogeler metni kapatmaz
+Maket onayi (2026-10-15): metnin ustundeki her oge sayfa renginde, opak,
+ince cizgili tek yuzeyde; uc yer (ust serit, metnin yani, alt serit), alt
+serit sayfayi kisaltir, metnin ustune binmez; baglam seridi sayfanin
+parcasi; imlec balonunda kaynak; gorunum paneli tek bakista; Zen'de ayni
+"Aa" paneli; secim cubugunun yer kurali yazili.
+
+- [x] **Tek yuzey** — "Onceki bolumde" karti degrade ve dolu dugme yerine
+      okuma yuzeyi ve sade baglanti; seslendirme cubugu ve ceviri seridi
+      secim cubuguyla ayni dugmeler (`DSIconButtonStyle`), hiz "Normal ▾"
+- [x] **Alt serit** — cumle cevirisi, altinda seslendirme cubugu; ikisi de
+      okuma sutununda, sayfa kisalir. Seslendirme cubugu artik pencerenin
+      altinda metnin ve Inspector'in ustune binmiyor (belge yokken eski yer)
+- [x] **Baglam seridi** — kart kalkti, alt cizgi ve sayfa temasinin
+      murekkebi; kitap adi pencere basliginda oldugu icin seritten cikti
+- [x] **Imlec balonu** — tanim en fazla dort satir; altinda kaynak (Kelime
+      defterin, Sozluk, Apple · bu Mac, saglayici · model · bu Mac/bulut);
+      kayitli kelimede "kayitli" isareti (cekimli hali dahil); bulunamayinca
+      sakin tek satir; kaydirinca kapanir (PDF ve EPUB), secim varken cikmaz
+- [x] **Ceviri seridi** — altinda kim cevirdigi (Apple Ceviri · bu Mac ya
+      da model)
+- [x] **Gorunum paneli** — alti tema tek satirda, secili yazi tipiyle
+      ornek satir, A− / A+, satir araligi uc secenek (Siki 1,4 · Normal 1,6
+      · Ferah 1,9; eski deger secilene kadar korunur, en yakini isaretli),
+      "Varsayilana Don" baglanti
+- [x] **Zen** — tema menusu yerine ayni "Aa" paneli; EPUB'da konum
+- [x] **Secim cubugu yeri** — `SelectionBarPlacement` iki okuyucuda ortak:
+      ustte, yer yoksa altta, iki taraftan birinde yer varken secili
+      satirlarin ustune hic binmez (EPUB'da alt kenara sikistirma onu
+      secimin ustune itebiliyordu)
+- [x] Testler: `ReadingSurfaceTests` (9) — yerlesim (ust, alt, hic
+      cakismama, uzun secim, yana tasma), satir araligi on ayarlari ve en
+      yakini, balonun kaynagi ve kayitli isareti, kelime defterinden gelen
+      yanit. Mutasyon: "alta gec" kolu. Tam paket 789 (bilinen kirilgan
+      `DocumentCoverStoreTests` tek basina yesil)
+- [ ] Canli tur (kullanici): uc sayfa temasi (Beyaz, Sepya, Gece)
 
 ## Sprint 5 — "Kelime defteri ve calisma odasi" (Should, **maketle baslar**)
 

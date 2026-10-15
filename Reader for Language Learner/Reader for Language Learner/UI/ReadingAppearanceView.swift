@@ -25,18 +25,18 @@ struct ReadingAppearanceView: View {
 
     private var pageTheme: PageTheme { PageTheme(rawValue: pageThemeRaw) ?? .original }
     private var fontFamily: EPUBFontFamily { EPUBFontFamily(rawValue: epubFontFamilyRaw) ?? .publisher }
-    private var contentWidth: EPUBContentWidth { EPUBContentWidth(rawValue: epubContentWidthRaw) ?? .medium }
 
+    // v18 S4 (approved mockup): the themes in one row, a sample line in the
+    // chosen type, A− / A+, three line spacings, and a link to reset.
     var body: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.md) {
             Text("Page Theme")
                 .font(DS.Typography.caption.weight(.semibold))
                 .foregroundStyle(DS.Color.textSecondary)
 
-            themeGrid
+            themeRow
 
             if isEPUB {
-                Divider()
                 typographySection
             } else {
                 Text("Typography controls apply to EPUB books.")
@@ -50,11 +50,11 @@ struct ReadingAppearanceView: View {
 
     // MARK: - Theme swatches
 
-    private var themeGrid: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: DS.Spacing.sm), count: 3),
-                  spacing: DS.Spacing.sm) {
+    private var themeRow: some View {
+        HStack(alignment: .top, spacing: 0) {
             ForEach(PageTheme.allCases) { theme in
                 themeSwatch(theme)
+                    .frame(maxWidth: .infinity)
             }
         }
     }
@@ -69,30 +69,30 @@ struct ReadingAppearanceView: View {
             pageThemeRaw = theme.rawValue
         } label: {
             VStack(spacing: DS.Spacing.xxs) {
-                RoundedRectangle(cornerRadius: DS.Radius.sm)
+                Circle()
                     .fill(background)
-                    .frame(height: 40)
+                    .frame(width: 32, height: 32)
                     .overlay {
                         Text(verbatim: "Aa")
-                            .font(DS.Typography.callout.weight(.medium))
+                            .font(DS.Typography.caption.weight(.semibold))
                             .foregroundStyle(ink)
                     }
+                    .overlay { Circle().strokeBorder(DS.Color.hairlineStrong, lineWidth: 1) }
+                    .padding(DS.Spacing.xxs)
                     .overlay {
-                        RoundedRectangle(cornerRadius: DS.Radius.sm)
-                            .strokeBorder(
-                                isSelected ? DS.Color.accent : DS.Color.hairlineStrong,
-                                lineWidth: isSelected ? 2 : 1
-                            )
+                        if isSelected { Circle().strokeBorder(DS.Color.accent, lineWidth: 2) }
                     }
                 Text(theme.localizedTitle)
-                    .font(DS.Typography.caption2)
+                    .font(DS.Typography.caption2.weight(isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? DS.Color.accent : DS.Color.textSecondary)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .animation(DS.Animation.springFast, value: isSelected)
+        .help(theme.localizedTitle)
         .accessibilityLabel(theme.localizedTitle)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
@@ -101,55 +101,47 @@ struct ReadingAppearanceView: View {
 
     private var typographySection: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.md) {
-            Text("Typography")
-                .font(DS.Typography.caption.weight(.semibold))
-                .foregroundStyle(DS.Color.textSecondary)
+            sample
 
-            LabeledContent {
-                Picker("", selection: $epubFontFamilyRaw) {
+            LabeledContent("Font") {
+                Picker("Font", selection: $epubFontFamilyRaw) {
                     ForEach(EPUBFontFamily.allCases) { family in
                         Text(family.localizedTitle).tag(family.rawValue)
                     }
                 }
                 .labelsHidden()
                 .frame(maxWidth: 170)
-            } label: {
-                Text("Font")
-                    .font(DS.Typography.caption)
             }
 
-            LabeledContent {
+            LabeledContent("Size") {
                 HStack(spacing: DS.Spacing.sm) {
-                    Stepper(
-                        value: $epubFontSize,
-                        in: EPUBTypography.minFontSize...EPUBTypography.maxFontSize, step: 1
-                    ) {
-                        Text("\(Int(epubFontSize)) pt")
-                            .font(DS.Typography.mono)
-                            .frame(width: 42, alignment: .trailing)
-                    }
-                }
-            } label: {
-                Text("Size")
-                    .font(DS.Typography.caption)
-            }
-
-            LabeledContent {
-                HStack(spacing: DS.Spacing.sm) {
-                    Slider(value: $epubLineHeight, in: 1.2...2.0, step: 0.1)
-                        .frame(width: 130)
-                    Text(String(format: "%.1f", epubLineHeight))
+                    Button("Smaller", systemImage: "textformat.size.smaller") { stepFontSize(-1) }
+                        .labelStyle(.iconOnly)
+                        .disabled(epubFontSize <= EPUBTypography.minFontSize)
+                    Text("\(Int(epubFontSize)) pt")
                         .font(DS.Typography.mono)
-                        .foregroundStyle(DS.Color.textTertiary)
-                        .frame(width: 28, alignment: .trailing)
+                        .monospacedDigit()
+                        .frame(minWidth: 40)
+                    Button("Larger", systemImage: "textformat.size.larger") { stepFontSize(1) }
+                        .labelStyle(.iconOnly)
+                        .disabled(epubFontSize >= EPUBTypography.maxFontSize)
                 }
-            } label: {
-                Text("Line Height")
-                    .font(DS.Typography.caption)
             }
 
-            LabeledContent {
-                Picker("", selection: $epubContentWidthRaw) {
+            LabeledContent("Line Spacing") {
+                Picker("Line Spacing", selection: Binding(
+                    get: { EPUBLineSpacing.nearest(to: epubLineHeight) },
+                    set: { epubLineHeight = $0.lineHeight }
+                )) {
+                    ForEach(EPUBLineSpacing.allCases) { Text($0.localizedTitle).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: 190)
+            }
+
+            LabeledContent("Width") {
+                Picker("Width", selection: $epubContentWidthRaw) {
                     ForEach(EPUBContentWidth.allCases) { width in
                         Text(width.localizedTitle).tag(width.rawValue)
                     }
@@ -157,30 +149,52 @@ struct ReadingAppearanceView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
                 .frame(maxWidth: 190)
-            } label: {
-                Text("Width")
-                    .font(DS.Typography.caption)
             }
 
-            Toggle(isOn: $epubJustified) {
-                Text("Justify Text")
-                    .font(DS.Typography.caption)
-            }
-            .toggleStyle(.switch)
-            .controlSize(.mini)
+            Toggle("Justify Text", isOn: $epubJustified)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
 
             HStack {
                 Spacer()
-                Button("Reset Typography") {
+                Button("Restore Defaults") {
                     epubFontSize = EPUBTypography.defaultFontSize
-                    epubLineHeight = 1.6
+                    epubLineHeight = EPUBLineSpacing.normal.lineHeight
                     epubFontFamilyRaw = EPUBFontFamily.publisher.rawValue
                     epubContentWidthRaw = EPUBContentWidth.medium.rawValue
                     epubJustified = false
                 }
-                .controlSize(.small)
+                .buttonStyle(.link)
+                .font(DS.Typography.caption)
             }
         }
+        .font(DS.Typography.caption)
+    }
+
+    /// A line in the chosen font, on the chosen page, so a change shows
+    /// without looking past the panel.
+    private var sample: some View {
+        Text(verbatim: "She pulled her coat tighter and read the notice again.")
+            .font(sampleFont)
+            .lineSpacing(CGFloat(epubLineHeight - 1) * 15)
+            .foregroundStyle(Color(hex: pageTheme.epubColors?.text ?? "#1d1d1f"))
+            .padding(DS.Spacing.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(hex: pageTheme.epubColors?.background ?? "#ffffff"),
+                        in: RoundedRectangle(cornerRadius: DS.Radius.sm))
+            .overlay { RoundedRectangle(cornerRadius: DS.Radius.sm).strokeBorder(DS.Color.hairlineStrong, lineWidth: 1) }
+            .accessibilityHidden(true)
+    }
+
+    private var sampleFont: Font {
+        let size = min(max(epubFontSize, EPUBTypography.minFontSize), EPUBTypography.maxFontSize) * 0.8
+        if let name = fontFamily.fontFamilyName { return .custom(name, size: size) }
+        // DS-exempt: the sample is sized like the page, not a UI text style.
+        return Font.system(size: size, design: fontFamily == .sanFrancisco ? .default : .serif)
+    }
+
+    private func stepFontSize(_ step: Double) {
+        epubFontSize = min(max(epubFontSize + step, EPUBTypography.minFontSize), EPUBTypography.maxFontSize)
     }
 }
 

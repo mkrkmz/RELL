@@ -33,6 +33,17 @@
         }, 500);
     }, { passive: true });
 
+    // v18 S4: the balloon doesn't ride along with a scroll. Posted once per
+    // scroll, not on every tick.
+    var scrolling = false;
+    window.addEventListener('scroll', function() {
+        if (timer) { clearTimeout(timer); }
+        if (scrolling) { return; }
+        scrolling = true;
+        post('', null);
+        setTimeout(function() { scrolling = false; }, 250);
+    }, { passive: true });
+
     document.addEventListener('mouseleave', function() {
         if (timer) { clearTimeout(timer); }
         post('', null);

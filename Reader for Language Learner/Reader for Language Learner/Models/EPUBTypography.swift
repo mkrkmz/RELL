@@ -93,6 +93,36 @@ enum EPUBContentWidth: String, CaseIterable, Identifiable {
     }
 }
 
+/// Line-height presets in the appearance panel (v18 S4, approved mockup):
+/// three choices instead of a slider. A value set before them is kept until
+/// one is picked; the panel marks the nearest.
+enum EPUBLineSpacing: CaseIterable, Identifiable {
+    case compact, normal, roomy
+
+    var id: Self { self }
+
+    var lineHeight: Double {
+        switch self {
+        case .compact: return 1.4
+        case .normal: return 1.6
+        case .roomy: return 1.9
+        }
+    }
+
+    var localizedTitle: String {
+        switch self {
+        case .compact: return String(localized: "Compact")
+        case .normal: return String(localized: "Normal")
+        case .roomy: return String(localized: "Roomy")
+        }
+    }
+
+    /// The preset closest to `lineHeight`; a tie goes to the smaller.
+    static func nearest(to lineHeight: Double) -> EPUBLineSpacing {
+        allCases.min { abs($0.lineHeight - lineHeight) < abs($1.lineHeight - lineHeight) } ?? .normal
+    }
+}
+
 /// The complete typography snapshot handed to `appearanceCSS`.
 struct EPUBTypography: Equatable {
     /// Reading font size bounds, shared by everything that can move it: the

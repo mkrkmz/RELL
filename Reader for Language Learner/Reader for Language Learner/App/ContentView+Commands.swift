@@ -22,8 +22,6 @@ extension ContentView {
         ZenControls(
             glossesOn: isEPUBDocument ? glossEnabled : nil,
             toggleGlosses: { glossEnabled.toggle() },
-            pageTheme: pageTheme,
-            setPageTheme: { pageThemeRaw = $0.rawValue },
             readAloud: { readCurrentPageAloud() },
             exit: { toggleZenMode() }
         )

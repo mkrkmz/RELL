@@ -20,15 +20,13 @@ struct SpeechPlaybackBar: View {
     private static let ratePresets: [Double] = [0.4, 0.5, 0.6]
 
     var body: some View {
-        HStack(spacing: DS.Spacing.md) {
+        HStack(spacing: DS.Spacing.sm) {
             Button {
                 manager.state == .paused ? manager.resume() : manager.pause()
             } label: {
                 Image(systemName: manager.state == .paused ? "play.fill" : "pause.fill")
-                    .font(DS.Typography.icon(13, weight: .medium))
-                    .foregroundStyle(DS.Color.textPrimary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DSIconButtonStyle(tint: DS.Color.textPrimary))
             .help(manager.state == .paused ? "Resume" : "Pause")
             .accessibilityLabel(manager.state == .paused ? "Resume speaking" : "Pause speaking")
 
@@ -70,16 +68,19 @@ struct SpeechPlaybackBar: View {
                     }
                 }
             } label: {
-                Image(systemName: "speedometer")
-                    .font(DS.Typography.icon(13))
-                    .foregroundStyle(DS.Color.textPrimary)
+                // v18 S4: says the rate rather than a speedometer glyph.
+                Text(Self.rateLabel(speechRate))
+                    .font(DS.Typography.caption.weight(.medium))
+                    .foregroundStyle(DS.Color.textSecondary)
             }
             .menuStyle(.borderlessButton)
+            .menuIndicator(.visible)
             .fixedSize()
             .help("Speech rate")
         }
-        .padding(.horizontal, DS.Spacing.lg)
-        .padding(.vertical, DS.Spacing.sm)
+        // The selection bar's proportions (v18 S4): one family of bars.
+        .padding(.horizontal, DS.Spacing.md)
+        .padding(.vertical, DS.Spacing.xxs)
         // Floats over the page's text: an opaque, page-themed capsule rather
         // than glass (v14 S1 — see ReadingOverlay.swift).
         .dsReadingOverlay(Capsule())

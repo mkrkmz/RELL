@@ -144,10 +144,12 @@ struct ContentView: View {
     }
 
     /// Floating playback bar while SpeechManager is speaking/paused — shared
-    /// by the inspector's Speak button and Speech ▸ Read Page Aloud.
+    /// by the inspector's Speak button and Speech ▸ Read Page Aloud. With a
+    /// book open it sits in the reading column's bottom lane instead (v18 S4:
+    /// over the window it covered the page's last lines and the Inspector).
     func withSpeechPlayback(_ content: some View) -> some View {
         content.overlay(alignment: .bottom) {
-            if speechManager.state != .idle {
+            if speechManager.state != .idle, selectionState.documentURL == nil {
                 SpeechPlaybackBar(manager: speechManager)
                     .padding(.bottom, DS.Spacing.xl)
                     .transition(DS.slideTransition(edge: .bottom, reduceMotion: reduceMotion))
@@ -622,11 +624,13 @@ struct ContentView: View {
                             readingRecapCard
                                 .frame(maxWidth: 560)
                                 .padding(DS.Spacing.md)
-                                .dsShadow(DS.Shadow.float)
                         }
                     }
                     .animation(DS.Animation.standard, value: readingLoop.recap)
 
+                    // The bottom lane (v18 S4): the sentence's translation, then
+                    // the speech bar. The page gives them its height rather
+                    // than being covered by them.
                     if sentenceTranslationEnabled, !chromeHidden, let sentence = translatableSentence {
                         SentenceTranslationStrip(
                             sentence: sentence,
@@ -635,8 +639,15 @@ struct ContentView: View {
                         )
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
+
+                    if speechManager.state != .idle {
+                        SpeechPlaybackBar(manager: speechManager)
+                            .padding(.bottom, DS.Spacing.sm)
+                            .transition(DS.slideTransition(edge: .bottom, reduceMotion: reduceMotion))
+                    }
                 }
         .animation(DS.Animation.standard, value: translatableSentence)
+        .animation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion), value: speechManager.state == .idle)
         // Zen is edge to edge: the page meets the screen's edges.
         .padding(.top, zenMode ? 0 : DS.Spacing.sm)
         .padding(.horizontal, zenMode ? 0 : DS.Spacing.sm)
