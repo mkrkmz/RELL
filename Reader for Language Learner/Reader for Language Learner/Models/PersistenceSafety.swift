@@ -96,6 +96,7 @@ enum PersistenceBackup {
         "epub_highlights.json",
         "epub_bookmarks.json",
         "recent_documents.json",
+        "custom_modules.json",
         "library_collections.json",
         WordEncounterStore.fileName,
     ]

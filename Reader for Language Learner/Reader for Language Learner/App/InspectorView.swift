@@ -33,6 +33,8 @@ struct InspectorView: View {
         DomainPreference(rawValue: domainRaw) ?? .general
     }
     @State var activeModule: ModuleType?
+    /// One of the reader's own modules, when it's the one open (v18 S3).
+    @State var activeCustom: UUID?
     /// v18 S2: the card's list changed (editor, right-click, 📌).
     @State var cardRevision = 0
     /// Width of the card's lower row — what doesn't fit goes to •••.
@@ -193,7 +195,7 @@ struct InspectorView: View {
                         refreshCache(term: trimmed)
                         viewModel.addToRecents(trimmed)
                         // Auto-run: if cache missed (no outputs loaded) and feature is on, trigger last module
-                        if autoRunEnabled && viewModel.outputs.isEmpty {
+                        if autoRunEnabled && !runOpenCustomForNewSelection() && viewModel.outputs.isEmpty {
                             let module = lastUsedModule
                             if module.isEnabled(mode: explainMode) {
                                 activeModule = module
@@ -232,7 +234,7 @@ struct InspectorView: View {
                 adoptAutomaticMode(for: term)
                 refreshCache(term: term)
                 viewModel.addToRecents(term)
-                if autoRunEnabled && viewModel.outputs.isEmpty {
+                if autoRunEnabled && !runOpenCustomForNewSelection() && viewModel.outputs.isEmpty {
                     let module = lastUsedModule
                     if module.isEnabled(mode: explainMode) {
                         activeModule = module
@@ -306,12 +308,16 @@ struct InspectorView: View {
                     outputs: viewModel.outputs,
                     pdfFilename: pdfFilename,
                     pageNumber: pageNumber,
-                    contextSentence: contextSentence
+                    contextSentence: contextSentence,
+                    ownAnswers: ownModuleAnswers
                 )
             }
             // v18 S2: what the card shows.
             .sheet(isPresented: $showCardEditor) {
-                InspectorCardEditor(initialKind: cardKind) { showCardEditor = false }
+                InspectorCardEditor(initialKind: cardKind, onNewModule: {
+                    showCardEditor = false
+                    openCustomModuleEditor(.new)
+                }) { showCardEditor = false }
             }
             .onReceive(NotificationCenter.default.publisher(for: .inspectorCardChanged)) { _ in
                 cardRevision += 1
@@ -471,6 +477,7 @@ struct InspectorView: View {
 
     /// Opens `module` (clicking the open one again keeps it open — v18 S2).
     func toggleModule(_ module: ModuleType) {
+        activeCustom = nil
         activeModule = module
         lastUsedModule = module
         if (viewModel.outputs[module] ?? "").isEmpty {
@@ -577,6 +584,14 @@ struct InspectorView: View {
                 let cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !cleaned.isEmpty { outputs[module.rawValue] = cleaned }
             }
+            // Own modules' answers, with their names — a deleted module's
+            // answers still say what they were (v18 S3).
+            for (id, output) in viewModel.customOutputs {
+                let cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !cleaned.isEmpty, viewModel.customLoading[id] != true else { continue }
+                outputs[CustomModule.outputKey(id)] = cleaned
+                outputs[CustomModule.titleKey(id)] = CustomModuleStore.shared.module(id)?.name
+            }
             savedWordsStore.add(SavedWord(
                 term: trimmedSelection,
                 sentence: contextSentence ?? "",
@@ -592,6 +607,13 @@ struct InspectorView: View {
         }
     }
 
+    /// This selection's own-module answers, for Anki.
+    var ownModuleAnswers: [OwnModuleAnswer] {
+        CustomModuleStore.shared.modules.compactMap { module in
+            viewModel.customOutputs[module.id].map { OwnModuleAnswer(id: module.id, title: module.name, body: $0) }
+        }
+    }
+
     @MainActor
     func quickExport() async {
         let selected = ankiPrefs.selectedModules(from: viewModel.outputs)
@@ -600,7 +622,8 @@ struct InspectorView: View {
             selectedText: trimmedSelection, mode: explainMode, domain: domainPreference,
             selectedModules: selected, outputs: viewModel.outputs,
             includeSource: ankiPrefs.includeSource, pdfFilename: pdfFilename,
-            pageNumber: pageNumber, contextSentence: contextSentence, tags: ankiPrefs.tags
+            pageNumber: pageNumber, contextSentence: contextSentence, tags: ankiPrefs.tags,
+            ownAnswers: ankiPrefs.includeOwnModules ? ownModuleAnswers : []
         )
         let content = AnkiExporter.tsvDocument(from: note)
         guard await AnkiExporter.saveTSV(content: content) else { return }

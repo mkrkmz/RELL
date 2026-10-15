@@ -252,6 +252,7 @@ extension LLMRequestOrigin {
         case .story:       return String(localized: "Story")
         case .prewarm:     return String(localized: "Loading the model")
         case .speedTest:   return String(localized: "Speed test")
+        case .custom:      return String(localized: "Own module")
         }
     }
 }

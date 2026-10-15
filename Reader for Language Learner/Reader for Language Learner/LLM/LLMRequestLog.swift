@@ -33,12 +33,15 @@ nonisolated enum LLMRequestOrigin: String, Sendable, CaseIterable {
     case prewarm
     /// Settings ▸ AI ▸ Speed (v17 S2).
     case speedTest
+    /// One of the reader's own modules (v18 S3); the detail is left out —
+    /// its name is the reader's text.
+    case custom
 
     /// Work you're waiting for on screen, as opposed to work the app does
     /// on its own while you read.
     var isForeground: Bool {
         switch self {
-        case .module, .askAI, .quickLookup, .grammar, .rewrite, .retell, .story: return true
+        case .module, .askAI, .quickLookup, .grammar, .rewrite, .retell, .story, .custom: return true
         case .cefr, .fill, .warmUp, .recap, .gloss, .prewarm, .speedTest: return false
         }
     }

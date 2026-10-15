@@ -36,6 +36,9 @@ struct PromptSettingsView: View {
 
     var body: some View {
         Form {
+            // v18 S3: modules you write yourself.
+            CustomModulesSection()
+
             Section {
                 preambleEditor
             } header: {

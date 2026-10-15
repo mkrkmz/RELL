@@ -194,16 +194,44 @@ kapali bir liste (`ModuleType`) ve onbellek, kayitli kelimeler, Anki,
 Apple yonlendirmesi, Eksikleri Doldur, seviye tahmini, ozel ayristiricilar
 ve modul basina ayarlara bagli; kendi modullerin bunlara karismaz.
 
-- [ ] Ayri tur: ad, ikon, yer tutuculu istem (`{kelime}`, `{cumle}`, `{ana
-      dil}`, `{hedef dil}`), yanit dili, uzunluk, motor (varsayilan
-      saglayici; Apple istege bagli); kendi dosyasinda, yedeklerde
-- [ ] Ayarlar ▸ Istemler'de duzenleyici, ornek kelimeyle "Dene"; Inspector'da
-      yalniz Karti Duzenle… ▸ "Yeni Modul…"
-- [ ] Inspector karti, kuyruk ve alt satir; onbellek anahtari istemin
-      icerigini icerir; kelimeyle saklama (bicim degismez); Anki istege bagli
-- [ ] Girmez: Eksikleri Doldur, seviye tahmini, ozel ayristiricilar
-- [ ] Gizlilik tablosunda satir; yanit uzunlugu siniri; silinen modulun
-      kayitli yanitlari adiyla kalir
+Maket onayi (2026-10-15): olusturma Ayarlar ▸ Istemler'de, Inspector'da
+yalniz "Yeni Modul…" baglantisi; yer tutucular tikla-ekle, degeri bos olan
+satir atlanir; uc sablon; dort ayar (nerede calisir, yanit dili, uzunluk,
+motor); yeni modul kartin sonuna eklenir, sigmazsa •••'e gecer.
+
+- [x] **Ayri tur** — `CustomModule` (ad, ikon, istem, kelime / cumle /
+      ikisi, yanit dili, Kisa ~300 / Uzun ~800 token, motor: saglayici ya
+      da Apple); en fazla 20 modul, istem en fazla 2.000 karakter;
+      `custom_modules.json` kendi dosyasinda, gunluk yedeklerde
+- [x] **Yer tutucular** — `{selection}` `{sentence}` `{book}` `{native}`
+      `{target}` `{level}` ve Turkce adlari (`{secim}`, `{cumle}`, `{kitap}`,
+      `{ana dil}`, `{hedef dil}`, `{seviye}`); degeri bos olan satir
+      butunuyle atlanir
+- [x] **Duzenleyici** — Ayarlar ▸ Istemler ▸ Kendi Modullerin: liste,
+      Sablondan (On Yasindaymisim Gibi Anlat, Beni Sina, Resmi / Gundelik),
+      ornek kelimeyle "Dene", metnin nereye gittigi, satir ici silme onayi.
+      Inspector'da ••• ▸ "Yeni Modul…", sag tik ▸ "Modulu Duzenle…",
+      Karti Duzenle… ▸ "Yeni Modul…"
+- [x] **Inspector** — kartta `custom.<id>`, yerlesik modullerle ayni kuyruk
+      (on plan), istek kaydi ve alt satir; ayri onbellek, anahtari istemin,
+      yanit dilinin, uzunlugun ve motorun ozetini icerir (istem
+      degisince eski yanit gosterilmez); otomatik calistirmada acik olan
+      kendi modul yeni secimde de calisir
+- [x] **Saklama** — yanit kelimeyle `custom.<id>` altinda, adi yaninda;
+      silinen modulun yanitlari adiyla kelime sayfasinda kalir; ad
+      tekrar kartinin arka yuzune dusmez
+- [x] **Anki istege bagli** — "Kendi modullerini ekle" (varsayilan kapali);
+      hizli disa aktarma, disa aktarma penceresi ve toplu disa aktarma
+- [x] **Girmez** — Eksikleri Doldur, seviye tahmini, ozel ayristiricilar,
+      modul basina ayarlar
+- [x] **Gizlilik tablosu** — "Kendi modullerin" satiri (motora ve
+      saglayiciya gore)
+- [x] Testler: `CustomModuleTests` (10) — yer tutucular (iki dilde), bos
+      degerli satir, yanit dili, onbellek etiketi, karta sona ekleme,
+      sinirlar, yeniden acilista korunma ve silme, kimlik gidis-donus,
+      silinen modulun adi, Anki sirasi. Mutasyon: bos satirin atlanmasi
+      ve istemin onbellek etiketinde olmasi. Tam paket 780 yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 4 — "Okuma ekrani ve yuzen ogeler" (Must, **maketle baslar**)
 

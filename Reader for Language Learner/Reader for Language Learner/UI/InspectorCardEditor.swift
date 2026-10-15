@@ -12,12 +12,15 @@ import SwiftUI
 
 struct InspectorCardEditor: View {
     var onDone: () -> Void
+    /// v18 S3: writing your own module starts from here too.
+    var onNewModule: (() -> Void)?
 
     @State private var kind: CardKind
     @State private var pinned: [CardItem]
 
-    init(initialKind: CardKind = .word, onDone: @escaping () -> Void) {
+    init(initialKind: CardKind = .word, onNewModule: (() -> Void)? = nil, onDone: @escaping () -> Void) {
         self.onDone = onDone
+        self.onNewModule = onNewModule
         _kind = State(initialValue: initialKind)
         _pinned = State(initialValue: InspectorCardLayout.load(initialKind))
     }
@@ -77,6 +80,10 @@ struct InspectorCardEditor: View {
                 Button("Restore Defaults") {
                     InspectorCardLayout.reset(kind)
                     pinned = InspectorCardLayout.load(kind)
+                }
+                if let onNewModule {
+                    Button("New Module…", action: onNewModule)
+                        .disabled(!CustomModuleStore.shared.canAdd)
                 }
                 Spacer()
                 Button("Done", action: onDone)

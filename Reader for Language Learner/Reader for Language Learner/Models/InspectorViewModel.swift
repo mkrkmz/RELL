@@ -91,6 +91,7 @@ final class InspectorViewModel {
         errors.removeAll()
         wasTruncated.removeAll()
         answerSources.removeAll()
+        clearCustom()
         followUpTask?.cancel()
         followUpTask = nil
         followUps.removeAll()
@@ -182,6 +183,79 @@ final class InspectorViewModel {
         for (_, task) in activeTasks { task.cancel() }
         activeTasks.removeAll()
         currentRunIDs.removeAll()
+        for (_, task) in customTasks { task.cancel() }
+        customTasks.removeAll()
+        customRunIDs.removeAll()
+    }
+
+    // MARK: - The reader's own modules (v18 S3)
+    //
+    // Kept apart from the built-in modules' state: those are keyed by
+    // `ModuleType` all through saving, the disk cache and Anki, and own
+    // modules stay out of all that.
+
+    private(set) var customOutputs: [UUID: String] = [:]
+    private(set) var customLoading: [UUID: Bool] = [:]
+    private(set) var customErrors: [UUID: String] = [:]
+    private(set) var customSources: [UUID: AnswerSource] = [:]
+    @ObservationIgnored private var customTasks: [UUID: Task<Void, Never>] = [:]
+    @ObservationIgnored private var customRunIDs: [UUID: UUID] = [:]
+    /// In memory; the key holds the prompt's tag, so an edited prompt
+    /// never shows an old answer.
+    @ObservationIgnored private var customCache = LRUCache<String, String>(capacity: 60)
+
+    func loadCustomFromCache(_ id: UUID, key: String) -> Bool {
+        guard let cached = customCache.get(key), !cached.isEmpty else { return false }
+        customOutputs[id] = cached
+        customErrors[id] = nil
+        customSources[id] = .cached
+        return true
+    }
+
+    func startCustom(_ id: UUID, system: String, user: String, maxTokens: Int, cacheKey: String, provider: any LLMProvider) {
+        cancelCustom(id)
+        customOutputs[id] = ""
+        customErrors[id] = nil
+        customLoading[id] = true
+        customSources[id] = (provider as? RecordedLLMProvider).map { .request($0.id) }
+        let runID = UUID()
+        customRunIDs[id] = runID
+        customTasks[id] = Task { [weak self] in
+            var failure: Error?
+            do {
+                _ = try await provider.stream(system: system, user: user, temperature: 0.4,
+                                              maxTokens: maxTokens, topP: 0.9) { token in
+                    guard let self, self.customRunIDs[id] == runID else { return }
+                    self.customOutputs[id, default: ""] += token
+                }
+            } catch {
+                failure = error
+            }
+            (provider as? RecordedLLMProvider)?.dropIfNotSent()
+            guard let self, self.customRunIDs[id] == runID else { return }
+            if let failure, !Task.isCancelled {
+                self.customErrors[id] = LLMErrorMessage.userMessage(for: failure)
+            } else if let output = self.customOutputs[id], !output.isEmpty, !Task.isCancelled {
+                self.customCache.set(cacheKey, output)
+            }
+            self.customLoading[id] = false
+            self.customTasks[id] = nil
+            self.customRunIDs[id] = nil
+        }
+    }
+
+    func cancelCustom(_ id: UUID) {
+        customTasks[id]?.cancel()
+        customTasks[id] = nil
+        customRunIDs[id] = nil
+        customLoading[id] = false
+    }
+
+    private func clearCustom() {
+        customOutputs.removeAll()
+        customLoading.removeAll()
+        customErrors.removeAll()
+        customSources.removeAll()
     }
 
     // MARK: - Running a module

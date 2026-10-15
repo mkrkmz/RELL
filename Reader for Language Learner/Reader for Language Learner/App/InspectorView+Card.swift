@@ -95,6 +95,10 @@ extension InspectorView {
         switch item {
         case .module(let module):
             moduleCardButton(module)
+        case .custom(let id):
+            if let module = CustomModuleStore.shared.module(id) {
+                customCardButton(module)
+            }
         default:
             Button { perform(item) } label: {
                 Label(cardTitle(item), systemImage: cardIcon(item))
@@ -107,7 +111,7 @@ extension InspectorView {
     }
 
     private func moduleCardButton(_ module: ModuleType) -> some View {
-        let isActive = displayedModule == module
+        let isActive = displayedCustom == nil && displayedModule == module
         let isLoading = viewModel.loading[module] == true
         let hasOutput = !(viewModel.outputs[module] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let hasError = viewModel.errors[module] != nil
@@ -130,8 +134,32 @@ extension InspectorView {
         .contextMenu { cardContextMenu(.module(module)) }
     }
 
+    private func customCardButton(_ module: CustomModule) -> some View {
+        let isActive = activeCustom == module.id
+        let isLoading = viewModel.customLoading[module.id] == true
+        let hasOutput = !(viewModel.customOutputs[module.id] ?? "").isEmpty
+        return Button { toggleCustom(module.id) } label: {
+            Label(module.name, systemImage: module.icon)
+        }
+        .buttonStyle(.dsQuiet(isOn: isActive, tint: DS.Color.accent))
+        .overlay(alignment: .topTrailing) {
+            if isLoading {
+                ProgressView().controlSize(.mini).scaleEffect(0.6).offset(x: 2, y: -4)
+            } else if hasOutput && !isActive {
+                Circle().fill(DS.Color.accent).frame(width: 5, height: 5).offset(x: -2, y: 3)
+            }
+        }
+        .disabled(!hasSelection)
+        .help(module.name)
+        .contextMenu { cardContextMenu(.custom(module.id)) }
+    }
+
     @ViewBuilder
     private func cardContextMenu(_ item: CardItem) -> some View {
+        if case .custom(let id) = item {
+            Button("Edit Module…") { openCustomModuleEditor(.edit(id)) }
+            Divider()
+        }
         Button("Remove from Card") { updateCard { InspectorCardLayout.unpin(item, in: $0) } }
         Button("Move Left") { updateCard { InspectorCardLayout.move(item, by: -1, in: $0) } }
         Button("Move Right") { updateCard { InspectorCardLayout.move(item, by: 1, in: $0) } }
@@ -223,6 +251,7 @@ extension InspectorView {
             }
             .disabled(isAnyLoading)
             Button("Edit Card…") { showCardEditor = true }
+            Button("New Module…") { openCustomModuleEditor(.new) }
         } label: {
             Image(systemName: "ellipsis.circle")
                 .font(DS.Typography.icon(13, weight: .medium))
@@ -253,6 +282,8 @@ extension InspectorView {
             NotificationCenter.default.post(name: .retellSelectionCommand, object: trimmedSelection)
         case .module(let module):
             toggleModule(module)
+        case .custom(let id):
+            toggleCustom(id)
         }
     }
 
@@ -262,6 +293,7 @@ extension InspectorView {
         case .grammar:           return GrammarLens.isEligible(trimmedSelection)
         case .simplify, .retell: return GradedRewrite.isEligible(trimmedSelection)
         case .module(let module): return isModuleEnabled(module)
+        case .custom(let id):    return CustomModuleStore.shared.module(id) != nil
         default:                 return true
         }
     }
@@ -298,6 +330,7 @@ extension InspectorView {
                 ? String(localized: "Simplify to your level, or retell it in your own words")
                 : SelectionMenu.passageOnlyReason
         case .module(let module): return module.title(nativeLanguage: nativeLanguage)
+        case .custom(let id): return CustomModuleStore.shared.module(id)?.name ?? ""
         }
     }
 
@@ -347,6 +380,8 @@ extension CardItem {
             if kind == .sentence, module == .definitionEN { return String(localized: "Explain") }
             if module == .meaningTR { return native.nativeName }
             return module.shortTitle
+        case .custom(let id):
+            return CustomModuleStore.shared.module(id)?.name ?? String(localized: "Own module")
         }
     }
 
@@ -359,6 +394,7 @@ extension CardItem {
         case .simplify: return "text.badge.checkmark"
         case .retell:   return "square.and.pencil"
         case .module(let module): return module.iconName
+        case .custom(let id): return CustomModuleStore.shared.module(id)?.icon ?? "sparkles"
         }
     }
 }

@@ -14,8 +14,12 @@ extension InspectorView {
     var resultPanel: some View {
         Group {
             // A module is always open (v18 S2): the one you opened, else the
-            // one used last.
-            if let module = displayedModule {
+            // one used last. One of your own when that's the open one (S3).
+            if let custom = displayedCustom {
+                customResultView(custom)
+                    .id(custom.id)
+                    .transition(.opacity)
+            } else if let module = displayedModule {
                 activeResultView(for: module)
                     .id(module)
                     .transition(.opacity)

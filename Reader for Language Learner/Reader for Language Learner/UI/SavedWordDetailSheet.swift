@@ -614,6 +614,27 @@ struct SavedWordDetailSheet: View {
                 .background(DS.Color.surfaceInset)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
             }
+            // v18 S3: your own modules' answers, under the name saved with them.
+            ForEach(CustomPrompt.savedAnswers(in: word.llmOutputs, modules: CustomModuleStore.shared.modules)) { answer in
+                VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                    HStack(spacing: DS.Spacing.xs) {
+                        Image(systemName: CustomModuleStore.shared.module(answer.id)?.icon ?? "sparkles")
+                            .font(DS.Typography.icon(8, weight: .semibold))
+                            .foregroundStyle(DS.Color.accent)
+                        Text(answer.title)
+                            .font(DS.Typography.caption.weight(.semibold))
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+                    Text(InspectorView.markdown(answer.body.trimmingCharacters(in: .whitespacesAndNewlines)))
+                        .font(DS.Typography.caption)
+                        .foregroundStyle(DS.Color.textPrimary)
+                        .textSelection(.enabled)
+                }
+                .padding(DS.Spacing.sm)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(DS.Color.surfaceInset)
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+            }
         }
     }
 

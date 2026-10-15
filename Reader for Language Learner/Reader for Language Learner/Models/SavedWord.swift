@@ -286,7 +286,8 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
                 return text
             }
         }
-        return llmOutputs.values.first(where: { !$0.isEmpty })
+        // Not an own module's name (v18 S3: "custom.<id>.title").
+        return llmOutputs.first(where: { !$0.key.hasSuffix(".title") && !$0.value.isEmpty })?.value
             ?? (sentence.isEmpty ? "No definition saved." : sentence)
     }
 

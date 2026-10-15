@@ -161,6 +161,19 @@ struct BulkAnkiExportView: View {
                     }
                     .toggleStyle(.checkbox)
 
+                    // v18 S3: your own modules, optional.
+                    if hasOwnAnswers {
+                        Toggle(isOn: $prefs.includeOwnModules) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(.secondary)
+                                Text("Include your own modules")
+                                    .font(.subheadline)
+                            }
+                        }
+                        .toggleStyle(.checkbox)
+                    }
+
                     if format == .ankiTSV {
                         Toggle(isOn: $deckPerBook) {
                             VStack(alignment: .leading, spacing: 2) {
@@ -383,6 +396,13 @@ struct BulkAnkiExportView: View {
 
     // MARK: - Export Logic
 
+    /// Whether any word in scope has an own-module answer to offer.
+    private var hasOwnAnswers: Bool {
+        scopedWords.contains { word in
+            word.llmOutputs.keys.contains { $0.hasPrefix("custom.") && !$0.hasSuffix(".title") }
+        }
+    }
+
     private func buildNote(from word: SavedWord) -> AnkiNoteDraft {
         var moduleOutputs: [ModuleType: String] = [:]
         for (key, value) in word.llmOutputs {
@@ -405,7 +425,10 @@ struct BulkAnkiExportView: View {
             pageNumber: word.pageNumber,
             contextSentence: word.sentence,
             tags: prefs.tags,
-            extraTags: word.tags
+            extraTags: word.tags,
+            ownAnswers: prefs.includeOwnModules
+                ? CustomPrompt.savedAnswers(in: word.llmOutputs, modules: CustomModuleStore.shared.modules)
+                : []
         )
         if deckPerBook && format == .ankiTSV {
             note.deck = AnkiExporter.bookDeck(bookTitles[word.pdfFilename ?? ""])

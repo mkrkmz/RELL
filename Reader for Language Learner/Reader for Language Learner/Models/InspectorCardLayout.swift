@@ -27,8 +27,10 @@ enum CardItem: Hashable {
     case simplify
     case retell
     case module(ModuleType)
+    /// One of the reader's own modules (v18 S3).
+    case custom(UUID)
 
-    /// Stable id for storage: "listen", "module.definitionEN"…
+    /// Stable id for storage: "listen", "module.definitionEN", "custom.<uuid>"…
     var id: String {
         switch self {
         case .listen:   return "listen"
@@ -38,6 +40,7 @@ enum CardItem: Hashable {
         case .simplify: return "simplify"
         case .retell:   return "retell"
         case .module(let module): return "module.\(module.rawValue)"
+        case .custom(let id):     return CustomModule.outputKey(id)
         }
     }
 
@@ -50,6 +53,11 @@ enum CardItem: Hashable {
         case "simplify": self = .simplify
         case "retell":   self = .retell
         default:
+            if id.hasPrefix("custom.") {
+                guard let uuid = UUID(uuidString: String(id.dropFirst("custom.".count))) else { return nil }
+                self = .custom(uuid)
+                return
+            }
             guard id.hasPrefix("module."),
                   let module = ModuleType(rawValue: String(id.dropFirst("module.".count))) else { return nil }
             self = .module(module)
@@ -61,7 +69,7 @@ enum CardItem: Hashable {
     var isAction: Bool {
         switch self {
         case .listen, .anki, .copy: return true
-        case .grammar, .simplify, .retell, .module: return false
+        case .grammar, .simplify, .retell, .module, .custom: return false
         }
     }
 
@@ -73,15 +81,17 @@ enum CardItem: Hashable {
 
 enum InspectorCardLayout {
 
-    /// Everything a card can show, in the order of the ••• menu.
-    static func available(_ kind: CardKind) -> [CardItem] {
+    /// Everything a card can show, in the order of the ••• menu: the
+    /// built-in items, then the reader's own modules that run on it.
+    static func available(_ kind: CardKind, customs: [CustomModule] = CustomModuleStore.shared.modules) -> [CardItem] {
+        let own = customs.filter { $0.runs(on: kind) }.map { CardItem.custom($0.id) }
         switch kind {
         case .word:
-            return [.listen, .anki] + ModuleType.menuOrder.filter { $0.isEnabled(mode: .word) }.map(CardItem.module)
+            return [.listen, .anki] + ModuleType.menuOrder.filter { $0.isEnabled(mode: .word) }.map(CardItem.module) + own
         case .sentence:
             return [.listen, .copy]
                 + ModuleType.menuOrder.filter { $0.isEnabled(mode: .sentence) }.map(CardItem.module)
-                + [.grammar, .simplify, .retell]
+                + [.grammar, .simplify, .retell] + own
         }
     }
 
@@ -99,16 +109,18 @@ enum InspectorCardLayout {
 
     /// The stored list, without ids that no longer exist or don't belong to
     /// this card; the defaults when nothing is stored.
-    static func pinned(_ kind: CardKind, stored: [String]?) -> [CardItem] {
+    static func pinned(_ kind: CardKind, stored: [String]?,
+                       customs: [CustomModule] = CustomModuleStore.shared.modules) -> [CardItem] {
         guard let stored else { return defaults(kind) }
-        let allowed = Set(available(kind))
+        let allowed = Set(available(kind, customs: customs))
         var seen = Set<CardItem>()
         return stored.compactMap(CardItem.init(id:)).filter { allowed.contains($0) && seen.insert($0).inserted }
     }
 
     /// What isn't on the card, in menu order.
-    static func unpinned(_ kind: CardKind, pinned: [CardItem]) -> [CardItem] {
-        available(kind).filter { !pinned.contains($0) }
+    static func unpinned(_ kind: CardKind, pinned: [CardItem],
+                         customs: [CustomModule] = CustomModuleStore.shared.modules) -> [CardItem] {
+        available(kind, customs: customs).filter { !pinned.contains($0) }
     }
 
     static func pin(_ item: CardItem, in pinned: [CardItem]) -> [CardItem] {
@@ -151,8 +163,9 @@ enum InspectorCardLayout {
         kind == .word ? StorageKey.inspectorWordCard : StorageKey.inspectorSentenceCard
     }
 
-    static func load(_ kind: CardKind, defaults: UserDefaults = .standard) -> [CardItem] {
-        pinned(kind, stored: defaults.stringArray(forKey: storageKey(kind)))
+    static func load(_ kind: CardKind, defaults: UserDefaults = .standard,
+                     customs: [CustomModule] = CustomModuleStore.shared.modules) -> [CardItem] {
+        pinned(kind, stored: defaults.stringArray(forKey: storageKey(kind)), customs: customs)
     }
 
     static func save(_ pinned: [CardItem], for kind: CardKind, defaults: UserDefaults = .standard) {

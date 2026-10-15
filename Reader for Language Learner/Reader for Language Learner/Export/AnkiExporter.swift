@@ -72,7 +72,8 @@ enum AnkiExporter {
         pageNumber: Int?,
         contextSentence: String? = nil,
         tags: String,
-        extraTags: [String] = []
+        extraTags: [String] = [],
+        ownAnswers: [OwnModuleAnswer] = []
     ) -> AnkiNoteDraft {
         // ── Front ──
         var front = selectedText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -103,6 +104,11 @@ enum AnkiExporter {
             }
             let cleaned = sanitize(output)
             backParts.append("<b>[\(module.title)]</b><br>\(cleaned)")
+        }
+
+        // The reader's own modules, after the built-in ones (v18 S3).
+        for answer in ownAnswers where !answer.body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            backParts.append("<b>[\(answer.title)]</b><br>\(sanitize(answer.body))")
         }
 
         let back = backParts.joined(separator: "<br><br>")

@@ -52,6 +52,7 @@ struct PrivacySummarySection: View {
             row("Recaps and chapter warm-ups", module: nil),
             row("Grammar explanations", module: .etymologyEN),
             translationRow,
+        ] + ownModulesRow + [
             Row(feature: "Web article import",
                 destination: String(localized: "Only the site you import from"), onDevice: false),
         ] + (updateCheckEnabled ? [
@@ -68,6 +69,18 @@ struct PrivacySummarySection: View {
         case .configured:
             return Row(feature: feature, destination: providerDestination, onDevice: providerIsLocal)
         }
+    }
+
+    /// v18 S3: your own modules go where their engine says; a module set to
+    /// Apple falls back to your provider when Apple's model isn't there.
+    private var ownModulesRow: [Row] {
+        let modules = CustomModuleStore.shared.modules
+        guard !modules.isEmpty else { return [] }
+        let appleReady = AppleOnDevice.currentRoute(for: nil) == .appleOnDevice
+        if appleReady, modules.allSatisfy({ $0.engine == .apple }) {
+            return [Row(feature: "Your own modules", destination: String(localized: "This Mac"), onDevice: true)]
+        }
+        return [Row(feature: "Your own modules", destination: providerDestination, onDevice: providerIsLocal)]
     }
 
     private var translationRow: Row {

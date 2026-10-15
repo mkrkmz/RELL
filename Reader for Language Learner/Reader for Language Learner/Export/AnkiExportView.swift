@@ -15,6 +15,7 @@ struct AnkiExportView: View {
     let pdfFilename: String?
     let pageNumber: Int?
     let contextSentence: String?
+    var ownAnswers: [OwnModuleAnswer] = []
 
     @Environment(AnkiModulePreferences.self) private var prefs
     @Environment(\.dismiss) private var dismiss
@@ -79,6 +80,19 @@ struct AnkiExportView: View {
                         }
                     }
                     .toggleStyle(.checkbox)
+
+                    // v18 S3: your own modules, optional.
+                    if !ownAnswers.isEmpty {
+                        Toggle(isOn: $prefs.includeOwnModules) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(.secondary)
+                                Text("Include your own modules")
+                                    .font(.subheadline)
+                            }
+                        }
+                        .toggleStyle(.checkbox)
+                    }
                 }
                 .padding()
             }
@@ -211,7 +225,8 @@ struct AnkiExportView: View {
             pdfFilename: pdfFilename,
             pageNumber: pageNumber,
             contextSentence: contextSentence,
-            tags: prefs.tags
+            tags: prefs.tags,
+            ownAnswers: prefs.includeOwnModules ? ownAnswers : []
         )
         let content = AnkiExporter.tsvDocument(from: note)
         let saved = await AnkiExporter.saveTSV(content: content)
