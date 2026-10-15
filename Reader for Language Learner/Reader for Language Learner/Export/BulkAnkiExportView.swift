@@ -309,7 +309,7 @@ struct BulkAnkiExportView: View {
             }
         }
         .padding(.vertical, DS.Spacing.xs)
-        .padding(.horizontal, 6)
+        .padding(.horizontal, DS.Spacing.xs + DS.Spacing.xxs)
         .contentShape(Rectangle())
         .onTapGesture {
             if isSelected {
@@ -377,7 +377,7 @@ struct BulkAnkiExportView: View {
             .padding(DS.Spacing.sm)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(nsColor: .textBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
     }
 

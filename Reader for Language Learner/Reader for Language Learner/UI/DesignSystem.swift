@@ -75,6 +75,8 @@ enum DS {
         /// The saved-word star. One token instead of `.yellow` hand-picked
         /// at every call site, so "saved" reads as one color everywhere.
         static var star: SwiftUI.Color { .yellow }
+        /// Words imported from a Kindle (v18 S1; was a literal purple).
+        static var kindle: SwiftUI.Color { .purple }
 
         // ── Identity palette extras ───────────────────────────────────────
         // The module/domain rainbow mostly rides system colors; these two are
@@ -130,6 +132,11 @@ enum DS {
         static var label:    SwiftUI.Font { .subheadline.weight(.medium) }
         static var overline: SwiftUI.Font { .caption2.weight(.heavy) }
         static var mono:     SwiftUI.Font { .system(.caption, design: .monospaced) }
+        /// Code and prompts in running text (v18 S1).
+        static var monoBody:    SwiftUI.Font { .system(.body, design: .monospaced) }
+        static var monoCallout: SwiftUI.Font { .system(.callout, design: .monospaced) }
+        /// A book-like heading in the reading tour's samples (v18 S1).
+        static var serifTitle:  SwiftUI.Font { .system(.title3, design: .serif) }
 
         /// A saved word's term, shown large — flashcards, word cards.
         static var wordDisplay:      SwiftUI.Font { .system(size: 22, weight: .semibold) }
@@ -179,6 +186,9 @@ enum DS {
     // MARK: - Spacing
 
     nonisolated enum Spacing {
+        /// Fine adjustments (badges, list rows): sums with the steps below
+        /// keep exact sizes in tokens (v18 S1).
+        static let hairline: CGFloat = 1
         static let xxs: CGFloat =  2
         static let xs:  CGFloat =  4
         static let sm:  CGFloat =  8
@@ -192,6 +202,10 @@ enum DS {
     // MARK: - Corner Radius
 
     enum Radius {
+        /// Heatmap cells, colour swatches and mini covers (v18 S1).
+        static let cell: CGFloat = 1.3
+        static let hairline: CGFloat = 2
+        static let cover: CGFloat = 3
         static let xs: CGFloat =  4
         static let sm: CGFloat =  6
         static let md: CGFloat = 10

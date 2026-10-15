@@ -332,7 +332,7 @@ struct SourceChip: View {
             .font(DS.Typography.caption2.weight(.semibold))
             .foregroundStyle(tint)
             .padding(.horizontal, DS.Spacing.xs)
-            .padding(.vertical, 1)
+            .padding(.vertical, DS.Spacing.hairline)
             .background(tint.opacity(0.12), in: Capsule())
             .lineLimit(1)
             .fixedSize()

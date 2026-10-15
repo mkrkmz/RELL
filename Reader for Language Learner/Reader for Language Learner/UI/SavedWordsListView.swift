@@ -622,10 +622,8 @@ struct SavedWordsListView: View {
                     showClearConfirm = true
                 } label: {
                     Image(systemName: "trash")
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.danger.opacity(0.7))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(DSIconButtonStyle(tint: DS.Color.danger.opacity(0.7)))
                 .help("Clear all saved words")
                 .accessibilityLabel("Clear all saved words")
             }
@@ -655,9 +653,8 @@ struct SavedWordsListView: View {
                 multiSelection = multiSelection == visible ? [] : visible
             } label: {
                 Image(systemName: "checklist.checked")
-                    .font(DS.Typography.caption)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.dsIcon)
             .help("Select or deselect all visible words")
             .accessibilityLabel("Select or deselect all visible words")
 
@@ -739,10 +736,8 @@ struct SavedWordsListView: View {
                 showBulkDeleteConfirm = true
             } label: {
                 Image(systemName: "trash")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.danger.opacity(0.85))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DSIconButtonStyle(tint: DS.Color.danger.opacity(0.85)))
             .disabled(multiSelection.isEmpty)
             .help("Delete the selected words")
             .accessibilityLabel("Delete the selected words")

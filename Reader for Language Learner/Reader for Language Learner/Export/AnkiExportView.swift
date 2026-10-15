@@ -132,7 +132,7 @@ struct AnkiExportView: View {
                 if domain != .general {
                     Text("[\(domain.localizedTitle)]")
                         .font(.caption2)
-                        .padding(.horizontal, 6)
+                        .padding(.horizontal, DS.Spacing.xs + DS.Spacing.xxs)
                         .padding(.vertical, DS.Spacing.xxs)
                         .background(.tint.opacity(0.15))
                         .clipShape(Capsule())
@@ -141,7 +141,7 @@ struct AnkiExportView: View {
             .padding(DS.Spacing.sm)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(nsColor: .textBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm + DS.Radius.hairline))
         }
     }
 

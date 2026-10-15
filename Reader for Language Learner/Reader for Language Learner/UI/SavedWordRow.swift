@@ -48,10 +48,10 @@ struct SavedWordRow: View {
                 if word.hasTag(KindleVocabulary.deckName) {
                     Text("Kindle")
                         .font(DS.Typography.caption2.weight(.semibold))
-                        .foregroundStyle(.purple)
+                        .foregroundStyle(DS.Color.kindle)
                         .padding(.horizontal, DS.Spacing.xs)
-                        .padding(.vertical, 1)
-                        .background(Color.purple.opacity(0.12), in: Capsule())
+                        .padding(.vertical, DS.Spacing.hairline)
+                        .background(DS.Color.kindle.opacity(0.12), in: Capsule())
                         .help("Imported from your Kindle")
                 }
                 if word.isStruggling {
@@ -72,7 +72,7 @@ struct SavedWordRow: View {
                     .font(DS.Typography.caption2.weight(.semibold))
                     .foregroundStyle(cefr.badgeColor)
                     .padding(.horizontal, DS.Spacing.xs)
-                    .padding(.vertical, 1)
+                    .padding(.vertical, DS.Spacing.hairline)
                     .background(cefr.badgeColor.opacity(0.12), in: Capsule())
                     .help(word.cefrIsAuto ? "AI-estimated level" : "CEFR level")
                 }
@@ -80,7 +80,7 @@ struct SavedWordRow: View {
                     .font(DS.Typography.caption2.weight(.semibold))
                     .foregroundStyle(word.reviewStatus.color)
                     .padding(.horizontal, DS.Spacing.xs)
-                    .padding(.vertical, 1)
+                    .padding(.vertical, DS.Spacing.hairline)
                     .background(word.reviewStatus.color.opacity(0.12), in: Capsule())
                     .lineLimit(1)
             }

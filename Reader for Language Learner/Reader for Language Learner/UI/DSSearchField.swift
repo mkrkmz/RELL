@@ -48,7 +48,7 @@ struct DSSearchField: View {
             }
         }
         .padding(.horizontal, DS.Spacing.sm)
-        .padding(.vertical, 5)
+        .padding(.vertical, DS.Spacing.xs + DS.Spacing.hairline)
         .dsCard(padding: nil, surface: DS.Color.surfaceInset, radius: DS.Radius.sm)
         .animation(DS.Animation.fast, value: text.isEmpty)
     }

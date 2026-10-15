@@ -212,7 +212,7 @@ extension QuizView {
             Text(key)
                 .font(DS.Typography.mono)
                 .padding(.horizontal, DS.Spacing.xs)
-                .padding(.vertical, 1)
+                .padding(.vertical, DS.Spacing.hairline)
                 .overlay(RoundedRectangle(cornerRadius: DS.Radius.sm).strokeBorder(DS.Color.hairlineStrong))
             Text(label)
         }

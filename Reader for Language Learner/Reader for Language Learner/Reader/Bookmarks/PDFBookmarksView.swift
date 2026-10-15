@@ -143,13 +143,8 @@ private struct BookmarkRow: View {
             if isHovered {
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
-                        .font(DS.Typography.icon(11, weight: .medium))
-                        .foregroundStyle(DS.Color.textSecondary)
-                        .frame(width: 26, height: 26)
-                        .background(DS.Color.surfaceInset)
-                        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.dsIconSecondary)
                 .help("Edit bookmark note")
                 .accessibilityLabel("Edit bookmark note")
                 .transition(.opacity.combined(with: .scale))

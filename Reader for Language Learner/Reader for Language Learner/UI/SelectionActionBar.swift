@@ -9,9 +9,8 @@
 //  action closures, which route into the reader's existing selection handlers.
 //
 //  It floats over the text, so it's an opaque, page-themed capsule rather
-//  than glass (v14 S1 — see ReadingOverlay.swift). Since 1.47.2 its buttons
-//  have no fill: labels in the page's text colour, colour only in the icons,
-//  a faint highlight under the pointer — and it can be turned off in
+//  than glass (v14 S1 — see ReadingOverlay.swift). Its buttons are the quiet
+//  ones (1.47.2, `DSButtonStyles` since v18 S1) — and it can be turned off in
 //  Settings ▸ Reading (the right-click menu and the Inspector do the same).
 //
 
@@ -44,17 +43,26 @@ struct SelectionActionBar: View {
     // (`SelectionMenu`). Before, seven unlabelled icons.
     var body: some View {
         HStack(spacing: 2) {
-            BarButton(title: isSaved ? "Saved" : "Save",
-                      icon: isSaved ? "bookmark.fill" : "bookmark",
-                      help: isSaved ? "Saved" : "Save Word",
-                      action: onSave)
-            BarButton(title: "Analyze", icon: "sparkles", help: "Analyze in the Inspector", action: onAnalyze)
+            Button(action: onSave) {
+                Label(isSaved ? "Saved" : "Save", systemImage: isSaved ? "bookmark.fill" : "bookmark")
+            }
+            .buttonStyle(.dsQuiet)
+            .help(isSaved ? "Saved" : "Save Word")
+            Button(action: onAnalyze) {
+                Label("Analyze", systemImage: "sparkles")
+            }
+            .buttonStyle(.dsQuiet)
+            .help("Analyze in the Inspector")
 
             Divider()
                 .frame(height: 16)
                 .padding(.horizontal, DS.Spacing.xxs)
 
-            BarButton(title: nil, icon: "speaker.wave.2", help: "Speak", action: onSpeak)
+            Button(action: onSpeak) {
+                Label("Speak", systemImage: "speaker.wave.2")
+            }
+            .buttonStyle(.dsIcon)
+            .help("Speak")
 
             toolsMenu
         }
@@ -106,38 +114,5 @@ struct SelectionActionBar: View {
         .frame(height: 26)
         .help("Simplify, retell, highlight, speak, copy")
         .accessibilityLabel("Tools")
-    }
-}
-
-/// A bar button without a fill (1.47.2): the icon in the accent colour, the
-/// label in the page's text colour, a faint highlight under the pointer.
-private struct BarButton: View {
-    let title: LocalizedStringKey?
-    let icon: String
-    let help: LocalizedStringKey
-    let action: () -> Void
-    @State private var hovering = false
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: DS.Spacing.xs) {
-                Image(systemName: icon)
-                    .font(DS.Typography.icon(12, weight: .semibold))
-                    .foregroundStyle(DS.Color.accent)
-                if let title {
-                    Text(title)
-                        .font(DS.Typography.caption.weight(.semibold))
-                        .foregroundStyle(DS.Color.textPrimary)
-                }
-            }
-            .padding(.horizontal, title == nil ? DS.Spacing.sm : DS.Spacing.sm + 2)
-            .frame(height: 26)
-            .background(hovering ? DS.Color.hoverOverlay : .clear, in: Capsule())
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering = $0 }
-        .help(help)
-        .accessibilityLabel(title ?? help)
     }
 }

@@ -20,7 +20,7 @@ struct CoverageBadge: View {
             .font(DS.Typography.caption2.weight(.semibold))
             .monospacedDigit()
             .foregroundStyle(filled ? SwiftUI.Color.white : tint)
-            .padding(.horizontal, 6)
+            .padding(.horizontal, DS.Spacing.xs + DS.Spacing.xxs)
             .padding(.vertical, DS.Spacing.xxs)
             .background(filled ? tint.opacity(0.85) : tint.opacity(0.12), in: Capsule())
             .help(Text("You know \(Int(profile.knownShare * 100))% of this book's words"))

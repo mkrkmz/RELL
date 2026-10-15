@@ -225,7 +225,7 @@ struct LineListResultView: View {
                         Circle()
                             .fill(DS.Color.accent.opacity(0.75))
                             .frame(width: 6, height: 6)
-                            .padding(.top, 7)
+                            .padding(.top, DS.Spacing.sm - DS.Spacing.hairline)
 
                         Text(line)
                             .font(DS.Typography.body)
@@ -235,7 +235,7 @@ struct LineListResultView: View {
 
                     if emphasizeDivider && index < lines.count - 1 {
                         Divider()
-                            .padding(.leading, 14)
+                            .padding(.leading, DS.Spacing.md + DS.Spacing.xxs)
                     }
                 }
             }
@@ -302,7 +302,7 @@ struct PronunciationResultView: View {
                         Image(systemName: "waveform")
                             .foregroundStyle(DS.Color.warning)
                         Text(line)
-                            .font(.system(.body, design: .monospaced))
+                            .font(DS.Typography.monoBody)
                             .foregroundStyle(DS.Color.textPrimary)
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -429,7 +429,7 @@ struct CollocationItemView: View {
                             Image(systemName: "quote.opening")
                                 .font(DS.Typography.icon(9, weight: .medium))
                                 .foregroundStyle(DS.Color.accent.opacity(0.55))
-                                .padding(.top, 3)
+                                .padding(.top, DS.Spacing.xxs + DS.Spacing.hairline)
                             Text(entry.example)
                                 .font(DS.Typography.callout)
                                 .italic()
@@ -441,10 +441,10 @@ struct CollocationItemView: View {
                         Text(entry.translationNative)
                             .font(DS.Typography.caption)
                             .foregroundStyle(DS.Color.textTertiary)
-                            .padding(.leading, 18)
+                            .padding(.leading, DS.Spacing.lg + DS.Spacing.xxs)
                     }
                 }
-                .padding(.leading, 22)
+                .padding(.leading, DS.Spacing.xl - DS.Spacing.xxs)
                 .padding(.top, DS.Spacing.xxs)
             }
         }

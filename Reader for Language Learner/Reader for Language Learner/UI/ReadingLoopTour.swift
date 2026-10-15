@@ -100,7 +100,7 @@ struct ReadingLoopTourPage: View {
                     Text(verbatim: ".")
                         .foregroundStyle(DS.Color.textSecondary)
                 }
-                .font(.system(.title3, design: .serif))
+                .font(DS.Typography.serifTitle)
             }
         case 1:
             VStack(alignment: .leading, spacing: DS.Spacing.xs) {
@@ -119,7 +119,7 @@ struct ReadingLoopTourPage: View {
                 HStack(spacing: DS.Spacing.xs) {
                     Image(systemName: "star.fill").foregroundStyle(DS.Color.star)
                     Text(verbatim: "landlady")
-                        .font(.system(.title3, design: .serif))
+                        .font(DS.Typography.serifTitle)
                         .underline(color: DS.Color.accent)
                 }
                 Text("Last met: Crime and Punishment · yesterday")
@@ -145,7 +145,7 @@ struct ReadingLoopTourPage: View {
             .font(DS.Typography.caption.weight(.semibold))
             .foregroundStyle(prominent ? SwiftUI.Color.white : DS.Color.accent)
             .padding(.horizontal, DS.Spacing.sm)
-            .padding(.vertical, 3)
+            .padding(.vertical, DS.Spacing.xxs + DS.Spacing.hairline)
             .background(prominent ? DS.Color.accent : DS.Color.accentSubtle, in: Capsule())
     }
 }

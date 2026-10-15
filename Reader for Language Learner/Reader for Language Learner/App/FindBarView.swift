@@ -61,6 +61,7 @@ struct FindBarView: View {
         }
         .padding(.horizontal, DS.Spacing.sm + DS.Spacing.xs)
         .padding(.vertical, DS.Spacing.sm)
-        .dsGlassCard(radius: DS.Radius.md)
+        // Over the page's text, so opaque and page-themed, not glass (v18 S1).
+        .dsReadingOverlay(RoundedRectangle(cornerRadius: DS.Radius.md))
     }
 }

@@ -98,18 +98,45 @@ CloudKit), iOS.
 
 ## Sprint 1 — "Tasarim sistemi turu" (Must, **maketle baslar**)
 
-- [ ] **Ortak buton stilleri** — sakin (zeminsiz, ikon renkli, hover'da
-      hafif vurgu; secim cubugundan), ana, ikincil, yalniz ikon; `DS`
-      altinda `ButtonStyle`'lar; 72 elle cizilmis butonun uygun olanlari
-      tasinir
-- [ ] **Hover ve hareket dili** — tek hover vurgusu, `DS.Animation`
-      sureleri, Reduce Motion
-- [ ] **Cam kurali** — Liquid Glass yalniz metin ustunde olmayan kabukta
-      (arac cubugu, kenar cubugu, sayfa disi paneller); metin ustu opak
-      (`dsReadingOverlay`) kalir; 20 kullanim taranir
-- [ ] **Kural disi degerler** — 5 yazi tipi, 13 renk, 30 bosluk, 7 kose
-      yuvarlakligi DS token'ina; grep denetimi (pre-commit) genisler
-- [ ] Koyu tema ve odak halkasi taramasi; "pencereyi buyutmez" testleri
+Maket onayi (2026-10-15): bes karar — bes buton stili DS'te; ekranda en
+fazla bir ana buton, yalniz ilerleten iste (satir ici Kaydet/Dinle/Anki
+sakin); tek hover kurali; cam yalniz kabukta, metnin ustunde hic;
+ayni yerde kalan butonun stili S1'de, yerlesim S2–S4'te.
+
+- [x] **Ortak buton stilleri** — `DSButtonStyles.swift`: `.dsQuiet`
+      (zeminsiz, ikon aksan, etiket metin rengi), `.dsIcon` /
+      `.dsIconSecondary` / `DSIconButtonStyle(tint:)`, `.dsChip(isOn:)` ve
+      `.dsChipTile(isOn:tint:)`; ana ve ikincil sistemin `.borderedProminent`
+      / `.bordered`'i. Tasindi: secim cubugu, Inspector kelime karti (dolu
+      Kaydet + renkli Dinle/Anki → sakin), sonuc dugmeleri (cam → ikon),
+      modul kutucuklari (cam → cip kutucugu), kutuphane, kelime listesi
+      arac cubugu, seslendirme cubugu, yer imleri ve notlar (gri dolgulu
+      kareler → ikon), ayarlardaki sifirla dugmeleri, Kindle/guncelleme
+      seritleri. `.plain` 72 → 54 (kalanlar liste satiri, kart, metin alani
+      ici "temizle" ya da S4'un ekranlari)
+- [x] **Ana buton kurali** — acilis rehberinde "Sistem Ayarlari'ni Ac" ve
+      "Baglantiyi Test Et", ana ekrandaki guncelleme "Indir" ikincil oldu
+      (ekranin tek ana butonu Devam / Ac)
+- [x] **Hover ve hareket dili** — `DS.Interaction.wash` (fare uzerinde
+      %6, koyuda %8; basili %11 / %14), `DS.Animation.fast`, Hareketi
+      Azalt'ta animasyon yok, kapali %38; hepsi `DSWashedButton`'da tek yerde
+- [x] **Cam kurali** — metnin ustundeki cumle cevirisi seridi, PDF ve
+      EPUB arama cubuklari opak (`dsReadingOverlay`, sayfa temasini izler);
+      Inspector dugmeleri cam degil. Kenar cubugu, Inspector zemini, Hizli
+      Arama paneli cam kaldi. Sinav ekrani S4'te
+- [x] **Kural disi degerler** — renkler `DS.Color.warning` / yeni
+      `DS.Color.kindle`; yazi tipleri yeni `DS.Typography.serifTitle`,
+      `monoBody`, `monoCallout`; boşluklar DS adimlariyla birebir ayni
+      toplamlarda (yeni `DS.Spacing.hairline` = 1), kose yuvarlakliklari yeni
+      `DS.Radius.cell` / `hairline` / `cover`. Ilk taramanin disindaki
+      `Export/` klasorunde 4 deger daha bulundu ve tasindi
+- [x] **Denetim testi** — `DesignSystemAuditTests`: kaynakta cig yazi
+      tipi, sayiyla bosluk / kose yuvarlakligi, adla renk (`DS.` disinda)
+      yasak; `// DS-exempt: <sebep>` ayni satirda ya da iki ust satirda.
+      CLAUDE.md'deki "grep denetimi" hic kurulmamisti; artik CI'da.
+      Mutasyon: eklenen `.padding(.horizontal, 6)` testi dusuruyor.
+      Tam paket 760 yesil
+- [ ] Canli tur (kullanici)
 
 ## Sprint 2 — "Inspector'i sadelestirmek" (Must, **maketle baslar**)
 

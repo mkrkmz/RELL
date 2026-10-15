@@ -198,7 +198,7 @@ struct SavedWordsFilterBar: View {
             .font(DS.Typography.caption2.weight(.medium))
             .foregroundStyle(DS.Color.accent)
             .padding(.horizontal, DS.Spacing.xs)
-            .padding(.vertical, 1)
+            .padding(.vertical, DS.Spacing.hairline)
             .background(DS.Color.accentSubtle, in: Capsule())
         }
         .buttonStyle(.plain)

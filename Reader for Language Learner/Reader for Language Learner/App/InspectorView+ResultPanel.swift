@@ -93,8 +93,7 @@ extension InspectorView {
                         .padding(.horizontal, DS.Spacing.xxs)
                 }
 
-                DSGlassGroup(spacing: DS.Spacing.xxs) {
-                    HStack(spacing: DS.Spacing.xxs) {
+                HStack(spacing: DS.Spacing.xxs) {
                         resultToolbarButton(systemImage: "arrow.clockwise", label: "Refresh") {
                             Task { await runModule(module, forceRefresh: true) }
                         }
@@ -110,20 +109,19 @@ extension InspectorView {
                         .disabled(renderedOutput.isEmpty)
 
                         if isLoading {
-                            resultToolbarButton(systemImage: "xmark.circle.fill", label: "Cancel") {
+                            resultToolbarButton(systemImage: "xmark.circle.fill", label: "Cancel",
+                                                tint: DS.Color.danger.opacity(0.78)) {
                                 viewModel.cancel(module: module)
                             }
-                            .foregroundStyle(DS.Color.danger.opacity(0.78))
                             .help("Cancel")
                         } else {
-                            resultToolbarButton(systemImage: "xmark.circle.fill", label: "Close") {
+                            resultToolbarButton(systemImage: "xmark", label: "Close",
+                                                tint: DS.Color.textSecondary) {
                                 activeModule = nil
                             }
                             .help("Close (Esc)")
                         }
-                    }
                 }
-                .controlSize(.small)
             }
             .padding(.horizontal, DS.Spacing.sm)
             .padding(.vertical, DS.Spacing.xs)
@@ -172,18 +170,17 @@ extension InspectorView {
         openSettings()
     }
 
+    /// An icon alone (v18 S1: `DSIconButtonStyle`, no glass).
     private func resultToolbarButton(
         systemImage: String,
         label: LocalizedStringKey,
+        tint: Color = DS.Color.accent,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .font(DS.Typography.icon(11, weight: .medium))
-                .frame(width: 26, height: 26)
-                .dsGlassInteractive(cornerRadius: DS.Radius.sm)
+            Label(label, systemImage: systemImage)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(DSIconButtonStyle(tint: tint))
         .accessibilityLabel(label)
     }
 

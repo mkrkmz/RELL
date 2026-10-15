@@ -119,7 +119,7 @@ private struct HighlightRow: View {
     var body: some View {
         HStack(spacing: DS.Spacing.sm) {
             // Color spine
-            RoundedRectangle(cornerRadius: 2)
+            RoundedRectangle(cornerRadius: DS.Radius.hairline)
                 .fill(Color(nsColor: highlight.color.nsColor))
                 .frame(width: 4)
                 .frame(maxHeight: .infinity)

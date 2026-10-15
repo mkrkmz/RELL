@@ -184,7 +184,7 @@ extension ContentView {
             .foregroundStyle(DS.Color.textPrimary)
             .lineLimit(1)
             .padding(.horizontal, DS.Spacing.sm)
-            .padding(.vertical, 3)
+            .padding(.vertical, DS.Spacing.xxs + DS.Spacing.hairline)
             .background(DS.Color.surface, in: Capsule())
             .overlay(Capsule().strokeBorder(DS.Color.hairline, lineWidth: 0.6))
             .contentShape(Capsule())

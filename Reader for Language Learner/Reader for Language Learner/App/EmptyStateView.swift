@@ -563,16 +563,16 @@ private struct RecentDocumentRow: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: DS.Layout.coverMini.width, height: DS.Layout.coverMini.height)
-                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.cover))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 3)
+                    RoundedRectangle(cornerRadius: DS.Radius.cover)
                         .strokeBorder(DS.Color.hairlineStrong, lineWidth: 0.5)
                 )
                 .transition(.opacity)
         } else {
             DSCoverPlaceholder(iconSize: 12, fileExists: fileExists)
                 .frame(width: DS.Layout.coverMini.width, height: DS.Layout.coverMini.height)
-                .clipShape(RoundedRectangle(cornerRadius: 3))
+                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.cover))
         }
     }
 

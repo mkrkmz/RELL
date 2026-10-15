@@ -231,9 +231,8 @@ struct LLMSettingsView: View {
                     timeout = LLMConfiguration.defaultTimeout
                 } label: {
                     Image(systemName: "arrow.counterclockwise")
-                        .foregroundStyle(DS.Color.textTertiary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(DSIconButtonStyle(tint: DS.Color.textTertiary))
                 .help("Reset to default (30s)")
                 .accessibilityLabel("Reset to default")
             }

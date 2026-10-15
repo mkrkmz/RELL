@@ -30,7 +30,7 @@ struct PageIndicatorView: View {
                 .frame(minWidth: totalWidth)
         }
         .padding(.horizontal, DS.Spacing.sm)
-        .padding(.vertical, 3)
+        .padding(.vertical, DS.Spacing.xxs + DS.Spacing.hairline)
         .background(DS.Color.surfaceElevated)
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         .overlay(

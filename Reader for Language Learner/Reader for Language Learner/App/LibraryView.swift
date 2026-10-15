@@ -452,22 +452,22 @@ struct LibraryCard: View {
     @ViewBuilder
     private var wordsBadge: some View {
         if let savedWords, savedWords > 0, let onShowWords {
-            HStack(spacing: 3) {
+            HStack(spacing: DS.Spacing.xxs + DS.Spacing.hairline) {
                 Image(systemName: "character.book.closed")
                 Text("\(savedWords)")
                 if let dueWords, dueWords > 0 {
-                    Text("· \(dueWords)").foregroundStyle(Color.orange)
+                    Text("· \(dueWords)").foregroundStyle(DS.Color.warning)
                 }
             }
             .font(DS.Typography.caption2.weight(.bold))
             .monospacedDigit()
             .foregroundStyle(.white)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
+            .padding(.horizontal, DS.Spacing.xs + DS.Spacing.xxs)
+            .padding(.vertical, DS.Spacing.xxs)
             // DS-exempt: sits on the full-color cover photo, like CoverageBadge.
             .background(.black.opacity(0.6), in: Capsule())
-            .padding(.trailing, 5)
-            .padding(.bottom, 9)   // clear of the reading-progress bar
+            .padding(.trailing, DS.Spacing.xs + DS.Spacing.hairline)
+            .padding(.bottom, DS.Spacing.sm + DS.Spacing.hairline)   // clear of the reading-progress bar
             .contentShape(Capsule())
             // Over the card's own click: the badge opens the words.
             .highPriorityGesture(TapGesture().onEnded { onShowWords() })
@@ -570,9 +570,9 @@ struct LibraryCard: View {
                 Image(systemName: "pin.fill")
                     .font(DS.Typography.icon(9, weight: .semibold))
                     .foregroundStyle(.white)
-                    .padding(5)
+                    .padding(DS.Spacing.xs + DS.Spacing.hairline)
                     .background(.black.opacity(0.45), in: Circle())
-                    .padding(5)
+                    .padding(DS.Spacing.xs + DS.Spacing.hairline)
             }
         }
         .overlay(alignment: .topLeading) {
@@ -580,7 +580,7 @@ struct LibraryCard: View {
             // decides whether it's worth starting (L-V2).
             if let coverage = document.coverage?.profile, coverage.totalTokens > 0 {
                 CoverageBadge(profile: coverage, filled: true)
-                    .padding(5)
+                    .padding(DS.Spacing.xs + DS.Spacing.hairline)
             }
         }
         .overlay(alignment: .bottomTrailing) { wordsBadge }
@@ -666,9 +666,8 @@ private struct DocumentStatsSheet: View {
                     .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
                 Spacer()
-                Button("Close", systemImage: "xmark.circle.fill") { dismiss() }
-                    .buttonStyle(.plain)
-                    .labelStyle(.iconOnly)
+                Button("Close", systemImage: "xmark") { dismiss() }
+                    .buttonStyle(.dsIconSecondary)
                     .keyboardShortcut(.cancelAction)
                     .foregroundStyle(DS.Color.textTertiary)
             }
@@ -765,9 +764,8 @@ private struct ManageCollectionsSheet: View {
                     .font(DS.Typography.headline)
                     .foregroundStyle(DS.Color.textPrimary)
                 Spacer()
-                Button("Close", systemImage: "xmark.circle.fill") { dismiss() }
-                    .buttonStyle(.plain)
-                    .labelStyle(.iconOnly)
+                Button("Close", systemImage: "xmark") { dismiss() }
+                    .buttonStyle(.dsIconSecondary)
                     .keyboardShortcut(.cancelAction)
                     .foregroundStyle(DS.Color.textTertiary)
             }
@@ -816,8 +814,7 @@ private struct ManageCollectionsSheet: View {
                 } label: {
                     Image(systemName: "pencil")
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(DS.Color.textSecondary)
+                .buttonStyle(.dsIconSecondary)
                 .help("Rename collection")
                 .accessibilityLabel("Rename collection")
                 Button(role: .destructive) {
@@ -825,8 +822,7 @@ private struct ManageCollectionsSheet: View {
                 } label: {
                     Image(systemName: "trash")
                 }
-                .buttonStyle(.plain)
-                .foregroundStyle(DS.Color.danger)
+                .buttonStyle(DSIconButtonStyle(tint: DS.Color.danger))
                 .help("Delete collection")
                 .accessibilityLabel("Delete collection")
             }

@@ -30,13 +30,12 @@ struct UpdateNoticeBanner: View {
                 Spacer(minLength: 0)
                 Button("What's New") { showNotes = true }
                     .controlSize(.small)
+                // Secondary: the home screen's one primary is Open (v18 S1).
                 Button("Download") { NSWorkspace.shared.open(release.pageURL) }
                     .controlSize(.small)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                 Button("Hide", systemImage: "xmark") { checker.hideBanner(for: release) }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.plain)
-                    .foregroundStyle(DS.Color.textTertiary)
+                    .buttonStyle(.dsIconSecondary)
                     .help("Hide for this version")
                     .accessibilityLabel("Hide for this version")
             }

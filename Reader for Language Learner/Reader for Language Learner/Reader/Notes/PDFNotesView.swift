@@ -93,7 +93,7 @@ struct PDFNotesView: View {
                 Text(item.localizedTitle)
                 Text("\(count)")
                     .font(DS.Typography.caption2.weight(.bold))
-                    .padding(.horizontal, 5)
+                    .padding(.horizontal, DS.Spacing.xs + DS.Spacing.hairline)
                     .padding(.vertical, DS.Spacing.xxs)
                     .background(isSelected ? .white.opacity(0.18) : DS.Color.surfaceInset)
                     .clipShape(Capsule())
@@ -101,7 +101,7 @@ struct PDFNotesView: View {
             .font(DS.Typography.caption.weight(.semibold))
             .foregroundStyle(isSelected ? .white : DS.Color.textSecondary)
             .padding(.horizontal, DS.Spacing.sm)
-            .padding(.vertical, 6)
+            .padding(.vertical, DS.Spacing.xs + DS.Spacing.xxs)
             .background(isSelected ? DS.Color.accent : DS.Color.surfaceElevated)
             .clipShape(Capsule())
         }
@@ -284,13 +284,8 @@ private struct PDFNoteRow: View {
     private func rowAction(systemName: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(DS.Typography.icon(11, weight: .medium))
-                .foregroundStyle(DS.Color.textSecondary)
-                .frame(width: 26, height: 26)
-                .background(DS.Color.surfaceInset)
-                .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xs))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.dsIconSecondary)
         .help(help)
         .accessibilityLabel(help)
     }

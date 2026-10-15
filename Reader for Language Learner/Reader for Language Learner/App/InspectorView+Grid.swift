@@ -21,13 +21,11 @@ extension InspectorView {
             }
             .padding(.horizontal, DS.Spacing.xxs)
 
-            DSGlassGroup(spacing: DS.Spacing.xxs) {
-                HStack(spacing: DS.Spacing.xxs) {
-                    ForEach(ModuleType.inspectorFront, id: \.self) { module in
-                        moduleButton(for: module, shortcut: nil)
-                    }
-                    moreModulesMenu
+            HStack(spacing: DS.Spacing.xxs) {
+                ForEach(ModuleType.inspectorFront, id: \.self) { module in
+                    moduleButton(for: module, shortcut: nil)
                 }
+                moreModulesMenu
             }
             .padding(.horizontal, DS.Spacing.xxs)
         }
@@ -96,15 +94,10 @@ extension InspectorView {
         // .button + .plain draws the label as built (icon over title, like
         // the chips); .borderlessButton flattened it into one line.
         .menuStyle(.button)
-        .buttonStyle(.plain)
+        // v18 S1: a chip tile like the module buttons, not glass.
+        .buttonStyle(.dsChipTile(isOn: activeInMenu != nil, tint: activeInMenu?.accentColor ?? DS.Color.accent))
         .menuIndicator(.hidden)
         .frame(maxWidth: .infinity)
-        .dsGlassInteractive(
-            cornerRadius: DS.Radius.sm,
-            tint: nil,
-            fallback: AnyShapeStyle(activeInMenu.map { $0.accentColor.opacity(0.12) } ?? DS.Color.surfaceInset),
-            fallbackStroke: .none
-        )
         .help("More explanations and Run All (⇧⌘R)")
         .accessibilityLabel("More explanations")
     }
@@ -133,13 +126,6 @@ extension InspectorView {
         let hasError  = viewModel.errors[module] != nil
         let isEnabled = isModuleEnabled(module) || isLoading
 
-        // Glass tint carries the active state on macOS 26; the fallback mirrors
-        // the pre-glass fills so macOS 15 keeps a visible active indicator
-        // (glass replaces the old `matchedGeometryEffect` slide).
-        let fallbackFill: AnyShapeStyle = isActive
-            ? AnyShapeStyle(module.accentColor.opacity(compact ? 0.08 : 0.12))
-            : (compact ? AnyShapeStyle(DS.Color.panel) : AnyShapeStyle(DS.Color.surfaceInset))
-
         Button { toggleModule(module) } label: {
             VStack(spacing: DS.Spacing.xxs) {
                 ZStack(alignment: .topTrailing) {
@@ -156,6 +142,7 @@ extension InspectorView {
                 }
 
                 Text(module.shortTitle)
+                    // DS-exempt: the compact tile's 8 pt label fits five tiles in a narrow column.
                     .font(compact
                           ? .system(size: 8, weight: .regular)
                           : DS.Typography.caption2)
@@ -167,29 +154,16 @@ extension InspectorView {
                 isActive   ? module.accentColor :
                              compact ? DS.Color.textTertiary : DS.Color.textSecondary
             )
-            .dsGlassInteractive(
-                cornerRadius: DS.Radius.sm,
-                // Neutral frosted glass for every chip — the active one reads via
-                // its accent-colored glyph/label + accent stroke, not a colored
-                // fill. Tinting the glass with the accent killed contrast against
-                // the accent-colored label (`Glass.tint` is opaque and its alpha
-                // can't be softened), so the color identity rides the content.
-                tint: nil,
-                fallback: fallbackFill,
-                fallbackStroke: .none
-            )
             .overlay {
-                // Error / active edge that the glass tint alone doesn't convey.
-                RoundedRectangle(cornerRadius: DS.Radius.sm)
-                    .stroke(
-                        hasError && !isActive ? DS.Color.danger.opacity(0.26) :
-                        isActive ? module.accentColor.opacity(0.36) : .clear,
-                        lineWidth: 1
-                    )
+                // An error edge the chip's own states don't carry.
+                if hasError && !isActive {
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .strokeBorder(DS.Color.danger.opacity(0.26), lineWidth: 1)
+                }
             }
-            .contentShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
-        .buttonStyle(.plain)
+        // v18 S1: a chip tile (light fill when open, hairline otherwise), not glass.
+        .buttonStyle(.dsChipTile(isOn: isActive, tint: module.accentColor))
         .animation(DS.Animation.springFast, value: isActive)
         .animation(DS.Animation.standard,   value: hasOutput)
         .if(shortcut != nil) { view in

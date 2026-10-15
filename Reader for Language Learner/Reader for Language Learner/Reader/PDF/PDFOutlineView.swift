@@ -209,12 +209,12 @@ struct PDFOutlineItemView: View {
                         .font(DS.Typography.mono)
                         .foregroundStyle(DS.Color.textTertiary)
                         .padding(.horizontal, DS.Spacing.xs)
-                        .padding(.vertical, 1)
+                        .padding(.vertical, DS.Spacing.hairline)
                         .background(DS.Color.surfaceElevated)
                         .clipShape(Capsule())
                 }
             }
-            .padding(.vertical, 5)
+            .padding(.vertical, DS.Spacing.xs + DS.Spacing.hairline)
             .padding(.leading, DS.Spacing.sm)
             .padding(.trailing, DS.Spacing.sm)
             .background(isHovered ? DS.Color.hoverOverlay : .clear)

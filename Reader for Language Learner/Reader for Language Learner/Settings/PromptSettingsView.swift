@@ -85,7 +85,7 @@ struct PromptSettingsView: View {
     private var preambleEditor: some View {
         VStack(alignment: .leading, spacing: DS.Spacing.xs) {
             TextEditor(text: $customPreamble)
-                .font(.system(.callout, design: .monospaced))
+                .font(DS.Typography.monoCallout)
                 .frame(minHeight: 80, maxHeight: 120)
                 .scrollContentBackground(.hidden)
                 .padding(DS.Spacing.sm)
@@ -142,10 +142,8 @@ struct PromptSettingsView: View {
                         saveOverrides(dict)
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
-                            .font(.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(DSIconButtonStyle(tint: DS.Color.textTertiary))
                     .help("Reset to default (\(String(format: "%.2f", defaultTemp)))")
                     .accessibilityLabel("Reset to default")
                 } else {

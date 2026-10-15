@@ -32,9 +32,7 @@ struct KindleNoticeBanner: View {
                     Button("Import…") { showImport = true }
                         .controlSize(.small)
                     Button("Hide", systemImage: "xmark") { hiddenAtCount = newWords }
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.plain)
-                        .foregroundStyle(DS.Color.textTertiary)
+                        .buttonStyle(.dsIconSecondary)
                         .help("Hide until the Kindle has more new words")
                         .accessibilityLabel("Hide until the Kindle has more new words")
                 }

@@ -193,7 +193,8 @@ struct OnboardingView: View {
                         Button("Open System Settings") {
                             NSWorkspace.shared.open(AppleOnDevice.appleIntelligenceSettingsURL)
                         }
-                        .buttonStyle(.borderedProminent)
+                        // Secondary: Continue is this screen's one primary (v18 S1).
+                        .buttonStyle(.bordered)
                         Button("Check Again") { appleCheck += 1 }
                     }
                     Text("After you turn it on, the model can take a few minutes to download. RELL starts using it as soon as it's ready.")
@@ -288,7 +289,8 @@ struct OnboardingView: View {
                             Label("Test Connection", systemImage: "bolt")
                         }
                     }
-                    .buttonStyle(.borderedProminent)
+                    // Secondary: Continue is this screen's one primary (v18 S1).
+                    .buttonStyle(.bordered)
                     .disabled(connectionStatus == .testing)
 
                     connectionFeedback

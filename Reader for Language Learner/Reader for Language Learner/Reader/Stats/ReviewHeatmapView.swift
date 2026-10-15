@@ -82,11 +82,11 @@ struct ReviewHeatmapView: View {
                         VStack(spacing: cellSpacing) {
                             ForEach(week) { cell in
                                 if let day = cell.day {
-                                    RoundedRectangle(cornerRadius: 1.3)
+                                    RoundedRectangle(cornerRadius: DS.Radius.cell)
                                         .fill(color(for: day.count))
                                         .frame(width: cellSize, height: cellSize)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 1.3)
+                                            RoundedRectangle(cornerRadius: DS.Radius.cell)
                                                 .strokeBorder(DS.Color.hairline, lineWidth: 0.4)
                                         )
                                         .help(helpText(for: day))

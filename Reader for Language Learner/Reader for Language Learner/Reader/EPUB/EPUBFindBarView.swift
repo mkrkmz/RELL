@@ -25,10 +25,8 @@ struct EPUBFindBarView: View {
                 resultsList
             }
         }
-        .dsGlassCard(
-            radius: DS.Radius.sm,
-            fallback: AnyShapeStyle(DS.Color.surfaceElevated.opacity(0.94))
-        )
+        // Over the page's text, so opaque and page-themed, not glass (v18 S1).
+        .dsReadingOverlay(RoundedRectangle(cornerRadius: DS.Radius.sm))
     }
 
     private var searchRow: some View {

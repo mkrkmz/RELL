@@ -41,15 +41,15 @@ extension InspectorView {
     // MARK: - Quick Actions (inside the card)
 
     /// Save, listen, Anki and the rest — labelled, inside the card. Before
-    /// v14 S2 these were unlabelled icons in a row of their own.
+    /// v14 S2 these were unlabelled icons in a row of their own; quiet since
+    /// v18 S1 (no fill, the icon in colour).
     var quickActions: some View {
         HStack(spacing: DS.Spacing.xs) {
             if isSingleWordSelection {
                 Button(action: toggleSaveWord) {
                     Label(isCurrentlySaved ? "Saved" : "Save", systemImage: isCurrentlySaved ? "star.fill" : "star")
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(isCurrentlySaved ? DS.Color.star : DS.Color.accent)
+                .buttonStyle(.dsQuiet)
                 .keyboardShortcut("d", modifiers: [.command])
                 .help(isCurrentlySaved ? "Remove from saved vocabulary (⌘D)" : "Save to vocabulary (⌘D)")
             }
@@ -60,7 +60,7 @@ extension InspectorView {
                 Label(speechManager.isSpeaking ? "Stop" : "Listen",
                       systemImage: speechManager.isSpeaking ? "stop.fill" : "play.fill")
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.dsQuiet)
             .keyboardShortcut("s", modifiers: [.command, .shift])
             .help(speechManager.isSpeaking ? "Stop speaking (⇧⌘X)" : "Speak selected text (⇧⌘S)")
 
@@ -70,7 +70,7 @@ extension InspectorView {
                 } label: {
                     Label("Anki", systemImage: "square.and.arrow.up")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.dsQuiet)
                 .help("Quick Export to Anki")
             } else {
                 Button {
@@ -78,7 +78,7 @@ extension InspectorView {
                 } label: {
                     Label("Copy", systemImage: "doc.on.doc")
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.dsQuiet)
                 .help("Copy Text")
             }
 
@@ -86,8 +86,6 @@ extension InspectorView {
 
             overflowMenu
         }
-        .controlSize(.small)
-        .font(DS.Typography.caption.weight(.medium))
         .lineLimit(1)
         // Keeps ⌘E (export) and ⇧⌘X (stop) working while their menu is closed.
         .background(exportShortcutButton)

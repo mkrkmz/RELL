@@ -40,10 +40,8 @@ struct SpeechPlaybackBar: View {
                 manager.stop()
             } label: {
                 Image(systemName: "stop.fill")
-                    .font(DS.Typography.icon(13, weight: .medium))
-                    .foregroundStyle(DS.Color.textPrimary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DSIconButtonStyle(tint: DS.Color.textPrimary))
             .help("Stop speaking")
             .accessibilityLabel("Stop speaking")
 
@@ -51,10 +49,8 @@ struct SpeechPlaybackBar: View {
                 karaokeEnabled.toggle()
             } label: {
                 Image(systemName: karaokeEnabled ? "text.line.first.and.arrowtriangle.forward" : "text.alignleft")
-                    .font(DS.Typography.icon(13, weight: .medium))
-                    .foregroundStyle(karaokeEnabled ? DS.Color.accent : DS.Color.textSecondary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DSIconButtonStyle(tint: karaokeEnabled ? DS.Color.accent : DS.Color.textSecondary))
             .help(karaokeEnabled ? "Stop following the spoken sentence" : "Follow the spoken sentence")
             .accessibilityLabel("Follow the spoken sentence")
             .accessibilityValue(karaokeEnabled ? "On" : "Off")

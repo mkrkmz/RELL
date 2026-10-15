@@ -31,7 +31,7 @@ struct SentenceTranslationStrip: View {
             Image(systemName: "character.bubble")
                 .font(DS.Typography.icon(12, weight: .semibold))
                 .foregroundStyle(DS.Color.accent)
-                .padding(.top, 1)
+                .padding(.top, DS.Spacing.hairline)
 
             content
 
@@ -48,12 +48,8 @@ struct SentenceTranslationStrip: View {
         }
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, DS.Spacing.sm)
-        // A floating bar over the reader — chrome, so it takes glass on macOS 26.
-        .dsGlassCard(
-            radius: DS.Radius.sm,
-            fallback: AnyShapeStyle(DS.Color.surfaceElevated),
-            fallbackStroke: .hairline
-        )
+        // Over the page's text, so opaque and page-themed, not glass (v18 S1).
+        .dsReadingOverlay(RoundedRectangle(cornerRadius: DS.Radius.sm))
         .task(id: sentence) { await load() }
         .translationTask(appleConfiguration) { [sentence] session in
             // The session lives only for this closure and is used by nothing

@@ -115,7 +115,7 @@ private struct EPUBHighlightRow: View {
 
     var body: some View {
         HStack(spacing: DS.Spacing.sm) {
-            RoundedRectangle(cornerRadius: 2)
+            RoundedRectangle(cornerRadius: DS.Radius.hairline)
                 .fill(Color(nsColor: highlight.color.nsColor))
                 .frame(width: 4)
                 .frame(maxHeight: .infinity)
