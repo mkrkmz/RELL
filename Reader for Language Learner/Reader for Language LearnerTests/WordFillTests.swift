@@ -95,7 +95,7 @@ final class WordFillTests: XCTestCase {
         let yours = SavedWord(term: "landlady", sentence: "He owed his landlady money.",
                               llmOutputs: [ModuleType.meaningTR.rawValue: "ev sahibesi"])
         for word in [translated, noSentence, yours] { store.add(word) }
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: "WordFillTests-\(UUID().uuidString)"))
+        let defaults = scratchDefaults()
         let enricher = WordEnricher(store: store, cefrEstimator: nil, observesSaves: false)
 
         // Version 2 ran on the live-pass Mac with half the fixes; 3 runs again.

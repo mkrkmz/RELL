@@ -95,7 +95,7 @@ final class OrganizeTests: XCTestCase {
         let data = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: data, withIntermediateDirectories: true)
         try Data("[]".utf8).write(to: data.appendingPathComponent("saved_words.json"))
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: "OrganizeTests-\(UUID().uuidString)"))
+        let defaults = scratchDefaults()
         var last: URL?
         for minute in 0..<7 {
             last = PersistenceBackup.snapshotBeforeChange("merge", dataDirectory: data, defaults: defaults,

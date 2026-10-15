@@ -15,11 +15,7 @@ final class ReaderWindowModelTests: XCTestCase {
     private static var retained: [AnyObject] = []
 
     private func makeModel(defaults: UserDefaults? = nil) -> ReaderWindowModel {
-        let suite = defaults ?? {
-            let name = "ReaderWindowModelTests-\(UUID().uuidString)"
-            addTeardownBlock { UserDefaults.standard.removePersistentDomain(forName: name) }
-            return UserDefaults(suiteName: name)!
-        }()
+        let suite = defaults ?? scratchDefaults()
         let model = ReaderWindowModel(defaults: suite)
         Self.retained.append(model)
         return model
@@ -97,9 +93,7 @@ final class ReaderWindowModelTests: XCTestCase {
     // MARK: Reading positions
 
     func testReadingPositionsPersistPerDocument() async {
-        let name = "ReaderWindowModelTests-\(UUID().uuidString)"
-        addTeardownBlock { UserDefaults.standard.removePersistentDomain(forName: name) }
-        let defaults = UserDefaults(suiteName: name)!
+        let defaults = scratchDefaults()
 
         let first = makeModel(defaults: defaults)
         first.persistPage(13, for: "book-a")
@@ -115,9 +109,7 @@ final class ReaderWindowModelTests: XCTestCase {
     /// Same key and JSON shape as the old `@AppStorage("readingPositions")`,
     /// so positions saved before v1.41 still restore.
     func testReadsPositionsWrittenByEarlierVersions() async throws {
-        let name = "ReaderWindowModelTests-\(UUID().uuidString)"
-        addTeardownBlock { UserDefaults.standard.removePersistentDomain(forName: name) }
-        let defaults = UserDefaults(suiteName: name)!
+        let defaults = scratchDefaults()
         defaults.set(try JSONEncoder().encode(["legacy-book": 41]), forKey: "readingPositions")
 
         XCTAssertEqual(makeModel(defaults: defaults).savedPageIndex(for: "legacy-book"), 41)

@@ -22,10 +22,7 @@ final class PersistenceSafetyTests: XCTestCase {
     }
 
     private func makeDefaults() -> UserDefaults {
-        let name = "PersistenceSafetyTests-\(UUID().uuidString)"
-        let defaults = UserDefaults(suiteName: name)!
-        addTeardownBlock { UserDefaults.standard.removePersistentDomain(forName: name) }
-        return defaults
+        scratchDefaults()
     }
 
     private func terms(at url: URL) throws -> [String] {

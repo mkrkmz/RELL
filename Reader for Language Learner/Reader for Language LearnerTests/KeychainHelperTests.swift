@@ -38,7 +38,7 @@ final class KeychainHelperTests: XCTestCase {
     // MARK: - Legacy UserDefaults migration
 
     private func makeDefaults() -> UserDefaults {
-        UserDefaults(suiteName: "KeychainHelperTests.\(UUID().uuidString)")!
+        scratchDefaults()
     }
 
     func testMigrationMovesLegacyKeyAndClearsDefaults() async {

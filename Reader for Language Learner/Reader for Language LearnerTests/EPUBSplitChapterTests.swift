@@ -47,14 +47,44 @@ final class EPUBSplitChapterTests: XCTestCase {
 
     // MARK: - Against a real split book
 
-    /// End-to-end on the book that surfaced this: every table-of-contents entry
-    /// must land on prose, not on a heading stub.
-    func testRealSplitBookResolvesTOCEntriesToProse() async throws {
-        let path = ("~/Downloads/Why We Sleep_ Unlocking the Power of Sleep and Dreams -- Walker, Matthew -- 2215bbe2fa1ffc1b477714adb7464da8 -- Anna’s Archive.epub" as NSString).expandingTildeInPath
-        guard FileManager.default.fileExists(atPath: path) else {
-            throw XCTSkip("sample book not present on this machine")
-        }
-        let document = try EPUBDocument(url: URL(fileURLWithPath: path))
+    // MARK: - Books made for the test (v18 S0)
+    //
+    // These ran on real books in the developer's Downloads folder — skipped
+    // on every other machine, 70–150 s on that one, and a personal file name
+    // in the repository. Now small books built with `MiniEPUB`: a split one
+    // (each chapter's heading on its own page, the way some converters
+    // produce them) and an ordinary one.
+
+    private static let prose = (0..<12).map { _ in
+        ExtractedArticle.Block(text: String(repeating: "The old harbour lay quiet under a pewter sky. ", count: 5),
+                               isHeading: false)
+    }
+
+    /// Headings split off onto their own pages, the prose on the next.
+    private func splitBook() throws -> EPUBDocument {
+        try book(named: "split", chapters: [
+            .init(title: "One: The Harbour", blocks: []),
+            .init(title: "", blocks: Self.prose),
+            .init(title: "Two: The Market", blocks: []),
+            .init(title: "", blocks: Self.prose),
+        ])
+    }
+
+    private func ordinaryBook() throws -> EPUBDocument {
+        try book(named: "ordinary", chapters: (1...4).map { .init(title: "Chapter \($0)", blocks: Self.prose) })
+    }
+
+    private func book(named name: String, chapters: [MiniEPUB.Chapter]) throws -> EPUBDocument {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("EPUBSplitChapterTests-\(name)-\(UUID().uuidString).epub")
+        try MiniEPUB.build(title: "Test Book", author: nil, language: "en", chapters: chapters).write(to: url)
+        addTeardownBlock { try? FileManager.default.removeItem(at: url) }
+        return try EPUBDocument(url: url)
+    }
+
+    /// Every table-of-contents entry must land on prose, not on a heading stub.
+    func testSplitBookResolvesTOCEntriesToProse() async throws {
+        let document = try splitBook()
 
         var stubsFound = 0
         for entry in document.tocEntries {
@@ -64,8 +94,7 @@ final class EPUBSplitChapterTests: XCTestCase {
 
             if document.isHeadingStub(at: index) { stubsFound += 1 }
 
-            // The reader must never *land* on a stub. (Part dividers are
-            // legitimately short and aren't stubs — nothing was split off them.)
+            // The reader must never *land* on a stub.
             let readable = document.readableChapterIndex(for: index)
             XCTAssertFalse(
                 document.isHeadingStub(at: readable),
@@ -77,22 +106,16 @@ final class EPUBSplitChapterTests: XCTestCase {
 
     /// Reading the folded chapter must show the heading that was split off,
     /// so nothing the author wrote disappears.
-    func testRealSplitBookServesTheHeadingWithTheProse() async throws {
-        let path = ("~/Downloads/Why We Sleep_ Unlocking the Power of Sleep and Dreams -- Walker, Matthew -- 2215bbe2fa1ffc1b477714adb7464da8 -- Anna’s Archive.epub" as NSString).expandingTildeInPath
-        guard FileManager.default.fileExists(atPath: path) else {
-            throw XCTSkip("sample book not present on this machine")
-        }
-        let document = try EPUBDocument(url: URL(fileURLWithPath: path))
+    func testSplitBookServesTheHeadingWithTheProse() async throws {
+        let document = try splitBook()
 
         guard let stubIndex = (0..<document.chapterCount).first(where: { document.isHeadingStub(at: $0) }) else {
             return XCTFail("precondition: expected a heading stub")
         }
-        // The stub's *visible* heading — `plainText` would also pull in the
-        // document head's <title>, which isn't what the page shows.
         let stubHTML = String(decoding: try document.chapterData(at: stubIndex), as: UTF8.self)
         let stubBody = try XCTUnwrap(EPUBDocument.bodyInnerHTML(of: stubHTML))
         let headingText = EPUBDocument.visibleText(in: stubBody)
-        XCTAssertFalse(headingText.isEmpty, "precondition: the stub shows a heading")
+        XCTAssertEqual(headingText, "One: The Harbour")
 
         let proseIndex = stubIndex + 1
         let served = try document.resource(at: document.chapterPath(at: proseIndex))
@@ -106,13 +129,11 @@ final class EPUBSplitChapterTests: XCTestCase {
 
     /// A book that isn't split must be served untouched.
     func testOrdinaryBookIsNotReshuffled() async throws {
-        let path = ("~/Downloads/Crime and Punishment.epub" as NSString).expandingTildeInPath
-        guard FileManager.default.fileExists(atPath: path) else {
-            throw XCTSkip("sample book not present on this machine")
-        }
-        let document = try EPUBDocument(url: URL(fileURLWithPath: path))
+        let document = try ordinaryBook()
+        XCTAssertGreaterThanOrEqual(document.chapterCount, 4)
 
         for index in 0..<document.chapterCount {
+            XCTAssertFalse(document.isHeadingStub(at: index))
             XCTAssertEqual(
                 document.readableChapterIndex(for: index), index,
                 "chapter \(index) of an unsplit book should resolve to itself"

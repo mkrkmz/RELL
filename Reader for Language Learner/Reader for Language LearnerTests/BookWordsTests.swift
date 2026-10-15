@@ -58,7 +58,7 @@ final class BookWordsTests: XCTestCase {
         XCTAssertEqual(Set(book.saved.map(\.term)), ["drowsy", "brainwave"])
         XCTAssertEqual(book.met.map(\.term), ["manure"], "met in this very file still counts")
 
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: "BookWordsTests-\(UUID().uuidString)"))
+        let defaults = scratchDefaults()
         XCTAssertTrue(BookWords.matchesTitles(forDocumentAt: path, defaults: defaults), "on by default")
         BookWords.setMatchesTitles(false, forDocumentAt: path, defaults: defaults)
         XCTAssertFalse(BookWords.matchesTitles(forDocumentAt: path, defaults: defaults))

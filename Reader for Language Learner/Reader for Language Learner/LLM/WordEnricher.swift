@@ -314,9 +314,15 @@ final class WordEnricher {
 
     /// Where an unfinished run is remembered. A test host keeps it out of
     /// the user's own preferences.
-    @ObservationIgnored var pendingDefaults: UserDefaults = RELLProcess.isTestHost
-        ? (UserDefaults(suiteName: "rell-test-host-\(ProcessInfo.processInfo.processIdentifier)") ?? .standard)
-        : .standard
+    @ObservationIgnored var pendingDefaults: UserDefaults = RELLProcess.isTestHost ? testHostDefaults : .standard
+
+    /// One suite for every test-host run, emptied when the run starts — a
+    /// name per process left a file per run in ~/Library/Preferences.
+    private static let testHostDefaults: UserDefaults = {
+        let name = "rell-test-host"
+        UserDefaults.standard.removePersistentDomain(forName: name)
+        return UserDefaults(suiteName: name) ?? .standard
+    }()
 
     private func savePending(_ ids: [UUID], fields: Set<FillField>) {
         pendingDefaults.set(ids.map(\.uuidString), forKey: StorageKey.fillPendingWordIDs)

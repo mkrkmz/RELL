@@ -79,12 +79,21 @@ CloudKit), iOS.
 
 ## Sprint 0 — "Guvenilirlik borcu" (Must, kisa)
 
-- [ ] Testlerin `~/Library/Preferences` icinde biraktigi ayar dosyalari
-      (`ReaderWindowModelTests-<UUID>`, `rell-test-host-<pid>`): her test
-      kendi suite'ini siler; mevcut artiklar yalniz onayla silinir
-- [ ] `EPUBSplitChapterTests.testOrdinaryBookIsNotReshuffled` gelistirme
-      makinesindeki bir kitaba bagli (70–150 sn): projenin `ZIPWriter` /
-      `MiniEPUB`'iyla uretilen kucuk bir ornek kitapla degistirilir
+- [x] **Test ayar dosyalari** — sebep: `removePersistentDomain` alani
+      bosaltiyor ama 42 baytlik bos dosyasini birakiyor; her test her
+      calismada yeni UUID adli suite actigi icin 659 dosya birikmisti.
+      `scratchDefaults()` (test sinifi basina sabit ad, testten once ve
+      sonra bosaltilir) 9 kullanimin hepsinde; test sunucusunun suite'i
+      sabit `rell-test-host`, her calismada bosaltilir. Iki ardisik tam
+      calismada dosya sayisi 8'de sabit. Eski 659 artik onayla silindi
+- [x] **Ornek kitaplar** — gelistirme makinesindeki kitaplara bagli uc
+      EPUB testi (bolumlenmis kitap ×2, siradan kitap; 70–150 sn, diger
+      makinelerde atlaniyordu) `MiniEPUB` ile uretilen kucuk kitaplara
+      gecti: basliklari ayri sayfada bir kitap ve siradan bir kitap. Uc
+      test 0,1 sn
+- [x] Gozlem: `DocumentCoverStoreTests` tam paket yuku altinda bir kez
+      dustu (PDF kapagi zaman asimi), tek basina ve ikinci tam calismada
+      yesil — dalgali; S5'te tekrar bakilir
 - [ ] **1.47.2** yayini (onayla)
 
 ## Sprint 1 — "Tasarim sistemi turu" (Must, **maketle baslar**)

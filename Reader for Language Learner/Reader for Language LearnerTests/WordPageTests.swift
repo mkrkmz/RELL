@@ -65,7 +65,7 @@ final class WordPageTests: XCTestCase {
     // MARK: - Jump
 
     func testPreparedPDFJumpIsWhereTheDocumentOpens() async throws {
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: "WordPageTests-\(UUID())"))
+        let defaults = scratchDefaults()
         let url = URL(fileURLWithPath: "/tmp/Some Book.pdf")
         DocumentJump.prepare(DocumentLocation(url: url, location: 41, isEPUB: false), defaults: defaults)
         let model = ReaderWindowModel(defaults: defaults)

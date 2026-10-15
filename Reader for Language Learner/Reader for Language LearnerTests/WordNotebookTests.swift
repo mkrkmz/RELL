@@ -144,7 +144,7 @@ final class WordNotebookTests: XCTestCase {
     // MARK: Helpers
 
     private func isolated(_ enricher: WordEnricher) -> WordEnricher {
-        enricher.pendingDefaults = UserDefaults(suiteName: "WordNotebookTests-\(UUID().uuidString)")!
+        enricher.pendingDefaults = scratchDefaults()
         return enricher
     }
 
