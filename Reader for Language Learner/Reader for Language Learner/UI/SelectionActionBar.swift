@@ -9,12 +9,20 @@
 //  action closures, which route into the reader's existing selection handlers.
 //
 //  It floats over the text, so it's an opaque, page-themed capsule rather
-//  than glass (v14 S1 — see ReadingOverlay.swift).
+//  than glass (v14 S1 — see ReadingOverlay.swift). Since 1.47.2 its buttons
+//  have no fill: labels in the page's text colour, colour only in the icons,
+//  a faint highlight under the pointer — and it can be turned off in
+//  Settings ▸ Reading (the right-click menu and the Inspector do the same).
 //
 
 import SwiftUI
 
 struct SelectionActionBar: View {
+    /// Settings ▸ Reading ▸ Selection Bar (1.47.2); on by default.
+    static var isEnabled: Bool {
+        UserDefaults.standard.object(forKey: StorageKey.selectionBarEnabled) as? Bool ?? true
+    }
+
     let onSave: () -> Void
     let onAnalyze: () -> Void
     let onHighlight: (HighlightColor) -> Void
@@ -36,29 +44,17 @@ struct SelectionActionBar: View {
     // (`SelectionMenu`). Before, seven unlabelled icons.
     var body: some View {
         HStack(spacing: 2) {
-            labelledButton(
-                isSaved ? "Saved" : "Save",
-                icon: isSaved ? "bookmark.fill" : "bookmark",
-                prominent: !isSaved,
-                help: isSaved ? "Saved" : "Save Word",
-                action: onSave
-            )
-            labelledButton("Analyze", icon: "sparkles", prominent: false, help: "Analyze in the Inspector", action: onAnalyze)
+            BarButton(title: isSaved ? "Saved" : "Save",
+                      icon: isSaved ? "bookmark.fill" : "bookmark",
+                      help: isSaved ? "Saved" : "Save Word",
+                      action: onSave)
+            BarButton(title: "Analyze", icon: "sparkles", help: "Analyze in the Inspector", action: onAnalyze)
 
             Divider()
                 .frame(height: 16)
                 .padding(.horizontal, DS.Spacing.xxs)
 
-            Button(action: onSpeak) {
-                Image(systemName: "speaker.wave.2")
-                    .font(DS.Typography.icon(13, weight: .medium))
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .frame(width: 30, height: 26)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help("Speak")
-            .accessibilityLabel("Speak")
+            BarButton(title: nil, icon: "speaker.wave.2", help: "Speak", action: onSpeak)
 
             toolsMenu
         }
@@ -101,6 +97,7 @@ struct SelectionActionBar: View {
         } label: {
             Text("Tools")
                 .font(DS.Typography.caption.weight(.medium))
+                .foregroundStyle(DS.Color.textSecondary)
         }
         .menuStyle(.borderlessButton)
         .menuIndicator(.visible)
@@ -110,24 +107,37 @@ struct SelectionActionBar: View {
         .help("Simplify, retell, highlight, speak, copy")
         .accessibilityLabel("Tools")
     }
+}
 
-    private func labelledButton(
-        _ title: LocalizedStringKey,
-        icon: String,
-        prominent: Bool,
-        help: LocalizedStringKey,
-        action: @escaping () -> Void
-    ) -> some View {
+/// A bar button without a fill (1.47.2): the icon in the accent colour, the
+/// label in the page's text colour, a faint highlight under the pointer.
+private struct BarButton: View {
+    let title: LocalizedStringKey?
+    let icon: String
+    let help: LocalizedStringKey
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
         Button(action: action) {
-            Label(title, systemImage: icon)
-                .font(DS.Typography.caption.weight(.semibold))
-                .foregroundStyle(prominent ? SwiftUI.Color.white : DS.Color.accent)
-                .padding(.horizontal, DS.Spacing.sm + 2)
-                .frame(height: 26)
-                .background(prominent ? DS.Color.accent : DS.Color.accentSubtle, in: Capsule())
-                .contentShape(Capsule())
+            HStack(spacing: DS.Spacing.xs) {
+                Image(systemName: icon)
+                    .font(DS.Typography.icon(12, weight: .semibold))
+                    .foregroundStyle(DS.Color.accent)
+                if let title {
+                    Text(title)
+                        .font(DS.Typography.caption.weight(.semibold))
+                        .foregroundStyle(DS.Color.textPrimary)
+                }
+            }
+            .padding(.horizontal, title == nil ? DS.Spacing.sm : DS.Spacing.sm + 2)
+            .frame(height: 26)
+            .background(hovering ? DS.Color.hoverOverlay : .clear, in: Capsule())
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .onHover { hovering = $0 }
         .help(help)
+        .accessibilityLabel(title ?? help)
     }
 }

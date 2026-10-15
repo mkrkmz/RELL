@@ -522,7 +522,8 @@ final class EPUBViewManager: NSObject {
     /// Shows the floating action bar above the current selection, or hides it
     /// when the selection is empty / has no measurable rect.
     private func updateSelectionBar(text: String, rect: CGRect) {
-        guard let webView,
+        guard SelectionActionBar.isEnabled,
+              let webView,
               !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               rect.width > 0, rect.height > 0
         else {

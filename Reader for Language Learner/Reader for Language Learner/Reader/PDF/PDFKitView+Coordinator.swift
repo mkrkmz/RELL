@@ -247,7 +247,8 @@ extension PDFKitView {
         /// Shows the floating action bar above the current selection, or hides
         /// it when there is nothing selected / it scrolled out of view.
         @MainActor func updateSelectionBar() {
-            guard let pdfView,
+            guard SelectionActionBar.isEnabled,
+                  let pdfView,
                   let selection = pdfView.currentSelection,
                   let raw = selection.string?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !raw.isEmpty,

@@ -16,6 +16,15 @@ project follows [Semantic Versioning](https://semver.org).
   column again and scrolls on its own; the short-window layout is kept
   for windows that are really short.
 
+### Changed
+
+- **A quieter selection bar.** The bar over a text selection has no
+  filled buttons any more: labels in the page's text colour, colour only
+  in the icons (Save, Analyze, Speak), a faint highlight under the
+  pointer; a saved word shows a filled bookmark.
+- **The selection bar can be turned off** in Settings ▸ Reading ▸ On the
+  Page. The right-click menu and the Inspector do the same things.
+
 ## [1.47.1] - 2026-10-14
 
 Apple's on-device model, seen on another Mac: it answers one request at a

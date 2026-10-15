@@ -44,6 +44,14 @@ struct ReadingSettingsView: View {
                     }
                 }
                 .disabled(!hoverDictionaryEnabled)
+                Toggle(isOn: $selectionBarEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Selection Bar")
+                        Text("Show Save, Analyze, Speak and Tools when you select text. When it's off, the right-click menu and the Inspector do the same.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
                 Toggle(isOn: $sentenceTranslationEnabled) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Sentence Translation")
@@ -123,6 +131,7 @@ struct ReadingSettingsView: View {
     }
 
     @AppStorage(StorageKey.hoverDictionaryEnabled) private var hoverDictionaryEnabled = true
+    @AppStorage(StorageKey.selectionBarEnabled) private var selectionBarEnabled = true
     @AppStorage(HoverDictionaryLanguage.storageKey)
     private var hoverDictionaryLanguageRaw = HoverDictionaryLanguage.default.rawValue
     @AppStorage(StorageKey.sentenceTranslationEnabled) private var sentenceTranslationEnabled = true

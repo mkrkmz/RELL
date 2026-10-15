@@ -11252,6 +11252,16 @@
         }
       }
     },
+    "Selection Bar" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçim Çubuğu"
+          }
+        }
+      }
+    },
     "Sends a short sentence to each engine, one after the other. About 20 seconds." : {
       "localizations" : {
         "tr" : {
@@ -11530,6 +11540,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pasajı Göster"
+          }
+        }
+      }
+    },
+    "Show Save, Analyze, Speak and Tools when you select text. When it's off, the right-click menu and the Inspector do the same." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metin seçince Kaydet, Analiz Et, Seslendir ve Araçlar'ı göster. Kapalıyken aynı işleri sağ tık menüsü ve Inspector yapar."
           }
         }
       }

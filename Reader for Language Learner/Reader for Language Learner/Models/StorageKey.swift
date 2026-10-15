@@ -62,6 +62,8 @@ nonisolated enum StorageKey {
     static let updateCheckEnabled = "updateCheckEnabled"
     static let updateLastCheck = "updateLastCheck"
     static let updateHiddenVersion = "updateHiddenVersion"
+    /// 1.47.2: the floating bar over a text selection (default on).
+    static let selectionBarEnabled = "selectionBarEnabled"
     static let grammarLensExpanded = "grammarLensExpanded"
     static let hasCompletedOnboarding = "hasCompletedOnboarding"
     /// The "major.minor" whose What's New page was last shown (v14 S3).
