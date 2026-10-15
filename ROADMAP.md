@@ -94,7 +94,7 @@ CloudKit), iOS.
 - [x] Gozlem: `DocumentCoverStoreTests` tam paket yuku altinda bir kez
       dustu (PDF kapagi zaman asimi), tek basina ve ikinci tam calismada
       yesil — dalgali; S5'te tekrar bakilir
-- [ ] **1.47.2** yayini (onayla)
+- [x] **1.47.2** yayinlandi (2026-10-15; Release is akisi yesil, DMG + zip, Latest)
 
 ## Sprint 1 — "Tasarim sistemi turu" (Must, **maketle baslar**)
 
