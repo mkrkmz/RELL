@@ -225,12 +225,19 @@ struct DictionaryEntry: Equatable {
 
     /// The senses of the first part of speech, cleaned, in entry order.
     var senses: [String] {
+        senses(isEnglishWord: { SpellingCheck.isWord($0, in: .english) })
+    }
+
+    /// `senses`, with the check that finds where a glued inflection ends
+    /// ("sleptuyumak") passed in, so tests don't depend on the Mac.
+    func senses(isEnglishWord: (String) -> Bool) -> [String] {
         guard !isThesaurus else { return [] }
         var text = body
         for marker in ["▸", " DERIVATIVES", " ORIGIN", " PHRASES", " PHRASAL VERBS", " USAGE"] {
             if let range = text.range(of: marker) { text = String(text[..<range.lowerBound]) }
         }
         text = Self.droppingLeadingPartOfSpeech(text)
+        text = Self.droppingInflections(text, headword: headword, isEnglishWord: isEnglishWord)
         // The first part-of-speech group only: a second one ("intransitive
         // verb past participle, past slept…") is mostly grammar.
         if let range = Self.nextPartOfSpeech(in: text) { text = String(text[..<range.lowerBound]) }
@@ -265,6 +272,57 @@ struct DictionaryEntry: Equatable {
         "exclamation", "interjection", "determiner", "abbreviation", "plural noun",
         "n", "adj", "adv", "pron", "prep", "conj", "interj", "abbr", "pl",
     ]
+
+    /// The inflections a bilingual entry lists before the meaning, often
+    /// glued to the next label or to the meaning itself (1.48 live pass: the
+    /// Inspector card showed them instead of the meaning):
+    /// "past -camepast participle -comeyenmek; galip gelmek" → "yenmek; …",
+    /// "past tookpast participle taken1 almak" → "1 almak",
+    /// "past participle, past sleptuyumak" → "uyumak".
+    /// When the end of a form can't be found the text is left as it was.
+    static func droppingInflections(_ text: String, headword: String, isEnglishWord: (String) -> Bool) -> String {
+        let labels = ["past participle, past", "past participle", "present participle", "past tense",
+                      "past", "plural", "comparative", "superlative"]
+        let original = text.trimmingCharacters(in: .whitespaces)
+        guard labels.contains(where: { original.hasPrefix($0 + " ") }) else { return text }
+
+        // A label glued to the form before it: "-camepast participle".
+        let glued = #"(?<=[a-z])(?=(past participle|past|plural|comparative|superlative)\b)"#
+        var rest = original.replacingOccurrences(of: glued, with: " ", options: .regularExpression)
+        let head = headword.lowercased()
+
+        for _ in 0..<4 {
+            guard let label = labels.first(where: { rest.hasPrefix($0 + " ") }) else { break }
+            rest = String(rest.dropFirst(label.count)).trimmingCharacters(in: .whitespaces)
+            let token = String(rest.prefix { !$0.isWhitespace })
+            let after = String(rest.dropFirst(token.count))
+            let word = token.trimmingCharacters(in: .punctuationCharacters.subtracting(CharacterSet(charactersIn: "-")))
+
+            if let digit = token.firstIndex(where: \.isNumber), digit != token.startIndex {
+                // "taken1 almak": the sense number starts the meaning.
+                rest = String(token[digit...]) + after
+            } else if word.hasPrefix("-") {
+                // "-comeyenmek": the form is a tail of the headword ("come").
+                let tail = word.dropFirst().lowercased()
+                let length = (2...max(2, tail.count)).reversed().first { tail.count >= $0 && head.hasSuffix(String(tail.prefix($0))) }
+                if let length, length < tail.count {
+                    // From the token, not the trimmed word: "yenmek;" keeps its ";".
+                    rest = String(token.dropFirst(1 + length)) + after
+                } else {
+                    rest = after
+                }
+            } else if isEnglishWord(word) {
+                rest = after
+            } else if let length = (2..<max(2, word.count - 1)).reversed().first(where: { isEnglishWord(String(word.prefix($0))) }) {
+                // "sleptuyumak": the longest English word at the start.
+                rest = String(token.dropFirst(length)) + after
+            } else {
+                return text
+            }
+            rest = rest.trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: ",")))
+        }
+        return rest.isEmpty ? text : rest
+    }
 
     private static func droppingLeadingPartOfSpeech(_ text: String) -> String {
         var result = text.trimmingCharacters(in: .whitespaces)

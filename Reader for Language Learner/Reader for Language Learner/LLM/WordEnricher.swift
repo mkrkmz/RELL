@@ -114,14 +114,16 @@ enum WordFillEngine {
     ) -> [FillField: String] {
         guard let raw, let entry = DictionaryEntry(raw: raw) else { return [:] }
         let isTargetWord = isTargetWord ?? { SpellingCheck.isWord($0, in: target) }
+        // The inflections before the meaning are English (v1.48 live pass).
+        let entrySenses = entry.senses(isEnglishWord: target == .english ? isTargetWord : { SpellingCheck.isWord($0, in: .english) })
         var answer: [FillField: String] = [:]
-        if native != target, !entry.senses.isEmpty {
+        if native != target, !entrySenses.isEmpty {
             switch SystemDictionary.detectedLanguage(of: entry.body, among: [native, target]) {
             case native?:
-                let senses = entry.senses.map { stripLabels($0, isTargetWord: isTargetWord) }.filter { !$0.isEmpty }
+                let senses = entrySenses.map { stripLabels($0, isTargetWord: isTargetWord) }.filter { !$0.isEmpty }
                 answer[.meaning] = usable(senses, term: term, headword: entry.headword)
             case target?:
-                answer[.definition] = usable(entry.senses, term: term, headword: entry.headword)
+                answer[.definition] = usable(entrySenses, term: term, headword: entry.headword)
             default: break
             }
         }

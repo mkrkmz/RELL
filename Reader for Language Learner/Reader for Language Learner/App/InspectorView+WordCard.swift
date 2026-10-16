@@ -59,7 +59,9 @@ extension InspectorView {
                 }
             }
             .font(DS.Typography.callout)
-            .lineLimit(1)
+            // v1.48 live pass: two lines, so a longer meaning fits.
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
             .help(inspectorQuickMeaning ?? "")
             .textSelection(.enabled)
 
@@ -88,14 +90,26 @@ extension InspectorView {
     func loadQuickMeaning(for term: String) async {
         inspectorQuickMeaning = nil
         guard isSingleWordSelection else { return }
-        if let cached = quickLookup.cachedHoverDefinition(for: term, savedWordsStore: savedWordsStore) {
-            inspectorQuickMeaning = Self.firstLine(cached)
+        if let cached = quickLookup.cachedHoverAnswer(for: term, savedWordsStore: savedWordsStore) {
+            inspectorQuickMeaning = Self.cardMeaning(cached, term: term)
             return
         }
-        guard let fetched = try? await quickLookup.hoverDefinition(for: term),
+        guard let fetched = try? await quickLookup.hoverAnswer(for: term),
               !Task.isCancelled, term == trimmedSelection
         else { return }
-        inspectorQuickMeaning = Self.firstLine(fetched)
+        inspectorQuickMeaning = Self.cardMeaning(fetched, term: term)
+    }
+
+    /// The card is a glance: from the dictionary, the short meaning only —
+    /// not the entry's grammar, inflections and phrases (v1.48 live pass);
+    /// otherwise the answer's first sentence.
+    static func cardMeaning(_ answer: HoverAnswer, term: String) -> String {
+        if answer.source == .dictionary {
+            let parsed = WordFillEngine.dictionaryAnswer(for: term, raw: answer.text,
+                                                         native: Language.storedNative, target: Language.storedTarget)
+            if let short = parsed[.meaning] ?? parsed[.definition] { return short }
+        }
+        return firstLine(answer.text)
     }
 
     /// First sentence of a definition, sanitised — the card is a glance.
