@@ -679,7 +679,6 @@ extension PDFKitView {
             let popover: NSPopover
             if let existing = hoverPopover {
                 popover = existing
-                if popover.isShown { popover.close() }   // reposition to the new word
             } else {
                 popover = NSPopover()
                 popover.behavior = .semitransient
@@ -688,7 +687,14 @@ extension PDFKitView {
                 hoverPopover = popover
             }
             popover.appearance = PageTheme.stored.overlayAppearance   // arrow matches the fill
-            popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
+            // An open balloon moves to the new word. Closing and showing it
+            // again in the same pass could leave it at the last word's place
+            // (v18 S4 live pass).
+            if popover.isShown {
+                popover.positioningRect = rect
+            } else {
+                popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
+            }
         }
 
         private func cancelHover() {

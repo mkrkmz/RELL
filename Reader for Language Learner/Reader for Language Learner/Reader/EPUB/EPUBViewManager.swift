@@ -843,7 +843,6 @@ final class EPUBViewManager: NSObject {
         let popover: NSPopover
         if let existing = hoverPopover {
             popover = existing
-            if popover.isShown { popover.close() }   // reposition to the new word
         } else {
             popover = NSPopover()
             popover.behavior = .semitransient
@@ -857,7 +856,14 @@ final class EPUBViewManager: NSObject {
         // onto the view's coordinate space.
         let positioning = rect.width > 0 ? rect : CGRect(x: rect.minX, y: rect.minY, width: 1, height: 1)
         popover.appearance = PageTheme.stored.overlayAppearance   // arrow matches the fill
-        popover.show(relativeTo: positioning, of: webView, preferredEdge: .maxY)
+        // An open balloon moves to the new word. Closing and showing it again
+        // in the same pass could leave it at the last word's place, showing
+        // the new one (v18 S4 live pass).
+        if popover.isShown {
+            popover.positioningRect = positioning
+        } else {
+            popover.show(relativeTo: positioning, of: webView, preferredEdge: .maxY)
+        }
     }
 
     private func startHoverLookup(term: String) {

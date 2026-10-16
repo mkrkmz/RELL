@@ -45,7 +45,7 @@ struct ReadingAppearanceView: View {
             }
         }
         .padding(DS.Spacing.lg)
-        .frame(width: 316)
+        .frame(width: 344)
     }
 
     // MARK: - Theme swatches
@@ -103,57 +103,63 @@ struct ReadingAppearanceView: View {
         VStack(alignment: .leading, spacing: DS.Spacing.md) {
             sample
 
-            LabeledContent("Font") {
-                Picker("Font", selection: $epubFontFamilyRaw) {
-                    ForEach(EPUBFontFamily.allCases) { family in
-                        Text(family.localizedTitle).tag(family.rawValue)
+            // One grid: labels in their own column, so a longer label
+            // (Turkish "Satır aralığı") never runs into its control.
+            Grid(alignment: .leading, horizontalSpacing: DS.Spacing.md, verticalSpacing: DS.Spacing.sm) {
+                GridRow {
+                    rowLabel("Font")
+                    Picker("Font", selection: $epubFontFamilyRaw) {
+                        ForEach(EPUBFontFamily.allCases) { family in
+                            Text(family.localizedTitle).tag(family.rawValue)
+                        }
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                }
+                GridRow {
+                    rowLabel("Size")
+                    HStack(spacing: DS.Spacing.sm) {
+                        Button { stepFontSize(-1) } label: { Text(verbatim: "A−") }
+                            .disabled(epubFontSize <= EPUBTypography.minFontSize)
+                            .help("Smaller")
+                        Text("\(Int(epubFontSize)) pt")
+                            .font(DS.Typography.mono)
+                            .monospacedDigit()
+                            .frame(minWidth: 40)
+                        Button { stepFontSize(1) } label: { Text(verbatim: "A+") }
+                            .disabled(epubFontSize >= EPUBTypography.maxFontSize)
+                            .help("Larger")
                     }
                 }
-                .labelsHidden()
-                .frame(maxWidth: 170)
-            }
-
-            LabeledContent("Size") {
-                HStack(spacing: DS.Spacing.sm) {
-                    Button("Smaller", systemImage: "textformat.size.smaller") { stepFontSize(-1) }
-                        .labelStyle(.iconOnly)
-                        .disabled(epubFontSize <= EPUBTypography.minFontSize)
-                    Text("\(Int(epubFontSize)) pt")
-                        .font(DS.Typography.mono)
-                        .monospacedDigit()
-                        .frame(minWidth: 40)
-                    Button("Larger", systemImage: "textformat.size.larger") { stepFontSize(1) }
-                        .labelStyle(.iconOnly)
-                        .disabled(epubFontSize >= EPUBTypography.maxFontSize)
-                }
-            }
-
-            LabeledContent("Line Spacing") {
-                Picker("Line Spacing", selection: Binding(
-                    get: { EPUBLineSpacing.nearest(to: epubLineHeight) },
-                    set: { epubLineHeight = $0.lineHeight }
-                )) {
-                    ForEach(EPUBLineSpacing.allCases) { Text($0.localizedTitle).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: 190)
-            }
-
-            LabeledContent("Width") {
-                Picker("Width", selection: $epubContentWidthRaw) {
-                    ForEach(EPUBContentWidth.allCases) { width in
-                        Text(width.localizedTitle).tag(width.rawValue)
+                GridRow {
+                    rowLabel("Line Spacing")
+                    Picker("Line Spacing", selection: Binding(
+                        get: { EPUBLineSpacing.nearest(to: epubLineHeight) },
+                        set: { epubLineHeight = $0.lineHeight }
+                    )) {
+                        ForEach(EPUBLineSpacing.allCases) { Text($0.localizedTitle).tag($0) }
                     }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: 190)
+                GridRow {
+                    rowLabel("Width")
+                    Picker("Width", selection: $epubContentWidthRaw) {
+                        ForEach(EPUBContentWidth.allCases) { width in
+                            Text(width.localizedTitle).tag(width.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+                GridRow {
+                    rowLabel("Justify Text")
+                    Toggle("Justify Text", isOn: $epubJustified)
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                }
             }
-
-            Toggle("Justify Text", isOn: $epubJustified)
-                .toggleStyle(.switch)
-                .controlSize(.mini)
+            .controlSize(.small)
 
             HStack {
                 Spacer()
@@ -168,7 +174,14 @@ struct ReadingAppearanceView: View {
                 .font(DS.Typography.caption)
             }
         }
-        .font(DS.Typography.caption)
+    }
+
+    private func rowLabel(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .font(DS.Typography.caption)
+            .foregroundStyle(DS.Color.textSecondary)
+            .gridColumnAlignment(.trailing)
+            .fixedSize()
     }
 
     /// A line in the chosen font, on the chosen page, so a change shows
@@ -187,7 +200,8 @@ struct ReadingAppearanceView: View {
     }
 
     private var sampleFont: Font {
-        let size = min(max(epubFontSize, EPUBTypography.minFontSize), EPUBTypography.maxFontSize) * 0.8
+        // Follows the size, but stays a line or two in the panel.
+        let size = min(min(max(epubFontSize, EPUBTypography.minFontSize), EPUBTypography.maxFontSize) * 0.8, 18)
         if let name = fontFamily.fontFamilyName { return .custom(name, size: size) }
         // DS-exempt: the sample is sized like the page, not a UI text style.
         return Font.system(size: size, design: fontFamily == .sanFrancisco ? .default : .serif)
