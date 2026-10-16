@@ -1,5 +1,7 @@
 # RELL Roadmap v18 — Sakin ve Tutarli Bir Arayuz (S0 + 6 sprint)
 
+**Durum: kapandi — 1.48.0 yayinlandi (2026-10-16).**
+
 Olusturulma: 2026-10-15 (v1.47.2 hazirligi sonrasi). Amac: islevleri
 olgunlasmis bir uygulamanin arayuzunu tek bir sakin, tutarli dile
 toplamak — once ortak tasarim temeli, sonra en cok kullanilan uc yuzey
@@ -329,7 +331,7 @@ bilgi tasimaz. Klavye haritasi ve renk denetimi sprintin parcasi.
       1.48 1.47.2'den yavas degil
 - [x] **CHANGELOG 1.48.0** ve **Yenilikler 1.48** (bes madde, TR ceviri)
 - [ ] Canli tur (kullanici): Yenilikler sayfasi (Yardim ▸ RELL'de Yenilikler)
-- [ ] **1.48.0** yayini (onayla)
+- [x] **1.48.0** yayinlandi (2026-10-16; Release is akisi yesil, DMG + zip, Latest)
 
 ---
 
