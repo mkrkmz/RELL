@@ -15,7 +15,7 @@
 			<key>NSMessage</key>
 			<string>lookUpInRELL</string>
 			<key>NSPortName</key>
-			<string>Reader for Language Learner</string>
+			<string>RELL</string>
 			<key>NSSendTypes</key>
 			<array>
 				<string>NSStringPboardType</string>

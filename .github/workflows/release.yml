@@ -87,7 +87,7 @@ jobs:
       - name: Create DMG and ZIP
         shell: bash
         run: |
-          APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release/Reader for Language Learner.app"
+          APP_PATH="$DERIVED_DATA_PATH/Build/Products/Release/RELL.app"
           if [[ ! -d "$APP_PATH" ]]; then
             echo "App bundle not found at $APP_PATH"
             find "$DERIVED_DATA_PATH" -maxdepth 4 -type d -name "*.app" || true

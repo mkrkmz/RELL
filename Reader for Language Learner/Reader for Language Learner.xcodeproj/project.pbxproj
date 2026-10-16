@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		FEDD958C2F3BC32C000F5EF2 /* Reader for Language Learner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Reader for Language Learner.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEDD958C2F3BC32C000F5EF2 /* Reader for Language Learner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RELL.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEDD95992F3BC32D000F5EF2 /* Reader for Language LearnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Reader for Language LearnerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEDD95A32F3BC32D000F5EF2 /* Reader for Language LearnerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Reader for Language LearnerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -409,7 +409,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Reader-for-Language-Learner.Reader-for-Language-Learner";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = Reader_for_Language_Learner;
+				PRODUCT_NAME = RELL;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = macosx;
@@ -440,7 +441,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "Reader-for-Language-Learner.Reader-for-Language-Learner";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = Reader_for_Language_Learner;
+				PRODUCT_NAME = RELL;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = macosx;
@@ -473,7 +475,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 2;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Reader for Language Learner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Reader for Language Learner";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RELL.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RELL";
 				XROS_DEPLOYMENT_TARGET = 26.2;
 			};
 			name = Debug;
@@ -499,7 +501,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 2;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Reader for Language Learner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Reader for Language Learner";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RELL.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RELL";
 				XROS_DEPLOYMENT_TARGET = 26.2;
 			};
 			name = Release;

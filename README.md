@@ -84,7 +84,9 @@
 ### Download (recommended)
 
 1. Download the latest `.dmg` from [Releases](../../releases).
-2. Open it and drag **Reader for Language Learner** into Applications.
+2. Open it and drag **RELL** into Applications. (Before 1.48.1 the app was
+   called *Reader for Language Learner*; after installing RELL, move the old
+   one to the Trash — your words, books and settings stay.)
 3. On first launch use **Right-click ▸ Open**. The app is not notarized yet, so macOS asks once.
 
 ### Build from source

@@ -104,7 +104,7 @@ format:
 
 ## DMG olustur (lokal release)
 dmg: release
-	$(eval APP_PATH := $(shell find ~/Library/Developer/Xcode/DerivedData -path "*/Release/Reader for Language Learner.app" -type d 2>/dev/null | head -1))
+	$(eval APP_PATH := $(shell find ~/Library/Developer/Xcode/DerivedData -path "*/Release/RELL.app" -type d 2>/dev/null | head -1))
 	@if [ -z "$(APP_PATH)" ]; then echo "App bundle bulunamadi. Once 'make release' calistirin."; exit 1; fi
 	@mkdir -p dmg_staging
 	@cp -R "$(APP_PATH)" dmg_staging/

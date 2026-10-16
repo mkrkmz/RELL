@@ -41,14 +41,14 @@ cat <<EOF
 
 ## Installation
 
-1. Download \`RELL-${VERSION}-macOS.dmg\` below, open it, and drag **Reader for Language Learner** to Applications.
+1. Download \`RELL-${VERSION}-macOS.dmg\` below, open it, and drag **RELL** to Applications. Coming from 1.48.0 or older, where the app was called *Reader for Language Learner*: move that one to the Trash afterwards — your words, books and settings stay.
 2. The app is not signed with an Apple Developer certificate, so macOS blocks the first launch. To allow it, do **one** of:
 
    **macOS 15 (Sequoia) or later:** double-click the app once (you'll see "could not be verified" → click **Done**), then open **System Settings → Privacy & Security**, scroll to the message about the app, and click **Open Anyway** → confirm with your password. It opens normally from then on.
 
    **Any macOS — Terminal (one line):**
    \`\`\`
-   xattr -dr com.apple.quarantine "/Applications/Reader for Language Learner.app"
+   xattr -dr com.apple.quarantine "/Applications/RELL.app"
    \`\`\`
    Then open the app normally. This removes the download-quarantine flag; the app is safe — it simply lacks Apple's notarization stamp.
 
