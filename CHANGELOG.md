@@ -4,6 +4,82 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.48.0] - 2026-10-16
+
+A calm, consistent interface. Roadmap v18 (Sprints 0–6): one family of
+buttons across the app, the Inspector's modules on the word card where you
+choose which ones stay, modules of your own written from your own prompt,
+a reading screen where nothing floats over the line you are reading, and
+a tidier word notebook beside a livelier study room.
+
+### Added
+
+- **Your own modules.** Settings ▸ Prompts ▸ Your Own Modules: write a
+  prompt with placeholders ({selection}, {sentence}, {book}, {native},
+  {target}, {level}, or their Turkish names) or start from a template,
+  choose where it runs (word, sentence or both), the answer's language and
+  length, and whether your provider or Apple's model answers. A new module
+  lands at the end of the card and answers like the built-in ones, with
+  the same footer. Its answer is saved with the word and stays under the
+  module's name even after the module is deleted; Anki can include it on
+  request. Up to 20 modules, prompts up to 2,000 characters. They stay out
+  of Fill Missing and the level estimate, and the privacy table lists them.
+- **Memory on the word page.** The chance you'd remember the word now, in
+  a number and a word (Strong, Fair, Weak), the day of its next review,
+  and its last 12 answers as marks.
+- **A livelier study room.** A coloured band on each card (New word,
+  Review, or "You keep forgetting · catch it this time") with your run of
+  remembered answers, the session's trail as the progress bar, your
+  streak, and filled rating buttons with marks. The summary shows the
+  share you remembered in a ring, four tiles and the words you struggled
+  with — choose one to open it in the notebook.
+- **More of the notebook by keyboard.** Space says the selected word,
+  Return goes to its page, ⌘1 / ⌘2 switch between list and table, ⌘⌫
+  deletes after asking. On the word page, Tab walks the card's fields,
+  Return edits one and Esc leaves it as it was; ⇧⌘F fills what's missing.
+  In the summary: Return, M and Esc.
+
+### Changed
+
+- **One family of buttons.** The same quiet, icon, chip and main buttons
+  everywhere, at most one main button per screen, one hover and press
+  look, and no glass over the text you read.
+- **Modules on the word card.** Save, Listen, Anki and the modules sit in
+  two quiet rows on the Inspector's card; Edit Card… (or right-click)
+  chooses which stay on the card and which wait in •••, separately for
+  words and sentences. What doesn't fit moves to ••• on its own. A module
+  is always open; the result's header is one line.
+- **A calm reading screen.** Everything over the page shares one surface
+  and three places: the strip above, the selection bar and the hover
+  balloon at the text, and a bottom lane — the sentence's translation,
+  then the speech bar — that shortens the page instead of covering it.
+  The speech bar no longer covers the Inspector. The strip above the page
+  is part of the page and no longer repeats the book's name.
+- **The hover balloon says where its answer came from** (your word
+  notebook, the dictionary, Apple or your provider), marks words you've
+  saved, keeps to four lines and closes when the page scrolls. The
+  translation strip names who translated.
+- **The Aa panel** shows the six themes in one row and a sample line in
+  your font, with A− / A+ and three line spacings (Compact, Normal,
+  Roomy; a value you set before is kept until you pick one). Zen mode
+  opens the same panel, and shows where you are in an EPUB.
+- **One status language.** A word's state is a tinted capsule with a mark
+  and a word — Waiting, New, "in 3 days", Settled, You keep forgetting —
+  in the notebook, its table, the word page and the study room, so it
+  reads without the colour too. Notebook rows keep two badges (level and
+  status); Kindle and the word's language moved to its page. The table
+  gains a sortable Memory column. The word page groups where you met the
+  word by book.
+- The passage difficulty next to "This chapter" is also said in words
+  (easy, moderate, hard) in its tooltip and to VoiceOver.
+
+### Fixed
+
+- **The hover balloon follows the word.** Moving to another word could
+  leave the balloon at the previous word's place.
+- **The selection bar never covers the selected lines** while there is
+  room above or below them; near the bottom of an EPUB page it could.
+
 ## [1.47.2] - 2026-10-15
 
 ### Fixed

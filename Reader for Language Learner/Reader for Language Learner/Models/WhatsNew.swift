@@ -25,6 +25,23 @@ nonisolated struct WhatsNew: Equatable, Sendable, Identifiable {
     /// Newest first.
     static var releases: [WhatsNew] {
         [
+            WhatsNew(version: "1.48", items: [
+                Item(icon: "wand.and.stars",
+                     title: String(localized: "Modules of your own"),
+                     detail: String(localized: "Write a prompt in Settings ▸ Prompts and it sits on the Inspector's card beside the built-in modules.")),
+                Item(icon: "rectangle.grid.1x2",
+                     title: String(localized: "Your card, your choice"),
+                     detail: String(localized: "The modules moved onto the word card. Edit Card… chooses which stay there and which wait in •••.")),
+                Item(icon: "book",
+                     title: String(localized: "A calm reading screen"),
+                     detail: String(localized: "Nothing floats over the line you read. The hover balloon says where its answer came from, and the Aa panel shows a sample line.")),
+                Item(icon: "rectangle.stack",
+                     title: String(localized: "A livelier study room"),
+                     detail: String(localized: "Your session's trail, your streak and a run of remembered answers — and a summary worth a look.")),
+                Item(icon: "character.book.closed",
+                     title: String(localized: "How well you know each word"),
+                     detail: String(localized: "Each word's page shows its memory and last answers, and one status reads the same everywhere.")),
+            ]),
             WhatsNew(version: "1.47", items: [
                 Item(icon: "gauge.with.dots.needle.50percent",
                      title: String(localized: "See who answered, and how fast"),

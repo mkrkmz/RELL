@@ -314,9 +314,22 @@ bilgi tasimaz. Klavye haritasi ve renk denetimi sprintin parcasi.
 
 ## Sprint 6 — "Kapanis"
 
-- [ ] Kapanis (Must): tam test, soguk acilis (1.47.2 ile yan yana), canli
-      tur, CHANGELOG 1.48.0 + Yenilikler 1.48
-- [ ] **1.48.0** yayini
+- [x] **Dalgali test** — `DocumentCoverStoreTests`'in ilk testi tam
+      paket yukunde ara ara kirmiziydi. Isitma denemesi tutmadi (kirmizi
+      yine geldi). Sebep: bellek onbellegi `NSCache`, sistem bellek
+      baskisinda onu her an bosaltabiliyor; test kapak yerine bellekteki
+      kopyayi bekliyordu. Testler artik cizimin geldigini (revizyon) ve
+      diskteki PNG'yi denetliyor; uygulamada bosalan kapak diskten geri
+      yukleniyor, davranis degismedi. Iki tam calisma temiz; mutasyon
+      (cizim yok) testi dusuruyor
+- [x] **Tam test** — 799 test, 0 hata (iki ardisik calisma)
+- [x] **Soguk acilis** (2026-10-16, ayni oturumda yan yana,
+      `testLaunchPerformance`, Debug, 5 olcum/tur): 1.48 ortanca 0,72 ve
+      0,76 sn; 1.47.2 1,53, 0,83 ve 1,51 sn. Makine mesgul, yayilim genis;
+      1.48 1.47.2'den yavas degil
+- [x] **CHANGELOG 1.48.0** ve **Yenilikler 1.48** (bes madde, TR ceviri)
+- [ ] Canli tur (kullanici): Yenilikler sayfasi (Yardim ▸ RELL'de Yenilikler)
+- [ ] **1.48.0** yayini (onayla)
 
 ---
 

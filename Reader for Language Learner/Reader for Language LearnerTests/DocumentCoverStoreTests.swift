@@ -48,32 +48,26 @@ final class DocumentCoverStoreTests: XCTestCase {
         return url
     }
 
-    /// v18 S6: the store renders at utility priority, and the first render
-    /// in the process loads PDFKit from disk. Under the full suite's load,
-    /// macOS throttled that low-priority I/O so long that this class's first
-    /// test sometimes got no cover in 20 s (red in some full runs, green
-    /// alone and on CI). One thumbnail drawn here at normal priority pays
-    /// that cold start, so the tests time the store, not the disk.
-    nonisolated override class func setUp() {
-        super.setUp()
-        let data = NSMutableData()
-        var box = CGRect(x: 0, y: 0, width: 20, height: 20)
-        if let consumer = CGDataConsumer(data: data as CFMutableData),
-           let context = CGContext(consumer: consumer, mediaBox: &box, nil) {
-            context.beginPDFPage(nil)
-            context.endPDFPage()
-            context.closePDF()
-        }
-        _ = PDFDocument(data: data as Data)?.page(at: 0)?.thumbnail(of: CGSize(width: 10, height: 10), for: .cropBox)
-    }
-
-    /// Up to 10 s, back as soon as the cover is there.
-    private func waitForCover(in store: DocumentCoverStore, path: String) async -> NSImage? {
-        for _ in 0..<200 {
-            if let image = store.cover(for: path) { return image }
+    /// Waits (up to 10 s) for a render to land — the store's revision moves
+    /// only when a cover was made — then returns the cover if the memory
+    /// cache still has it.
+    ///
+    /// v18 S6: the memory cache is an `NSCache`, which the system may empty
+    /// at any moment under memory pressure, as during the full suite. Polling
+    /// the cache alone made this class's first test fail now and then though
+    /// the cover had rendered (green alone and on CI); the revision and the
+    /// PNG on disk say it did.
+    @discardableResult
+    private func waitForRender(in store: DocumentCoverStore, path: String, from revision: Int = 0) async -> NSImage? {
+        for _ in 0..<200 where store.revision == revision {
             try? await Task.sleep(for: .milliseconds(50))
         }
         return store.cover(for: path)
+    }
+
+    private func cachedPNGs(in directory: URL) throws -> [URL] {
+        try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "png" }
     }
 
     func testRendersCoverForValidPDF() async throws {
@@ -82,10 +76,11 @@ final class DocumentCoverStoreTests: XCTestCase {
         let store = makeStore(coversDirectory: coversDir)
 
         store.requestCover(for: pdfURL.path)
-        let image = await waitForCover(in: store, path: pdfURL.path)
+        await waitForRender(in: store, path: pdfURL.path)
 
-        XCTAssertNotNil(image, "A valid one-page PDF should produce a cover")
-        XCTAssertGreaterThan(image?.size.width ?? 0, 0)
+        XCTAssertEqual(store.revision, 1, "A valid one-page PDF should produce a cover")
+        let png = try XCTUnwrap(cachedPNGs(in: coversDir).first)
+        XCTAssertGreaterThan(NSImage(contentsOf: png)?.size.width ?? 0, 0)
     }
 
     func testWritesCoverToDiskCache() async throws {
@@ -94,11 +89,9 @@ final class DocumentCoverStoreTests: XCTestCase {
         let store = makeStore(coversDirectory: coversDir)
 
         store.requestCover(for: pdfURL.path)
-        _ = await waitForCover(in: store, path: pdfURL.path)
+        await waitForRender(in: store, path: pdfURL.path)
 
-        let cached = try FileManager.default.contentsOfDirectory(atPath: coversDir.path)
-            .filter { $0.hasSuffix(".png") }
-        XCTAssertEqual(cached.count, 1, "Cover should be persisted as a single PNG")
+        XCTAssertEqual(try cachedPNGs(in: coversDir).count, 1, "Cover should be persisted as a single PNG")
     }
 
     func testSecondStoreLoadsFromDiskCache() async throws {
@@ -107,13 +100,14 @@ final class DocumentCoverStoreTests: XCTestCase {
 
         let first = makeStore(coversDirectory: coversDir)
         first.requestCover(for: pdfURL.path)
-        _ = await waitForCover(in: first, path: pdfURL.path)
+        await waitForRender(in: first, path: pdfURL.path)
+        XCTAssertEqual(try cachedPNGs(in: coversDir).count, 1)
 
         // A fresh store (empty memory cache) should resolve from disk.
         let second = makeStore(coversDirectory: coversDir)
         second.requestCover(for: pdfURL.path)
-        let image = await waitForCover(in: second, path: pdfURL.path)
-        XCTAssertNotNil(image)
+        await waitForRender(in: second, path: pdfURL.path)
+        XCTAssertEqual(second.revision, 1, "loaded from the PNG on disk")
     }
 
     func testMissingFileProducesNoCover() async {
