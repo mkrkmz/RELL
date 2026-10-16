@@ -49,6 +49,15 @@ nonisolated struct LexicalProfile: Equatable, Hashable, Codable {
         case comfortable    // ≥ 95% known
         case challenging    // 80–95%
         case demanding      // < 80%
+
+        /// In words, so the coverage colour never stands alone (v18 S5).
+        var localizedTitle: String {
+            switch self {
+            case .comfortable: return String(localized: "easy")
+            case .challenging: return String(localized: "moderate")
+            case .demanding: return String(localized: "hard")
+            }
+        }
     }
 
     var difficulty: Difficulty {

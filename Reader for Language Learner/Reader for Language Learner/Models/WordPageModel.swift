@@ -22,6 +22,36 @@ enum WordPageModel {
         return FSRSScheduler.retrievability(elapsedDays: days, stability: stability)
     }
 
+    /// The last answers given for the word, oldest first (v18 S5: the
+    /// word page's history strip).
+    static func recentAnswers(_ word: SavedWord, limit: Int = 12) -> [ReviewEvent] {
+        Array(word.reviewEvents.sorted { $0.date < $1.date }.suffix(limit))
+    }
+
+    /// One book's encounters on the word page (v18 S5), in the order the
+    /// list had them, with how many times the word turned up there.
+    struct BookEncounters: Identifiable, Equatable {
+        let title: String
+        let times: Int
+        let encounters: [WordEncounter]
+        var id: String { title }
+    }
+
+    /// `shown` grouped by book, books in the order they first appear;
+    /// `times` counts every occurrence in `all`, not just the shown ones.
+    static func groupedByBook(_ shown: [WordEncounter], all: [WordEncounter]) -> [BookEncounters] {
+        var order: [String] = []
+        var groups: [String: [WordEncounter]] = [:]
+        for encounter in shown {
+            if groups[encounter.documentTitle] == nil { order.append(encounter.documentTitle) }
+            groups[encounter.documentTitle, default: []].append(encounter)
+        }
+        return order.map { title in
+            let times = all.filter { $0.documentTitle == title }.reduce(0) { $0 + max(1, $1.occurrences) }
+            return BookEncounters(title: title, times: times, encounters: groups[title] ?? [])
+        }
+    }
+
     /// "Met 7 times in 3 books" — occurrences on every logged page, not just
     /// the number of pages.
     static func encounterSummary(_ encounters: [WordEncounter]) -> String? {

@@ -17,6 +17,9 @@ struct SavedWordDetailSheet: View {
     /// In the word notebook's third column (v16 S2): no Save/Cancel —
     /// edits are saved as they're made; deleting asks first.
     var isPane: Bool = false
+    /// Bumped by the notebook's Return: focus moves to the card's first
+    /// field (v18 S5).
+    var focusRequest: Int = 0
     @Environment(WordEncounterStore.self) private var encounterStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openWindow) private var openWindow
@@ -31,6 +34,7 @@ struct SavedWordDetailSheet: View {
     @State private var editingField: FillField?
     @State private var editText = ""
     @State private var showDetails = false
+    @FocusState private var focusedField: FillField?
 
     /// Encounters shown before "Show all".
     private static let collapsedEncounterCount = 6
@@ -117,6 +121,8 @@ struct SavedWordDetailSheet: View {
             Divider()
             HStack {
                 Button("Delete…", role: .destructive) { confirmDelete = true }
+                    .keyboardShortcut(.delete, modifiers: .command)
+                    .help("Delete (⌘⌫)")
                 Spacer()
                 Text("Changes are saved as you make them.")
                     .font(DS.Typography.caption)
@@ -127,6 +133,7 @@ struct SavedWordDetailSheet: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onChange(of: edits) { old, new in saveEdits(from: old, to: new) }
+        .onChange(of: focusRequest) { _, _ in focusedField = shownCardFields.first }
         .confirmationDialog("Delete “\(word.term)”?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { store.delete(word) }
         } message: {
@@ -206,22 +213,6 @@ struct SavedWordDetailSheet: View {
                         .lineLimit(1)
                         .textSelection(.enabled)
                 }
-                Spacer()
-                if let cefr = word.cefrLevel {
-                    Text(cefr)
-                        .font(DS.Typography.caption.weight(.bold))
-                        .foregroundStyle(CEFRLevel(rawValue: cefr)?.badgeColor ?? DS.Color.textSecondary)
-                        .padding(.horizontal, DS.Spacing.sm)
-                        .padding(.vertical, DS.Spacing.xxs)
-                        .background(
-                            (CEFRLevel(rawValue: cefr)?.badgeColor ?? DS.Color.textSecondary).opacity(0.12),
-                            in: Capsule()
-                        )
-                        .help(word.cefrIsAuto ? Text("Level estimated automatically") : Text("CEFR level"))
-                }
-                Label(word.masteryLevel.localizedTitle, systemImage: word.masteryLevel.icon)
-                    .font(DS.Typography.caption.weight(.semibold))
-                    .foregroundStyle(word.masteryLevel.color)
             }
             if let definition {
                 Text(definition)
@@ -230,7 +221,45 @@ struct SavedWordDetailSheet: View {
                     .lineLimit(3)
                     .textSelection(.enabled)
             }
+            summaryLine
         }
+    }
+
+    /// v18 S5: the word at a glance — level, status, memory, and where it
+    /// came from when that's worth saying (Kindle, another language).
+    private var summaryLine: some View {
+        HStack(spacing: DS.Spacing.sm) {
+            if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
+                Text(word.cefrIsAuto ? "\(cefr.rawValue) · \(String(localized: "estimated"))" : cefr.rawValue)
+                    .font(DS.Typography.caption.weight(.bold))
+                    .foregroundStyle(cefr.badgeColor)
+                    .padding(.horizontal, DS.Spacing.sm)
+                    .padding(.vertical, DS.Spacing.hairline)
+                    .background(cefr.badgeColor.opacity(0.12), in: Capsule())
+                    .help(word.cefrIsAuto ? Text("Level estimated automatically") : Text("CEFR level"))
+            }
+            WordStatusBadge(status: WordStatus.of(current))
+            if let recall = WordPageModel.recallNow(current) {
+                Text("Memory \(Int((recall * 100).rounded()))% · \(RecallStrength(recall).title)")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+            }
+            if word.hasTag(KindleVocabulary.deckName) {
+                Text("Kindle")
+                    .font(DS.Typography.caption2.weight(.semibold))
+                    .foregroundStyle(DS.Color.kindle)
+                    .padding(.horizontal, DS.Spacing.xs)
+                    .padding(.vertical, DS.Spacing.hairline)
+                    .background(DS.Color.kindle.opacity(0.12), in: Capsule())
+                    .help("Imported from your Kindle")
+            }
+            if let other = word.language.flatMap(Language.init), other != Language.storedTarget {
+                Text("\(other.flag) \(other.nativeName)")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+            }
+        }
+        .lineLimit(1)
     }
 
     // MARK: - Card (v15 S1)
@@ -275,8 +304,10 @@ struct SavedWordDetailSheet: View {
                             Text("Fill Missing")
                         }
                     }
-                    .controlSize(.small)
-                    .buttonStyle(.borderedProminent)
+                    // v18 S5: the card's quiet button family, with its key.
+                    .buttonStyle(.dsQuiet)
+                    .keyboardShortcut("f", modifiers: [.command, .shift])
+                    .help("Fill Missing (⇧⌘F)")
                     .disabled(isFilling)
                 }
             }
@@ -303,6 +334,11 @@ struct SavedWordDetailSheet: View {
                     .textFieldStyle(.roundedBorder)
                     .lineLimit(1...4)
                     .onSubmit { commitEdit() }
+                    // v18 S5: Esc leaves the field as it was.
+                    .onExitCommand {
+                        editingField = nil
+                        focusedField = field
+                    }
                 Button("Done") { commitEdit() }
                     .controlSize(.small)
             } else {
@@ -329,6 +365,14 @@ struct SavedWordDetailSheet: View {
         .padding(.horizontal, DS.Spacing.md)
         .padding(.vertical, DS.Spacing.sm)
         .contentShape(Rectangle())
+        // v18 S5: Tab walks the fields; Return edits the one in focus.
+        .focusable(editingField != field)
+        .focused($focusedField, equals: field)
+        .onKeyPress(.return) {
+            guard field != .level, editingField != field else { return .ignored }
+            beginEdit(field)
+            return .handled
+        }
         .contextMenu {
             if field != .level {
                 Button("Edit") { beginEdit(field) }
@@ -428,39 +472,50 @@ struct SavedWordDetailSheet: View {
 
     // MARK: - Memory
 
+    /// v18 S5: how well you remember it — the chance now in a number and a
+    /// word, when it comes back, and the last answers as marks.
     private var memoryCard: some View {
-        HStack(spacing: DS.Spacing.lg) {
-            if let recall = WordPageModel.recallNow(current) {
-                Gauge(value: recall) {
-                    EmptyView()
-                } currentValueLabel: {
-                    Text(recall, format: .percent.precision(.fractionLength(0)))
-                        .font(DS.Typography.statNumber(12))
-                }
-                .gaugeStyle(.accessoryCircularCapacity)
-                .tint(recall >= 0.8 ? DS.Color.success : recall >= 0.5 ? DS.Color.warning : DS.Color.danger)
-                .accessibilityLabel(Text("Chance you remember it now"))
+        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
+            Text("MEMORY").dsOverlineLabel()
+            HStack(spacing: DS.Spacing.lg) {
+                if let recall = WordPageModel.recallNow(current) {
+                    let strength = RecallStrength(recall)
+                    Gauge(value: recall) {
+                        EmptyView()
+                    } currentValueLabel: {
+                        Text(recall, format: .percent.precision(.fractionLength(0)))
+                            .font(DS.Typography.statNumber(12))
+                    }
+                    .gaugeStyle(.accessoryCircularCapacity)
+                    .tint(strength.color)
+                    .accessibilityLabel(Text("Chance you remember it now"))
+                    .accessibilityValue(Text("\(Int((recall * 100).rounded()))%, \(strength.title)"))
 
-                VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                    Text("Chance you remember it now")
-                        .font(DS.Typography.label)
-                        .foregroundStyle(DS.Color.textPrimary)
-                    nextReviewLine
+                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                        Text("\(strength.title): you'd remember it now with a \(Int((recall * 100).rounded()))% chance")
+                            .font(DS.Typography.label)
+                            .foregroundStyle(DS.Color.textPrimary)
+                        nextReviewLine
+                    }
+                } else {
+                    Image(systemName: "sparkle")
+                        .font(DS.Typography.icon(20))
+                        .foregroundStyle(DS.Color.accent)
+                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                        Text("Not reviewed yet")
+                            .font(DS.Typography.label)
+                            .foregroundStyle(DS.Color.textPrimary)
+                        Text("Its first review will start tracking how well you remember it.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
                 }
-            } else {
-                Image(systemName: "sparkle")
-                    .font(DS.Typography.icon(20))
-                    .foregroundStyle(DS.Color.accent)
-                VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                    Text("Not reviewed yet")
-                        .font(DS.Typography.label)
-                        .foregroundStyle(DS.Color.textPrimary)
-                    Text("Its first review will start tracking how well you remember it.")
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            let history = WordPageModel.recentAnswers(current)
+            if !history.isEmpty {
+                ReviewHistoryStrip(events: history)
+            }
         }
         .dsCard()
     }
@@ -473,12 +528,12 @@ struct SavedWordDetailSheet: View {
                     .font(DS.Typography.caption)
                     .foregroundStyle(DS.Color.warning)
             } else {
-                Text("Next review \(next, format: .relative(presentation: .named))")
+                Text("Next review \(WordStatus.relative(next)) (\(next, format: .dateTime.weekday(.wide)))")
                     .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
+                    .foregroundStyle(DS.Color.textSecondary)
             }
         }
-        Text("\(current.reviewCount) reviews · \(current.incorrectCount) missed")
+        Text("\(current.reviewCount) reviews · \(current.incorrectCount) times Again")
             .font(DS.Typography.caption)
             .foregroundStyle(DS.Color.textTertiary)
     }
@@ -504,13 +559,29 @@ struct SavedWordDetailSheet: View {
                     .foregroundStyle(DS.Color.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                ForEach(shown) { encounter in
-                    EncounterRow(
-                        encounter: encounter,
-                        sentence: WordPageModel.emphasized(encounter.sentence, term: word.term, language: language),
-                        isAvailable: DocumentJump.isAvailable(encounter.documentPath),
-                        onOpen: { open(encounter) }
-                    )
+                // v18 S5: grouped by book, each with how often it turned up.
+                ForEach(WordPageModel.groupedByBook(shown, all: encounters)) { book in
+                    HStack {
+                        Text(book.title)
+                            .font(DS.Typography.caption.weight(.semibold))
+                            .foregroundStyle(DS.Color.textPrimary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                        Text(book.times == 1 ? String(localized: "once") : String(localized: "\(book.times) times"))
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                            .monospacedDigit()
+                    }
+                    .padding(.top, DS.Spacing.xxs)
+                    ForEach(book.encounters) { encounter in
+                        EncounterRow(
+                            encounter: encounter,
+                            sentence: WordPageModel.emphasized(encounter.sentence, term: word.term, language: language),
+                            isAvailable: DocumentJump.isAvailable(encounter.documentPath),
+                            onOpen: { open(encounter) }
+                        )
+                    }
                 }
                 if encounters.count > Self.collapsedEncounterCount {
                     Button(showAllEncounters ? "Show fewer" : "Show all \(encounters.count)") {
@@ -682,12 +753,10 @@ private struct EncounterRow: View {
                     .foregroundStyle(DS.Color.textPrimary)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+                // The book's name is the heading above (v18 S5).
                 HStack(spacing: DS.Spacing.xs) {
                     Image(systemName: encounter.isEPUB ? "book" : "doc.text")
                         .font(DS.Typography.icon(10))
-                    Text(encounter.documentTitle)
-                        .lineLimit(1)
-                    Text("·")
                     Text(WordPageModel.locationLabel(encounter))
                     Text("·")
                     Text(encounter.date, format: .relative(presentation: .named))

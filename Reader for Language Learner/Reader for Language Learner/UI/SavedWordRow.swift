@@ -40,27 +40,9 @@ struct SavedWordRow: View {
 
                 Spacer(minLength: DS.Spacing.xs)
 
-                if let language = word.language.flatMap(Language.init), language != Language.storedTarget {
-                    Text(language.flag)
-                        .font(DS.Typography.caption2)
-                        .help(language.nativeName)
-                }
-                if word.hasTag(KindleVocabulary.deckName) {
-                    Text("Kindle")
-                        .font(DS.Typography.caption2.weight(.semibold))
-                        .foregroundStyle(DS.Color.kindle)
-                        .padding(.horizontal, DS.Spacing.xs)
-                        .padding(.vertical, DS.Spacing.hairline)
-                        .background(DS.Color.kindle.opacity(0.12), in: Capsule())
-                        .help("Imported from your Kindle")
-                }
-                if word.isStruggling {
-                    Image(systemName: "exclamationmark.arrow.circlepath")
-                        .font(DS.Typography.icon(10, weight: .semibold))
-                        .foregroundStyle(DS.Color.danger)
-                        .help("You keep forgetting this one")
-                        .accessibilityLabel("You keep forgetting this one")
-                }
+                // v18 S5: two badges — the level and the status. Kindle and
+                // the word's language are on its page; "you keep forgetting"
+                // is a status of its own.
                 if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
                     HStack(spacing: 2) {
                         if word.cefrIsAuto {
@@ -76,13 +58,7 @@ struct SavedWordRow: View {
                     .background(cefr.badgeColor.opacity(0.12), in: Capsule())
                     .help(word.cefrIsAuto ? "AI-estimated level" : "CEFR level")
                 }
-                Text(word.reviewStatus.localizedTitle)
-                    .font(DS.Typography.caption2.weight(.semibold))
-                    .foregroundStyle(word.reviewStatus.color)
-                    .padding(.horizontal, DS.Spacing.xs)
-                    .padding(.vertical, DS.Spacing.hairline)
-                    .background(word.reviewStatus.color.opacity(0.12), in: Capsule())
-                    .lineLimit(1)
+                WordStatusBadge(status: WordStatus.of(word))
             }
 
             if let meaning = Self.oneLineMeaning(of: word) {
@@ -113,7 +89,7 @@ struct SavedWordRow: View {
         .accessibilityElement(children: .combine)
         // `localizedTitle`, not `label`: VoiceOver should speak the mastery
         // level in the user's language like the rest of the row.
-        .accessibilityLabel("\(word.term), \(word.masteryLevel.localizedTitle)")
+        .accessibilityLabel("\(word.term), \(WordStatus.of(word).title())")
         .accessibilityHint("Tap to view details")
         .accessibilityValue(word.pdfFilename.map { "from \($0)" } ?? "")
     }

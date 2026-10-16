@@ -17,6 +17,12 @@ struct StudySummaryView: View {
     let onMore: () -> Void
     let onClose: () -> Void
 
+    @Environment(\.openWindow) private var openWindow
+    @FocusState private var focusedLine: UUID?
+
+    // v18 S5 (approved mockup): a small celebration — the share remembered
+    // in a ring, the session's trail, four coloured tiles — and lists you
+    // can walk with the keys, each word opening in the notebook.
     var body: some View {
         let summary = StudySummary(answers: session.answers, startedAt: session.startedAt)
         ScrollView(.vertical) {
@@ -30,27 +36,46 @@ struct StudySummaryView: View {
             .padding(DS.Spacing.xl)
             .frame(maxWidth: .infinity)
         }
+        .background(
+            ZStack {
+                RadialGradient(colors: [DS.Color.success.opacity(0.12), .clear], center: .topLeading, startRadius: 0, endRadius: 520)
+                RadialGradient(colors: [DS.Color.accent.opacity(0.10), .clear], center: .topTrailing, startRadius: 0, endRadius: 520)
+            }
+            .ignoresSafeArea()
+        )
     }
 
     private func overview(_ summary: StudySummary) -> some View {
         let answered = summary.remembered + summary.struggled.count
+        let ratings = session.answers.map(\.rating)
         return VStack(alignment: .leading, spacing: DS.Spacing.md) {
-            Text(mode.isRoundBased
-                 ? String(localized: "Practice done")
-                 : answered == 1 ? String(localized: "1 word done") : String(localized: "\(answered) words done"))
-                .font(DS.Typography.largeTitle)
-
-            if mode.isRoundBased {
-                if let accuracy = session.accuracy {
-                    Text("\(Int((accuracy * 100).rounded()))% of your pairs were right the first time.")
-                        .foregroundStyle(DS.Color.textSecondary)
+            HStack(spacing: DS.Spacing.lg) {
+                if !mode.isRoundBased, answered > 0 {
+                    rememberedRing(Double(summary.remembered) / Double(answered))
                 }
-            } else {
+                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                    Text(mode.isRoundBased
+                         ? String(localized: "Practice done")
+                         : answered == 1 ? String(localized: "1 word done") : String(localized: "\(answered) words done"))
+                        .font(DS.Typography.largeTitle)
+                    if mode.isRoundBased, let accuracy = session.accuracy {
+                        Text("\(Int((accuracy * 100).rounded()))% of your pairs were right the first time.")
+                            .foregroundStyle(DS.Color.textSecondary)
+                    }
+                    if !ratings.isEmpty {
+                        SessionTrail(ratings: ratings, total: ratings.count)
+                            .frame(maxWidth: 280)
+                    }
+                }
+            }
+
+            if !mode.isRoundBased {
                 Grid(horizontalSpacing: DS.Spacing.sm) {
                     GridRow {
-                        stat("\(summary.remembered)", String(localized: "remembered"), DS.Color.success)
-                        stat("\(summary.struggled.count)", String(localized: "marked again"), DS.Color.danger)
-                        stat(Self.durationText(summary.duration), String(localized: "took"), DS.Color.textPrimary)
+                        tile("checkmark", "\(summary.remembered)", String(localized: "remembered"), DS.Color.success)
+                        tile("arrow.counterclockwise", "\(summary.struggled.count)", String(localized: "marked again"), DS.Color.danger)
+                        tile("clock", Self.durationText(summary.duration), String(localized: "took"), DS.Color.accent)
+                        tile("flame.fill", "\(store.reviewStreak().current)", String(localized: "day streak"), DS.Color.warning)
                     }
                 }
             }
@@ -69,17 +94,39 @@ struct StudySummaryView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
+                    .help("Return")
                 }
                 Button("More Words", action: onMore)
+                    .keyboardShortcut("m", modifiers: [])
+                    .help("M")
                 Button("Close", action: onClose)
                     .keyboardShortcut(.cancelAction)
+                    .help("Esc")
             }
             .controlSize(.large)
         }
     }
 
+    private func rememberedRing(_ share: Double) -> some View {
+        ZStack {
+            Circle().stroke(DS.Color.hairlineStrong, lineWidth: 9)
+            Circle()
+                .trim(from: 0, to: share)
+                .stroke(DS.Color.success, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            VStack(spacing: 0) {
+                Text(share, format: .percent.precision(.fractionLength(0)))
+                    .font(DS.Typography.statNumber(20))
+                Text("remembered")
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(DS.Color.textSecondary)
+            }
+        }
+        .frame(width: 92, height: 92)
+        .accessibilityElement(children: .combine)
+    }
+
     private func footnote(_ summary: StudySummary) -> Text {
-        let streak = store.reviewStreak().current
         let tomorrow = StudyPlan.comingDueTomorrow(in: store.words)
             + StudyPlan.dueReviewCount(in: store.words)
         var parts: [String] = []
@@ -87,21 +134,24 @@ struct StudySummaryView: View {
             parts.append(String(localized: "\(summary.settled.count) words now come back after a week or more."))
         }
         parts.append(String(localized: "\(tomorrow) words will be waiting by tomorrow."))
-        if streak > 0 { parts.append(String(localized: "Streak: \(streak) days.")) }
         return Text(parts.joined(separator: " "))
     }
 
-    private func stat(_ value: String, _ label: String, _ tint: Color) -> some View {
+    /// A coloured tile: its mark and its label say what the number is.
+    private func tile(_ symbol: String, _ value: String, _ label: String, _ tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(value)
-                .font(DS.Typography.statNumber(22))
+            Label(value, systemImage: symbol)
+                .font(DS.Typography.statNumber(20))
                 .foregroundStyle(tint)
+                .labelStyle(.titleAndIcon)
             Text(label)
-                .font(DS.Typography.caption)
+                .font(DS.Typography.caption.weight(.semibold))
                 .foregroundStyle(DS.Color.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .dsCard()
+        .padding(DS.Spacing.sm)
+        .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: DS.Radius.md))
+        .accessibilityElement(children: .combine)
     }
 
     @ViewBuilder
@@ -113,6 +163,11 @@ struct StudySummaryView: View {
             if !summary.settled.isEmpty {
                 list(String(localized: "SETTLED"), summary.settled)
             }
+            if !summary.struggled.isEmpty || !summary.settled.isEmpty {
+                Text("Choose a word to open it in the notebook.")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
         }
     }
 
@@ -122,28 +177,42 @@ struct StudySummaryView: View {
             VStack(spacing: 0) {
                 ForEach(Array(lines.prefix(12).enumerated()), id: \.element.id) { index, line in
                     if index > 0 { Divider() }
-                    HStack(spacing: DS.Spacing.sm) {
-                        Text(line.term).font(DS.Typography.callout.weight(.medium))
-                        if let meaning = store.word(withID: line.id).flatMap(SavedWordRow.oneLineMeaning(of:)) {
-                            Text(MarkdownUtils.sanitizeLLMOutput(meaning))
-                                .font(DS.Typography.callout)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                        Spacer(minLength: DS.Spacing.sm)
-                        if let next = line.nextReviewAt {
-                            Text(StudyPlan.intervalLabel(from: Date(), to: next))
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(DS.Color.textTertiary)
-                                .monospacedDigit()
-                        }
-                    }
-                    .lineLimit(1)
-                    .padding(.horizontal, DS.Spacing.md)
-                    .padding(.vertical, DS.Spacing.sm)
+                    lineRow(line)
                 }
             }
             .dsCard(padding: nil)
         }
+    }
+
+    /// A word of the session: its status, and a click (or Space) opens it in
+    /// the notebook.
+    private func lineRow(_ line: StudySummary.Line) -> some View {
+        let word = store.word(withID: line.id)
+        return Button {
+            WordNotebook.open(on: line.id) { openWindow(id: $0) }
+        } label: {
+            HStack(spacing: DS.Spacing.sm) {
+                Text(line.term).font(DS.Typography.callout.weight(.medium))
+                if let meaning = word.flatMap(SavedWordRow.oneLineMeaning(of:)) {
+                    Text(MarkdownUtils.sanitizeLLMOutput(meaning))
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(DS.Color.textSecondary)
+                }
+                Spacer(minLength: DS.Spacing.sm)
+                if let word {
+                    WordStatusBadge(status: WordStatus.of(word))
+                }
+            }
+            .lineLimit(1)
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.vertical, DS.Spacing.sm)
+            .contentShape(Rectangle())
+            .background(focusedLine == line.id ? DS.Color.accentSubtle : .clear)
+        }
+        .buttonStyle(.plain)
+        .focusable()
+        .focused($focusedLine, equals: line.id)
+        .help("Open in the notebook")
     }
 
     static func durationText(_ seconds: TimeInterval) -> String {

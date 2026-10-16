@@ -77,6 +77,8 @@ enum DS {
         static var star: SwiftUI.Color { .yellow }
         /// Words imported from a Kindle (v18 S1; was a literal purple).
         static var kindle: SwiftUI.Color { .purple }
+        /// The study room's second hue beside the accent (v18 S5).
+        static var violet: SwiftUI.Color { .purple }
 
         // ── Identity palette extras ───────────────────────────────────────
         // The module/domain rainbow mostly rides system colors; these two are

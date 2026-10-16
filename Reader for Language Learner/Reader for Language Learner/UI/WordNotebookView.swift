@@ -22,6 +22,9 @@ struct WordNotebookView: View {
     /// Saved twice (v16 S3) — the tagger over every word, so worked out
     /// when the words change rather than on every redraw.
     @State private var duplicates: [WordMerge.Group] = []
+    /// Return in the list moves focus to the word page (v18 S5).
+    @State private var pageFocusRequest = 0
+    @AppStorage(StorageKey.speechRate) private var speechRate: Double = 0.5
 
     /// Books shown before "N more books".
     private static let collapsedBookCount = 6
@@ -47,11 +50,24 @@ struct WordNotebookView: View {
                     )
                 }
             }
+            // v18 S5: the notebook by keyboard — Space says the word, Return
+            // goes to its page. (A focused search field keeps both keys.)
+            .onKeyPress(.space) {
+                guard let word = selectedWord else { return .ignored }
+                SpeechManager.shared.speak(word.term, language: word.language.flatMap(Language.init) ?? Language.storedTarget,
+                                           rate: Float(speechRate))
+                return .handled
+            }
+            .onKeyPress(.return) {
+                guard selectedWord != nil else { return .ignored }
+                pageFocusRequest += 1
+                return .handled
+            }
             .navigationSplitViewColumnWidth(min: 320, ideal: 420)
             .toolbar { toolbar }
         } detail: {
             if let selection, let word = store.word(withID: selection) {
-                SavedWordDetailSheet(word: word, store: store, isPane: true)
+                SavedWordDetailSheet(word: word, store: store, isPane: true, focusRequest: pageFocusRequest)
                     .id(selection)
             } else {
                 DSEmptyState(icon: "character.book.closed", title: "Choose a word",
@@ -62,6 +78,10 @@ struct WordNotebookView: View {
         .onAppear(perform: takePendingReveal)
         .task(id: store.words.count) { findDuplicates() }
         .onReceive(NotificationCenter.default.publisher(for: .revealInNotebook)) { _ in takePendingReveal() }
+    }
+
+    private var selectedWord: SavedWord? {
+        selection.flatMap { store.word(withID: $0) }
     }
 
     private func findDuplicates() {
@@ -154,7 +174,18 @@ struct WordNotebookView: View {
                 Label("Table", systemImage: "tablecells").tag(true)
             }
             .pickerStyle(.segmented)
-            .help("Show the words as a list or a table")
+            .help("Show the words as a list (⌘1) or a table (⌘2)")
+            // v18 S5: ⌘1 / ⌘2, as in Finder's views.
+            .background {
+                Button("List") { tableMode = false }
+                    .keyboardShortcut("1", modifiers: .command)
+                    .opacity(0)
+                    .accessibilityHidden(true)
+                Button("Table") { tableMode = true }
+                    .keyboardShortcut("2", modifiers: .command)
+                    .opacity(0)
+                    .accessibilityHidden(true)
+            }
         }
         ToolbarItem {
             Button {
@@ -179,8 +210,10 @@ struct WordTable: View {
         let term: String
         let meaning: String
         let level: String
-        let status: String
+        let status: WordStatus
         let statusOrder: Int
+        /// Chance of recalling it now, 0…1; -1 before its first review.
+        let recall: Double
         let nextReview: Date
         let book: String
     }
@@ -189,14 +222,15 @@ struct WordTable: View {
 
     private var rows: [Row] {
         words.map { word in
-            let status = word.reviewStatus
+            let status = WordStatus.of(word)
             return Row(
                 id: word.id,
                 term: word.term,
                 meaning: SavedWordRow.oneLineMeaning(of: word).map(MarkdownUtils.sanitizeLLMOutput) ?? "",
                 level: word.cefrLevel ?? "",
-                status: status.localizedTitle,
-                statusOrder: [ReviewStatus.due, .new, .scheduled, .mastered].firstIndex(of: status) ?? 0,
+                status: status,
+                statusOrder: Self.order(status),
+                recall: WordPageModel.recallNow(word) ?? -1,
                 nextReview: word.nextReviewAt ?? .distantFuture,
                 book: word.pdfFilename.map(BookIdentity.displayTitle) ?? ""
             )
@@ -204,12 +238,40 @@ struct WordTable: View {
         .sorted(using: sortOrder)
     }
 
+    /// What needs you first: forgotten, waiting, new, then by when.
+    private static func order(_ status: WordStatus) -> Int {
+        switch status {
+        case .struggling: return 0
+        case .waiting: return 1
+        case .new: return 2
+        case .scheduled: return 3
+        case .settled: return 4
+        }
+    }
+
     var body: some View {
         Table(rows, selection: $selection, sortOrder: $sortOrder) {
             TableColumn("Word", value: \.term)
             TableColumn("Meaning", value: \.meaning) { Text($0.meaning).foregroundStyle(DS.Color.textSecondary) }
             TableColumn("Level", value: \.level).width(min: 40, ideal: 50, max: 70)
-            TableColumn("Status", value: \.statusOrder) { Text($0.status) }.width(min: 70, ideal: 90)
+            TableColumn("Status", value: \.statusOrder) { WordStatusBadge(status: $0.status) }.width(min: 90, ideal: 120)
+            // v18 S5: how well you remember it now — a short bar, the number beside it.
+            TableColumn("Memory", value: \.recall) { row in
+                if row.recall < 0 {
+                    Text("—").foregroundStyle(DS.Color.textTertiary)
+                } else {
+                    HStack(spacing: DS.Spacing.xs) {
+                        ProgressView(value: row.recall)
+                            .tint(DS.Color.textSecondary)
+                            .frame(width: 40)
+                        Text(row.recall, format: .percent.precision(.fractionLength(0)))
+                            .monospacedDigit()
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(Text("\(Int((row.recall * 100).rounded()))% · \(RecallStrength(row.recall).title)"))
+                }
+            }
+            .width(min: 70, ideal: 90)
             TableColumn("Next Review", value: \.nextReview) { row in
                 if row.nextReview == .distantFuture {
                     Text("—").foregroundStyle(DS.Color.textTertiary)

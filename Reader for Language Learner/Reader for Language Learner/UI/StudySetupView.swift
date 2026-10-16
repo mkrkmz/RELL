@@ -212,7 +212,7 @@ struct StudySetupView: View {
                     .foregroundStyle(DS.Color.textSecondary)
             }
             Spacer(minLength: 0)
-            Text("⌃⌘F full screen")
+            Text("↩ start · ⌃⌘F full screen")
                 .font(DS.Typography.caption)
                 .foregroundStyle(DS.Color.textTertiary)
         }

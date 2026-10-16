@@ -657,12 +657,20 @@ struct QuizView: View {
     // MARK: - Card Faces
 
     func cardFace(content: some View, isFront: Bool) -> some View {
-        content
-            .padding(style == .room ? DS.Spacing.xl : DS.Spacing.lg)
-            .frame(maxWidth: .infinity, minHeight: style == .room ? 300 : DS.Layout.cardFrontMinHeight)
-            .dsCard(padding: nil, radius: DS.Radius.lg, stroke: .hairlineStrong)
-            .dsShadow(DS.Shadow.card)
-            .padding(.horizontal, DS.Spacing.md)
+        VStack(spacing: 0) {
+            // v18 S5: in the room, a coloured band says what this card is.
+            if style == .room, !quizMode.isRoundBased, let word = session.currentWord {
+                roomBand(for: word)
+            }
+            content
+                .padding(style == .room ? DS.Spacing.xl : DS.Spacing.lg)
+                .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity, minHeight: style == .room ? 300 : DS.Layout.cardFrontMinHeight, alignment: .top)
+        .dsCard(padding: nil, radius: DS.Radius.lg, stroke: .hairlineStrong)
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+        .dsShadow(DS.Shadow.card)
+        .padding(.horizontal, DS.Spacing.md)
     }
 
     @ViewBuilder

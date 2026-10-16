@@ -18,8 +18,24 @@ struct StudyRoomView: View {
 
     var body: some View {
         QuizView(store: store, style: .room, onClose: { dismissWindow(id: StudyRoom.windowID) })
-            .background(DS.Color.surface)
+            .background(StudyRoomGlow())
             .background(StudyRoomWindowConfigurator())
+    }
+}
+
+/// The room's floor (v18 S5, approved mockup): the surface with a soft
+/// light of the accent from above and violet from the far corner — so the
+/// room feels like a place, not a form.
+private struct StudyRoomGlow: View {
+    var body: some View {
+        ZStack {
+            DS.Color.surface
+            RadialGradient(colors: [DS.Color.accent.opacity(0.16), .clear],
+                           center: .top, startRadius: 0, endRadius: 620)
+            RadialGradient(colors: [DS.Color.violet.opacity(0.10), .clear],
+                           center: .bottomTrailing, startRadius: 0, endRadius: 560)
+        }
+        .ignoresSafeArea()
     }
 }
 

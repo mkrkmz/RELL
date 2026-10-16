@@ -273,10 +273,44 @@ parcasi; imlec balonunda kaynak; gorunum paneli tek bakista; Zen'de ayni
 
 ## Sprint 5 — "Kelime defteri ve calisma odasi" (Should, **maketle baslar**)
 
-- [ ] Kelime sayfasi (hafiza gucu, sonraki tekrar, karsilasmalar),
-      defter listesi ve tablosu, calisma karti ve ozeti icin gorsel
-      yenileme
-- [ ] Erisilebilirlik: renk tek bilgi tasiyicisi degil, klavye akislari
+Maket onayi (2026-10-16, 2. surum — kullanicinin istegiyle): defter ve
+kelime sayfasi derli toplu; calisma odasi canli ve odullendirici (renkli
+serit, oturumun izi, dolu renkli degerlendirme dugmeleri, kutlama gibi
+ozet). Durum her yerde renkli kapsul + isaret + sozcuk; renk tek basina
+bilgi tasimaz. Klavye haritasi ve renk denetimi sprintin parcasi.
+
+- [x] **Tek durum dili** — `WordStatus` (Bekliyor ●, Yeni ✦, "3 gun sonra" ○,
+      Oturdu ✓, Unutuyorsun ↺ — digerlerinin onune gecer) ve
+      `WordStatusBadge`; defter satiri, tablo, kelime sayfasi, ozet
+- [x] **Defter satiri** — sagda seviye ve durum; Kindle ve dil kelime
+      sayfasina, ayri ↺ isareti durumun icine
+- [x] **Tablo** — durum rozeti, siralanabilir "Hafiza" sutunu (yuzde +
+      kisa cubuk; ilk tekrardan once "—")
+- [x] **Kelime sayfasi** — baslikta ozet satiri (seviye, durum, hafiza,
+      Kindle/dil); Hafiza kutusu: yuzde + Guclu / Orta / Zayif, sonraki
+      tekrarin gunu, son 12 cevabin seridi (↺ – ✓ ✓✓, `ReviewHistoryStrip`);
+      karsilasmalar kitaba gore gruplu; "Eksikleri Doldur" sade dugme (⇧⌘F)
+- [x] **Calisma odasi** — zeminde vurgu ve mor isik; kartin ustunde durum
+      seridi (Yeni, Tekrar, Unutuyorsun · bu kez yakala) ve "N ust uste";
+      ilerleme cubugu oturumun izi (`SessionTrail`); seri (alev); dolu
+      renkli, isaretli degerlendirme dugmeleri (basinca hafif cokme); hafiza
+      ipucu sicak kutuda, ampulle. Hareketi azalt ayari saygi gorur
+- [x] **Ozet** — hatirlama halkasi, oturumun izi, dort renkli kutu
+      (hatirladin, "Tekrar" dedin, sure, gunluk seri); listede satir secilince
+      kelime defterde acilir, satirlar klavyeyle gezilir; ↩ / M / Esc
+- [x] **Klavye** — defterde Bosluk dinle, ↩ kelime sayfasina, ⌘1 / ⌘2 liste
+      / tablo, ⌘⌫ sil (onayli); kelime sayfasinda Tab alanlar, ↩ duzenle,
+      Esc birak, ⇧⌘F doldur; kurulumda ↩ ipucu
+- [x] **Renk denetimi** — hafiza halkasi, durumlar, degerlendirme, ozet
+      sayilari, oturumun izi ve okuma ekranindaki "Bu bolum" yuzdesi (yardim
+      balonu ve VoiceOver "kolay / orta / zor") sozcukle de soylenir
+- [x] Testler: `NotebookAndStudyTests` (10) — isaret ve sozcuk her durumda
+      ayri, kelimenin durumu, "unutuyorsun" onde, hafiza esikleri, cevap
+      isaretleri, ust uste sayaci, izin sozlu ozeti, gecmis seridi, kitaba
+      gore gruplama, zorluk sozcukleri. Mutasyon: "unutuyorsun onde" ve ust
+      uste sayaci. Tam paket 799 (bilinen kirilgan `DocumentCoverStoreTests`
+      tam calismada kirmizi, tek basina ve CI'da yesil — S6'da ele alinir)
+- [ ] Canli tur (kullanici)
 
 ## Sprint 6 — "Kapanis"
 

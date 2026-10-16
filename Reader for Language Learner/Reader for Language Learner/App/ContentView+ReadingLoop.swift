@@ -192,8 +192,12 @@ extension ContentView {
         }
         .buttonStyle(.plain)
         .fixedSize()
-        .help(Text("What you know here, words to warm up, and reviews due"))
+        // v18 S5: the percentage's colour says how hard the passage is; the
+        // tooltip and VoiceOver say it in words.
+        .help(known.map { Text("\(Int(($0.knownShare * 100).rounded()))% known · \($0.difficulty.localizedTitle). What you know here, words to warm up, and reviews due") }
+              ?? Text("What you know here, words to warm up, and reviews due"))
         .accessibilityLabel(scope)
+        .accessibilityValue(known.map { Text("\(Int(($0.knownShare * 100).rounded()))% known, \($0.difficulty.localizedTitle)") } ?? Text(""))
         .popover(isPresented: Bindable(model).showWarmUp, arrowEdge: .bottom) {
             ChapterPanel(
                 title: isEPUBDocument

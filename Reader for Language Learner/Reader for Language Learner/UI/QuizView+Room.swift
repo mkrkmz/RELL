@@ -147,10 +147,7 @@ extension QuizView {
     func introductionCard(for word: SavedWord) -> some View {
         VStack(spacing: DS.Spacing.md) {
             cardFace(
-                content: VStack(spacing: DS.Spacing.sm) {
-                    Text("NEW WORD").dsOverlineLabel()
-                    roomBack(for: word)
-                },
+                content: roomBack(for: word),
                 isFront: true
             )
             Button {
@@ -176,14 +173,20 @@ extension QuizView {
 
     private var roomProgress: some View {
         HStack(spacing: DS.Spacing.md) {
-            ProgressView(value: Double(min(session.position, session.total)), total: Double(max(session.total, 1)))
-                .tint(DS.Color.accent)
+            // v18 S5: the session's trail — every answer a slice in its colour.
+            SessionTrail(ratings: session.answers.map(\.rating), total: session.total)
             if session.cram {
                 Label("Practice", systemImage: "gamecontroller")
                     .foregroundStyle(DS.Color.warning)
             }
             Text("\(session.position) / \(session.total)")
                 .monospacedDigit()
+            let streak = store.reviewStreak().current
+            if streak > 0 {
+                Label("\(streak) days", systemImage: "flame.fill")
+                    .foregroundStyle(DS.Color.warning)
+                    .help("Days in a row you've studied")
+            }
         }
         .font(DS.Typography.caption.weight(.semibold))
         .foregroundStyle(DS.Color.textSecondary)
@@ -222,18 +225,7 @@ extension QuizView {
 
     func roomFront(for word: SavedWord) -> some View {
         VStack(spacing: DS.Spacing.md) {
-            HStack(spacing: DS.Spacing.xs) {
-                if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
-                    Text(cefr.rawValue)
-                        .font(DS.Typography.caption2.weight(.bold))
-                        .foregroundStyle(cefr.badgeColor)
-                        .padding(.horizontal, DS.Spacing.xs)
-                        .background(cefr.badgeColor.opacity(0.12), in: Capsule())
-                }
-                Text(word.hasBeenReviewed ? String(localized: "Review") : String(localized: "New word"))
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
+            // The level and "new / review" are on the card's band (v18 S5).
             Text(word.term)
                 .font(DS.Typography.studyWord)
                 .foregroundStyle(DS.Color.textPrimary)
@@ -285,15 +277,26 @@ extension QuizView {
                     }
                 }
                 if let hook = FillField.mnemonic.value(in: word) {
-                    VStack(spacing: DS.Spacing.xxs) {
-                        Text("MEMORY HOOK").dsOverlineLabel()
-                        Text(hook)
-                            .font(DS.Typography.callout)
-                            .foregroundStyle(DS.Color.textPrimary)
+                    // v18 S5: a warm box with a bulb — the hook should stand out.
+                    HStack(alignment: .top, spacing: DS.Spacing.sm) {
+                        Image(systemName: "lightbulb.fill")
+                            .foregroundStyle(DS.Color.amber)
+                        VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                            Text("MEMORY HOOK").dsOverlineLabel()
+                            Text(hook)
+                                .font(DS.Typography.callout)
+                                .foregroundStyle(DS.Color.textPrimary)
+                        }
+                        .multilineTextAlignment(.leading)
+                        Spacer(minLength: 0)
                     }
                     .padding(DS.Spacing.sm)
                     .frame(maxWidth: .infinity)
-                    .background(DS.Color.warning.opacity(0.08), in: RoundedRectangle(cornerRadius: DS.Radius.md))
+                    .background(
+                        LinearGradient(colors: [DS.Color.amber.opacity(0.20), DS.Color.warning.opacity(0.08)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing),
+                        in: RoundedRectangle(cornerRadius: DS.Radius.md)
+                    )
                 }
                 if !word.sentence.isEmpty {
                     roomSentence(word)
@@ -348,15 +351,16 @@ extension QuizView {
 
     func roomRatingRow(for word: SavedWord) -> some View {
         HStack(spacing: DS.Spacing.sm) {
-            roomRating(.again, title: String(localized: "Again"), key: "1", tint: DS.Color.danger, word: word)
-            roomRating(.hard, title: String(localized: "Hard"), key: "2", tint: DS.Color.warning, word: word)
-            roomRating(.good, title: String(localized: "Good"), key: "3", tint: DS.Color.accent, word: word)
-            roomRating(.easy, title: String(localized: "Easy"), key: "4", tint: DS.Color.success, word: word)
+            ForEach(Array([ReviewRating.again, .hard, .good, .easy].enumerated()), id: \.element) { index, rating in
+                roomRating(rating, key: Character("\(index + 1)"), word: word)
+            }
         }
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
-    private func roomRating(_ rating: ReviewRating, title: String, key: Character, tint: Color, word: SavedWord) -> some View {
+    /// v18 S5 (approved mockup): filled in the rating's colour with its mark
+    /// — the colour makes it inviting, the mark and word say it.
+    private func roomRating(_ rating: ReviewRating, key: Character, word: SavedWord) -> some View {
         // When the word comes back after this grade — not in practice,
         // which leaves the schedule alone (approved decision 4).
         let next = session.cram ? nil : store.nextReviewDate(for: word, after: rating)
@@ -366,24 +370,86 @@ extension QuizView {
             VStack(spacing: 1) {
                 Text(String(key))
                     .font(DS.Typography.mono)
-                    .opacity(0.7)
-                Text(title)
-                    .font(DS.Typography.callout.weight(.semibold))
+                    .opacity(0.8)
+                Text("\(rating.mark) \(rating.localizedTitle)")
+                    .font(DS.Typography.callout.weight(.bold))
                 if let next {
                     Text(StudyPlan.intervalLabel(from: Date(), to: next))
                         .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.textSecondary)
+                        .opacity(0.9)
                         .monospacedDigit()
                 }
             }
-            .foregroundStyle(tint)
+            .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, DS.Spacing.sm)
-            .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: DS.Radius.md))
+            .background(
+                LinearGradient(colors: [rating.tint.opacity(0.82), rating.tint],
+                               startPoint: .top, endPoint: .bottom),
+                in: RoundedRectangle(cornerRadius: DS.Radius.md)
+            )
+            .shadow(color: rating.tint.opacity(0.25), radius: 4, y: 2)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(RoomRatingButtonStyle())
         .keyboardShortcut(KeyEquivalent(key), modifiers: [])
-        .accessibilityLabel(next.map { "\(title), \(StudyPlan.intervalLabel(from: Date(), to: $0))" } ?? title)
+        .accessibilityLabel(next.map { "\(rating.localizedTitle), \(StudyPlan.intervalLabel(from: Date(), to: $0))" } ?? rating.localizedTitle)
+    }
+
+    // MARK: Liveliness (v18 S5)
+
+    /// The band across the top of the card: what this card is, in colour
+    /// and in words — the level, and a streak of remembered answers.
+    func roomBand(for word: SavedWord) -> some View {
+        let isNew = !word.hasBeenReviewed
+        let colors: [Color] = word.isStruggling ? [DS.Color.danger, DS.Color.warning]
+            : isNew ? [DS.Color.accent, DS.Color.violet] : [DS.Color.accent, DS.Color.accent.opacity(0.7)]
+        let title = word.isStruggling ? String(localized: "You keep forgetting · catch it this time")
+            : isNew ? String(localized: "New word") : String(localized: "Review")
+        let symbol = word.isStruggling ? "arrow.counterclockwise" : isNew ? "sparkle" : "circle.fill"
+        return HStack(spacing: DS.Spacing.sm) {
+            Label(title, systemImage: symbol)
+                .imageScale(.small)
+            Spacer(minLength: DS.Spacing.sm)
+            if roomCombo >= 3 {
+                Label("\(roomCombo) in a row", systemImage: "checkmark")
+                    .imageScale(.small)
+                    .padding(.horizontal, DS.Spacing.xs)
+                    .background(.white.opacity(0.22), in: Capsule())
+                    .help("Answers in a row you remembered")
+            }
+            if let cefr = word.cefrLevel.flatMap(CEFRLevel.init) {
+                Text(cefr.rawValue)
+                    .padding(.horizontal, DS.Spacing.xs)
+                    .background(.white.opacity(0.22), in: Capsule())
+            }
+        }
+        .font(DS.Typography.caption.weight(.bold))
+        .foregroundStyle(.white)
+        .lineLimit(1)
+        .padding(.horizontal, DS.Spacing.md)
+        .padding(.vertical, DS.Spacing.xs)
+        .frame(maxWidth: .infinity)
+        .background(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Answers in a row, from the latest back, that weren't "Again".
+    var roomCombo: Int {
+        SessionTrail.combo(session.answers.map(\.rating))
+    }
+}
+
+/// Presses in a little and brightens on hover — the buttons feel alive.
+private struct RoomRatingButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hovering = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .brightness(hovering ? 0.05 : 0)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
+            .onHover { hovering = $0 }
+            .animation(reduceMotion ? nil : DS.Animation.fast, value: configuration.isPressed)
     }
 }
