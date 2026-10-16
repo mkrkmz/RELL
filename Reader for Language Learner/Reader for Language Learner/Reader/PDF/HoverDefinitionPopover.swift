@@ -26,7 +26,7 @@ final class HoverBalloon {
     nonisolated static let delay: TimeInterval = 0.8
 
     private let model: HoverLookupModel
-    private var host: PassThroughHostingView<HoverBalloonView>?
+    private var host: HoverBalloonHostingView?
     /// The word's rectangle in the host view, and that view.
     private var anchor: (rect: CGRect, view: NSView)?
 
@@ -39,7 +39,7 @@ final class HoverBalloon {
     /// Shows the balloon at `rect`, a rectangle in `view`'s coordinates.
     func show(at rect: CGRect, in view: NSView) {
         anchor = (rect, view)
-        let host = self.host ?? PassThroughHostingView(rootView: HoverBalloonView(model: model))
+        let host = self.host ?? HoverBalloonHostingView(rootView: HoverBalloonView(model: model))
         host.translatesAutoresizingMaskIntoConstraints = true
         if host.superview !== view {
             host.removeFromSuperview()
@@ -116,8 +116,10 @@ nonisolated enum HoverBalloonPlacement {
     }
 }
 
-/// A hosting view the pointer goes through.
-final class PassThroughHostingView<Content: View>: NSHostingView<Content> {
+/// The balloon's hosting view; the pointer goes through it. Not generic:
+/// CI's Swift 6.3 optimizer crashed on the deinit of a generic
+/// `NSHostingView` subclass in Release builds (1.48.1 release run).
+final class HoverBalloonHostingView: NSHostingView<HoverBalloonView> {
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 

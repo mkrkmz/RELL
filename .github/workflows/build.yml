@@ -23,6 +23,9 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      # Release, as the release workflow builds it: the optimizer runs only
+      # there (1.48.1: CI's compiler crashed in Release on code that built
+      # fine in Debug, and only the tag's run found out). Tests cover Debug.
       - name: Build
         run: |
           set -o pipefail
@@ -30,7 +33,7 @@ jobs:
             -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
             -scheme "Reader for Language Learner" \
             -destination 'platform=macOS' \
-            -configuration Debug \
+            -configuration Release \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -45,7 +48,7 @@ jobs:
             -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
             -scheme "Reader for Language Learner" \
             -destination 'platform=macOS' \
-            -configuration Debug \
+            -configuration Release \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
