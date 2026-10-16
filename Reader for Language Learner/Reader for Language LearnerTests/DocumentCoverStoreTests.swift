@@ -48,8 +48,28 @@ final class DocumentCoverStoreTests: XCTestCase {
         return url
     }
 
+    /// v18 S6: the store renders at utility priority, and the first render
+    /// in the process loads PDFKit from disk. Under the full suite's load,
+    /// macOS throttled that low-priority I/O so long that this class's first
+    /// test sometimes got no cover in 20 s (red in some full runs, green
+    /// alone and on CI). One thumbnail drawn here at normal priority pays
+    /// that cold start, so the tests time the store, not the disk.
+    nonisolated override class func setUp() {
+        super.setUp()
+        let data = NSMutableData()
+        var box = CGRect(x: 0, y: 0, width: 20, height: 20)
+        if let consumer = CGDataConsumer(data: data as CFMutableData),
+           let context = CGContext(consumer: consumer, mediaBox: &box, nil) {
+            context.beginPDFPage(nil)
+            context.endPDFPage()
+            context.closePDF()
+        }
+        _ = PDFDocument(data: data as Data)?.page(at: 0)?.thumbnail(of: CGSize(width: 10, height: 10), for: .cropBox)
+    }
+
+    /// Up to 10 s, back as soon as the cover is there.
     private func waitForCover(in store: DocumentCoverStore, path: String) async -> NSImage? {
-        for _ in 0..<100 {
+        for _ in 0..<200 {
             if let image = store.cover(for: path) { return image }
             try? await Task.sleep(for: .milliseconds(50))
         }
