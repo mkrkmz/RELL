@@ -4,6 +4,28 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.48.1] - 2026-10-16
+
+### Changed
+
+- **The app is called RELL.** It installs as RELL.app, so Finder and
+  Spotlight find it by that name. Your words, books, settings and keys
+  stay. Coming from 1.48.0 or older, move the old "Reader for Language
+  Learner" to the Trash after installing.
+- **The hover balloon waits a little longer** — 0.8 s instead of 0.5 s —
+  so passing over the text on the way somewhere doesn't open one.
+
+### Fixed
+
+- **The hover balloon opens at the word.** It could appear well above or
+  below the word you were on, in PDFs and EPUBs alike. It now sits right
+  below the word, or above it near the bottom of the page.
+- **The word card shows the short meaning.** For a word answered from the
+  Apple dictionary, the card showed the entry's grammar first
+  ("transitive verb past -came…") and the meaning was cut off. It now
+  shows the meaning only ("yenmek; galip gelmek"), on up to two lines.
+  Fill Missing writes the same cleaner meaning.
+
 ## [1.48.0] - 2026-10-16
 
 A calm, consistent interface. Roadmap v18 (Sprints 0–6): one family of
