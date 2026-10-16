@@ -54,8 +54,8 @@ extension PDFKitView {
         private var highlightsObserver: NSObjectProtocol?
 
         // Hover dictionary
-        private var hoverPopover: NSPopover?
         private let hoverModel = HoverLookupModel()
+        private lazy var hoverBalloon = HoverBalloon(model: hoverModel)
         private var hoverWorkItem: DispatchWorkItem?
         private var hoverTask: Task<Void, Never>?
         private var currentHoverTerm: String = ""
@@ -616,7 +616,7 @@ extension PDFKitView {
                 MainActor.assumeIsolated { self?.resolveHover(at: point) }
             }
             hoverWorkItem = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: work)
+            DispatchQueue.main.asyncAfter(deadline: .now() + HoverBalloon.delay, execute: work)
         }
 
         @MainActor private func resolveHover(at point: NSPoint) {
@@ -637,7 +637,7 @@ extension PDFKitView {
                 closeHoverPopover(); return
             }
 
-            if raw.lowercased() == currentHoverTerm.lowercased(), hoverPopover?.isShown == true {
+            if raw.lowercased() == currentHoverTerm.lowercased(), hoverBalloon.isShown {
                 return
             }
             currentHoverTerm = raw
@@ -676,25 +676,7 @@ extension PDFKitView {
         }
 
         @MainActor private func showHoverPopover(relativeTo rect: NSRect, in view: NSView) {
-            let popover: NSPopover
-            if let existing = hoverPopover {
-                popover = existing
-            } else {
-                popover = NSPopover()
-                popover.behavior = .semitransient
-                popover.animates = false
-                popover.contentViewController = NSHostingController(rootView: HoverDefinitionPopover(model: hoverModel))
-                hoverPopover = popover
-            }
-            popover.appearance = PageTheme.stored.overlayAppearance   // arrow matches the fill
-            // An open balloon moves to the new word. Closing and showing it
-            // again in the same pass could leave it at the last word's place
-            // (v18 S4 live pass).
-            if popover.isShown {
-                popover.positioningRect = rect
-            } else {
-                popover.show(relativeTo: rect, of: view, preferredEdge: .maxY)
-            }
+            hoverBalloon.show(at: rect, in: view)
         }
 
         private func cancelHover() {
@@ -706,7 +688,7 @@ extension PDFKitView {
             hoverWorkItem?.cancel()
             hoverTask?.cancel()
             currentHoverTerm = ""
-            hoverPopover?.performClose(nil)
+            hoverBalloon.close()
         }
 
         // MARK: - Context Menu Actions
@@ -915,8 +897,7 @@ extension PDFKitView {
             hoverWorkItem = nil
             hoverTask?.cancel()
             hoverTask = nil
-            hoverPopover?.performClose(nil)
-            hoverPopover = nil
+            hoverBalloon.close()
             selectionDebounceWorkItem?.cancel()
             selectionDebounceWorkItem = nil
             documentUpdateWorkItem?.cancel()

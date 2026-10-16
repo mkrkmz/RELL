@@ -347,11 +347,11 @@ struct EPUBReaderView: NSViewRepresentable {
         forMainFrameOnly: true
     )
 
-    /// Hover dictionary bridge: after the pointer rests for 500 ms over a
-    /// word (and nothing is selected), report the word + its viewport rect.
-    /// An empty word means "hover ended" and closes the popover.
+    /// Hover dictionary bridge: after the pointer rests over a word for
+    /// `HoverBalloon.delay` (and nothing is selected), report the word + its
+    /// viewport rect. An empty word means "hover ended" and closes the balloon.
     private static let hoverScript = WKUserScript(
-        source: bundledScript("rell-hover"),
+        source: "var rellHoverDelayMs = \(Int(HoverBalloon.delay * 1000));\n" + bundledScript("rell-hover"),
         injectionTime: .atDocumentEnd,
         forMainFrameOnly: true
     )

@@ -202,7 +202,7 @@ final class EPUBViewManager: NSObject {
     @ObservationIgnored var hoverLookup: ((String) async throws -> HoverAnswer)?
     /// Whether a hovered word is in the notebook (any form of it).
     @ObservationIgnored var hoverIsSaved: ((String) -> Bool)?
-    @ObservationIgnored private var hoverPopover: NSPopover?
+    @ObservationIgnored private lazy var hoverBalloon = HoverBalloon(model: hoverModel)
     /// Floating selection action bar hosted over the web view (U1).
     @ObservationIgnored private var selectionBarHost: NSHostingView<SelectionActionBar>?
     @ObservationIgnored private let hoverModel = HoverLookupModel()
@@ -831,7 +831,7 @@ final class EPUBViewManager: NSObject {
             closeHoverPopover()
             return
         }
-        if term.lowercased() == currentHoverTerm.lowercased(), hoverPopover?.isShown == true {
+        if term.lowercased() == currentHoverTerm.lowercased(), hoverBalloon.isShown {
             return
         }
         currentHoverTerm = term
@@ -840,30 +840,10 @@ final class EPUBViewManager: NSObject {
             startHoverLookup(term: term)
         }
 
-        let popover: NSPopover
-        if let existing = hoverPopover {
-            popover = existing
-        } else {
-            popover = NSPopover()
-            popover.behavior = .semitransient
-            popover.animates = false
-            popover.contentViewController = NSHostingController(
-                rootView: HoverDefinitionPopover(model: hoverModel)
-            )
-            hoverPopover = popover
-        }
         // WKWebView is flipped, so JS viewport coordinates map straight
         // onto the view's coordinate space.
         let positioning = rect.width > 0 ? rect : CGRect(x: rect.minX, y: rect.minY, width: 1, height: 1)
-        popover.appearance = PageTheme.stored.overlayAppearance   // arrow matches the fill
-        // An open balloon moves to the new word. Closing and showing it again
-        // in the same pass could leave it at the last word's place, showing
-        // the new one (v18 S4 live pass).
-        if popover.isShown {
-            popover.positioningRect = positioning
-        } else {
-            popover.show(relativeTo: positioning, of: webView, preferredEdge: .maxY)
-        }
+        hoverBalloon.show(at: positioning, in: webView)
     }
 
     private func startHoverLookup(term: String) {
@@ -886,7 +866,7 @@ final class EPUBViewManager: NSObject {
     func closeHoverPopover() {
         hoverTask?.cancel()
         currentHoverTerm = ""
-        hoverPopover?.performClose(nil)
+        hoverBalloon.close()
     }
 
     /// Called by the reader view when a chapter finishes loading.

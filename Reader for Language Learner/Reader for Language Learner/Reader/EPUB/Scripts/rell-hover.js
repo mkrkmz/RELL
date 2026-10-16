@@ -1,6 +1,8 @@
 // rell-hover.js — injected into every EPUB chapter by EPUBReaderView.makeConfiguration (RELL's own content world; the book's scripts are off).
 (function() {
     var timer = null;
+    // Set by EPUBReaderView from HoverBalloon.delay, the PDF reader's too.
+    var delay = (typeof rellHoverDelayMs === 'number') ? rellHoverDelayMs : 800;
     var WORD = /[A-Za-zÀ-ÖØ-öø-ÿĀ-ſ'’-]/;
 
     function post(word, r) {
@@ -30,7 +32,7 @@
             wordRange.setStart(node, start);
             wordRange.setEnd(node, end);
             post(text.substring(start, end), wordRange.getBoundingClientRect());
-        }, 500);
+        }, delay);
     }, { passive: true });
 
     // v18 S4: the balloon doesn't ride along with a scroll. Posted once per

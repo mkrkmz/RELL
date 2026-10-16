@@ -52,6 +52,31 @@ final class ReadingSurfaceTests: XCTestCase {
                        800 - 200 - SelectionBarPlacement.margin)
     }
 
+    // MARK: Hover balloon placement (1.48 live pass: it now lives in the page)
+
+    func testTheBalloonSitsRightBelowTheWord() {
+        let y = HoverBalloonPlacement.originY(wordTop: 200, wordBottom: 220, height: 100, visibleTop: 0, visibleBottom: 600)
+        XCTAssertEqual(y, 220 + HoverBalloonPlacement.gap, "touching the word, not hundreds of points away")
+    }
+
+    func testTheBalloonGoesAboveAWordAtTheBottomOfThePage() {
+        let y = HoverBalloonPlacement.originY(wordTop: 560, wordBottom: 580, height: 100, visibleTop: 0, visibleBottom: 600)
+        XCTAssertEqual(y, 560 - HoverBalloonPlacement.gap - 100)
+    }
+
+    func testTheBalloonNeverCoversTheWordWhileEitherSideHasRoom() {
+        for top in stride(from: CGFloat(0), through: 580, by: 9) {
+            let word = top...(top + 20)
+            let y = HoverBalloonPlacement.originY(wordTop: word.lowerBound, wordBottom: word.upperBound, height: 120,
+                                                  visibleTop: 0, visibleBottom: 600)
+            XCTAssertFalse((y...(y + 120)).overlaps(word), "word at \(top)")
+            let gapBelow = y - word.upperBound
+            let gapAbove = word.lowerBound - (y + 120)
+            XCTAssertTrue(gapBelow == HoverBalloonPlacement.gap || gapAbove == HoverBalloonPlacement.gap,
+                          "right next to the word at \(top)")
+        }
+    }
+
     // MARK: Line spacing presets
 
     func testLineSpacingPresetsAndTheNearestToAnOlderValue() {
