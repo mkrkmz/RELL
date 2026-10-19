@@ -14,81 +14,6 @@ import os
 import SwiftUI
 import WebKit
 
-// MARK: - URL Scheme
-
-enum EPUBScheme {
-    static let scheme = "rell-epub"
-
-    static func url(forArchivePath path: String) -> URL? {
-        var components = URLComponents()
-        components.scheme = scheme
-        components.host = "book"
-        components.path = "/" + path
-        return components.url
-    }
-
-    static func archivePath(from url: URL) -> String {
-        String(url.path.dropFirst())   // strip leading "/" — already percent-decoded
-    }
-}
-
-// MARK: - Scheme Handler
-
-/// Serves chapter XHTML and its resources (images, CSS, fonts) straight from
-/// the ZIP archive. WebKit's protocol is main-actor isolated, so these run
-/// on the main actor like the rest of the reader.
-final class EPUBSchemeHandler: NSObject, WKURLSchemeHandler {
-    /// Off the main actor: on macOS 15 a main-actor deinit run outside a
-    /// task crashes when it releases another one (v16 S0, CI crash reports).
-    nonisolated deinit {}
-
-
-    var document: EPUBDocument?
-
-    func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
-        guard let url = urlSchemeTask.request.url,
-              let document
-        else {
-            urlSchemeTask.didFailWithError(URLError(.fileDoesNotExist))
-            return
-        }
-
-        let path = EPUBScheme.archivePath(from: url)
-        do {
-            let resource = try document.resource(at: path)
-            let response = URLResponse(
-                url: url,
-                mimeType: resource.mimeType,
-                expectedContentLength: resource.data.count,
-                textEncodingName: resource.mimeType.contains("xml") || resource.mimeType.hasPrefix("text")
-                    ? "utf-8" : nil
-            )
-            urlSchemeTask.didReceive(response)
-            urlSchemeTask.didReceive(resource.data)
-            urlSchemeTask.didFinish()
-        } catch {
-            urlSchemeTask.didFailWithError(error)
-        }
-    }
-
-    func webView(_ webView: WKWebView, stop urlSchemeTask: WKURLSchemeTask) {
-        // Loads are synchronous slices from memory — nothing to cancel.
-    }
-}
-
-// MARK: - Selection Anchor
-
-/// Text-quote selector for a live selection — mirrors the W3C Web
-/// Annotation model closely enough for our purposes: enough context to
-/// re-find the same text after a chapter reload, independent of any fixed
-/// geometry (EPUB has none).
-struct EPUBSelectionAnchor: Equatable {
-    let quote: String
-    let prefix: String
-    let suffix: String
-    let startOffset: Int
-}
-
 // MARK: - Manager
 
 @MainActor
@@ -185,16 +110,16 @@ final class EPUBViewManager: NSObject {
 
     /// Inflected shapes of saved words, per chapter — computed off-main, so
     /// the first render shows literal matches and the callback re-marks.
-    @ObservationIgnored private let inflectedTerms = InflectedTermService()
+    @ObservationIgnored let inflectedTerms = InflectedTermService()
 
     @ObservationIgnored private var pendingScrollFraction: Double?
     @ObservationIgnored private var pendingFragment: String?
     @ObservationIgnored private var lastPositionSave = Date.distantPast
     /// Term to highlight once the next chapter finishes loading (search jump).
-    @ObservationIgnored private var pendingFindTerm: String?
+    @ObservationIgnored var pendingFindTerm: String?
     /// Highlight to scroll to once the next chapter finishes loading and its
     /// marks have been rendered.
-    @ObservationIgnored private var pendingHighlightScrollID: UUID?
+    @ObservationIgnored var pendingHighlightScrollID: UUID?
 
     // Hover dictionary — reuses the PDF side's popover UI and lookup flow.
     var hoverEnabled = true
@@ -202,12 +127,12 @@ final class EPUBViewManager: NSObject {
     @ObservationIgnored var hoverLookup: ((String) async throws -> HoverAnswer)?
     /// Whether a hovered word is in the notebook (any form of it).
     @ObservationIgnored var hoverIsSaved: ((String) -> Bool)?
-    @ObservationIgnored private lazy var hoverBalloon = HoverBalloon(model: hoverModel)
+    @ObservationIgnored lazy var hoverBalloon = HoverBalloon(model: hoverModel)
     /// Floating selection action bar hosted over the web view (U1).
     @ObservationIgnored private var selectionBarHost: NSHostingView<SelectionActionBar>?
-    @ObservationIgnored private let hoverModel = HoverLookupModel()
-    @ObservationIgnored private var hoverTask: Task<Void, Never>?
-    @ObservationIgnored private var currentHoverTerm = ""
+    @ObservationIgnored let hoverModel = HoverLookupModel()
+    @ObservationIgnored var hoverTask: Task<Void, Never>?
+    @ObservationIgnored var currentHoverTerm = ""
 
     // `nonisolated(unsafe)`: written once in init, read only by deinit.
     @ObservationIgnored nonisolated(unsafe) private var highlightsChangedObserver: NSObjectProtocol?
@@ -548,7 +473,7 @@ final class EPUBViewManager: NSObject {
 
     /// Scroll-driven update: keep the existing bar pinned, or hide it once the
     /// selection is gone / off-screen.
-    private func repositionSelectionBar(rect: CGRect) {
+    func repositionSelectionBar(rect: CGRect) {
         guard let webView, let host = selectionBarHost else { return }
         guard rect.width > 0, rect.height > 0 else { hideSelectionBar(); return }
         positionSelectionBar(host, over: rect, in: webView)
@@ -616,258 +541,6 @@ final class EPUBViewManager: NSObject {
         )
     }
 
-    // MARK: Highlights
-
-    /// Re-renders this chapter's highlight marks and saved-word underlines
-    /// from current store contents. Safe to call repeatedly — the JS side
-    /// clears old marks before re-wrapping. Saved-word marks are applied
-    /// *after* highlights: highlight anchors must resolve against a
-    /// pristine, unwrapped DOM (see `rellRenderHighlights`), and running
-    /// them second here keeps that guarantee regardless of call order.
-    func refreshHighlights() {
-        guard let webView, let document,
-              document.spinePaths.indices.contains(chapterIndex)
-        else { return }
-
-        if let highlightsProvider {
-            let chapterPath = document.spinePaths[chapterIndex]
-            let entries = highlightsProvider(chapterPath)
-            webView.evaluateJavaScript(Self.renderHighlightsScript(for: entries, ink: Self.highlightInk(for: currentTheme)))
-        }
-
-        if let savedWordTermsProvider {
-            let terms = savedWordTermsProvider()
-            // Inflections first: they're known to occur in this chapter, so
-            // they get the 500-term budget ahead of vocabulary that may not
-            // appear here at all.
-            let inflected = inflectedChapterForms()
-            let marked = Self.dedupedTerms(inflected + terms)
-            webView.evaluateJavaScript(Self.markSavedWordsScript(
-                for: marked,
-                color: Self.savedWordMarkColor(for: currentTheme),
-                glosses: Self.glossesIncludingInflections(glosses, inflected: inflected, language: Language.storedTarget),
-                glossOnly: glossOnlyTerms,
-                glossColor: Self.glossColor(for: currentTheme)
-            ))
-        }
-    }
-
-    /// Dotted-underline tint for saved-word marks — visually distinct from
-    /// a user highlight's filled background, and readable against all six
-    /// page themes without one fixed color's contrast breaking on the dark
-    /// ones.
-    static func savedWordMarkColor(for theme: PageTheme) -> String {
-        theme.usesLightInk ? "rgba(150, 179, 255, 0.75)" : "rgba(51, 92, 209, 0.65)"
-    }
-
-    /// Surface forms of saved vocabulary occurring in the open chapter —
-    /// "ran" and "running" for a saved "run". Empty until the chapter's
-    /// off-main pass lands, which re-marks with them included.
-    private func inflectedChapterForms() -> [String] {
-        guard let keys = savedWordKeysProvider?(), !keys.isEmpty,
-              let document, document.spinePaths.indices.contains(chapterIndex)
-        else { return [] }
-        let book = loadedURL?.lastPathComponent ?? ""
-        return inflectedTerms.surfaceForms(
-            passageKey: "\(book)#c\(chapterIndex)",
-            keys: keys,
-            language: Language.storedTarget,
-            text: document.plainText(at: chapterIndex),
-            onReady: { [weak self] in self?.refreshHighlights() }
-        )
-    }
-
-    /// Case-insensitive dedupe, first occurrence wins.
-    private static func dedupedTerms(_ terms: [String]) -> [String] {
-        var seen: Set<String> = []
-        return terms.filter { seen.insert($0.lowercased()).inserted }
-    }
-
-    static func markSavedWordsScript(
-        for terms: [String],
-        color: String,
-        glosses: [String: String] = [:],
-        glossOnly: [String] = [],
-        glossColor: String = ""
-    ) -> String {
-        func json<T: Encodable>(_ value: T, fallback: String) -> String {
-            (try? JSONEncoder().encode(value)).flatMap { String(data: $0, encoding: .utf8) } ?? fallback
-        }
-        let capped = Array(terms.prefix(500))
-        // JSON-encoded, never interpolated raw: a gloss comes from a model
-        // and may contain quotes.
-        return "window.rellMarkSavedWords(\(json(capped, fallback: "[]")), '\(color)', "
-            + "\(json(glosses, fallback: "{}")), \(json(glossOnly, fallback: "[]")), "
-            + "\(json(glossColor, fallback: "\"\"")));"
-    }
-
-    /// Meaning colour: quieter than body text, legible on every page theme.
-    static func glossColor(for theme: PageTheme) -> String {
-        theme.usesLightInk ? "rgba(170, 195, 255, 0.95)" : "rgba(40, 80, 190, 0.9)"
-    }
-
-    /// Glosses are keyed by the saved form; the chapter may use "ran" for a
-    /// saved "run". Adds each inflected form under its dictionary word's
-    /// gloss. Only the few inflected forms are lemmatized, never the whole
-    /// vocabulary — this runs on every re-mark.
-    nonisolated static func glossesIncludingInflections(
-        _ glosses: [String: String],
-        inflected: [String],
-        language: Language?
-    ) -> [String: String] {
-        guard !glosses.isEmpty, !inflected.isEmpty else { return glosses }
-        var byKey: [String: String] = [:]
-        for (term, gloss) in glosses {
-            byKey[LemmaMatcher.matchKey(for: term, language: language)] = gloss
-        }
-        var result = glosses
-        for form in inflected where result[form.lowercased()] == nil {
-            if let gloss = byKey[LemmaMatcher.matchKey(for: form, language: language)] {
-                result[form.lowercased()] = gloss
-            }
-        }
-        return result
-    }
-
-    private static func renderHighlightsScript(for highlights: [EPUBHighlight], ink: String) -> String {
-        struct Entry: Encodable {
-            let id: String
-            let quote: String
-            let prefix: String
-            let suffix: String
-            let startOffset: Int
-            let color: String
-        }
-        let entries = highlights.map {
-            Entry(
-                id: $0.id.uuidString, quote: $0.quote, prefix: $0.prefix,
-                suffix: $0.suffix, startOffset: $0.startOffset, color: $0.color.webBackground
-            )
-        }
-        let json = (try? JSONEncoder().encode(entries)).flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
-        return "window.rellRenderHighlights(\(json), '\(ink)');"
-    }
-
-    /// Opens a chapter and scrolls to a highlight's mark once it renders.
-    func openChapter(at index: Int, thenScrollToHighlight id: UUID) {
-        pendingHighlightScrollID = id
-        if index == chapterIndex {
-            refreshHighlights()
-            scrollToHighlight(id)
-            pendingHighlightScrollID = nil
-        } else {
-            openChapter(at: index)
-        }
-    }
-
-    // MARK: Karaoke (spoken-sentence tracking)
-
-    /// Highlights the sentence being read aloud and keeps it in view. Passing
-    /// nil clears the highlight. Misses are silent — a sentence the tokenizer
-    /// produced but that doesn't appear verbatim in the DOM simply isn't
-    /// highlighted, and playback continues undisturbed.
-    func highlightSpokenSentence(_ sentence: String?) {
-        guard let webView else { return }
-        guard let sentence, !sentence.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            webView.evaluateJavaScript("window.rellKaraoke && window.rellKaraoke('');")
-            return
-        }
-        let encoded = (try? JSONEncoder().encode(sentence))
-            .flatMap { String(data: $0, encoding: .utf8) } ?? "\"\""
-        let background = Self.karaokeBackground(for: currentTheme)
-        webView.evaluateJavaScript(
-            "window.rellKaraoke && window.rellKaraoke(\(encoded), '\(background)');"
-        )
-    }
-
-    /// Warm wash that stays legible on all six page themes — lighter on dark
-    /// ink, deeper on light ink, so the spoken line reads as lit rather than
-    /// blacked out.
-    static func karaokeBackground(for theme: PageTheme) -> String {
-        theme.usesLightInk ? "rgba(255, 214, 102, 0.32)" : "rgba(255, 205, 90, 0.55)"
-    }
-
-    private func scrollToHighlight(_ id: UUID) {
-        webView?.evaluateJavaScript(
-            "document.querySelector('mark[data-rell-highlight-id=\"\(id.uuidString)\"]')" +
-            "?.scrollIntoView({block: 'center'});"
-        )
-    }
-
-    // MARK: Find in page
-
-    /// Highlights the next/previous occurrence in the loaded chapter using
-    /// WebKit's native find (Safari-style selection + scroll).
-    func findInPage(_ term: String, forward: Bool = true) {
-        guard let webView, !term.isEmpty else { return }
-        let configuration = WKFindConfiguration()
-        configuration.backwards = !forward
-        configuration.caseSensitive = false
-        configuration.wraps = true
-        webView.find(term, configuration: configuration) { _ in }
-    }
-
-    /// Opens a chapter and highlights `term` once it has loaded.
-    func openChapter(at index: Int, thenFind term: String) {
-        pendingFindTerm = term
-        if index == chapterIndex {
-            findInPage(term)
-            pendingFindTerm = nil
-        } else {
-            openChapter(at: index)
-        }
-    }
-
-    // MARK: Hover dictionary
-
-    func handleHoverMessage(word: String, rect: CGRect) {
-        guard hoverEnabled, let webView, document != nil else { return }
-        let term = word.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard (1...40).contains(term.count),
-              term.contains(where: \.isLetter),
-              !term.contains(where: \.isWhitespace)
-        else {
-            closeHoverPopover()
-            return
-        }
-        if term.lowercased() == currentHoverTerm.lowercased(), hoverBalloon.isShown {
-            return
-        }
-        currentHoverTerm = term
-
-        if !hoverModel.begin(term: term, isSaved: hoverIsSaved?(term) ?? false, cached: hoverCachedLookup?(term)) {
-            startHoverLookup(term: term)
-        }
-
-        // WKWebView is flipped, so JS viewport coordinates map straight
-        // onto the view's coordinate space.
-        let positioning = rect.width > 0 ? rect : CGRect(x: rect.minX, y: rect.minY, width: 1, height: 1)
-        hoverBalloon.show(at: positioning, in: webView)
-    }
-
-    private func startHoverLookup(term: String) {
-        hoverTask?.cancel()
-        hoverTask = Task { @MainActor [weak self] in
-            guard let self, let lookup = self.hoverLookup else { return }
-            do {
-                let answer = try await lookup(term)
-                guard !Task.isCancelled,
-                      self.currentHoverTerm.lowercased() == term.lowercased() else { return }
-                self.hoverModel.show(answer)
-            } catch {
-                guard !Task.isCancelled,
-                      self.currentHoverTerm.lowercased() == term.lowercased() else { return }
-                self.hoverModel.fail()
-            }
-        }
-    }
-
-    func closeHoverPopover() {
-        hoverTask?.cancel()
-        currentHoverTerm = ""
-        hoverBalloon.close()
-    }
 
     /// Called by the reader view when a chapter finishes loading.
     func chapterDidFinishLoading(url: URL?) {
@@ -939,124 +612,3 @@ final class EPUBViewManager: NSObject {
     }
 }
 
-// MARK: - Link policy
-
-/// Where a navigation inside the reader may go. Book-internal pages load in
-/// place. Anything else leaves the app only when the reader clicked it and it
-/// is a web or mail link — never a `file://` URL or another app's scheme,
-/// and never on the page's own initiative (a redirect, a meta refresh).
-enum EPUBLinkPolicy: Equatable {
-    case allow
-    case openExternally(URL)
-    case block
-
-    static let externalSchemes: Set<String> = ["http", "https", "mailto"]
-
-    static func decision(for url: URL?, userClicked: Bool) -> EPUBLinkPolicy {
-        guard let url, let scheme = url.scheme?.lowercased() else { return .block }
-        if scheme == EPUBScheme.scheme || scheme == "about" { return .allow }
-        guard userClicked, externalSchemes.contains(scheme) else { return .block }
-        return .openExternally(url)
-    }
-}
-
-// MARK: - WKNavigationDelegate
-
-extension EPUBViewManager: WKNavigationDelegate {
-
-    nonisolated func webView(
-        _ webView: WKWebView,
-        decidePolicyFor navigationAction: WKNavigationAction,
-        decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void
-    ) {
-        MainActor.assumeIsolated {
-            switch EPUBLinkPolicy.decision(
-                for: navigationAction.request.url,
-                userClicked: navigationAction.navigationType == .linkActivated
-            ) {
-            case .allow:
-                decisionHandler(.allow)
-            case .openExternally(let url):
-                NSWorkspace.shared.open(url)
-                decisionHandler(.cancel)
-            case .block:
-                decisionHandler(.cancel)
-            }
-        }
-    }
-
-    nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        MainActor.assumeIsolated {
-            chapterDidFinishLoading(url: webView.url)
-        }
-    }
-}
-
-// MARK: - WKScriptMessageHandler
-
-extension EPUBViewManager: WKScriptMessageHandler {
-
-    static let scrollMessageName = "rellScroll"
-    static let selectionMessageName = "rellSelection"
-    static let hoverMessageName = "rellHover"
-
-    nonisolated func userContentController(
-        _ userContentController: WKUserContentController,
-        didReceive message: WKScriptMessage
-    ) {
-        MainActor.assumeIsolated {
-            switch message.name {
-            case Self.scrollMessageName:
-                if let fraction = message.body as? Double {
-                    handleScrollMessage(fraction: fraction)
-                }
-            case Self.selectionMessageName:
-                if let body = message.body as? [String: Any] {
-                    let rect = CGRect(
-                        x: (body["rectX"] as? Double) ?? -1,
-                        y: (body["rectY"] as? Double) ?? -1,
-                        width: (body["rectW"] as? Double) ?? 0,
-                        height: (body["rectH"] as? Double) ?? 0
-                    )
-                    // Scroll-driven reposition carries only a fresh rect.
-                    if (body["reposition"] as? Bool) == true {
-                        repositionSelectionBar(rect: rect)
-                        break
-                    }
-                    let text = (body["text"] as? String) ?? ""
-                    var anchor: EPUBSelectionAnchor?
-                    if !text.isEmpty,
-                       let quote = body["quote"] as? String, !quote.isEmpty,
-                       let startOffset = body["startOffset"] as? Int {
-                        anchor = EPUBSelectionAnchor(
-                            quote: quote,
-                            prefix: (body["prefix"] as? String) ?? "",
-                            suffix: (body["suffix"] as? String) ?? "",
-                            startOffset: startOffset
-                        )
-                    }
-                    handleSelectionMessage(
-                        text: text,
-                        sentence: body["sentence"] as? String,
-                        anchor: anchor,
-                        rect: rect
-                    )
-                }
-            case Self.hoverMessageName:
-                if let body = message.body as? [String: Any] {
-                    handleHoverMessage(
-                        word: (body["word"] as? String) ?? "",
-                        rect: CGRect(
-                            x: (body["x"] as? Double) ?? 0,
-                            y: (body["y"] as? Double) ?? 0,
-                            width: (body["w"] as? Double) ?? 0,
-                            height: (body["h"] as? Double) ?? 0
-                        )
-                    )
-                }
-            default:
-                break
-            }
-        }
-    }
-}

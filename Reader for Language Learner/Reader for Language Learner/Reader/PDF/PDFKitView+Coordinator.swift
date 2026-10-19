@@ -18,7 +18,7 @@ extension PDFKitView {
     // MARK: - Coordinator
 
     final class Coordinator {
-        private weak var pdfView: PDFView?
+        weak var pdfView: PDFView?
         private var overlayView: PassthroughOverlayView?
         private var selectionObserver: NSObjectProtocol?
         private var visiblePagesObserver: NSObjectProtocol?
@@ -32,8 +32,8 @@ extension PDFKitView {
         /// Coalesces the flood of `PDFViewVisiblePagesChanged` notifications
         /// a scroll or zoom gesture fires — without this, every single tick
         /// re-ran the highlight scan.
-        private var visiblePagesDebounceWorkItem: DispatchWorkItem?
-        private var loadedDocumentURL: URL?
+        var visiblePagesDebounceWorkItem: DispatchWorkItem?
+        var loadedDocumentURL: URL?
         private var currentTheme: PageTheme = .original
         var currentDisplayMode: PDFLayoutMode = .single
         
@@ -48,9 +48,9 @@ extension PDFKitView {
         var hoverEnabled: Bool
 
         /// Key for identifying auto-generated highlight annotations.
-        private let kAutoHighlightKey = "RELL_AutoHighlight"
-        private let kNoteHighlightKey = "RELL_NoteHighlight"
-        private let kUserHighlightKey = "RELL_UserHighlight"
+        let kAutoHighlightKey = "RELL_AutoHighlight"
+        let kNoteHighlightKey = "RELL_NoteHighlight"
+        let kUserHighlightKey = "RELL_UserHighlight"
         private var highlightsObserver: NSObjectProtocol?
 
         // Hover dictionary
@@ -61,25 +61,25 @@ extension PDFKitView {
         private var currentHoverTerm: String = ""
         
         /// Cache of pages that have already been processed for the current set of saved words.
-        private var processedPages = Set<PDFPage>()
+        var processedPages = Set<PDFPage>()
 
         /// `page.string` re-extracts a PDF page's full text on every call —
         /// not free for a scanned or text-heavy page. Keyed by the `PDFPage`
         /// object itself (stable per document instance; NSCache's default
         /// identity-based key handling is exactly what's wanted here).
-        private let pageTextCache = NSCache<PDFPage, NSString>()
+        let pageTextCache = NSCache<PDFPage, NSString>()
 
         /// Saved-word terms as of the last full or additive scan — diffed
         /// against the store's current terms on every refresh so a newly
         /// saved word can be layered onto already-highlighted pages instead
         /// of forcing a full teardown-and-rescan of every term.
-        private var knownSavedTerms: Set<String> = []
-        private var lastNotesCount: Int = 0
+        var knownSavedTerms: Set<String> = []
+        var lastNotesCount: Int = 0
 
         /// Inflected shapes of saved words, per page. The pass runs off-main
         /// and lands later, so a page's literal matches are drawn first and
         /// the inflections join them on the callback's refresh.
-        private let inflectedTerms = InflectedTermService()
+        let inflectedTerms = InflectedTermService()
         
         init(selectedText: Binding<String>, contextSentence: Binding<String?>, searchManager: PDFSearchManager, savedWordsStore: SavedWordsStore, noteStore: PDFNoteStore, highlightStore: PDFHighlightStore, quickLookup: QuickLookupService, toastCenter: ToastCenter, hoverEnabled: Bool) {
             self.selectedText = selectedText
@@ -335,7 +335,7 @@ extension PDFKitView {
             )
         }
         
-        private func extractContext() -> String? {
+        func extractContext() -> String? {
             guard let pdfView = pdfView,
                   let selection = pdfView.currentSelection,
                   let page = selection.pages.first,
@@ -395,215 +395,6 @@ extension PDFKitView {
             let sentenceRange = tokenizer.tokenRange(for: matchSwiftRange)
             let sentence = String(swiftText[sentenceRange])
             return sentence.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        
-        // MARK: - Auto Highlighting
-
-        /// Coalesces same-tick visible-page-change bursts (scroll/zoom fire
-        /// this notification repeatedly) into a single refresh ~120ms after
-        /// the last one, rather than re-scanning on every intermediate tick.
-        private func scheduleVisiblePagesRefresh() {
-            visiblePagesDebounceWorkItem?.cancel()
-            let workItem = DispatchWorkItem { [weak self] in
-                self?.refreshHighlights()
-                self?.closeHoverPopover()
-            }
-            visiblePagesDebounceWorkItem = workItem
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: workItem)
-        }
-
-        @MainActor func refreshHighlights(force: Bool = false) {
-            guard let pdfView = pdfView else { return }
-
-            var effectiveForce = force
-            // Additive fast path: only new terms were added since the last
-            // scan, so already-processed pages just get those terms' matches
-            // layered on top instead of a full teardown-and-rescan of every
-            // term. Any removal or edit falls back to the original
-            // clear-everything behavior below — diffing out a stale
-            // highlight isn't worth the bookkeeping deletion/rename is rare.
-            var additiveTerms: [String]?
-            // Scoped to the study language: a library with German and
-            // English words underlined both in every book before v1.36.
-            let currentTerms = savedWordsStore.terms(for: Language.storedTarget)
-            let currentTermSet = Set(currentTerms)
-            if currentTermSet != knownSavedTerms {
-                let added = currentTermSet.subtracting(knownSavedTerms)
-                let removed = knownSavedTerms.subtracting(currentTermSet)
-                if removed.isEmpty, !added.isEmpty {
-                    additiveTerms = Array(added)
-                } else {
-                    effectiveForce = true
-                    processedPages.removeAll()
-                }
-                knownSavedTerms = currentTermSet
-            }
-            if noteStore.notes.count != lastNotesCount {
-                effectiveForce = true
-                lastNotesCount = noteStore.notes.count
-                processedPages.removeAll()
-            }
-
-            let visiblePages = pdfView.visiblePages
-            // Early exit: nothing to layer on and every visible page is
-            // already up to date — skip building the per-page term/note/
-            // highlight lookups below entirely.
-            guard effectiveForce || additiveTerms != nil
-                    || visiblePages.contains(where: { !processedPages.contains($0) })
-            else { return }
-
-            let currentFilename = loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? ""
-            // Memoized in the store; computed here once rather than per page.
-            let lemmaKeys = savedWordsStore.lemmaKeys(for: Language.storedTarget)
-            let notesByPage = Dictionary(grouping: noteStore.notes(for: currentFilename), by: \.pageIndex)
-            let highlightsByPage = Dictionary(grouping: highlightStore.highlights(for: currentFilename), by: \.pageIndex)
-
-            for page in visiblePages {
-                let pageIndex = pdfView.document?.index(for: page) ?? -1
-                if let additiveTerms, processedPages.contains(page) {
-                    // Only the new terms' inflections, or the page's existing
-                    // highlights would be laid down a second time.
-                    let addedKeys = Set(additiveTerms.map {
-                        LemmaMatcher.matchKey(for: $0, language: Language.storedTarget)
-                    })
-                    addHighlights(
-                        for: additiveTerms + inflectedForms(on: page, pageIndex: pageIndex, keys: addedKeys),
-                        on: page
-                    )
-                    continue
-                }
-                if effectiveForce || !processedPages.contains(page) {
-                    processPage(
-                        page,
-                        savedTerms: currentTerms + inflectedForms(on: page, pageIndex: pageIndex, keys: lemmaKeys),
-                        notes: notesByPage[pageIndex] ?? [],
-                        highlights: highlightsByPage[pageIndex] ?? []
-                    )
-                    processedPages.insert(page)
-                }
-            }
-        }
-
-        @MainActor private func resetHighlightsCache() {
-            processedPages.removeAll()
-            refreshHighlights(force: true)
-        }
-
-        /// Returns `page.string`, computing and caching it on a miss —
-        /// re-extracting a page's full text on every hover/selection/scan is
-        /// the actual cost on text-heavy or scanned pages.
-        private func cachedPageString(_ page: PDFPage) -> String? {
-            if let cached = pageTextCache.object(forKey: page) {
-                return cached as String
-            }
-            guard let text = page.string else { return nil }
-            pageTextCache.setObject(text as NSString, forKey: page)
-            return text
-        }
-
-        /// Surface forms of saved vocabulary occurring on this page — "ran"
-        /// and "running" for a saved "run". Empty until the page's off-main
-        /// pass lands, which then forces a refresh that picks it up.
-        private func inflectedForms(on page: PDFPage, pageIndex: Int, keys: Set<String>) -> [String] {
-            let document = loadedDocumentURL?.lastPathComponent ?? ""
-            return inflectedTerms.surfaceForms(
-                passageKey: "\(document)#p\(pageIndex)",
-                keys: keys,
-                language: Language.storedTarget,
-                text: cachedPageString(page),
-                onReady: { [weak self] in self?.refreshHighlights(force: true) }
-            )
-        }
-
-        private func processPage(_ page: PDFPage, savedTerms: [String], notes: [PDFNote], highlights: [PDFHighlight]) {
-            removeGeneratedHighlights(from: page)
-
-            // User highlights first so saved-word/note tints layer over them.
-            for highlight in highlights {
-                let nsColor = highlight.color.nsColor
-                for rect in highlight.highlightRects {
-                    addUserHighlight(
-                        to: page,
-                        rect: CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height),
-                        color: nsColor
-                    )
-                }
-            }
-
-            addHighlights(for: savedTerms, on: page)
-
-            for note in notes {
-                for rect in note.highlightRects {
-                    addNoteHighlight(
-                        to: page,
-                        rect: CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
-                    )
-                }
-            }
-        }
-
-        /// Scans `page`'s text for every occurrence of each term in `terms`
-        /// and adds a highlight annotation per match. Shared by `processPage`
-        /// (full pass, every saved term) and the additive top-up in
-        /// `refreshHighlights` (just the newly-added terms, on a page whose
-        /// existing highlights are left untouched).
-        private func addHighlights(for terms: [String], on page: PDFPage) {
-            guard let text = cachedPageString(page) else { return }
-            let nsText = text as NSString
-
-            for term in terms {
-                // Whole-word, the same rule the EPUB reader applies in JS —
-                // a plain substring scan underlined "brunt" for a saved "run".
-                for foundRange in TermMatcher.ranges(of: term, in: nsText) {
-                    guard let selection = page.selection(for: foundRange) else { continue }
-                    // Handle multi-line selections
-                    for lineSel in selection.selectionsByLine() {
-                        addHighlight(to: page, selection: lineSel)
-                    }
-                }
-            }
-        }
-        
-        private func addHighlight(to page: PDFPage, selection: PDFSelection) {
-            let bounds = selection.bounds(for: page)
-            // Skip zero-size bounds
-            if bounds.width <= 0 || bounds.height <= 0 { return }
-            
-            let annotation = PDFAnnotation(bounds: bounds, forType: .highlight, withProperties: nil)
-            annotation.color = .yellow.withAlphaComponent(0.3)
-            annotation.userName = kAutoHighlightKey
-            // We can also lock it so user doesn't accidentally move it, though passthrough overlay prevents clicks anyway.
-            annotation.shouldPrint = false
-            page.addAnnotation(annotation)
-        }
-        
-        private func addNoteHighlight(to page: PDFPage, rect: CGRect) {
-            guard rect.width > 0, rect.height > 0 else { return }
-            let annotation = PDFAnnotation(bounds: rect, forType: .highlight, withProperties: nil)
-            annotation.color = .systemBlue.withAlphaComponent(0.22)
-            annotation.userName = kNoteHighlightKey
-            annotation.shouldPrint = false
-            page.addAnnotation(annotation)
-        }
-
-        private func addUserHighlight(to page: PDFPage, rect: CGRect, color: NSColor) {
-            guard rect.width > 0, rect.height > 0 else { return }
-            let annotation = PDFAnnotation(bounds: rect, forType: .highlight, withProperties: nil)
-            annotation.color = color.withAlphaComponent(0.34)
-            annotation.userName = kUserHighlightKey
-            annotation.shouldPrint = false
-            page.addAnnotation(annotation)
-        }
-
-        private func removeGeneratedHighlights(from page: PDFPage) {
-            let annotations = page.annotations
-            for annotation in annotations {
-                if annotation.userName == kAutoHighlightKey
-                    || annotation.userName == kNoteHighlightKey
-                    || annotation.userName == kUserHighlightKey {
-                    page.removeAnnotation(annotation)
-                }
-            }
         }
         
 
@@ -684,137 +475,13 @@ extension PDFKitView {
             closeHoverPopover()
         }
 
-        private func closeHoverPopover() {
+        func closeHoverPopover() {
             hoverWorkItem?.cancel()
             hoverTask?.cancel()
             currentHoverTerm = ""
             hoverBalloon.close()
         }
 
-        // MARK: - Context Menu Actions
-
-        private func contextSaveWord() {
-            guard let pdfView = pdfView,
-                  let raw = pdfView.currentSelection?.string else { return }
-            let term = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !term.isEmpty else { return }
-
-            let sentence = extractContext() ?? ""
-            let filename = loadedDocumentURL?.deletingPathExtension().lastPathComponent
-            let documentPath = loadedDocumentURL?.path
-            let pageNum: Int?
-            if let page = pdfView.currentPage {
-                pageNum = (pdfView.document?.index(for: page)).map { $0 + 1 }
-            } else {
-                pageNum = nil
-            }
-            Task { @MainActor in
-                self.savedWordsStore.add(SavedWord(
-                    term: term,
-                    sentence: sentence,
-                    pdfFilename: filename,
-                    pageNumber: pageNum,
-                    mode: ExplainMode.word.rawValue,
-                    domain: "general",
-                    llmOutputs: [:],
-                    language: Language.storedTarget.rawValue,
-                    documentPath: documentPath
-                ))
-                self.toastCenter.show(String(localized: "Word saved!"))
-            }
-        }
-
-        private func contextAddNote() {
-            guard let pdfView = pdfView,
-                  let selection = pdfView.currentSelection,
-                  let raw = selection.string
-            else { return }
-            let selectedText = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !selectedText.isEmpty else { return }
-
-            guard let page = selection.pages.first ?? pdfView.currentPage,
-                  let document = pdfView.document
-            else { return }
-
-            let pageIndex = document.index(for: page)
-            let rects = selection.selectionsByLine().map { lineSelection in
-                let rect = lineSelection.bounds(for: page)
-                return PDFHighlightRect(
-                    x: rect.origin.x,
-                    y: rect.origin.y,
-                    width: rect.size.width,
-                    height: rect.size.height
-                )
-            }
-
-            let draft = PDFNote(
-                pdfFilename: loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? "Unknown PDF",
-                pageIndex: pageIndex,
-                pageLabel: page.label ?? "Page \(pageIndex + 1)",
-                selectedText: selectedText,
-                contextSentence: extractContext() ?? "",
-                note: "",
-                category: .vocabulary,
-                highlightRects: rects
-            )
-
-            Task { @MainActor in
-                self.noteStore.startDraft(draft)
-            }
-        }
-
-        private func contextHighlight(_ color: HighlightColor) {
-            guard let pdfView = pdfView,
-                  let selection = pdfView.currentSelection,
-                  let raw = selection.string
-            else { return }
-            let selectedText = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !selectedText.isEmpty else { return }
-
-            guard let page = selection.pages.first ?? pdfView.currentPage,
-                  let document = pdfView.document
-            else { return }
-
-            let pageIndex = document.index(for: page)
-            let rects = selection.selectionsByLine().map { lineSelection -> PDFHighlightRect in
-                let rect = lineSelection.bounds(for: page)
-                return PDFHighlightRect(
-                    x: rect.origin.x,
-                    y: rect.origin.y,
-                    width: rect.size.width,
-                    height: rect.size.height
-                )
-            }
-            guard !rects.isEmpty else { return }
-
-            let highlight = PDFHighlight(
-                pdfFilename: loadedDocumentURL?.deletingPathExtension().lastPathComponent ?? "Unknown PDF",
-                pageIndex: pageIndex,
-                pageLabel: page.label ?? "Page \(pageIndex + 1)",
-                selectedText: selectedText,
-                colorRaw: color.rawValue,
-                highlightRects: rects
-            )
-
-            Task { @MainActor in
-                self.highlightStore.add(highlight)
-            }
-        }
-
-        private func contextCopy() {
-            guard let text = pdfView?.currentSelection?.string, !text.isEmpty else { return }
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(text, forType: .string)
-        }
-
-        private func contextSpeak() {
-            guard let raw = pdfView?.currentSelection?.string else { return }
-            let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !text.isEmpty else { return }
-            Task { @MainActor in
-                SpeechManager.shared.speakResolved(text)
-            }
-        }
 
         // MARK: - Theme
 
