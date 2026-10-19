@@ -221,6 +221,17 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         )
     }
 
+    /// Whether this module's prompt reads the sentence around the word —
+    /// its answer then depends on that sentence (v19 S0: the cache keys it
+    /// by the sentence too).
+    func usesContext(mode: ExplainMode) -> Bool {
+        guard mode == .word else { return false }
+        switch self {
+        case .definitionEN, .meaningTR, .synonymsEN, .usageNotesEN: return true
+        default: return false
+        }
+    }
+
     func isEnabled(mode: ExplainMode) -> Bool {
         switch (self, mode) {
         case (.etymologyEN, .sentence), (.mnemonicEN, .sentence), (.wordFamilyEN, .sentence):

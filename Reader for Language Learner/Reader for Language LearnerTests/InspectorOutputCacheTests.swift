@@ -54,6 +54,67 @@ final class InspectorOutputCacheTests: XCTestCase {
         XCTAssertFalse(second.loadFromCache(key: makeKey()))
     }
 
+    // MARK: Sentence and prompt revision (v19 S0)
+
+    private func key(context: String, prompts: Int = PromptTemplates.revision) -> OutputCacheKey {
+        var key = makeKey()
+        key.context = context
+        key.prompts = prompts
+        return key
+    }
+
+    func testAnswersThatReadTheSentenceAreKeptPerSentence() {
+        let fileURL = makeTempFileURL()
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let first = makeViewModel(fileURL: fileURL)
+        first.outputs[.meaningTR] = "yörünge (in the first sentence)"
+        first.outputs[.etymologyEN] = "from Latin orbita"
+        first.snapshotToCache(key: key(context: "The moon is in orbit."))
+
+        let second = makeViewModel(fileURL: fileURL)
+        XCTAssertTrue(second.loadFromCache(key: key(context: "He fell into her orbit.")))
+        XCTAssertNil(second.outputs[.meaningTR], "another sentence: the contextual meaning is asked again")
+        XCTAssertEqual(second.outputs[.etymologyEN], "from Latin orbita", "the etymology doesn't depend on the sentence")
+
+        let third = makeViewModel(fileURL: fileURL)
+        XCTAssertTrue(third.loadFromCache(key: key(context: "The moon is in orbit.")))
+        XCTAssertEqual(third.outputs[.meaningTR], "yörünge (in the first sentence)")
+    }
+
+    func testAWordWithoutASentenceKeepsEverythingTogether() {
+        let fileURL = makeTempFileURL()
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let first = makeViewModel(fileURL: fileURL)
+        first.outputs[.definitionEN] = "a curved path"
+        first.snapshotToCache(key: key(context: ""))
+
+        let second = makeViewModel(fileURL: fileURL)
+        XCTAssertTrue(second.loadFromCache(key: key(context: "")))
+        XCTAssertEqual(second.outputs[.definitionEN], "a curved path")
+        let third = makeViewModel(fileURL: fileURL)
+        XCTAssertFalse(third.loadFromCache(key: key(context: "The moon is in orbit.")),
+                       "an answer written without the sentence isn't shown as its in-context answer")
+    }
+
+    func testAnEditedPromptDoesNotShowTheOldAnswer() {
+        let fileURL = makeTempFileURL()
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let first = makeViewModel(fileURL: fileURL)
+        first.outputs[.etymologyEN] = "old prompt's answer"
+        first.snapshotToCache(key: key(context: "", prompts: PromptTemplates.revision - 1))
+
+        let second = makeViewModel(fileURL: fileURL)
+        XCTAssertFalse(second.loadFromCache(key: key(context: "")))
+    }
+
+    func testSnapshotsFromBeforeTheRevisionDecodeAsRevisionZero() throws {
+        let json = #"{"term":"orbit","mode":"Word","detail":"Short","domain":"General","provider":"LM Studio","model":"m"}"#
+        let decoded = try JSONDecoder().decode(OutputCacheKey.self, from: Data(json.utf8))
+        XCTAssertEqual(decoded.prompts, 0)
+        XCTAssertEqual(decoded.context, "")
+        XCTAssertNotEqual(decoded.prompts, PromptTemplates.revision, "so they never match a current key")
+    }
+
     func testMissingFileStartsEmpty() {
         let viewModel = makeViewModel(fileURL: makeTempFileURL())
         XCTAssertFalse(viewModel.loadFromCache(key: makeKey()))

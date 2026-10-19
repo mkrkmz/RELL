@@ -102,13 +102,29 @@ final class InspectorViewModel {
     /// Caches the finished modules. A module that ended in an error is left
     /// out: its partial text would otherwise come back as a "cache hit" for
     /// this word from then on, on every launch.
+    ///
+    /// v19 S0: a module that reads the sentence is kept under the key with
+    /// the sentence; the others under the key without it, so the word's
+    /// examples or etymology still come from the cache in another sentence.
     func snapshotToCache(key: OutputCacheKey) {
         let snapshot = outputs.filter { !$0.value.isEmpty && errors[$0.key] == nil }
         guard !snapshot.isEmpty else { return }
-        var merged = cache.get(key) ?? [:]
-        for (module, value) in snapshot { merged[module] = value }
-        cache.set(key, merged)
+        var byKey: [OutputCacheKey: [ModuleType: String]] = [:]
+        for (module, value) in snapshot {
+            byKey[Self.storageKey(for: module, in: key), default: [:]][module] = value
+        }
+        for (storeKey, values) in byKey {
+            var merged = cache.get(storeKey) ?? [:]
+            for (module, value) in values { merged[module] = value }
+            cache.set(storeKey, merged)
+        }
         persistCache()
+    }
+
+    /// Where `module`'s answer for `key` is kept.
+    static func storageKey(for module: ModuleType, in key: OutputCacheKey) -> OutputCacheKey {
+        let mode = ExplainMode(rawValue: key.mode) ?? .word
+        return module.usesContext(mode: mode) && !key.context.isEmpty ? key : key.withoutContext
     }
 
     /// Clears the in-memory cache and its disk snapshot.
@@ -161,8 +177,15 @@ final class InspectorViewModel {
     }
 
     func loadFromCache(key: OutputCacheKey) -> Bool {
-        guard let cached = cache.get(key), !cached.isEmpty else { return false }
-        for (module, value) in cached {
+        var found: [ModuleType: String] = [:]
+        // Each module from the key it's kept under (`storageKey`).
+        for storeKey in Set([key, key.withoutContext]) {
+            for (module, value) in cache.get(storeKey) ?? [:] where Self.storageKey(for: module, in: key) == storeKey {
+                found[module] = value
+            }
+        }
+        guard !found.isEmpty else { return false }
+        for (module, value) in found {
             outputs[module] = value
             answerSources[module] = .cached
         }

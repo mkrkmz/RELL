@@ -439,16 +439,25 @@ struct InspectorView: View {
         return viewModel.loading[module] != true
     }
 
-    func refreshCache(term: String) {
-        viewModel.resetAll()
-        guard !term.isEmpty else { return }
-        let key = OutputCacheKey(
+    /// The answer cache's key for `term` here: the sentence around it and
+    /// the prompts' revision included (v19 S0).
+    func outputCacheKey(term: String) -> OutputCacheKey {
+        let sentence = (contextSentence ?? "")
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return OutputCacheKey(
             term: term, mode: explainMode.rawValue,
             detail: explainDetail.rawValue, domain: domainPreference.rawValue,
             provider: cacheProviderLabel, model: llmModel,
-            native: nativeLanguageRaw, target: targetLanguageRaw
+            native: nativeLanguageRaw, target: targetLanguageRaw,
+            context: explainMode == .word ? sentence : "",
+            prompts: PromptTemplates.revision
         )
-        let loaded = viewModel.loadFromCache(key: key)
+    }
+
+    func refreshCache(term: String) {
+        viewModel.resetAll()
+        guard !term.isEmpty else { return }
+        let loaded = viewModel.loadFromCache(key: outputCacheKey(term: term))
         if loaded {
             showSavedAnswer()
         } else if let activeModule, !activeModule.isEnabled(mode: explainMode) {
@@ -527,12 +536,7 @@ struct InspectorView: View {
             ),
             temperature: temperature,
             maxTokens: module.recommendedMaxTokens(mode: explainMode, detail: explainDetail, modelIdentifier: llmModel),
-            cacheKey: OutputCacheKey(
-                term: trimmedSelection, mode: explainMode.rawValue,
-                detail: explainDetail.rawValue, domain: domainPreference.rawValue,
-                provider: cacheProviderLabel, model: llmModel,
-                native: nativeLanguageRaw, target: targetLanguageRaw
-            ),
+            cacheKey: outputCacheKey(term: trimmedSelection),
             isFallback: AppleOnDevice.isFallback(module)
         )
         viewModel.start(run, provider: llmProvider(for: module))

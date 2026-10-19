@@ -98,11 +98,27 @@ struct OutputCacheKey: Hashable, Codable {
     let model: String
     var native: String = ""
     var target: String = ""
+    /// The sentence around the word, for the modules that read it (v19 S0:
+    /// without it a word met in a second sentence showed the first
+    /// sentence's "in this context" answer). Empty for the others.
+    var context: String = ""
+    /// `PromptTemplates.revision` when the answer was made: an edited
+    /// prompt never shows an answer to the old one. 0 for snapshots from
+    /// before it was recorded.
+    var prompts: Int = 0
+
+    /// The same key without the sentence — where the modules that don't
+    /// read it keep their answers, shared by every sentence of the word.
+    var withoutContext: OutputCacheKey {
+        var key = self
+        key.context = ""
+        return key
+    }
 }
 
 extension OutputCacheKey {
     private enum CodingKeys: String, CodingKey {
-        case term, mode, detail, domain, provider, model, native, target
+        case term, mode, detail, domain, provider, model, native, target, context, prompts
     }
 
     // Custom decode: `native` (and later `target`) were added after the first
@@ -117,5 +133,7 @@ extension OutputCacheKey {
         model    = try container.decode(String.self, forKey: .model)
         native   = try container.decodeIfPresent(String.self, forKey: .native) ?? ""
         target   = try container.decodeIfPresent(String.self, forKey: .target) ?? ""
+        context  = try container.decodeIfPresent(String.self, forKey: .context) ?? ""
+        prompts  = try container.decodeIfPresent(Int.self, forKey: .prompts) ?? 0
     }
 }
