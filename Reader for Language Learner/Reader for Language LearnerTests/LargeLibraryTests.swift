@@ -115,7 +115,7 @@ final class LargeLibraryTests: XCTestCase {
 
     // MARK: - The word store
 
-    func testLoadAndSaveFiveThousandWords() async throws {
+    func testLoadFiveThousandWords() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         addTeardownBlock { try? FileManager.default.removeItem(at: folder) }
@@ -127,6 +127,10 @@ final class LargeLibraryTests: XCTestCase {
             XCTAssertEqual(store.words.count, 5_000)
             stores.append(store)
         }
+    }
+
+    /// One `measure` per test: XCTest aborts on a second.
+    func testEncodeFiveThousandWords() async throws {
         measure(metrics: [XCTClockMetric()], options: options) {
             _ = try? JSONEncoder().encode(Self.vocabulary)
         }

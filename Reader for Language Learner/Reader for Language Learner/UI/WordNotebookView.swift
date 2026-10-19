@@ -39,7 +39,7 @@ struct WordNotebookView: View {
             Group {
                 if source == .duplicates {
                     DuplicateWordsView(store: store, groups: duplicates, selection: $selection,
-                                       onMerged: findDuplicates)
+                                       onMerged: { Task { await findDuplicates() } })
                 } else {
                     SavedWordsListView(
                         store: store,
@@ -76,7 +76,7 @@ struct WordNotebookView: View {
         }
         .navigationTitle(Text("Word Notebook"))
         .onAppear(perform: takePendingReveal)
-        .task(id: store.words.count) { findDuplicates() }
+        .task(id: store.words.count) { await findDuplicates() }
         .onReceive(NotificationCenter.default.publisher(for: .revealInNotebook)) { _ in takePendingReveal() }
     }
 
@@ -84,8 +84,13 @@ struct WordNotebookView: View {
         selection.flatMap { store.word(withID: $0) }
     }
 
-    private func findDuplicates() {
-        duplicates = WordMerge.duplicates(in: store.words)
+    /// Off the main thread: tagging every word took 0.6 s for 5,000 words
+    /// (v19 S0), long enough to freeze the window.
+    private func findDuplicates() async {
+        let entries = store.words.map(WordMerge.Entry.init)
+        let ids = await Task.detached(priority: .utility) { WordMerge.duplicateIDs(in: entries) }.value
+        guard !Task.isCancelled else { return }
+        duplicates = WordMerge.groups(from: ids, in: store.words)
     }
 
     private func takePendingReveal() {

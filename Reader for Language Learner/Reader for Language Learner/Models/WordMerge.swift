@@ -23,17 +23,46 @@ enum WordMerge {
     /// tagger (injected: tests and the real one differ by machine).
     static func duplicates(
         in words: [SavedWord],
-        lemma: (String, Language?) -> String? = { LemmaMatcher.lemma(of: $0, language: $1) }
+        lemma: @Sendable (String, Language?) -> String? = { LemmaMatcher.lemma(of: $0, language: $1) }
     ) -> [Group] {
-        var buckets: [String: [SavedWord]] = [:]
-        for word in words {
-            let language = word.language.flatMap(Language.init(rawValue:))
-            let term = word.term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        groups(from: duplicateIDs(in: words.map(Entry.init), lemma: lemma), in: words)
+    }
+
+    /// What finding duplicates needs of a word — plain values, so the
+    /// tagging can run off the main thread (v19 S0: 0.6 s for 5,000 words).
+    struct Entry: Sendable {
+        let id: UUID
+        let term: String
+        let language: String?
+
+        init(_ word: SavedWord) {
+            id = word.id
+            term = word.term
+            language = word.language
+        }
+    }
+
+    /// The ids of words sharing a dictionary form in the same language.
+    nonisolated static func duplicateIDs(
+        in entries: [Entry],
+        lemma: @Sendable (String, Language?) -> String? = { LemmaMatcher.lemma(of: $0, language: $1) }
+    ) -> [[UUID]] {
+        var buckets: [String: [UUID]] = [:]
+        for entry in entries {
+            let language = entry.language.flatMap(Language.init(rawValue:))
+            let term = entry.term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             guard !term.isEmpty else { continue }
             let key = (language?.rawValue ?? "") + "|" + (lemma(term, language) ?? term)
-            buckets[key, default: []].append(word)
+            buckets[key, default: []].append(entry.id)
         }
-        return buckets.values
+        return buckets.values.filter { $0.count > 1 }
+    }
+
+    /// The groups for `ids`, each with the word to keep first, by term.
+    static func groups(from ids: [[UUID]], in words: [SavedWord]) -> [Group] {
+        let byID = Dictionary(words.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return ids
+            .map { $0.compactMap { byID[$0] } }
             .filter { $0.count > 1 }
             .map { Group(words: $0.sorted(by: preferredToKeep)) }
             .sorted { $0.words[0].term.localizedCaseInsensitiveCompare($1.words[0].term) == .orderedAscending }

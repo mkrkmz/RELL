@@ -1,6 +1,6 @@
 # RELL Roadmap v19 — Kelimeden Cumleye (S0 + 6 sprint)
 
-**Durum: onaylandi (2026-10-19); S0 basladi.**
+**Durum: onaylandi (2026-10-19); S0 kapandi, S1 basladi.**
 
 Olusturulma: 2026-10-19 (1.48.1 sonrasi). Amac: RELL okutuyor ve
 kelimeyi hatirlatiyor ama kullandirmiyor. Bu roadmap once mevcut
@@ -101,22 +101,38 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
 
 ## Sprint 0 — "Borc" (Must, kisa)
 
-- [ ] **Onbellek baglami** — baglam kullanan modullerde (tanim, anlam,
-      es anlamlilar, kullanim notlari ve S1'de baglama baglananlar)
-      cumle anahtara girer. Test: ayni kelime iki cumlede iki yanit
-- [ ] **Istem surumu** onbellek anahtarina; eski diskteki kayitlar
-      okunurken surumsuz sayilir
-- [ ] **Imlec balonu** sozlukten gelen yaniti kisa anlamla gosterir
-      (kelime kartindaki ayristirici)
-- [ ] **Buyuk dosyalar** davranis degismeden bolunur: EPUB gorunum
-      yoneticisi, calisma ekrani, PDF koordinatoru (oncesi/sonrasi ayni
-      testler yesil)
-- [ ] **Buyuk kutuphane olcumu** — 5.000 kelimelik ve 1.000 sayfalik
-      sentetik veriyle acilis, kelime defteri, calisma odasi, karsilasma
-      taramasi; esik asilirsa ayri kalem
-- [ ] **Sesli tekrar denemesi** (bir gun): imzasiz uygulamada mikrofon
-      ve konusma tanima izin akisi, cihaz ici tanima, Turkce ve Ingilizce.
-      Kapi: izin istemi gorunur ve tanima cevrimdisi calisir
+- [x] **Onbellek baglami** — baglami okuyan modullerin (tanim, anlam, es
+      anlamlilar, kullanim notlari; kelime modunda) yaniti cumleyle
+      birlikte anahtarlanir; digerleri kelimenin butun cumlelerinde ortak
+      kalir. Test: ayni kelime iki cumlede, baglamsiz yanit baglamli
+      yerine gecmez
+- [x] **Istem surumu** onbellek anahtarinda (`PromptTemplates.revision`);
+      eski kayitlar surum 0 sayilir ve bir daha gosterilmez
+- [x] **Imlec balonu** sozlukten gelen yaniti kelime karti gibi kisa
+      anlamla gosterir (ortak `HoverAnswer.shortMeaning`)
+- [x] **Buyuk dosyalar** davranis degismeden bolundu: EPUB gorunum
+      yoneticisi 1.062 → 614 satir, calisma ekrani 1.049 → 365, PDF
+      koordinatoru 921 → 588; yalniz tasinan kodun eristigi uyeler
+      `private` olmaktan cikti. Tam paket yesil
+- [x] **Buyuk kutuphane olcumu** (`LargeLibraryTests`, istege bagli:
+      `RELL_LARGE_LIBRARY=1`; 5.000 kelime, 1.000 sayfalik PDF):
+
+      | Is | Sure |
+      |---|---|
+      | Kelime deposunu yukle / kaydet | 36 / 38 ms |
+      | Defterin kaynaklari ve durumlari | 11 ms |
+      | Calisma kuyrugu | 7 ms |
+      | Bolum kapsama profili | 11 ms |
+      | Bolumu kayitli kelimelere karsi tara (ana thread disinda) | 719 ms |
+      | Iki kez kaydedilenleri bul | 633 ms → ana thread disina alindi |
+      | 1.000 sayfanin metnini oku (arka planda) | 1,1 sn, tepe ~390 MB |
+
+      Esigi asan tek is iki kez kaydedilenleri bulmakti: kelime defterinde
+      ana thread'de calisiyordu, artik arka planda
+- [~] **Sesli tekrar denemesi** — kismi: cihaz ici tanima Ingilizce (ABD)
+      ve Turkce icin hazir (62 dil destekleniyor; Ingiliz Ingilizcesi,
+      Almanca, Fransizca, Ispanyolca icin model indirilmemis). Izin akisi
+      ve gercek tanima denenmedi; S4'un ilk isi
 
 ## Sprint 1 — "Modullerin kalitesi" (Must)
 
