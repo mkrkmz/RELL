@@ -168,7 +168,8 @@ final class HoverLookupModel {
     }
 
     func show(_ answer: HoverAnswer) {
-        phase = .loaded(answer.text)
+        // v19 S0: from the dictionary, the short meaning, as on the card.
+        phase = .loaded(answer.shortMeaning(for: term))
         source = answer.source
     }
 

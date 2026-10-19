@@ -35,6 +35,19 @@ nonisolated struct HoverAnswer: Equatable, Sendable {
     let source: HoverSource
 }
 
+extension HoverAnswer {
+    /// The short meaning a glance needs (the word card, the hover balloon):
+    /// from the dictionary, the meaning only — not the entry's grammar,
+    /// inflections and phrases (1.48.1, v19 S0); otherwise the text as is.
+    @MainActor
+    func shortMeaning(for term: String) -> String {
+        guard source == .dictionary else { return text }
+        let parsed = WordFillEngine.dictionaryAnswer(for: term, raw: text,
+                                                     native: Language.storedNative, target: Language.storedTarget)
+        return parsed[.meaning] ?? parsed[.definition] ?? text
+    }
+}
+
 @MainActor
 @Observable
 final class QuickLookupService {

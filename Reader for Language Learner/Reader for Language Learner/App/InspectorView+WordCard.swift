@@ -104,12 +104,7 @@ extension InspectorView {
     /// not the entry's grammar, inflections and phrases (v1.48 live pass);
     /// otherwise the answer's first sentence.
     static func cardMeaning(_ answer: HoverAnswer, term: String) -> String {
-        if answer.source == .dictionary {
-            let parsed = WordFillEngine.dictionaryAnswer(for: term, raw: answer.text,
-                                                         native: Language.storedNative, target: Language.storedTarget)
-            if let short = parsed[.meaning] ?? parsed[.definition] { return short }
-        }
-        return firstLine(answer.text)
+        answer.source == .dictionary ? answer.shortMeaning(for: term) : firstLine(answer.text)
     }
 
     /// First sentence of a definition, sanitised — the card is a glance.
