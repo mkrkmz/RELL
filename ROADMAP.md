@@ -1,6 +1,6 @@
 # RELL Roadmap v19 — Kelimeden Cumleye (S0 + 6 sprint)
 
-**Durum: onaylandi (2026-10-19); S0 kapandi, S1 basladi.**
+**Durum: onaylandi (2026-10-19); S0 ve S1 kapandi, S2 basladi.**
 
 Olusturulma: 2026-10-19 (1.48.1 sonrasi). Amac: RELL okutuyor ve
 kelimeyi hatirlatiyor ama kullandirmiyor. Bu roadmap once mevcut
@@ -136,20 +136,33 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
 
 ## Sprint 1 — "Modullerin kalitesi" (Must)
 
-- [ ] **Degerlendirme seti** (~30 madde): cok anlamli kelimeler, phrasal
+- [x] **Degerlendirme seti** (30 madde): cok anlamli kelimeler, phrasal
       verb'ler, deyimler, cekimli bicimler, alan terimleri, ana dille
-      yaniltici benzerler, kitap cumleleri; 12 dilden en az uc hedef dil
-- [ ] **Rapor araci** — her modul icin eski ve yeni istem ayni maddelerde
-      yan yana (HTML); otomatik denetimler: dogru dil, ayristiricinin
-      okudugu bicim, uzunluk, kesilme, giris cumlesi. CI'da calismaz
-- [ ] **Ogrenci seviyesi** tanim, ornek, es anlamli ve anlam modullerine
-- [ ] **Baglamdaki anlam** — baglam varsa once o anlam (kisa karsilik ve
-      bir satir neden), ornekler ve esdizimler o anlamdan
-- [ ] **Tanim** ogrenci sozlugu biciminde (sozcuk turu + sade cumle);
-      **animsatici** ana dilde anahtar kelime yontemiyle; **etimoloji**
-      yalniz iyi bilinen koken, emin degilse soyler
-- [ ] **Token sinirlari** kesilme olcumune gore
-- [ ] Kapi: rapor kullanici onayindan gecer; ayristirici testleri yesil
+      yaniltici benzerler, kitap cumleleri, uc baska hedef dil (Almanca,
+      Ispanyolca, Fransizca) — `PromptEvaluationTests` (istege bagli)
+- [x] **Rapor araci** — `scripts/prompt-report.py`: eski ve yeni istem
+      yan yana (HTML), otomatik denetimler (dil, bicim, kesilme, giris
+      cumlesi) ve ayni modelin anlam yargisi; gecici sunucu hatalarinda
+      yeniden deneme. CI'da calismaz
+- [x] **Istemler (surum 3)** — kelime modunda her modul cumleyi gorur ve
+      o anlam icin yanit verir (onbellek de cumleyle anahtarlar); ogrenci
+      seviyesi tanim, ornek ve cumle aciklamasinda; tanim ogrenci sozlugu
+      biciminde (sozcuk turu + tek cumle); anlam cumledeki karsilik ve
+      gerekcesi (cumle cevirisi degil); animsatici ana dilde anahtar kelime
+      yontemiyle ve yaniltici benzeri anlam esi saymadan (Eksikleri Doldur
+      da dilini denetler); etimoloji yalniz iyi bilinen koken; sozcuk
+      ailesi phrasal verb ve deyimlerde ilgili ifadeler; koseli parantez
+      yanita gecmez
+- [x] Sonuc (30 madde, ayni bulut modeli, anlam yargisi eski → yeni):
+      ornekler 18 → 28/30, esdizimler 21 → 26/29, etimoloji 20 → 24/25,
+      animsatici 16 → 22/24, sozcuk ailesi 11 → 15/24; tanim, anlam, es
+      anlamlilar, kullanim notlari ayni duzeyde. Butun yanitlar dogru dil
+      ve bicimde; yanitlar %10–35 kisa
+- [x] **Token sinirlari** — kucuk yerel modelin sinirlariyla etimolojinin
+      ucte biri kesiliyordu (70 token); etimoloji ve animsatici 110/160
+- [x] Kapi: rapor kullanici onayindan gecti (2026-10-20); tam paket 822
+      yesil. Kalan zayiflik: sozcuk ailesi, animsaticilarin bir kismi
+      zorlama
 
 ## Sprint 2 — "Cumle kaydetme" (Must, **maketle baslar**)
 

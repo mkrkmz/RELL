@@ -336,12 +336,14 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         case (.synonymsEN, _, .detailed),
              (.wordFamilyEN, _, .detailed):
             return min(base, 150)
+        // v19 S1 (measured): at 70 a third of the etymologies were cut off,
+        // and the memory hook, now in your language, came close.
         case (.etymologyEN, _, .short),
              (.mnemonicEN, _, .short):
-            return min(base, 70)
+            return min(base, 110)
         case (.etymologyEN, _, .detailed),
              (.mnemonicEN, _, .detailed):
-            return min(base, 100)
+            return min(base, 160)
         case (.pronunciationEN, _, _):
             return base
         }
