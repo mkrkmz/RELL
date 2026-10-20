@@ -96,6 +96,8 @@ struct DashboardWordCard: View {
         }
         .frame(maxWidth: .infinity, minHeight: 96)
         .contentShape(Rectangle())
+        // v19 S5: VoiceOver sees it as something to press.
+        .accessibilityAddTraits(.isButton)
         .onTapGesture { isFlipped.toggle() }
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.bottom, isFlipped ? DS.Spacing.sm : DS.Spacing.lg)

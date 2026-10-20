@@ -196,6 +196,9 @@ struct SavedWordsListView: View {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 .padding(DS.Spacing.sm)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+                // v19 S5: VoiceOver sees it as something to press.
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint(Text("Dismiss"))
                 .onTapGesture { withAnimation(DS.Animation.standard) { store.saveError = nil } }
             }
         }

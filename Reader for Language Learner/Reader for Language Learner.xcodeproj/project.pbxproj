@@ -193,6 +193,8 @@
 				en,
 				Base,
 				tr,
+				es,
+				de,
 			);
 			mainGroup = FEDD95832F3BC32C000F5EF2;
 			minimizedProjectReferenceProxies = 1;

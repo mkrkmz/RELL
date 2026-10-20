@@ -57,6 +57,8 @@ struct CommandPaletteView: View {
                             row(item, selected: index == selection)
                                 .id(index)
                                 .contentShape(Rectangle())
+                                // v19 S5: VoiceOver sees it as something to press.
+                                .accessibilityAddTraits(.isButton)
                                 .onTapGesture { selection = index; run(results) }
                         }
                         if results.isEmpty {

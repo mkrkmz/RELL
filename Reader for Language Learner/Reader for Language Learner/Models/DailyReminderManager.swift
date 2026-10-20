@@ -2,9 +2,10 @@
 //  DailyReminderManager.swift
 //  Reader for Language Learner
 //
-//  Local daily-goal reminder: a repeating UNUserNotificationCenter request
-//  that nudges the user at a chosen time, and deep-links into the review
-//  window (reusing RELLIntents' .openReviewWindowCommand) when tapped.
+//  Local daily-goal reminder: one UNUserNotificationCenter request a day for
+//  the coming week (v19 S5), skipped on a day whose goal is done, that
+//  deep-links into the review window (reusing RELLIntents'
+//  .openReviewWindowCommand) when tapped.
 //
 
 import Foundation
@@ -79,41 +80,84 @@ final class DailyReminderManager: NSObject {
         }
     }
 
-    /// Schedules (or reschedules) the repeating daily reminder at the stored time.
-    func schedule() {
-        let center = UNUserNotificationCenter.current()
-        center.removePendingNotificationRequests(withIdentifiers: [dailyReminderRequestIdentifier])
+    /// Today's goal as the tracker last saw it (v19 S5): a day already done
+    /// gets no reminder, and today's says what's left.
+    private var goalDoneToday = false
+    private var goalRemaining: String?
 
-        let time = Self.storedTime()
-        var components = Calendar.current.dateComponents([.hour, .minute], from: time)
-        components.second = 0
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
-
-        let content = UNMutableNotificationContent()
-        if let word = savedWordsStore?.dueWords().first {
-            // A word to answer right from the banner. It's the word due when
-            // this was scheduled; answering reschedules with the next one.
-            content.title = String(localized: "Do you remember “\(word.term)”?")
-            content.body = String(localized: "Answer here, or open RELL to review the rest.")
-            content.categoryIdentifier = reviewWordCategory
-            content.userInfo = [wordIDKey: word.id.uuidString]
-        } else {
-            content.title = String(localized: "Time for your daily goal")
-            content.body = String(localized: "Review a few words or read a page to keep your streak going.")
+    func goalChanged(done: Bool, remaining: String?) {
+        goalDoneToday = done
+        goalRemaining = remaining
+        if UserDefaults.standard.object(forKey: Self.enabledKey) as? Bool ?? false {
+            schedule()
         }
-        content.sound = .default
+    }
 
-        let request = UNNotificationRequest(identifier: dailyReminderRequestIdentifier, content: content, trigger: trigger)
-        // The async form, not the completion block: the block runs on a
-        // background queue, and one formed here would inherit main-actor
-        // isolation — under Swift 6 a runtime check that traps.
-        Task {
-            do {
-                try await center.add(request)
-            } catch {
-                AppLogger.notifications.error("Failed to schedule reminder: \(error.localizedDescription, privacy: .public)")
+    /// Schedules the reminders for the next seven days at the stored time —
+    /// one request a day, so today's can be left out once the goal is done
+    /// (v19 S5; before, one repeating request).
+    func schedule(now: Date = Date()) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: Self.allIdentifiers(from: now))
+
+        let calendar = Calendar.current
+        let time = calendar.dateComponents([.hour, .minute], from: Self.storedTime())
+        let dueWord = savedWordsStore?.dueWords().first
+        let doneToday = goalDoneToday, remaining = goalRemaining
+
+        for offset in 0..<Self.daysAhead {
+            guard let day = calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now)),
+                  let fire = calendar.date(bySettingHour: time.hour ?? 19, minute: time.minute ?? 0, second: 0, of: day),
+                  fire > now
+            else { continue }
+            if offset == 0, doneToday { continue }
+
+            let content = UNMutableNotificationContent()
+            if let word = dueWord {
+                // A word to answer right from the banner. It's the word due when
+                // this was scheduled; answering reschedules with the next one.
+                content.title = String(localized: "Do you remember “\(word.term)”?")
+                content.body = offset == 0 && remaining != nil
+                    ? remaining!
+                    : String(localized: "Answer here, or open RELL to review the rest.")
+                content.categoryIdentifier = reviewWordCategory
+                content.userInfo = [wordIDKey: word.id.uuidString]
+            } else {
+                content.title = String(localized: "Time for your daily goal")
+                content.body = offset == 0 && remaining != nil
+                    ? remaining!
+                    : String(localized: "Review a few words or read a page to keep your streak going.")
+            }
+            content.sound = .default
+
+            let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fire)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+            let request = UNNotificationRequest(identifier: Self.identifier(for: day), content: content, trigger: trigger)
+            // The async form, not the completion block: the block runs on a
+            // background queue, and one formed here would inherit main-actor
+            // isolation — under Swift 6 a runtime check that traps.
+            Task {
+                do {
+                    try await center.add(request)
+                } catch {
+                    AppLogger.notifications.error("Failed to schedule reminder: \(error.localizedDescription, privacy: .public)")
+                }
             }
         }
+    }
+
+    static let daysAhead = 7
+
+    /// "dailyGoalReminder-2026-10-20" — the day the reminder is for.
+    static func identifier(for day: Date) -> String {
+        dailyReminderRequestIdentifier + "-" + DailyGoalLog.key(day)
+    }
+
+    /// Today's and the coming days' identifiers, and the old repeating one.
+    static func allIdentifiers(from now: Date) -> [String] {
+        let calendar = Calendar.current
+        let days = (-1...daysAhead).compactMap { calendar.date(byAdding: .day, value: $0, to: calendar.startOfDay(for: now)) }
+        return [dailyReminderRequestIdentifier] + days.map(identifier(for:))
     }
 
     /// A banner answer: recall, so it goes to the schedule like a flashcard's.
@@ -128,7 +172,7 @@ final class DailyReminderManager: NSObject {
     }
 
     func cancel() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [dailyReminderRequestIdentifier])
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: Self.allIdentifiers(from: Date()))
     }
 
     static func storedTime() -> Date {
@@ -146,7 +190,7 @@ extension DailyReminderManager: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        guard response.notification.request.identifier == dailyReminderRequestIdentifier else {
+        guard response.notification.request.identifier.hasPrefix(dailyReminderRequestIdentifier) else {
             completionHandler()
             return
         }

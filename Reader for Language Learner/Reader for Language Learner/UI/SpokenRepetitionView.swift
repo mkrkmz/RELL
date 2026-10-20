@@ -71,6 +71,7 @@ struct SpokenRepetitionView: View {
                 }
                 step = .result(result)
                 onResult(result)
+                Announcement.post(accessibilitySummary(result))
             case .failed(let message):
                 step = .failed(message)
             case .idle, .listening:

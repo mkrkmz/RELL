@@ -165,14 +165,22 @@ struct SentenceWritingCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private func verdictTitle(_ verdict: SentenceWriting.Verdict) -> String {
+        switch verdict {
+        case .natural:    return String(localized: "Natural")
+        case .fixed:      return String(localized: "Corrected")
+        case .otherSense: return String(localized: "Used in another sense")
+        }
+    }
+
     /// The verdict in words and a mark, not colour alone.
     private func verdictChip(_ verdict: SentenceWriting.Verdict) -> some View {
-        let (title, symbol, tint): (String, String, Color) = switch verdict {
-        case .natural:    (String(localized: "Natural"), "checkmark", DS.Color.success)
-        case .fixed:      (String(localized: "Corrected"), "pencil", DS.Color.warning)
-        case .otherSense: (String(localized: "Used in another sense"), "arrow.triangle.branch", DS.Color.danger)
+        let (symbol, tint): (String, Color) = switch verdict {
+        case .natural:    ("checkmark", DS.Color.success)
+        case .fixed:      ("pencil", DS.Color.warning)
+        case .otherSense: ("arrow.triangle.branch", DS.Color.danger)
         }
-        return Label(title, systemImage: symbol)
+        return Label(verdictTitle(verdict), systemImage: symbol)
             .font(DS.Typography.caption.weight(.bold))
             .foregroundStyle(tint)
             .padding(.horizontal, DS.Spacing.sm)
@@ -261,6 +269,7 @@ struct SentenceWritingCard: View {
                     written = sentence
                     feedback = parsed
                     onChecked(parsed)
+                    Announcement.post(verdictTitle(parsed.verdict) + ". " + parsed.why)
                 } else {
                     failure = String(localized: "The AI's answer couldn't be read. Try again.")
                 }

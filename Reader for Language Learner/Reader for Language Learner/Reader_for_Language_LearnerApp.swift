@@ -49,7 +49,9 @@ struct Reader_for_Language_LearnerApp: App {
     @State private var epubHighlightStore = EPUBHighlightStore()
     @State private var epubBookmarkStore = EPUBBookmarkStore()
     @State private var epubNoteStore     = EPUBNoteStore()
-    @State private var sessionStore      = ReadingSessionStore()
+    @State private var sessionStore:     ReadingSessionStore
+    /// Today's goal, live (v19 S5).
+    @State private var dailyGoal:        DailyGoalTracker
     @State private var encounterStore    = WordEncounterStore()
     @State private var recentDocumentStore = RecentDocumentStore()
     @State private var coverStore        = DocumentCoverStore()
@@ -64,6 +66,10 @@ struct Reader_for_Language_LearnerApp: App {
         let lookup = QuickLookupService()
         _savedWordsStore = State(initialValue: savedWords)
         _quickLookup = State(initialValue: lookup)
+        let sessions = ReadingSessionStore()
+        _sessionStore = State(initialValue: sessions)
+        _dailyGoal = State(initialValue: DailyGoalTracker(sessions: sessions, words: savedWords,
+                                                          keepsLog: !RELLProcess.isTestHost))
         // Listens for .savedWordAdded — estimates CEFR for unrated new words.
         let estimator = CEFREstimator(savedWordsStore: savedWords)
         _cefrEstimator = State(initialValue: estimator)
@@ -129,6 +135,7 @@ struct Reader_for_Language_LearnerApp: App {
                 .environment(epubBookmarkStore)
                 .environment(epubNoteStore)
                 .environment(sessionStore)
+                .environment(dailyGoal)
                 .environment(encounterStore)
                 .environment(recentDocumentStore)
                 .environment(coverStore)
@@ -185,6 +192,7 @@ struct Reader_for_Language_LearnerApp: App {
         ) {
             MenuBarQuickLookupView()
                 .environment(savedWordsStore)
+                .environment(dailyGoal)
                 .environment(quickLookup)
                 .rellAccentTint()
         }
@@ -202,10 +210,31 @@ struct Reader_for_Language_LearnerApp: App {
 private struct MenuBarQuickLookupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(SavedWordsStore.self) private var savedWordsStore
+    @Environment(DailyGoalTracker.self) private var dailyGoal
 
     var body: some View {
         VStack(spacing: 0) {
             QuickLookupPanelView(style: .menuBar, onDismiss: { dismiss() })
+            // v19 S5: today's goal at a glance.
+            Divider()
+            HStack(spacing: DS.Spacing.xs) {
+                Image(systemName: dailyGoal.todayStatus == .full ? "checkmark.circle.fill" : "target")
+                    .foregroundStyle(dailyGoal.todayStatus == .full ? DS.Color.success : DS.Color.accent)
+                    .accessibilityHidden(true)
+                Text("Today: \(dailyGoal.summary)")
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .monospacedDigit()
+                Spacer(minLength: 0)
+                if dailyGoal.streak > 0 {
+                    Label("\(dailyGoal.streak)", systemImage: "flame.fill")
+                        .font(DS.Typography.caption.weight(.semibold))
+                        .foregroundStyle(DS.Color.warning)
+                        .accessibilityLabel(Text("\(dailyGoal.streak)-day streak"))
+                }
+            }
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.vertical, DS.Spacing.xs)
             // One due word, answerable without opening a window (v13 S5).
             if !savedWordsStore.words.isEmpty {
                 Divider()

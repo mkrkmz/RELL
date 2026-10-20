@@ -43,6 +43,8 @@ struct PDFBookmarksView: View {
             ForEach(entries) { bookmark in
                 BookmarkRow(bookmark: bookmark, onEdit: { editingBookmark = bookmark })
                     .contentShape(Rectangle())
+                    // v19 S5: VoiceOver sees it as something to press.
+                    .accessibilityAddTraits(.isButton)
                     .onTapGesture { navigate(to: bookmark) }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {

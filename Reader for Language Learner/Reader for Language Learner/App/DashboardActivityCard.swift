@@ -2,11 +2,13 @@
 //  DashboardActivityCard.swift
 //  Reader for Language Learner
 //
-//  Dashboard card combining the daily reading goal ring, reading streak,
-//  and a 7-day activity mini chart. Right-click the card to change the goal.
+//  "Today's goal" on the home screen (Roadmap v19 Sprint 5, approved
+//  mockup): reading and reviews, a ring each, the goal streak and the last
+//  seven days as dots — ✓ both parts done, ½ one, empty none; the mark
+//  reads without the colour. Right-click the card to change the goal. With
+//  the reviews part off, one ring, as before.
 //
 
-import Charts
 import SwiftUI
 
 struct DashboardActivityCard: View {
@@ -15,158 +17,167 @@ struct DashboardActivityCard: View {
     let readingStreak: Int
     var streakAtRisk: Bool = false
 
+    @Environment(DailyGoalTracker.self) private var tracker: DailyGoalTracker?
     @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
+    @AppStorage(StorageKey.dailyGoalReviews) private var goalReviews = DailyGoal.Targets.defaultReviews
 
-    static let goalChoices = [10, 15, 20, 30, 45, 60]
+    static let goalChoices = DailyGoal.Targets.readingChoices
 
-    private var todayMinutes: Int {
-        Int(todayReadingTime / 60)
+    private var targets: DailyGoal.Targets { DailyGoal.Targets(readingMinutes: goalMinutes, reviews: goalReviews) }
+
+    /// Live from the tracker; from the card's own figures without one.
+    private var day: DailyGoal.Day {
+        tracker?.today ?? DailyGoal.Day(readingSeconds: todayReadingTime, reviews: 0, dueLeft: 0)
     }
 
-    private var progress: Double {
-        guard goalMinutes > 0 else { return 0 }
-        return min(1, todayReadingTime / Double(goalMinutes * 60))
-    }
+    private var streak: Int { tracker?.streak ?? readingStreak }
 
-    private var goalReached: Bool {
-        progress >= 1
-    }
-
-    // Half the home column since v14 S3 (beside the review card): the ring
-    // and the text on top, the week's chart under them.
     var body: some View {
+        let day = day, targets = targets
+        let readingDone = DailyGoal.readingDone(day, targets)
+        let reviewsDone = DailyGoal.reviewsDone(day, targets)
         VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            HStack(spacing: DS.Spacing.md) {
-                goalRing
-
-                VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                    Text(goalReached ? "Daily goal reached" : "\(todayMinutes) of \(goalMinutes) min today")
-                        .font(DS.Typography.label)
-                        .foregroundStyle(DS.Color.textPrimary)
-                        .lineLimit(1)
-
-                    if readingStreak > 0 {
-                        HStack(spacing: DS.Spacing.xs) {
-                            Image(systemName: "flame.fill")
-                                .font(DS.Typography.icon(10))
-                                .foregroundStyle(streakAtRisk ? DS.Color.warning : (goalReached ? DS.Color.warning : DS.Color.textTertiary))
-                            if streakAtRisk {
-                                Text(readingStreak == 1 ? "1-day streak · read today to keep it" : "\(readingStreak)-day streak · read today to keep it")
-                                    .font(DS.Typography.caption)
-                                    .foregroundStyle(DS.Color.warning)
-                            } else {
-                                Text(readingStreak == 1 ? "1-day streak" : "\(readingStreak)-day streak")
-                                    .font(DS.Typography.caption)
-                                    .foregroundStyle(DS.Color.textTertiary)
-                            }
-                        }
-                    } else {
-                        Text("Read a little every day")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
+            HStack(alignment: .firstTextBaseline) {
+                Text("Today's goal")
+                    .font(DS.Typography.label)
+                    .foregroundStyle(DS.Color.textPrimary)
+                Spacer(minLength: DS.Spacing.sm)
+                if streak > 0 {
+                    Label(streak == 1 ? String(localized: "1-day streak") : String(localized: "\(streak)-day streak"),
+                          systemImage: "flame.fill")
+                        .font(DS.Typography.caption.weight(.semibold))
+                        .foregroundStyle(DS.Color.warning)
                 }
-
-                Spacer(minLength: 0)
             }
 
-            weeklyChart
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
+            HStack(spacing: DS.Spacing.md) {
+                part(
+                    progress: min(1, day.readingSeconds / Double(max(1, targets.readingMinutes) * 60)),
+                    done: readingDone,
+                    value: "\(min(targets.readingMinutes, Int(day.readingSeconds / 60))) / \(targets.readingMinutes) min",
+                    caption: readingDone ? String(localized: "Reading · done")
+                        : String(localized: "Reading · \(DailyGoal.readingLeft(day, targets)) min left")
+                )
+                if targets.reviews > 0 {
+                    part(
+                        progress: reviewsDone ? 1 : min(1, Double(day.reviews) / Double(targets.reviews)),
+                        done: reviewsDone,
+                        value: "\(min(day.reviews, targets.reviews)) / \(targets.reviews)",
+                        caption: reviewsDone
+                            ? (day.reviews < targets.reviews ? String(localized: "Reviews · nothing left") : String(localized: "Reviews · done"))
+                            : String(localized: "Reviews · \(DailyGoal.reviewsLeft(day, targets)) left")
+                    )
+                }
+            }
+
+            if let week = tracker?.week {
+                HStack(spacing: DS.Spacing.xs) {
+                    ForEach(week) { weekDay in
+                        dayDot(weekDay)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(weekSummary(week)))
+            }
+
+            Text(hint(readingDone: readingDone, reviewsDone: reviewsDone))
+                .font(DS.Typography.caption)
+                .foregroundStyle(DS.Color.textTertiary)
+                .lineLimit(2)
         }
         .padding(.horizontal, DS.Spacing.lg)
         .padding(.vertical, DS.Spacing.md)
         .dsCard(padding: nil, radius: DS.Radius.md, stroke: .hairline)
         .contextMenu {
-            Section("Daily Goal") {
-                ForEach(Self.goalChoices, id: \.self) { minutes in
-                    Button {
-                        goalMinutes = minutes
-                    } label: {
-                        if minutes == goalMinutes {
-                            Label("\(minutes) minutes", systemImage: "checkmark")
-                        } else {
-                            Text("\(minutes) minutes")
-                        }
-                    }
+            Section("Daily Reading") {
+                ForEach(DailyGoal.Targets.readingChoices, id: \.self) { minutes in
+                    Toggle(String(localized: "\(minutes) minutes"), isOn: Binding(
+                        get: { goalMinutes == minutes }, set: { if $0 { goalMinutes = minutes; tracker?.refresh() } }
+                    ))
+                }
+            }
+            Section("Daily Reviews") {
+                ForEach(DailyGoal.Targets.reviewChoices, id: \.self) { count in
+                    Toggle(count == 0 ? String(localized: "Off") : String(localized: "\(count) cards"), isOn: Binding(
+                        get: { goalReviews == count }, set: { if $0 { goalReviews = count; tracker?.refresh() } }
+                    ))
                 }
             }
         }
-        .help("Today's reading vs your daily goal — right-click to change the goal")
+        .help("Today's reading and reviews against your daily goal — right-click to change it")
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(
-            goalReached
-            ? "Daily reading goal reached"
-            : "\(todayMinutes) of \(goalMinutes) minutes read today"
-        )
     }
 
-    // MARK: - Goal Ring
+    // MARK: Parts
 
-    private var goalRing: some View {
-        ZStack {
-            Circle()
-                .stroke(DS.Color.hairlineStrong, lineWidth: 3.5)
-
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    goalReached
-                        ? AnyShapeStyle(DS.Color.success)
-                        : AnyShapeStyle(DS.Gradient.goalRing),
-                    style: StrokeStyle(lineWidth: 3.5, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-
-            if goalReached {
-                Image(systemName: "checkmark")
-                    .font(DS.Typography.icon(12, weight: .bold))
-                    .foregroundStyle(DS.Color.success)
-                    .symbolEffect(.bounce, value: goalReached)
-            } else {
-                Text("\(Int(progress * 100))%")
-                    .font(DS.Typography.statNumber(9, weight: .semibold))
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
-        }
-        .frame(width: 38, height: 38)
-        .animation(DS.Animation.spring, value: progress)
-    }
-
-    // MARK: - Weekly Chart
-
-    private var weeklyChart: some View {
-        Chart(last7Days) { day in
-            BarMark(
-                x: .value("Day", day.label),
-                y: .value("Minutes", max(day.seconds / 60, 0))
-            )
-            .foregroundStyle(
-                Calendar.current.isDateInToday(day.day)
-                ? DS.Color.accent
-                : DS.Color.accentMuted
-            )
-            .cornerRadius(2)
-
-            if goalMinutes > 0 {
-                RuleMark(y: .value("Goal", goalMinutes))
-                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                    .foregroundStyle(DS.Color.separator)
-            }
-        }
-        .chartYAxis(.hidden)
-        .chartXAxis {
-            AxisMarks { value in
-                AxisValueLabel {
-                    if let label = value.as(String.self) {
-                        Text(label.prefix(1))
-                            .font(DS.Typography.micro(8))
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
+    private func part(progress: Double, done: Bool, value: String, caption: String) -> some View {
+        HStack(spacing: DS.Spacing.sm) {
+            ZStack {
+                Circle().stroke(DS.Color.hairlineStrong, lineWidth: 3.5)
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(done ? AnyShapeStyle(DS.Color.success) : AnyShapeStyle(DS.Gradient.goalRing),
+                            style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                if done {
+                    Image(systemName: "checkmark")
+                        .font(DS.Typography.icon(11, weight: .bold))
+                        .foregroundStyle(DS.Color.success)
+                } else {
+                    Text("\(Int(progress * 100))%")
+                        .font(DS.Typography.statNumber(9, weight: .semibold))
+                        .foregroundStyle(DS.Color.textSecondary)
                 }
             }
+            .frame(width: 34, height: 34)
+            .animation(DS.Animation.spring, value: progress)
+            .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(value)
+                    .font(DS.Typography.callout.weight(.semibold))
+                    .monospacedDigit()
+                    .lineLimit(1)
+                Text(caption)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .lineLimit(1)
+            }
         }
-        .chartYScale(domain: 0...max(Double(goalMinutes), (last7Days.map { $0.seconds / 60 }.max() ?? 0) * 1.15, 1))
-        .accessibilityLabel("Reading minutes for the last 7 days")
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func dayDot(_ day: DailyGoalTracker.WeekDay) -> some View {
+        let (fill, mark): (Color, String) = switch day.status {
+        case .full: (DS.Color.success, "✓")
+        case .half: (DS.Color.warning, "½")
+        case .none: (DS.Color.hairlineStrong, "")
+        }
+        return VStack(spacing: DS.Spacing.hairline) {
+            Text(mark)
+                .font(DS.Typography.caption2.weight(.bold))
+                .foregroundStyle(day.status == .none ? DS.Color.textTertiary : .white)
+                .frame(width: 18, height: 18)
+                .background(day.isToday && day.status == .none ? Color.clear : fill, in: Circle())
+                .overlay(Circle().strokeBorder(day.isToday ? DS.Color.accent : .clear,
+                                               style: StrokeStyle(lineWidth: 1.5, dash: day.status == .none ? [2, 2] : [])))
+            Text(day.id.formatted(.dateTime.weekday(.narrow)))
+                .font(DS.Typography.micro(8))
+                .foregroundStyle(day.isToday ? DS.Color.accent : DS.Color.textTertiary)
+        }
+    }
+
+    private func hint(readingDone: Bool, reviewsDone: Bool) -> String {
+        switch (readingDone, reviewsDone || targets.reviews == 0) {
+        case (true, true):   return String(localized: "Today's goal is done.")
+        case (false, true):  return String(localized: "Read \(DailyGoal.readingLeft(day, targets)) more minutes to finish today.")
+        case (true, false):  return String(localized: "Review \(DailyGoal.reviewsLeft(day, targets)) more cards to finish today.")
+        case (false, false): return String(localized: "Read a little and review a few cards to keep the streak.")
+        }
+    }
+
+    private func weekSummary(_ week: [DailyGoalTracker.WeekDay]) -> String {
+        let full = week.filter { $0.status == .full }.count
+        return String(localized: "Goal done on \(full) of the last 7 days")
     }
 }

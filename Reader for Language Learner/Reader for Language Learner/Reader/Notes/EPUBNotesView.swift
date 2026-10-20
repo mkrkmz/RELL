@@ -92,6 +92,8 @@ struct EPUBNotesView: View {
             ForEach(entries) { note in
                 EPUBNoteRow(note: note, chapterTitle: chapterTitle(for: note))
                     .contentShape(Rectangle())
+                    // v19 S5: VoiceOver sees it as something to press.
+                    .accessibilityAddTraits(.isButton)
                     .onTapGesture { navigate(to: note) }
                     .contextMenu {
                         Button("Edit Note…") { editingNote = note }

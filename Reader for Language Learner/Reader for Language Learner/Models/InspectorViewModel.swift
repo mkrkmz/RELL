@@ -358,6 +358,10 @@ final class InspectorViewModel {
             if let start = moduleStartTimes[module] {
                 moduleElapsed[module] = Date().timeIntervalSince(start)
             }
+            // v19 S5: the answer arrived where the focus isn't — say so.
+            Announcement.post(failure == nil
+                ? String(localized: "\(module.title) ready")
+                : String(localized: "\(module.title) failed"))
         }
         loading[module] = false
         activeTasks[module] = nil

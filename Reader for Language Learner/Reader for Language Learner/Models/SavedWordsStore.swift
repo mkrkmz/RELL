@@ -841,7 +841,7 @@ final class SavedWordsStore {
         return days > 0 ? days : nil
     }
 
-    private func reviewEventDates() -> [Date] {
+    func reviewEventDates() -> [Date] {
         words.flatMap { word in
             if !word.reviewHistory.isEmpty {
                 return word.reviewHistory

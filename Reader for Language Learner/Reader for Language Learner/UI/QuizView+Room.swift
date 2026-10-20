@@ -159,6 +159,10 @@ extension QuizView {
             return .handled
         }
         .onAppear { roomFocused = true }
+        // v19 S5: the next card, said for VoiceOver.
+        .onChange(of: word.id) { _, _ in
+            Announcement.post(String(localized: "Card \(session.position) of \(session.total)"))
+        }
         .animation(DS.Animation.springFast, value: session.isFlipped)
     }
 

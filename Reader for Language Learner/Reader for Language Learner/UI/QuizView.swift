@@ -170,6 +170,9 @@ struct QuizView: View {
                 .rotation3DEffect(.degrees(session.isFlipped ? 90 : 0), axis: (x: 0, y: 1, z: 0))
                 .opacity(session.isFlipped ? 0 : 1)
         }
+        // v19 S5: VoiceOver sees it as something to press.
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(Text("Flip the card"))
         .onTapGesture { flipCard() }
         .focusable()
         .focusEffectDisabled()

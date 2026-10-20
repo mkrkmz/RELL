@@ -25,6 +25,9 @@ struct AppearanceSettingsView: View {
 
     var body: some View {
         Form {
+            // v19 S5.
+            InterfaceLanguageSection()
+
             Section("App Theme") {
                 Picker("Appearance", selection: $appThemeRaw) {
                     ForEach(AppTheme.allCases) { theme in

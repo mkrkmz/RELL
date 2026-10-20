@@ -336,6 +336,8 @@ struct BulkAnkiExportView: View {
         .padding(.vertical, DS.Spacing.xs)
         .padding(.horizontal, DS.Spacing.xs + DS.Spacing.xxs)
         .contentShape(Rectangle())
+        // v19 S5: a toggle to VoiceOver, with its state.
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .onTapGesture {
             if isSelected {
                 selectedIDs.remove(word.id)

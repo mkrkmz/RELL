@@ -368,6 +368,7 @@ struct ComprehensionCheckSheet: View {
                 let score = ComprehensionCheck.score(parsed.filter { $0.value.verdict != .skipped })
                 ComprehensionHistory.record(score.understood, of: score.total, for: request.historyKey)
                 phase = .results
+                Announcement.post(String(localized: "\(score.understood) of \(score.total) understood"))
             } catch {
                 guard !Task.isCancelled else { return }
                 failure = error.localizedDescription

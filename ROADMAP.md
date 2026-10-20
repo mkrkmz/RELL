@@ -1,6 +1,6 @@
 # RELL Roadmap v19 — Kelimeden Cumleye (S0 + 6 sprint)
 
-**Durum: onaylandi (2026-10-19); S0–S3 kapandi; S4 kodlandi (izin akisi ve canli tur bekliyor).**
+**Durum: onaylandi (2026-10-19); S0–S4 kapandi; S5 kodlandi (VoiceOver turu ve canli tur bekliyor).**
 
 Olusturulma: 2026-10-19 (1.48.1 sonrasi). Amac: RELL okutuyor ve
 kelimeyi hatirlatiyor ama kullandirmiyor. Bu roadmap once mevcut
@@ -233,16 +233,37 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
       Izin reddedilirse ya da dil icin cihaz ici tanima yoksa mikrofon
       gizlenir; Ayarlar ▸ Okuma ▸ Sesli Tekrar'da neden ve cozum yolu.
       Gizlilik tablosunda "Sesli tekrar · Bu Mac"
-- [ ] Kapi: izin akisi ve gercek tanima kullanicinin Mac'inde (canli tur)
+- [x] Kapi: tam paket 869 yesil; izin akisi ve gercek tanima kullanicinin
+      Mac'inde canli turdan gecti (2026-10-20)
 
 ## Sprint 5 — "Herkes icin hazir" (Should, **maketle baslar**)
 
-- [ ] **Yeni arayuz dilleri** — iki dil (secim sprint basinda); ceviri
-      anadil konusan biri tarafindan gozden gecirilir
-- [ ] **Gunluk hedef** — okuma suresi ve tekrar sayisi; ana ekranda
-      ilerleme, seriye bagli
-- [ ] **Ekran okuyucu turu** — okuma ekrani, Inspector, kelime defteri,
-      calisma odasi bastan sona VoiceOver ile; bulunanlar duzeltilir
+- [x] **Yeni arayuz dilleri** — Ispanyolca ve Almanca, 1.574 metnin
+      tamami; bicim belirtecleri betikle ve testle denetlenir. Ayarlar ▸
+      Gorunum ▸ Arayuz Dili (Sistem, English, Turkce, Espanol, Deutsch),
+      yeniden acilista gecerli, "Simdi Yeniden Baslat". Ana dili konusan
+      biri gozden gecirene kadar "beta"; Yardim ▸ "Bir Ceviriyi Duzelt…"
+      GitHub'da kisisel bilgi icermeyen bir sablon acar. Izin metinleri de
+      uc dilde
+- [ ] Ceviri, ana dili Ispanyolca ve Almanca olan biri tarafindan gozden
+      gecirilir (beta etiketi o zaman kalkar)
+- [x] **Gunluk hedef** — okuma (dakika) ve tekrar (10/20/30/50 kart ya da
+      kapali, varsayilan 20); bekleyen kart hedeften azsa hepsi bitince
+      tamam. Ana ekranda iki halka, hedef serisi ve son yedi gun (✓ / ½ /
+      bos). Seri bundan sonra iki parca tamamlaninca sayilir; onceki gunler
+      eski kuralla (okuma), mevcut seri sifirlanmaz. Her gunun durumu
+      dakikada bir kaydedilir. Hatirlatma artik yedi ayri gunluk bildirim:
+      hedef tamamsa o gun gonderilmez, bugunku kalanini soyler. Menu
+      cubugunda "Bugun" satiri
+- [x] **Ekran okuyucu turu, kod tarafi** — dokunma hareketiyle calisan 15
+      yer VoiceOver'a dugme olarak tanitildi (yakinlastirma yuzdesi, sayfa
+      gostergesi, yer imi/not/vurgu satirlari, kartlar, toplu disa
+      aktarma); calisma odasinda kart degisince, Inspector'da modul
+      yaniti gelince, cumle kurma, anlama kontrolu ve sesli tekrar sonucu
+      VoiceOver'a duyurulur. Apple'in otomatik erisilebilirlik denetimi
+      istege bagli UI testi olarak (`TEST_RUNNER_RELL_A11Y_AUDIT=1 make
+      ui-test`)
+- [ ] VoiceOver ile canli tur (kullanici) ve bulunanlarin duzeltilmesi
 
 ## Sprint 6 — "Kapanis"
 

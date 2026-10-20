@@ -178,6 +178,12 @@ extension ContentView {
                 .foregroundStyle(DS.Color.textSecondary)
                 .frame(width: 46)
                 .onTapGesture { pdfViewManager.fitToWidth() }
+                // v19 S5: a button to VoiceOver — the zoom, and what pressing does.
+                .accessibilityElement()
+                .accessibilityLabel(Text("Fit to Width"))
+                .accessibilityValue(Text(pdfViewManager.zoomLabel))
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { pdfViewManager.fitToWidth() }
 
             Divider().frame(height: 16)
 

@@ -19,6 +19,8 @@ extension QuizView {
                 sentenceRepeating = false
                 speak(word)
             }
+            // v19 S5: VoiceOver sees it as something to press.
+            .accessibilityAddTraits(.isButton)
             .onTapGesture {
                 if !sentenceTextShown {
                     withAnimation(DS.Animation.standard) { sentenceTextShown = true }

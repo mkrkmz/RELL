@@ -455,7 +455,7 @@ struct InspectorView: View {
     }
 
     func refreshCache(term: String) {
-        viewModel.resetAll()
+         viewModel.resetAll()
         guard !term.isEmpty else { return }
         let loaded = viewModel.loadFromCache(key: outputCacheKey(term: term))
         if loaded {

@@ -28,6 +28,18 @@
             "state" : "translated",
             "value" : "RELL yalnızca bir cümleyi sesli tekrar ederken dinler. Söylediğin bu Mac'te tanınır; kaydedilmez, hiçbir yere gönderilmez."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL solo escucha mientras repites una frase en voz alta. Lo que dices se reconoce en este Mac; no se graba ni se envía."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL hört nur zu, während du einen Satz nachsprichst. Was du sagst, wird auf diesem Mac erkannt, nie aufgenommen oder gesendet."
+          }
         }
       }
     },
@@ -45,6 +57,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "RELL, söylediğini cümleyle karşılaştırmak için bu Mac'te yazıya döker. Hiçbir şey kaydedilmez ya da gönderilmez."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL convierte lo que dices en texto en este Mac para compararlo con la frase. No se graba ni se envía nada."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL wandelt das Gesagte auf diesem Mac in Text um, um es mit dem Satz zu vergleichen. Nichts wird aufgenommen oder gesendet."
           }
         }
       }

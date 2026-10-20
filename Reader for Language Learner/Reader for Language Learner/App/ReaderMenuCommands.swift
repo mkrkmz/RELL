@@ -30,6 +30,10 @@ struct ReaderMenuCommands: Commands {
             Button("Diagnostic Report…") {
                 NotificationCenter.default.post(name: .diagnosticReportCommand, object: nil)
             }
+            // v19 S5: a GitHub issue from a template; nothing about you in it.
+            Button("Fix a Translation…") {
+                NSWorkspace.shared.open(InterfaceLanguage.fixTranslationURL)
+            }
         }
 
         // ── File ──────────────────────────────────────────────────────

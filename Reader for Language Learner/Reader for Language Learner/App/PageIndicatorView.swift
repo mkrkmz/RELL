@@ -67,6 +67,11 @@ struct PageIndicatorView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { enterEdit() }
                 .help("Click to jump to page")
+                // v19 S5.
+                .accessibilityLabel(Text("Page \(displayPage)"))
+                .accessibilityHint(Text("Jump to a page"))
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { enterEdit() }
         }
     }
 

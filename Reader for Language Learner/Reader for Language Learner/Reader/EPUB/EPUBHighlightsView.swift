@@ -51,6 +51,8 @@ struct EPUBHighlightsView: View {
                     onEditNote: { noteTarget = highlight }
                 )
                 .contentShape(Rectangle())
+                // v19 S5: VoiceOver sees it as something to press.
+                .accessibilityAddTraits(.isButton)
                 .onTapGesture { navigate(to: highlight) }
                 .contextMenu {
                     Button(highlight.note.isEmpty ? "Add Note…" : "Edit Note…") {

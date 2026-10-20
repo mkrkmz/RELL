@@ -120,6 +120,8 @@ struct PDFNotesView: View {
                     onQueueReview: { saveWord(from: note, queueForReview: true) }
                 )
                     .contentShape(Rectangle())
+                    // v19 S5: VoiceOver sees it as something to press.
+                    .accessibilityAddTraits(.isButton)
                     .onTapGesture { navigate(to: note) }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {

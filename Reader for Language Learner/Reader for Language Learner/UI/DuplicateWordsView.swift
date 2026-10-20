@@ -74,6 +74,8 @@ struct DuplicateWordsView: View {
                 Spacer(minLength: 0)
             }
             .contentShape(Rectangle())
+            // v19 S5: VoiceOver sees it as something to press.
+            .accessibilityAddTraits(.isButton)
             .onTapGesture { selection = word.id }
             .listRowBackground(selection == word.id ? DS.Color.accentSubtle : nil)
         }

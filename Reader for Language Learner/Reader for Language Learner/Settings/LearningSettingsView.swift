@@ -23,6 +23,7 @@ struct LearningSettingsView: View {
     @AppStorage(StorageKey.comprehensionOfferEnabled) private var comprehensionOfferEnabled = true
     @AppStorage(StorageKey.chapterWarmUpEnabled) private var chapterWarmUpEnabled = true
     @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
+    @AppStorage(StorageKey.dailyGoalReviews) private var goalReviews = DailyGoal.Targets.defaultReviews
     @AppStorage(StorageKey.fillOnSave) private var fillOnSave = true
     @AppStorage(StorageKey.studySentenceOnFront) private var sentenceOnFront = true
     @AppStorage(DailyReminderManager.enabledKey) private var dailyReminderEnabled = false
@@ -125,10 +126,23 @@ struct LearningSettingsView: View {
                         Text("\(minutes) minutes").tag(minutes)
                     }
                 }
+                // v19 S5: reviews are the goal's second part.
+                Picker(selection: $goalReviews) {
+                    ForEach(DailyGoal.Targets.reviewChoices, id: \.self) { count in
+                        Text(count == 0 ? String(localized: "Off") : String(localized: "\(count) cards")).tag(count)
+                    }
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Daily Reviews")
+                        Text("With fewer cards waiting, the reviews are done once none are left.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
             } header: {
                 Text("Goal")
             } footer: {
-                Text("Shown on the home screen's reading card. You can also right-click that card to change it.")
+                Text("A day counts towards the streak once both parts are done; days before the goal began count if you read. Shown on the home screen — right-click the card to change it there.")
                     .foregroundStyle(DS.Color.textTertiary)
             }
 
