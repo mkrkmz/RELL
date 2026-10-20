@@ -6577,6 +6577,16 @@
         }
       }
     },
+    "Include sentences" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümleleri dahil et"
+          }
+        }
+      }
+    },
     "Include Source" : {
       "localizations" : {
         "tr" : {
@@ -7204,6 +7214,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dinle"
+          }
+        }
+      }
+    },
+    "Listen again" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden dinle"
+          }
+        }
+      }
+    },
+    "Listen again (S)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden dinle (S)"
           }
         }
       }
@@ -8641,6 +8671,16 @@
         }
       }
     },
+    "No other words to save here." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burada kaydedilecek başka kelime yok."
+          }
+        }
+      }
+    },
     "No Outline" : {
       "localizations" : {
         "tr" : {
@@ -8772,6 +8812,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İçindekiler Yok"
+          }
+        }
+      }
+    },
+    "No translation saved yet. The sentence's page can translate it." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz kayıtlı çeviri yok. Cümlenin sayfası çevirebilir."
+          }
+        }
+      }
+    },
+    "No translation yet" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz çeviri yok"
           }
         }
       }
@@ -10157,6 +10217,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çevirmek için boşluğa bas"
+          }
+        }
+      }
+    },
+    "Press T for the text, Space for the translation" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metin için T, çeviri için Boşluk"
           }
         }
       }
@@ -11832,6 +11902,16 @@
         }
       }
     },
+    "Save “%@” with this sentence" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” kelimesini bu cümleyle kaydet"
+          }
+        }
+      }
+    },
     "Save %@" : {
       "localizations" : {
         "tr" : {
@@ -11908,6 +11988,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kaydet, unutma"
+          }
+        }
+      }
+    },
+    "Save Sentence" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümleyi Kaydet"
           }
         }
       }
@@ -12474,6 +12564,16 @@
         }
       }
     },
+    "Sentence saved" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümle kaydedildi"
+          }
+        }
+      }
+    },
     "Sentence selection ready" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -12501,6 +12601,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cümle Çevirisi"
+          }
+        }
+      }
+    },
+    "Sentence, read aloud" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümle, sesli okunuyor"
+          }
+        }
+      }
+    },
+    "Sentences" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümleler"
+          }
+        }
+      }
+    },
+    "Sentences (%lld)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümleler (%lld)"
           }
         }
       }
@@ -13757,6 +13887,16 @@
         }
       }
     },
+    "text" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "metin"
+          }
+        }
+      }
+    },
     "That doesn't look like a web address. Paste a link that starts with http:// or https://." : {
       "localizations" : {
         "tr" : {
@@ -14442,6 +14582,16 @@
         }
       }
     },
+    "Translate" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çevir"
+          }
+        }
+      }
+    },
     "Translate the selected sentence below the page." : {
       "localizations" : {
         "tr" : {
@@ -14468,6 +14618,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çevriliyor…"
+          }
+        }
+      }
+    },
+    "translation" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "çeviri"
+          }
+        }
+      }
+    },
+    "TRANSLATION" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ÇEVİRİ"
           }
         }
       }
@@ -15355,6 +15525,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DÜZELTMEDEKİ KELİMELER"
+          }
+        }
+      }
+    },
+    "WORDS IN IT" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İÇİNDEKİ KELİMELER"
           }
         }
       }

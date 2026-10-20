@@ -1,6 +1,6 @@
 # RELL Roadmap v19 — Kelimeden Cumleye (S0 + 6 sprint)
 
-**Durum: onaylandi (2026-10-19); S0 ve S1 kapandi, S2 basladi.**
+**Durum: onaylandi (2026-10-19); S0 ve S1 kapandi, S2 kodlandi (canli tur bekliyor).**
 
 Olusturulma: 2026-10-19 (1.48.1 sonrasi). Amac: RELL okutuyor ve
 kelimeyi hatirlatiyor ama kullandirmiyor. Bu roadmap once mevcut
@@ -166,13 +166,24 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
 
 ## Sprint 2 — "Cumle kaydetme" (Must, **maketle baslar**)
 
-- [ ] Secim cubugu ve sag tik menusunde "Cumleyi Kaydet"; cumle, kaynagi
-      ve icindeki kelimelerle saklanir
-- [ ] Calisma odasinda dinle-anla karti (once ses, sonra metin ve
-      ceviri); FSRS'e yazar
-- [ ] Kelime defterinde cumleler ayri bir kaynak; Anki disa aktarmada
-      cumle kartlari
-- [ ] Yedeklerde ve gizlilik tablosunda
+- [x] Secim cubugu, sag tik menusu ve Inspector kartinda "Cumleyi Kaydet"
+      (bes kelime ve uzeri secimler, ⌘D); cumle ayni kelime deposunda
+      `mode = "Sentence"` ile, kaynagi, cevirisi ve modul yanitlariyla
+      saklanir. Ceviri kayit aninda doldurulur (seridin onbellegi ya da
+      ceviri servisi); eksikse cumle sayfasinda "Cevir"
+- [x] Cumleler yalniz kelimelerin katildigi islerin disinda: seviye
+      tahmini, kapsama, alti cizme, karsilasmalar, cift kayit taramasi
+- [x] Calisma odasinda dinle-anla karti: once ses, metin bulanik; T metni,
+      Bosluk ceviriyi acar, S yeniden okur; 1–4 FSRS'e yazar. Cumleler
+      yalniz kart ve asamali oturumlarda sorulur; "Cumleler" kaynagi
+- [x] Kelime defterinde "Cumleler" kaynagi; cumle sayfasi: buyuk cumle,
+      dinle, ceviri, icindeki kelimeler (kayitlilar durumuyla, digerleri
+      "+ Kaydet" ile cumle baglamiyla), hafiza, kaynak
+- [x] Anki disa aktarmada cumle karti (on yuz cumle; arka yuz ceviri,
+      icindeki kayitli kelimeler ve notlar) ve "Cumleleri dahil et"
+- [x] Yedekler ve gizlilik: cumleler kelime dosyasinda, ceviri mevcut
+      "Cumle cevirisi" satirinin yolundan gider; yeni dosya ya da hedef yok
+- [x] Kapi: tam paket 833 yesil; canli tur kullanicida
 
 ## Sprint 3 — "Kelimeyle cumle kur, okudugunu anla" (Must, **maketle baslar**)
 

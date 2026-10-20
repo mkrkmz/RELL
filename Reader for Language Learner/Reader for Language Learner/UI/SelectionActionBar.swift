@@ -37,6 +37,8 @@ struct SelectionActionBar: View {
     /// When the current selection is already in the vocabulary, the save button
     /// reads as "saved" rather than inviting a duplicate.
     var isSaved: Bool = false
+    /// The selection is saved as a sentence card (v19 S2).
+    var savesSentence: Bool = false
 
     // v14 S1: the two actions used most are labelled; the rest are named in
     // a Tools menu, in the same order as the right-click menu
@@ -44,10 +46,11 @@ struct SelectionActionBar: View {
     var body: some View {
         HStack(spacing: 2) {
             Button(action: onSave) {
-                Label(isSaved ? "Saved" : "Save", systemImage: isSaved ? "bookmark.fill" : "bookmark")
+                Label(isSaved ? "Saved" : savesSentence ? "Save Sentence" : "Save",
+                      systemImage: isSaved ? "bookmark.fill" : "bookmark")
             }
             .buttonStyle(.dsQuiet)
-            .help(isSaved ? "Saved" : "Save Word")
+            .help(isSaved ? "Saved" : savesSentence ? "Save Sentence" : "Save Word")
             Button(action: onAnalyze) {
                 Label("Analyze", systemImage: "sparkles")
             }

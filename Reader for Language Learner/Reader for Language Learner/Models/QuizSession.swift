@@ -37,11 +37,19 @@ enum QuizMode: String, CaseIterable, Identifiable {
     ///   its definition as the hint;
     /// - mastered: hear it and type it, when a voice can say it.
     static func stageMode(for word: SavedWord, canSpeak: Bool) -> QuizMode {
+        // A sentence has its own card: hear it, read it, check the translation.
+        if word.isSentence { return .flashcard }
         let canAsk = word.usableDefinition != nil
         let canCloze = canAsk || !word.sentence.isEmpty
         if word.reviewCount < 2 { return canAsk ? .multipleChoice : .flashcard }
         if word.masteryLevel == .mastered, canSpeak { return .listening }
         return canCloze ? .typed : .flashcard
+    }
+
+    /// Whether `word` can be asked in this mode: a saved sentence only on
+    /// its own card — flashcards and By Stage (v19 S2).
+    func asks(_ word: SavedWord) -> Bool {
+        !word.isSentence || self == .flashcard || self == .mixed
     }
 
     /// Modes whose answer the app can check itself, rather than asking the
@@ -174,7 +182,7 @@ final class QuizSession {
     /// The card on screen is a new word still to be introduced.
     var isIntroducing: Bool {
         guard introducesNewWords, let word = currentWord else { return false }
-        return !word.hasBeenReviewed && !introduced.contains(word.id)
+        return !word.hasBeenReviewed && !word.isSentence && !introduced.contains(word.id)
     }
 
     // MARK: - Derived

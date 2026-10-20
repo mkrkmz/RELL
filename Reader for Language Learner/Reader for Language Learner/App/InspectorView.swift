@@ -596,18 +596,28 @@ struct InspectorView: View {
                 outputs[CustomModule.outputKey(id)] = cleaned
                 outputs[CustomModule.titleKey(id)] = CustomModuleStore.shared.module(id)?.name
             }
-            savedWordsStore.add(SavedWord(
+            // v19 S2: five words or more are a sentence card, with the
+            // strip's translation when it has one.
+            let isSentence = SavedWord.savesAsSentence(trimmedSelection)
+            if isSentence, let translation = quickLookup.cachedTranslation(for: trimmedSelection) {
+                outputs[SavedWord.translationKey] = translation
+            }
+            let word = SavedWord(
                 term: trimmedSelection,
-                sentence: contextSentence ?? "",
+                sentence: isSentence ? "" : contextSentence ?? "",
                 pdfFilename: pdfFilename,
                 pageNumber: pageNumber,
-                mode: explainMode.rawValue,
+                mode: SavedWord.savedMode(for: trimmedSelection),
                 domain: domainPreference.rawValue,
                 llmOutputs: outputs,
                 language: targetLanguage.rawValue,
                 documentPath: documentPath
-            ))
-            showToastBriefly("Word saved!")
+            )
+            savedWordsStore.add(word)
+            showToastBriefly(isSentence ? "Sentence saved" : "Word saved!")
+            if isSentence {
+                Task { await SentenceTranslation.fill(wordID: word.id, store: savedWordsStore, quickLookup: quickLookup) }
+            }
         }
     }
 

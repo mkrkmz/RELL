@@ -161,6 +161,18 @@ struct BulkAnkiExportView: View {
                     }
                     .toggleStyle(.checkbox)
 
+                    // v19 S2: saved sentences, as their own cards.
+                    if scopedWords.contains(where: \.isSentence) {
+                        Toggle(isOn: $prefs.includeSentences) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "quote.opening")
+                                    .foregroundStyle(.secondary)
+                                Text("Include sentences")
+                                    .font(.subheadline)
+                            }
+                        }
+                        .toggleStyle(.checkbox)
+                    }
                     // v18 S3: your own modules, optional.
                     if hasOwnAnswers {
                         Toggle(isOn: $prefs.includeOwnModules) {
@@ -404,6 +416,20 @@ struct BulkAnkiExportView: View {
     }
 
     private func buildNote(from word: SavedWord) -> AnkiNoteDraft {
+        if word.isSentence {
+            let words = SentenceWords.saved(in: word.term, store: store, language: word.language.flatMap(Language.init))
+                .map { (term: $0.term, meaning: SavedWordRow.oneLineMeaning(of: $0).map(MarkdownUtils.sanitizeLLMOutput)) }
+            var note = AnkiExporter.buildSentenceNote(word, savedWords: words, includeSource: prefs.includeSource,
+                                                      tags: prefs.tags, extraTags: word.tags)
+            if deckPerBook && format == .ankiTSV {
+                note.deck = AnkiExporter.bookDeck(bookTitles[word.pdfFilename ?? ""])
+            }
+            return note
+        }
+        return buildWordNote(from: word)
+    }
+
+    private func buildWordNote(from word: SavedWord) -> AnkiNoteDraft {
         var moduleOutputs: [ModuleType: String] = [:]
         for (key, value) in word.llmOutputs {
             if let module = ModuleType(rawValue: key) {
@@ -447,7 +473,8 @@ struct BulkAnkiExportView: View {
 
     @MainActor
     private func export() async {
-        let selectedWords = store.words.filter { selectedIDs.contains($0.id) }
+        // v19 S2: sentences go too unless switched off.
+        let selectedWords = store.words.filter { selectedIDs.contains($0.id) && (prefs.includeSentences || !$0.isSentence) }
         guard !selectedWords.isEmpty else { return }
 
         let notes = selectedWords.map { buildNote(from: $0) }

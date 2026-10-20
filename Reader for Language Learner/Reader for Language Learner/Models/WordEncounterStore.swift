@@ -101,7 +101,8 @@ final class WordEncounterStore {
         now: Date = Date()
     ) {
         let vocabulary = words.compactMap { word -> EncounterScanner.Entry? in
-            guard word.language == nil || word.language == language.rawValue else { return nil }
+            // A saved sentence isn't met again word by word (v19 S2).
+            guard !word.isSentence, word.language == nil || word.language == language.rawValue else { return nil }
             return EncounterScanner.Entry(id: word.id, term: word.term)
         }
         // The sentence each word was saved from is where it came from, not

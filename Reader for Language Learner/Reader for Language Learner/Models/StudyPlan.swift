@@ -23,6 +23,8 @@ enum StudySource: Hashable {
     case deck(String)
     /// Words you've marked "Again" at least `StudyPlan.strugglingThreshold` times.
     case struggling
+    /// Saved sentences only (v19 S2).
+    case sentences
 }
 
 struct StudyPlan: Equatable {
@@ -81,6 +83,7 @@ struct StudyPlan: Equatable {
                              matchingTitles: BookWords.matchesTitles(forDocumentAt: document.path)).saved
         case .deck(let tag):  return words.filter { $0.hasTag(tag) }
         case .struggling:     return words.filter { $0.incorrectCount >= strugglingThreshold }
+        case .sentences:      return words.filter(\.isSentence)
         }
     }
 

@@ -357,6 +357,32 @@ struct SavedWord: Identifiable, Codable, Equatable, Hashable {
 
     /// Marked "Again" often enough to need a different way in (v15 S3):
     /// it gets a badge, a memory hook and its own study source.
+    /// A saved sentence rather than a word (v19 S2): studied with the
+    /// listen-understand card and kept out of what only words take part in
+    /// (the level estimate, coverage, underlining, encounters, duplicates).
+    var isSentence: Bool { mode == ExplainMode.sentence.rawValue }
+
+    /// Whether a selection is saved as a sentence card (v19 S2): five words
+    /// or more. Shorter ones — "put up with", "under the weather" — are
+    /// words and phrases, studied like words.
+    static func savesAsSentence(_ selection: String) -> Bool {
+        selection.split(whereSeparator: \.isWhitespace).count >= 5
+    }
+
+    /// The mode a selection is saved with.
+    static func savedMode(for selection: String) -> String {
+        (savesAsSentence(selection) ? ExplainMode.sentence : ExplainMode.word).rawValue
+    }
+
+    /// Where a saved sentence keeps its translation in `llmOutputs`.
+    static let translationKey = "translation"
+
+    /// The sentence's translation into your language, if there is one.
+    var translation: String? {
+        let text = (llmOutputs[Self.translationKey] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty ? nil : text
+    }
+
     var isStruggling: Bool {
         incorrectCount >= StudyPlan.strugglingThreshold
     }

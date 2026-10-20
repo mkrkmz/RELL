@@ -30,6 +30,11 @@ import SwiftUI
         didSet { UserDefaults.standard.set(includeOwnModules, forKey: "ankiIncludeOwnModules") }
     }
 
+    /// Saved sentences in a bulk export (v19 S2: on by default).
+    var includeSentences: Bool {
+        didSet { UserDefaults.standard.set(includeSentences, forKey: "ankiIncludeSentences") }
+    }
+
     /// Per-module toggles keyed by ModuleType.rawValue.
     /// Mutations go through setIncluded(_:_:) which also persists to UserDefaults.
     private(set) var moduleToggles: [String: Bool]
@@ -40,6 +45,7 @@ import SwiftUI
         self.tags = UserDefaults.standard.string(forKey: "ankiTags") ?? "rell"
         self.includeSource = UserDefaults.standard.object(forKey: "ankiIncludeSource") as? Bool ?? true
         self.includeOwnModules = UserDefaults.standard.bool(forKey: "ankiIncludeOwnModules")
+        self.includeSentences = UserDefaults.standard.object(forKey: "ankiIncludeSentences") as? Bool ?? true
 
         var toggles: [String: Bool] = [:]
         for module in ModuleType.allCases {

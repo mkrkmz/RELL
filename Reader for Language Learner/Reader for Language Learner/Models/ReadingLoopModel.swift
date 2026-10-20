@@ -260,7 +260,7 @@ final class ReadingLoopModel {
         let answerIn = HoverDictionaryLanguage.stored == .native ? Language.storedNative : target
         let level = CEFRLevel.storedLearnerLevel
         let learning = savedWords.compactMap { word -> EncounterScanner.Entry? in
-            guard word.masteryLevel != .mastered,
+            guard word.masteryLevel != .mastered, !word.isSentence,
                   word.language == nil || word.language == target.rawValue
             else { return nil }
             return EncounterScanner.Entry(id: word.id, term: word.term)

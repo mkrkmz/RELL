@@ -331,7 +331,8 @@ extension PDFKitView {
                     NotificationCenter.default.post(name: .retellSelectionCommand, object: term)
                 },
                 isPassage: GradedRewrite.isEligible(term),
-                isSaved: isSaved
+                isSaved: isSaved,
+                savesSentence: SavedWord.savesAsSentence(term)
             )
         }
         

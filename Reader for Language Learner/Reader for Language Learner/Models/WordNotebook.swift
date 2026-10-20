@@ -24,6 +24,8 @@ enum WordNotebook {
 
     enum Source: Hashable {
         case all, waiting, new, struggling, missingMeaning
+        /// Saved sentences (v19 S2); the other states list words only.
+        case sentences
         /// The same word saved twice (v16 S3).
         case duplicates
         case book(Book)
@@ -56,8 +58,17 @@ enum WordNotebook {
             .sorted { ($0.count, $1.title) > ($1.count, $0.title) }
     }
 
-    static func words(for source: Source, from words: [SavedWord], at now: Date = Date()) -> [SavedWord] {
+    static func words(for source: Source, from all: [SavedWord], at now: Date = Date()) -> [SavedWord] {
+        if source == .sentences { return all.filter(\.isSentence) }
+        // The states and the duplicates are about words (v19 S2); books and
+        // decks keep both.
+        let words: [SavedWord]
         switch source {
+        case .book, .noBook, .deck: words = all
+        default:                    words = all.filter { !$0.isSentence }
+        }
+        switch source {
+        case .sentences:      return words
         case .all:            return words
         case .waiting:        return words.filter { $0.hasBeenReviewed && $0.isDue(at: now) }
         case .new:            return words.filter { !$0.hasBeenReviewed }

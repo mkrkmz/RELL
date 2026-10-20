@@ -248,9 +248,11 @@ final class WordEnricher {
         fields.reduce(0) { $0 + missingCount($1, in: ids) }
     }
 
+    /// Words only: a saved sentence has its translation, not card fields
+    /// (v19 S2).
     private func words(in ids: Set<UUID>?) -> [SavedWord] {
-        guard let ids else { return store.words }
-        return store.words.filter { ids.contains($0.id) }
+        guard let ids else { return store.vocabulary }
+        return store.vocabulary.filter { ids.contains($0.id) }
     }
 
     // MARK: Bulk run
@@ -381,7 +383,7 @@ final class WordEnricher {
     /// at save time already.
     private func fillAfterSave(wordID: UUID) {
         guard UserDefaults.standard.object(forKey: StorageKey.fillOnSave) as? Bool ?? true,
-              let word = store.word(withID: wordID) else { return }
+              let word = store.word(withID: wordID), !word.isSentence else { return }
         let fields = FillField.defaultSelection.subtracting([.level])
         let backends = backends(.onThisMac)
         Task(priority: .utility) { [weak self] in

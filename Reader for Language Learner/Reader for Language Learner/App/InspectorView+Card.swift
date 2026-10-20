@@ -30,7 +30,8 @@ extension InspectorView {
 
     var cardActionsRow: some View {
         HStack(spacing: DS.Spacing.xxs) {
-            if isSingleWordSelection {
+            // v19 S2: a sentence can be saved too.
+            if hasSelection {
                 Button(action: toggleSaveWord) {
                     Label(isCurrentlySaved ? "Saved" : "Save", systemImage: isCurrentlySaved ? "star.fill" : "star")
                 }

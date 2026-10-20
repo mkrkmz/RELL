@@ -27,6 +27,50 @@ struct SavedWordRow: View {
     // (Tags used a FlowLayout, which re-flows with the column's width — not
     // allowed in an AppKit-sized column since v14.)
     var body: some View {
+        if word.isSentence {
+            sentenceRow
+        } else {
+            wordRow
+        }
+    }
+
+    /// v19 S2: a saved sentence — two lines of it, its translation, where
+    /// it's from.
+    private var sentenceRow: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .top, spacing: DS.Spacing.xs) {
+                Text(word.term)
+                    .font(DS.Typography.callout)
+                    .fontDesign(.serif)
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .lineLimit(2)
+                Spacer(minLength: DS.Spacing.xs)
+                WordStatusBadge(status: WordStatus.of(word))
+            }
+            if let translation = word.translation {
+                Text(translation)
+                    .font(DS.Typography.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .lineLimit(1)
+            } else {
+                Text("No translation yet")
+                    .font(DS.Typography.caption.italic())
+                    .foregroundStyle(DS.Color.textTertiary)
+            }
+            if let lastMet = lastMetText {
+                Text(lastMet)
+                    .font(DS.Typography.caption2)
+                    .foregroundStyle(DS.Color.textTertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+        }
+        .padding(.vertical, DS.Spacing.xxs)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(word.term), \(WordStatus.of(word).title())")
+    }
+
+    private var wordRow: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: DS.Spacing.xs) {
                 Text(word.term)

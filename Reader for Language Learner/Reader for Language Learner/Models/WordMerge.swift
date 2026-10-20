@@ -34,11 +34,14 @@ enum WordMerge {
         let id: UUID
         let term: String
         let language: String?
+        /// Saved sentences aren't words saved twice (v19 S2).
+        let isSentence: Bool
 
         init(_ word: SavedWord) {
             id = word.id
             term = word.term
             language = word.language
+            isSentence = word.isSentence
         }
     }
 
@@ -48,7 +51,7 @@ enum WordMerge {
         lemma: @Sendable (String, Language?) -> String? = { LemmaMatcher.lemma(of: $0, language: $1) }
     ) -> [[UUID]] {
         var buckets: [String: [UUID]] = [:]
-        for entry in entries {
+        for entry in entries where !entry.isSentence {
             let language = entry.language.flatMap(Language.init(rawValue:))
             let term = entry.term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             guard !term.isEmpty else { continue }

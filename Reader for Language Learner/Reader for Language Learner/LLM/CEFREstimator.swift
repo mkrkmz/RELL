@@ -46,7 +46,7 @@ final class CEFREstimator {
     /// Estimates in the background when the word is still unrated. No-op for
     /// rated words, so a save → manual-assign race can't clobber the user.
     func estimateIfNeeded(wordID: UUID) {
-        guard let word = savedWordsStore.word(withID: wordID), word.cefrLevel == nil else { return }
+        guard let word = savedWordsStore.word(withID: wordID), word.cefrLevel == nil, !word.isSentence else { return }
         let term = word.term
         Task(priority: .background) { [weak self] in
             guard let self else { return }

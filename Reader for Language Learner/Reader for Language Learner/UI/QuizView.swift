@@ -28,6 +28,8 @@ struct QuizView: View {
 
     /// Queue, position, tallies and the card's answer state — see `QuizSession`.
     @State var session = QuizSession()
+    /// A sentence card's text is shown (T) before the translation (v19 S2).
+    @State var sentenceTextShown = false
 
     /// Sentences met in reading, for cloze contexts. Optional: a host without
     /// the encounter log still quizzes from the saved sentence alone.

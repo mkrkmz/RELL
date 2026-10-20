@@ -58,6 +58,32 @@ enum ExportFormat: String, CaseIterable, Identifiable {
 
 enum AnkiExporter {
 
+    // MARK: - Sentence card (v19 S2)
+
+    /// A saved sentence's card: the sentence on the front; its translation,
+    /// the saved words in it and your notes on the back.
+    static func buildSentenceNote(
+        _ sentence: SavedWord,
+        savedWords: [(term: String, meaning: String?)],
+        includeSource: Bool,
+        tags: String,
+        extraTags: [String] = []
+    ) -> AnkiNoteDraft {
+        var back: [String] = []
+        if let translation = sentence.translation { back.append(sanitize(translation)) }
+        let words = savedWords.map { word in
+            "<b>\(sanitize(word.term))</b>" + (word.meaning.map { " — " + sanitize($0) } ?? "")
+        }
+        if !words.isEmpty { back.append(words.joined(separator: "<br>")) }
+        let notes = sentence.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !notes.isEmpty { back.append(sanitize(notes)) }
+        let base = buildNote(selectedText: sentence.term, mode: .sentence, domain: .general, selectedModules: [],
+                             outputs: [:], includeSource: includeSource, pdfFilename: sentence.pdfFilename,
+                             pageNumber: sentence.pageNumber, tags: tags, extraTags: extraTags)
+        return AnkiNoteDraft(front: base.front, back: back.joined(separator: "<br><br>"),
+                             tags: base.tags, source: base.source, deck: base.deck)
+    }
+
     // MARK: - Build Note
 
     /// Assembles an Anki note draft from the user's selection and module outputs.

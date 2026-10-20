@@ -267,18 +267,24 @@ struct EPUBReaderView: NSViewRepresentable {
             guard let manager else { return }
             let term = manager.lastSelectionText.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !term.isEmpty else { return }
-            store.add(SavedWord(
+            // v19 S2: five words or more are a sentence card.
+            let isSentence = SavedWord.savesAsSentence(term)
+            let word = SavedWord(
                 term: term,
-                sentence: manager.lastSelectionSentence ?? "",
+                sentence: isSentence ? "" : manager.lastSelectionSentence ?? "",
                 pdfFilename: manager.loadedURL?.deletingPathExtension().lastPathComponent,
                 pageNumber: manager.chapterIndex + 1,
-                mode: ExplainMode.word.rawValue,
+                mode: SavedWord.savedMode(for: term),
                 domain: "general",
                 llmOutputs: [:],
                 language: Language.storedTarget.rawValue,
                 documentPath: manager.loadedURL?.path
-            ))
-            toastCenter.show(String(localized: "Word saved!"))
+            )
+            store.add(word)
+            toastCenter.show(isSentence ? String(localized: "Sentence saved") : String(localized: "Word saved!"))
+            if isSentence {
+                Task { await SentenceTranslation.fill(wordID: word.id, store: store, quickLookup: quickLookup) }
+            }
         }
         webView.onContextLookUp = {
             NotificationCenter.default.post(name: .inspectorRunLastModule, object: nil)

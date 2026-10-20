@@ -161,6 +161,8 @@ struct Reader_for_Language_LearnerApp: App {
         Window("Word Notebook", id: WordNotebook.windowID) {
             WordNotebookView(store: savedWordsStore)
                 .environment(savedWordsStore)
+                // A sentence's page translates it (v19 S2).
+                .environment(quickLookup)
                 .environment(encounterStore)
                 .environment(wordEnricher)
                 .environment(cefrEstimator)

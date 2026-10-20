@@ -133,6 +133,12 @@ struct StudySetupView: View {
                         StudyChip(title: String(localized: "You keep forgetting (\(strugglingCount))"),
                                   isOn: source == .struggling) { source = .struggling }
                     }
+                    // v19 S2: saved sentences, studied with their own card.
+                    let sentenceCount = store.sentences.count
+                    if sentenceCount > 0 {
+                        StudyChip(title: String(localized: "Sentences (\(sentenceCount))"),
+                                  isOn: source == .sentences) { source = .sentences }
+                    }
                 }
             } hint: { EmptyView() }
             Divider()

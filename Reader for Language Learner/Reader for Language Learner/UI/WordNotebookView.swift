@@ -112,13 +112,18 @@ struct WordNotebookView: View {
     private var sourceList: some View {
         List(selection: $source) {
             Section {
-                row(.all, String(localized: "All Words"), "tray.full", store.words.count)
+                row(.all, String(localized: "All Words"), "tray.full", store.vocabulary.count)
                 row(.waiting, String(localized: "Waiting for Review"), "clock", WordNotebook.words(for: .waiting, from: store.words).count)
                 row(.new, String(localized: "Never Studied"), "sparkle", WordNotebook.words(for: .new, from: store.words).count)
                 row(.struggling, String(localized: "You Keep Forgetting"), "exclamationmark.arrow.circlepath",
                     WordNotebook.words(for: .struggling, from: store.words).count)
                 row(.missingMeaning, String(localized: "Missing a Meaning"), "text.badge.plus",
                     WordNotebook.words(for: .missingMeaning, from: store.words).count)
+                // v19 S2: saved sentences, with their own page and card.
+                let sentenceCount = store.sentences.count
+                if sentenceCount > 0 || source == .sentences {
+                    row(.sentences, String(localized: "Sentences"), "quote.opening", sentenceCount)
+                }
                 if !duplicates.isEmpty || source == .duplicates {
                     row(.duplicates, String(localized: "Saved Twice"), "square.on.square", duplicates.count)
                 }

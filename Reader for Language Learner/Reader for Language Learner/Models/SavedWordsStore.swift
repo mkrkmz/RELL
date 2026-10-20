@@ -213,6 +213,14 @@ final class SavedWordsStore {
         removed.forEach { SpotlightIndexer.removeWord(id: $0.id) }
     }
 
+    /// The saved words without the saved sentences (v19 S2) — what the
+    /// level estimate, coverage, underlining, encounters and duplicates
+    /// look at.
+    var vocabulary: [SavedWord] { words.filter { !$0.isSentence } }
+
+    /// The saved sentences (v19 S2).
+    var sentences: [SavedWord] { words.filter(\.isSentence) }
+
     /// An already-saved word that is the same dictionary word as `term`, even
     /// in a different inflection ("ran" finding a saved "run"). Exact matches
     /// win; lemma matching only runs when nothing matches outright, so this
@@ -224,7 +232,7 @@ final class SavedWordsStore {
         let needle = term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !needle.isEmpty else { return nil }
 
-        if let exact = words.first(where: { $0.term.lowercased() == needle }) {
+        if let exact = vocabulary.first(where: { $0.term.lowercased() == needle }) {
             return exact
         }
 
@@ -233,7 +241,7 @@ final class SavedWordsStore {
         // A term with no lemma of its own can't match anything but exactly.
         guard key != needle else { return nil }
 
-        return words.first { word in
+        return vocabulary.first { word in
             guard word.language == nil || word.language == studyLanguage.rawValue else { return false }
             return LemmaMatcher.matchKey(for: word.term, language: studyLanguage) == key
         }
@@ -246,7 +254,7 @@ final class SavedWordsStore {
     /// coverage. Words with no recorded language are pre-v1.24 rows that the
     /// loader backfills, and are kept rather than silently dropped.
     func terms(for language: Language) -> [String] {
-        words.compactMap { word in
+        vocabulary.compactMap { word in
             guard word.language == nil || word.language == language.rawValue else { return nil }
             let trimmed = word.term.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmed.isEmpty ? nil : trimmed
@@ -258,7 +266,7 @@ final class SavedWordsStore {
     /// persisted snapshot (`BookCoverage`) whether the words it was computed
     /// from are still the words on disk. FNV-1a over the sorted terms.
     func vocabularyFingerprint(for language: Language) -> String {
-        let terms = words
+        let terms = vocabulary
             .filter { $0.language == nil || $0.language == language.rawValue }
             .map { $0.term.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
             .sorted()
@@ -282,7 +290,7 @@ final class SavedWordsStore {
     /// have it down yet. `lemmaKeySets(for:)` is the same pass split by
     /// mastery, which is what coverage needs and highlighting doesn't.
     func lemmaKeys(for language: Language) -> Set<String> {
-        let terms = words.compactMap { word -> String? in
+        let terms = vocabulary.compactMap { word -> String? in
             guard word.language == nil || word.language == language.rawValue else { return nil }
             return word.term
         }
@@ -321,7 +329,7 @@ final class SavedWordsStore {
     func lemmaKeySets(for language: Language) -> (mastered: Set<String>, learning: Set<String>) {
         var mastered: Set<String> = []
         var learning: Set<String> = []
-        for word in words {
+        for word in vocabulary {
             guard word.language == nil || word.language == language.rawValue else { continue }
             let key = LemmaMatcher.matchKey(for: word.term, language: language)
             guard !key.isEmpty else { continue }

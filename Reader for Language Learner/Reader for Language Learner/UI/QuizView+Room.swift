@@ -49,7 +49,8 @@ extension QuizView {
         session.modeResolver = { stageMode(for: $0) }
         session.introducesNewWords = !quizMode.isRoundBased
         session.cram = practice
-        let run = quizMode.isRoundBased ? words.filter { $0.usableDefinition != nil } : words
+        let asked = words.filter(quizMode.asks)
+        let run = quizMode.isRoundBased ? asked.filter { $0.usableDefinition != nil } : asked
         session.begin(with: run, mode: quizMode, shuffle: false)
         roomFocused = true
     }
@@ -78,6 +79,7 @@ extension QuizView {
                     introductionCard(for: word)
                 } else {
                     switch cardMode {
+                    case .flashcard where word.isSentence: sentenceBody(word)
                     case .flashcard:      flashcardBody(word)
                     case .multipleChoice: multipleChoiceBody(word)
                     case .typed:          typedBody(word)
@@ -127,6 +129,12 @@ extension QuizView {
         .onKeyPress(characters: ["s", "S"]) { _ in
             guard !isTypingAnswer else { return .ignored }
             speak(word)
+            return .handled
+        }
+        // A sentence card: T shows the text before the translation (v19 S2).
+        .onKeyPress(characters: ["t", "T"]) { _ in
+            guard word.isSentence, !session.isFlipped else { return .ignored }
+            withAnimation(DS.Animation.standard) { sentenceTextShown = true }
             return .handled
         }
         .onAppear { roomFocused = true }
@@ -197,6 +205,10 @@ extension QuizView {
         HStack(spacing: DS.Spacing.lg) {
             if isTypingAnswer {
                 keyHint("↩", String(localized: "check"))
+            } else if session.currentWord?.isSentence == true, !session.isFlipped {
+                keyHint("S", String(localized: "listen"))
+                keyHint("T", String(localized: "text"))
+                keyHint("Space", String(localized: "translation"))
             } else {
                 keyHint("Space", String(localized: "flip"))
                 keyHint("←", String(localized: "take back"))
@@ -403,10 +415,13 @@ extension QuizView {
     func roomBand(for word: SavedWord) -> some View {
         let isNew = !word.hasBeenReviewed
         let colors: [Color] = word.isStruggling ? [DS.Color.danger, DS.Color.warning]
+            : word.isSentence ? [DS.Color.violet, DS.Color.accent]
             : isNew ? [DS.Color.accent, DS.Color.violet] : [DS.Color.accent, DS.Color.accent.opacity(0.7)]
         let title = word.isStruggling ? String(localized: "You keep forgetting · catch it this time")
+            : word.isSentence ? String(localized: "Sentence")
             : isNew ? String(localized: "New word") : String(localized: "Review")
-        let symbol = word.isStruggling ? "arrow.counterclockwise" : isNew ? "sparkle" : "circle.fill"
+        let symbol = word.isStruggling ? "arrow.counterclockwise" : word.isSentence ? "quote.opening"
+            : isNew ? "sparkle" : "circle.fill"
         return HStack(spacing: DS.Spacing.sm) {
             Label(title, systemImage: symbol)
                 .imageScale(.small)

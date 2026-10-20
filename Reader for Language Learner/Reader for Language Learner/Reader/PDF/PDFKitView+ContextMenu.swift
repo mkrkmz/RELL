@@ -31,19 +31,25 @@ extension PDFKitView.Coordinator {
             } else {
                 pageNum = nil
             }
+            // v19 S2: five words or more are a sentence card.
+            let isSentence = SavedWord.savesAsSentence(term)
             Task { @MainActor in
-                self.savedWordsStore.add(SavedWord(
+                let word = SavedWord(
                     term: term,
-                    sentence: sentence,
+                    sentence: isSentence ? "" : sentence,
                     pdfFilename: filename,
                     pageNumber: pageNum,
-                    mode: ExplainMode.word.rawValue,
+                    mode: SavedWord.savedMode(for: term),
                     domain: "general",
                     llmOutputs: [:],
                     language: Language.storedTarget.rawValue,
                     documentPath: documentPath
-                ))
-                self.toastCenter.show(String(localized: "Word saved!"))
+                )
+                self.savedWordsStore.add(word)
+                self.toastCenter.show(isSentence ? String(localized: "Sentence saved") : String(localized: "Word saved!"))
+                if isSentence {
+                    await SentenceTranslation.fill(wordID: word.id, store: self.savedWordsStore, quickLookup: self.quickLookup)
+                }
             }
         }
 
