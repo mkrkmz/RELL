@@ -141,8 +141,15 @@ extension QuizView {
             return .handled
         }
         .onKeyPress(characters: ["s", "S"]) { _ in
-            guard !isTypingAnswer else { return .ignored }
+            // Not while a sentence is being said back: the voice would be heard.
+            guard !isTypingAnswer, !sentenceRepeating else { return .ignored }
             speak(word)
+            return .handled
+        }
+        // A flipped sentence card: R says it back (v19 S4).
+        .onKeyPress(characters: ["r", "R"]) { _ in
+            guard !isTypingAnswer, !sentenceRepeating, canRepeat(word) else { return .ignored }
+            sentenceRepeating = true
             return .handled
         }
         // A sentence card: T shows the text before the translation (v19 S2).
@@ -227,6 +234,10 @@ extension QuizView {
                 keyHint("S", String(localized: "listen"))
                 keyHint("T", String(localized: "text"))
                 keyHint("Space", String(localized: "translation"))
+            } else if let word = session.currentWord, canRepeat(word) {
+                keyHint("R", String(localized: "say it"))
+                keyHint("S", String(localized: "listen"))
+                keyHint("1–4", String(localized: "grade"))
             } else {
                 keyHint("Space", String(localized: "flip"))
                 keyHint("←", String(localized: "take back"))

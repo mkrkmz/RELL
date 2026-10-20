@@ -73,6 +73,10 @@ final class StorageKeyTests: XCTestCase {
             (StorageKey.comprehensionOfferEnabled, "comprehensionOfferEnabled"),
             (StorageKey.sentenceWritingShowsBookSentence, "sentenceWritingShowsBookSentence"),
             (StorageKey.sentenceWritingSize, "sentenceWritingSize"),
+            (StorageKey.spokenRepetitionAutoListen, "spokenRepetitionAutoListen"),
+            (StorageKey.spokenRepetitionEnabled, "spokenRepetitionEnabled"),
+            (StorageKey.spokenRepetitionExplained, "spokenRepetitionExplained"),
+            (StorageKey.spokenRepetitionHomophoneNoted, "spokenRepetitionHomophoneNoted"),
             (StorageKey.interlinearGlossEnabled, "interlinearGlossEnabled"),
             (StorageKey.grammarLensExpanded, "grammarLensExpanded"),
         ]

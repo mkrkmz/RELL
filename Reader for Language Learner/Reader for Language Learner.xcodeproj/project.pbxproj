@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		FEDD958C2F3BC32C000F5EF2 /* Reader for Language Learner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RELL.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEDD958C2F3BC32C000F5EF2 /* RELL.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RELL.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEDD95992F3BC32D000F5EF2 /* Reader for Language LearnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Reader for Language LearnerTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FEDD95A32F3BC32D000F5EF2 /* Reader for Language LearnerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Reader for Language LearnerUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -85,7 +85,7 @@
 		FEDD958D2F3BC32C000F5EF2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FEDD958C2F3BC32C000F5EF2 /* Reader for Language Learner.app */,
+				FEDD958C2F3BC32C000F5EF2 /* RELL.app */,
 				FEDD95992F3BC32D000F5EF2 /* Reader for Language LearnerTests.xctest */,
 				FEDD95A32F3BC32D000F5EF2 /* Reader for Language LearnerUITests.xctest */,
 			);
@@ -114,7 +114,7 @@
 			packageProductDependencies = (
 			);
 			productName = "Reader for Language Learner";
-			productReference = FEDD958C2F3BC32C000F5EF2 /* Reader for Language Learner.app */;
+			productReference = FEDD958C2F3BC32C000F5EF2 /* RELL.app */;
 			productType = "com.apple.product-type.application";
 		};
 		FEDD95982F3BC32D000F5EF2 /* Reader for Language LearnerTests */ = {
@@ -404,6 +404,8 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "RELL listens only while you repeat a sentence aloud. What you say is recognised on this Mac and never recorded or sent.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "RELL turns what you say into text on this Mac to compare it with the sentence. Nothing is recorded or sent.";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
@@ -436,6 +438,8 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "RELL listens only while you repeat a sentence aloud. What you say is recognised on this Mac and never recorded or sent.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "RELL turns what you say into text on this Mac to compare it with the sentence. Nothing is recorded or sent.";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;

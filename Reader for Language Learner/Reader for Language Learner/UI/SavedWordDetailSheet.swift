@@ -37,6 +37,7 @@ struct SavedWordDetailSheet: View {
     @State private var editText = ""
     @State private var showDetails = false
     @State private var showWriting = false
+    @State private var repeating = false
     @FocusState private var focusedField: FillField?
 
     /// Encounters shown before "Show all".
@@ -197,6 +198,50 @@ struct SavedWordDetailSheet: View {
         }
     }
 
+    // MARK: - Saying a sentence back (v19 S4)
+
+    /// "Say It Aloud" and the last result: how many words, which were hard.
+    @ViewBuilder
+    private var spokenRepetitionSection: some View {
+        if SpokenRepetitionRecognizer.isOffered(for: language) || current.spokenRepetition != nil {
+            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                Text("SAYING IT ALOUD").dsOverlineLabel()
+                if repeating {
+                    SpokenRepetitionView(
+                        sentence: word.term,
+                        language: language,
+                        onResult: { store.recordSpokenRepetition($0, for: word.id) },
+                        onClose: { repeating = false }
+                    )
+                    .padding(DS.Spacing.sm)
+                    .background(DS.Color.surfaceInset, in: RoundedRectangle(cornerRadius: DS.Radius.md))
+                } else {
+                    HStack(spacing: DS.Spacing.sm) {
+                        if let record = current.spokenRepetition {
+                            Text("Last: \(record.said) of \(record.total) words · \(record.date.formatted(date: .abbreviated, time: .omitted))")
+                                .font(DS.Typography.caption.weight(.semibold))
+                                .foregroundStyle(record.said == record.total ? DS.Color.success : DS.Color.warning)
+                            if !record.hardWords.isEmpty {
+                                Text("Hard: \(record.hardWords.joined(separator: ", "))")
+                                    .font(DS.Typography.caption)
+                                    .foregroundStyle(DS.Color.textSecondary)
+                                    .lineLimit(1)
+                            }
+                        }
+                        Spacer(minLength: DS.Spacing.sm)
+                        if SpokenRepetitionRecognizer.isOffered(for: language) {
+                            Button { repeating = true } label: {
+                                Label("Say It Aloud", systemImage: "mic")
+                            }
+                            .controlSize(.small)
+                            .help("Hear the sentence, then say it back")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - A saved sentence (v19 S2)
 
     /// The sentence large, read aloud on request; its translation; the
@@ -237,6 +282,7 @@ struct SavedWordDetailSheet: View {
                 }
             }
 
+            spokenRepetitionSection
             sentenceWordsSection
             memoryCard
 
@@ -804,7 +850,9 @@ struct SavedWordDetailSheet: View {
                         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
                 }
 
-                if word.llmOutputs.keys.contains(where: { key in !Self.cardFields.contains { $0.module?.rawValue == key } }) {
+                if word.llmOutputs.keys.contains(where: { key in
+                    ModuleType(rawValue: key) != nil && !Self.cardFields.contains { $0.module?.rawValue == key }
+                }) {
                     savedOutputs
                 }
 

@@ -70,6 +70,8 @@ final class ReaderWindowModel {
     var comprehensionRequest: ComprehensionCheckSheet.Request?
     var comprehensionOffer: ComprehensionOffer?
     var pdfSessionStartPage: Int?
+    /// The sentence being repeated aloud in the bottom lane (v19 S4).
+    var repeatSentence: String?
     /// Chapters this window already considered for the offer.
     @ObservationIgnored var comprehensionSkipKeys: Set<String> = []
     /// ⌘K (v13 Sprint 5).

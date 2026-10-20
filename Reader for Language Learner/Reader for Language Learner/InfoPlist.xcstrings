@@ -1,0 +1,54 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "RELL"
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Privacy - Microphone Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "RELL listens only while you repeat a sentence aloud. What you say is recognised on this Mac and never recorded or sent."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL yalnızca bir cümleyi sesli tekrar ederken dinler. Söylediğin bu Mac'te tanınır; kaydedilmez, hiçbir yere gönderilmez."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription" : {
+      "comment" : "Privacy - Speech Recognition Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "RELL turns what you say into text on this Mac to compare it with the sentence. Nothing is recorded or sent."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL, söylediğini cümleyle karşılaştırmak için bu Mac'te yazıya döker. Hiçbir şey kaydedilmez ya da gönderilmez."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -15,16 +15,18 @@ enum SelectionMenu {
     enum Entry: Equatable {
         case save, analyze, analyzeWith
         case simplify, retell
-        case highlight, addNote, speak, copy
+        case highlight, addNote, speak, repeatAloud, copy
         case separator
     }
 
     /// The right-click menu's lines. `addNote` exists only in the PDF
     /// reader; the EPUB menu leaves Copy to WebKit's own items below.
-    static func entries(includesNote: Bool, includesCopy: Bool) -> [Entry] {
+    static func entries(includesNote: Bool, includesCopy: Bool, includesRepeat: Bool = false) -> [Entry] {
         var entries: [Entry] = [.save, .analyze, .analyzeWith, .separator, .simplify, .retell, .separator, .highlight]
         if includesNote { entries.append(.addNote) }
         entries.append(.speak)
+        // v19 S4: a sentence, in a language this Mac can recognise.
+        if includesRepeat { entries.append(.repeatAloud) }
         if includesCopy { entries += [.separator, .copy] }
         return entries
     }
@@ -51,7 +53,10 @@ enum SelectionMenu {
         let preview = selection.count > 40 ? String(selection.prefix(40)) + "…" : selection
         let isPassage = GradedRewrite.isEligible(selection)
 
-        return entries(includesNote: actions.addNote != nil, includesCopy: actions.copy != nil).map { entry in
+        let canRepeat = SpokenRepetition.isEligible(selection)
+            && SpokenRepetitionRecognizer.isOffered(for: Language.storedTarget)
+        return entries(includesNote: actions.addNote != nil, includesCopy: actions.copy != nil,
+                       includesRepeat: canRepeat).map { entry in
             switch entry {
             case .save:
                 return ClosureMenuItem.make(String(localized: "Save \(preview)"), actions.save)
@@ -91,6 +96,10 @@ enum SelectionMenu {
                 return ClosureMenuItem.make(String(localized: "Add Note"), actions.addNote ?? {})
             case .speak:
                 return ClosureMenuItem.make(String(localized: "Speak"), actions.speak)
+            case .repeatAloud:
+                return ClosureMenuItem.make(String(localized: "Repeat Aloud")) {
+                    NotificationCenter.default.post(name: .repeatAloudCommand, object: selection)
+                }
             case .copy:
                 let item = ClosureMenuItem.make(String(localized: "Copy"), actions.copy ?? {})
                 item.keyEquivalent = "c"

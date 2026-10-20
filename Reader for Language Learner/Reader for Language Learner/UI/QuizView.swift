@@ -30,6 +30,8 @@ struct QuizView: View {
     @State var session = QuizSession()
     /// A sentence card's text is shown (T) before the translation (v19 S2).
     @State var sentenceTextShown = false
+    /// v19 S4: saying the flipped sentence card back.
+    @State var sentenceRepeating = false
 
     /// Sentences met in reading, for cloze contexts. Optional: a host without
     /// the encounter log still quizzes from the saved sentence alone.

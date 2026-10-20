@@ -168,6 +168,16 @@
         }
       }
     },
+    "%@ (on this Mac)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (bu Mac'te)"
+          }
+        }
+      }
+    },
     "%@ %@" : {
       "localizations" : {
         "en" : {
@@ -679,6 +689,38 @@
         }
       }
     },
+    "%lld of %lld words" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld words"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld kelime"
+          }
+        }
+      }
+    },
+    "%lld of %lld words · Spot on" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld words · Spot on"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld kelime · Tam isabet"
+          }
+        }
+      }
+    },
     "%lld of %lld words have an empty field." : {
       "localizations" : {
         "en" : {
@@ -1103,6 +1145,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%llds"
+          }
+        }
+      }
+    },
+    "• Only how many words matched is kept." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "• Yalnızca kaç kelimenin tuttuğu saklanır."
+          }
+        }
+      }
+    },
+    "• The microphone listens only while 🎙 is on." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "• Mikrofon yalnızca 🎙 açıkken dinler."
+          }
+        }
+      }
+    },
+    "• What you say is recognised on this Mac. Nothing is recorded or sent." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "• Söylediğin bu Mac'te tanınır. Hiçbir şey kaydedilmez ya da gönderilmez."
           }
         }
       }
@@ -1884,6 +1956,16 @@
         }
       }
     },
+    "Allowed" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İzin verildi"
+          }
+        }
+      }
+    },
     "Already saved" : {
       "localizations" : {
         "tr" : {
@@ -2469,6 +2551,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Takip soruları ve kelime seviyeleri"
+          }
+        }
+      }
+    },
+    "Asked the first time you repeat a sentence" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İlk kez bir cümleyi tekrar ettiğinde sorulur"
           }
         }
       }
@@ -6202,6 +6294,16 @@
         }
       }
     },
+    "grade" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "değerlendir"
+          }
+        }
+      }
+    },
     "Grade my typed answer automatically" : {
       "localizations" : {
         "tr" : {
@@ -6305,6 +6407,16 @@
         }
       }
     },
+    "Hard: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorlanılan: %@"
+          }
+        }
+      }
+    },
     "Has output" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6312,6 +6424,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Çıktısı var"
+          }
+        }
+      }
+    },
+    "Hear a sentence, say it back, see which words matched." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir cümleyi dinle, sesli tekrar et, hangi kelimelerin tuttuğunu gör."
+          }
+        }
+      }
+    },
+    "Hear the sentence, then say it back" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümleyi dinle, sonra sesli tekrar et"
           }
         }
       }
@@ -6572,6 +6704,16 @@
     },
     "https://…" : {
 
+    },
+    "I couldn't hear you. Check the microphone and try again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seni duyamadım. Mikrofonu kontrol edip yeniden dene."
+          }
+        }
+      }
     },
     "I Knew It" : {
       "localizations" : {
@@ -7279,6 +7421,22 @@
         }
       }
     },
+    "Last: %lld of %lld words · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last: %1$lld of %2$lld words · %3$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son: %lld/%lld kelime · %@"
+          }
+        }
+      }
+    },
     "Latency" : {
       "localizations" : {
         "tr" : {
@@ -7502,6 +7660,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DİNLE VE KELİMEYİ YAZ"
+          }
+        }
+      }
+    },
+    "Listen Once the Sentence Is Read" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümle Okununca Dinlemeye Başla"
+          }
+        }
+      }
+    },
+    "Listen…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dinle…"
+          }
+        }
+      }
+    },
+    "Listening" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dinleniyor"
+          }
+        }
+      }
+    },
+    "Listening…" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dinliyorum…"
           }
         }
       }
@@ -7774,6 +7972,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "M"
+          }
+        }
+      }
+    },
+    "macOS will then ask twice: for the microphone and for speech recognition." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ardından macOS iki şey soracak: mikrofon ve konuşma tanıma."
           }
         }
       }
@@ -8144,6 +8352,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ÜST VERİ"
+          }
+        }
+      }
+    },
+    "Microphone" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon"
+          }
+        }
+      }
+    },
+    "Microphone or speech recognition is turned off for RELL." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RELL için mikrofon ya da konuşma tanıma kapalı."
           }
         }
       }
@@ -8973,6 +9201,16 @@
         }
       }
     },
+    "No microphone was found." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon bulunamadı."
+          }
+        }
+      }
+    },
     "No models found.\nIs the server running?" : {
       "localizations" : {
         "tr" : {
@@ -9001,6 +9239,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Henüz Not Yok"
+          }
+        }
+      }
+    },
+    "No on-device recognition for this language yet. Add it under Keyboard ▸ Dictation and it turns on." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu dil için henüz cihaz içi tanıma yok. Klavye ▸ Dikte'den ekleyince açılır."
           }
         }
       }
@@ -9280,6 +9528,16 @@
         }
       }
     },
+    "Not heard right: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doğru duyulmayan: %@"
+          }
+        }
+      }
+    },
     "Not matched" : {
       "localizations" : {
         "tr" : {
@@ -9336,6 +9594,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "gönderilmedi"
+          }
+        }
+      }
+    },
+    "Not supported on this Mac" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac'te desteklenmiyor"
           }
         }
       }
@@ -9509,6 +9777,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kapalı"
+          }
+        }
+      }
+    },
+    "Off: press the microphone when you're ready." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapalıysa hazır olunca mikrofona basarsın."
           }
         }
       }
@@ -10571,6 +10849,16 @@
         }
       }
     },
+    "Press 🎙 when you're ready" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hazır olunca 🎙'a bas"
+          }
+        }
+      }
+    },
     "Press Return to look up · Esc to close" : {
       "localizations" : {
         "tr" : {
@@ -10930,6 +11218,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bir web sayfasını kitap gibi oku"
+          }
+        }
+      }
+    },
+    "Read at three-quarter speed" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%75 hızda oku"
           }
         }
       }
@@ -11593,6 +11891,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "İlk açılış kurulumunu yeniden açar: dil çifti, yapay zekâ bağlantısı ve tanıtım turu"
+          }
+        }
+      }
+    },
+    "Repeat Aloud" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesli Tekrar Et"
+          }
+        }
+      }
+    },
+    "Repeat aloud (⌃⌘R)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesli tekrar et (⌃⌘R)"
+          }
+        }
+      }
+    },
+    "Repeat Selection Aloud" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçimi Sesli Tekrar Et"
+          }
+        }
+      }
+    },
+    "Repeat the sentence aloud (R)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cümleyi sesli tekrar et (R)"
+          }
+        }
+      }
+    },
+    "Repeating aloud" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesli tekrar"
+          }
+        }
+      }
+    },
+    "Repeating Aloud" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesli Tekrar"
           }
         }
       }
@@ -12629,6 +12987,56 @@
         }
       }
     },
+    "say it" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "söyle"
+          }
+        }
+      }
+    },
+    "Say It" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Söyle"
+          }
+        }
+      }
+    },
+    "Say It Again" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Söyle"
+          }
+        }
+      }
+    },
+    "Say It Aloud" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesli Tekrar Et"
+          }
+        }
+      }
+    },
+    "SAYING IT ALOUD" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SESLİ TEKRAR"
+          }
+        }
+      }
+    },
     "Scheduled" : {
       "localizations" : {
         "tr" : {
@@ -13592,6 +14000,16 @@
         }
       }
     },
+    "Slower" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha Yavaş"
+          }
+        }
+      }
+    },
     "Smaller" : {
       "localizations" : {
         "tr" : {
@@ -13714,12 +14132,42 @@
         }
       }
     },
+    "Speech is recognised on this Mac. Nothing is recorded or sent; a saved sentence keeps only how many words matched." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşma bu Mac'te tanınır. Hiçbir şey kaydedilmez ya da gönderilmez; kayıtlı bir cümle yalnızca kaç kelimenin tuttuğunu saklar."
+          }
+        }
+      }
+    },
     "Speech rate" : {
       "localizations" : {
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Konuşma hızı"
+          }
+        }
+      }
+    },
+    "Speech recognition for this language isn't available on this Mac." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu dil için konuşma tanıma bu Mac'te yok."
+          }
+        }
+      }
+    },
+    "Speech recognition stopped. Try again." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konuşma tanıma durdu. Yeniden dene."
           }
         }
       }
@@ -13770,6 +14218,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Başla"
+          }
+        }
+      }
+    },
+    "Start listening now" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi dinlemeye başla"
           }
         }
       }
@@ -14509,6 +14967,26 @@
         }
       }
     },
+    "The microphone couldn't start: %@" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon başlatılamadı: %@"
+          }
+        }
+      }
+    },
+    "The microphone, for repeating aloud" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesli tekrar için mikrofon"
+          }
+        }
+      }
+    },
     "The model is ready when you are" : {
       "localizations" : {
         "tr" : {
@@ -14819,6 +15297,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu Mac (yerel sunucu)"
+          }
+        }
+      }
+    },
+    "This Mac (on-device speech recognition)" : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac (cihaz içi konuşma tanıma)"
           }
         }
       }
@@ -15214,6 +15702,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple'ın cihaz içi modelini aç"
+          }
+        }
+      }
+    },
+    "Turned off for RELL in Privacy & Security, so the microphone button is hidden." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gizlilik ve Güvenlik'te RELL için kapalı; bu yüzden mikrofon düğmesi gizli."
           }
         }
       }
@@ -16127,6 +16625,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "gleam ve gleaming gibi iki biçimde kaydedilen kelimeler bulunur ve istersen geçmişiyle birlikte birleştirilir."
+          }
+        }
+      }
+    },
+    "Words that sound alike — read and red — can be heard as each other. That's the recogniser, not always you." : {
+      "localizations" : {
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesteş kelimeler (read ve red gibi) birbiri yerine duyulabilir. Bu her zaman senin hatan değil, tanımanın sınırı."
           }
         }
       }

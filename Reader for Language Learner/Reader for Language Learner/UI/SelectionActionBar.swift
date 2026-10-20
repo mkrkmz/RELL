@@ -39,6 +39,9 @@ struct SelectionActionBar: View {
     var isSaved: Bool = false
     /// The selection is saved as a sentence card (v19 S2).
     var savesSentence: Bool = false
+    /// A sentence the Mac can recognise: the microphone shows (v19 S4).
+    var canRepeat: Bool = false
+    var onRepeat: () -> Void = {}
 
     // v14 S1: the two actions used most are labelled; the rest are named in
     // a Tools menu, in the same order as the right-click menu
@@ -66,6 +69,14 @@ struct SelectionActionBar: View {
             }
             .buttonStyle(.dsIcon)
             .help("Speak")
+
+            if canRepeat {
+                Button(action: onRepeat) {
+                    Label("Repeat Aloud", systemImage: "mic")
+                }
+                .buttonStyle(.dsIcon)
+                .help("Repeat aloud (⌃⌘R)")
+            }
 
             toolsMenu
         }

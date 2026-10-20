@@ -117,6 +117,9 @@ struct ReadingSettingsView: View {
                     .foregroundStyle(DS.Color.textTertiary)
             }
 
+            // v19 S4.
+            SpokenRepetitionSection()
+
             Section {
                 Toggle(isOn: $menuBarExtraEnabled) {
                     VStack(alignment: .leading, spacing: 2) {

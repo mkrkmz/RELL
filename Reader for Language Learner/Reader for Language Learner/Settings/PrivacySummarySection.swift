@@ -54,6 +54,9 @@ struct PrivacySummarySection: View {
             // v19 S3: your sentence with the word; the part of the chapter you read.
             row("Sentence writing", module: nil),
             row("Comprehension checks", module: nil),
+            // v19 S4: recognised on this Mac, never recorded.
+            Row(feature: "Repeating aloud",
+                destination: String(localized: "This Mac (on-device speech recognition)"), onDevice: true),
             translationRow,
         ] + ownModulesRow + [
             Row(feature: "Web article import",

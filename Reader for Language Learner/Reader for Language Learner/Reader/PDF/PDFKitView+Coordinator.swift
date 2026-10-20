@@ -332,7 +332,10 @@ extension PDFKitView {
                 },
                 isPassage: GradedRewrite.isEligible(term),
                 isSaved: isSaved,
-                savesSentence: SavedWord.savesAsSentence(term)
+                savesSentence: SavedWord.savesAsSentence(term),
+                canRepeat: SpokenRepetition.isEligible(term)
+                    && SpokenRepetitionRecognizer.isOffered(for: Language.storedTarget),
+                onRepeat: { NotificationCenter.default.post(name: .repeatAloudCommand, object: term) }
             )
         }
         

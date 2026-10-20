@@ -1,6 +1,6 @@
 # RELL Roadmap v19 — Kelimeden Cumleye (S0 + 6 sprint)
 
-**Durum: onaylandi (2026-10-19); S0, S1 ve S2 kapandi; S3 kodlandi (canli tur bekliyor).**
+**Durum: onaylandi (2026-10-19); S0–S3 kapandi; S4 kodlandi (izin akisi ve canli tur bekliyor).**
 
 Olusturulma: 2026-10-19 (1.48.1 sonrasi). Amac: RELL okutuyor ve
 kelimeyi hatirlatiyor ama kullandirmiyor. Bu roadmap once mevcut
@@ -210,15 +210,30 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
       etkilesimli kuyrukta, sorular "Basla" ile uretilir (arka planda
       hazirlanmaz). Etiketler (VERDICT / CORRECTED / WHY / EXAMPLE / TOPIC,
       Q1–Q3, ANSWER / NOTE / QUOTE) Ingilizce ve sabit
+- [x] Kapi: tam paket 855 yesil; canli tur kullanici onayindan gecti
+      (2026-10-20)
 
 ## Sprint 4 — "Sesli tekrar" (Should, S0 denemesi gecerse, **maketle baslar**)
 
-- [ ] Cumleyi dinle, tekrar et; tanima metni kelime kelime karsilastirir
-      (dogru, eksik, farkli)
-- [ ] Okuma ekraninda secili cumleden ve calisma odasindaki cumle
-      kartlarindan
-- [ ] Ses kaydedilmez; izin reddedilirse ozellik sessizce gizlenir ve
-      Ayarlar'da nedeni yazar
+- [x] Cumleyi dinle, tekrar et: cumle okunur, bitince mikrofon acilir
+      (ayardan kapanir), konusurken duyulan metin canli gorunur; 1,5 sn
+      sessizlikte, 6 sn hic ses yoksa ya da 20 sn'de durur. Sonuc kelime
+      kelime: dogru (yesil, ✓), atlanan (gri, ustu cizili), farkli duyulan
+      (kirmizi, noktali, altinda duyulan). Buyuk/kucuk harf, noktalama ve
+      sayinin yazilisi fark sayilmaz; bes harf ve ustu kelimede tek harf
+      farki ayni kelime (colour / color). Sesteslerle ilgili not bir kez
+- [x] Okuma ekraninda secili cumleden (en az uc kelime): secim cubugunda
+      mikrofon, sag tik menusu, Konusma ▸ Secimi Sesli Tekrar Et (⌃⌘R);
+      sonuc alt seritte. Calisma odasinda cevrilmis cumle kartinda (R);
+      1–4 her zamanki gibi yazar, sesli tekrar yazmaz. Cumle sayfasinda
+      "Sesli Tekrar Et" ve son sonuc. Tek kelimelerde yok
+- [x] Ses kaydedilmez, yalniz cihaz ici tanima; kayitli cumle yalniz
+      sayiyi ve zorlanilan kelimeleri saklar (duyulan metin de saklanmaz).
+      Ilk basista RELL'in kendi aciklamasi, sonra macOS'un iki izni.
+      Izin reddedilirse ya da dil icin cihaz ici tanima yoksa mikrofon
+      gizlenir; Ayarlar ▸ Okuma ▸ Sesli Tekrar'da neden ve cozum yolu.
+      Gizlilik tablosunda "Sesli tekrar · Bu Mac"
+- [ ] Kapi: izin akisi ve gercek tanima kullanicinin Mac'inde (canli tur)
 
 ## Sprint 5 — "Herkes icin hazir" (Should, **maketle baslar**)
 

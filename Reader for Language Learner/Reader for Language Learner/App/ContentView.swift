@@ -139,7 +139,7 @@ struct ContentView: View {
     // (`the compiler is unable to type-check this expression in reasonable
     // time`) even though a warm local cache let it slide.
     var body: some View {
-        withHelpSheets(withCommandPalette(withComprehension(withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent))))))))))
+        withHelpSheets(withCommandPalette(withSpokenRepetition(withComprehension(withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))))))))))
             .dataRecoveryAlert()
     }
 
@@ -643,13 +643,17 @@ struct ContentView: View {
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
 
-                    if speechManager.state != .idle {
+                    // v19 S4: repeating aloud; its own reading needs no player bar.
+                    repeatLane
+
+                    if speechManager.state != .idle, model.repeatSentence == nil {
                         SpeechPlaybackBar(manager: speechManager)
                             .padding(.bottom, DS.Spacing.sm)
                             .transition(DS.slideTransition(edge: .bottom, reduceMotion: reduceMotion))
                     }
                 }
         .animation(DS.Animation.standard, value: translatableSentence)
+        .animation(DS.Animation.standard, value: model.repeatSentence)
         .animation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion), value: speechManager.state == .idle)
         // Zen is edge to edge: the page meets the screen's edges.
         .padding(.top, zenMode ? 0 : DS.Spacing.sm)

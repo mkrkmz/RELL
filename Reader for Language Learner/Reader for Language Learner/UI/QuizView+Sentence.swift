@@ -16,6 +16,7 @@ extension QuizView {
             .onAppear { speak(word) }
             .onChange(of: word.id) { _, _ in
                 sentenceTextShown = false
+                sentenceRepeating = false
                 speak(word)
             }
             .onTapGesture {
@@ -69,8 +70,36 @@ extension QuizView {
                         .font(DS.Typography.caption)
                         .foregroundStyle(DS.Color.textTertiary)
                 }
+                sentenceRepetition(word)
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// v19 S4: say the sentence back (R) — practice; the 1–4 below still grade.
+    @ViewBuilder
+    private func sentenceRepetition(_ word: SavedWord) -> some View {
+        if canRepeat(word) {
+            Divider()
+            if sentenceRepeating {
+                SpokenRepetitionView(
+                    sentence: word.term,
+                    language: voiceLanguage(for: word),
+                    start: .listening,
+                    onResult: { store.recordSpokenRepetition($0, for: word.id) },
+                    onClose: { sentenceRepeating = false }
+                )
+            } else {
+                Button { sentenceRepeating = true } label: {
+                    Label("Say It Aloud", systemImage: "mic")
+                }
+                .controlSize(.small)
+                .help("Repeat the sentence aloud (R)")
+            }
+        }
+    }
+
+    func canRepeat(_ word: SavedWord) -> Bool {
+        word.isSentence && session.isFlipped && SpokenRepetitionRecognizer.isOffered(for: voiceLanguage(for: word))
     }
 }

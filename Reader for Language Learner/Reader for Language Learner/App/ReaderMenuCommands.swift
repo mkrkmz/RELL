@@ -196,6 +196,15 @@ struct ReaderMenuCommands: Commands {
             Button("Stop Speaking") { reader?.stopSpeech() }
                 .keyboardShortcut(".", modifiers: [.command, .option])
                 .disabled((reader?.speechState ?? .idle) == .idle)
+
+            Divider()
+
+            // v19 S4: hear the selected sentence, say it back, see the difference.
+            Button("Repeat Selection Aloud") {
+                NotificationCenter.default.post(name: .repeatAloudCommand, object: nil)
+            }
+            .keyboardShortcut("r", modifiers: [.command, .control])
+            .disabled(reader?.hasSelection != true)
         }
 
         // ── Modules ───────────────────────────────────────────────────

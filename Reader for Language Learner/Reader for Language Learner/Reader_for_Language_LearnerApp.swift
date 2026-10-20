@@ -234,6 +234,8 @@ extension Notification.Name {
     static let importWebArticleCommand = Notification.Name("importWebArticleCommand")
     /// Object: the selected passage, to retell in the reader's own words.
     static let retellSelectionCommand = Notification.Name("retellSelectionCommand")
+    /// Object: the sentence to repeat aloud, or nil for the selection (v19 S4).
+    static let repeatAloudCommand = Notification.Name("repeatAloudCommand")
     /// Go ▸ Story From Your Words… — the key window shows the story sheet.
     static let wordStoryCommand = Notification.Name("wordStoryCommand")
     /// View ▸ Command Palette (⌘K).
