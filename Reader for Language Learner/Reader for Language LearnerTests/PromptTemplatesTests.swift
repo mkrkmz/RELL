@@ -41,7 +41,7 @@ final class PromptTemplatesTests: XCTestCase {
             term: "Haus", mode: .word, detail: .short,
             nativeLanguage: .turkish, targetLanguage: .german
         )
-        XCTAssertTrue(word.contains("Define it in German."))
+        XCTAssertTrue(word.contains("Define it in German, like a learner's dictionary"))
 
         let sentence = ModuleType.definitionEN.userPrompt(
             term: "Das ist ein Haus.", mode: .sentence, detail: .short,
@@ -65,17 +65,59 @@ final class PromptTemplatesTests: XCTestCase {
         """)
     }
 
+    /// Revision 2 (v19 S1): learner's-dictionary style, the reader's level.
     func testGoldenEnglishTargetDefinitionUserPrompt() async {
         let prompt = ModuleType.definitionEN.userPrompt(
             term: "orbit", mode: .word, detail: .short,
-            nativeLanguage: .turkish, targetLanguage: .english
+            nativeLanguage: .turkish, targetLanguage: .english, level: .b1
         )
         XCTAssertEqual(prompt, """
         Word/Phrase: orbit
 
-        Define it in English.
-        Write 1 short paragraph.
+        Define it in English, like a learner's dictionary: start with the part of speech in brackets, e.g. (verb), then plain words.
+        The reader is a B1 learner of English: use words a B1 learner knows.
+        Write one sentence for the main meaning.
         """)
+    }
+
+    // MARK: - Revision 2 (v19 S1)
+
+    func testWordModulesAnswerForTheSenseInTheSentence() async {
+        let sentence = "They sat on the bank of the river."
+        for module in [ModuleType.examplesEN, .collocations, .synonymsEN, .wordFamilyEN, .mnemonicEN, .usageNotesEN] {
+            let prompt = module.userPrompt(term: "bank", mode: .word, detail: .short, context: sentence,
+                                           nativeLanguage: .turkish, targetLanguage: .english, level: .b1)
+            XCTAssertTrue(prompt.contains(sentence), "\(module.rawValue) doesn't see the sentence")
+            XCTAssertTrue(prompt.contains("Use the sense the word has in the context sentence."), module.rawValue)
+            XCTAssertTrue(module.usesContext(mode: .word), "\(module.rawValue): its answer depends on the sentence")
+        }
+        XCTAssertFalse(ModuleType.examplesEN.usesContext(mode: .sentence))
+    }
+
+    func testAPromptWithoutASentenceDoesNotMentionOne() async {
+        let prompt = ModuleType.examplesEN.userPrompt(term: "bank", mode: .word, detail: .short, context: "  ",
+                                                     nativeLanguage: .turkish, targetLanguage: .english, level: .b1)
+        XCTAssertFalse(prompt.contains("context sentence"), "a blank sentence counts as none")
+    }
+
+    func testTheMemoryHookIsInYourLanguage() async {
+        guard case .native(let language) = ModuleType.mnemonicEN.outputLanguage(nativeLanguage: .turkish, targetLanguage: .english) else {
+            return XCTFail("the hook uses a sound-alike in your language")
+        }
+        XCTAssertEqual(language, .turkish)
+        let prompt = ModuleType.mnemonicEN.userPrompt(term: "actual", mode: .word, detail: .short,
+                                                      nativeLanguage: .turkish, targetLanguage: .english, level: .b1)
+        XCTAssertTrue(prompt.contains("sounds like \"actual\""))
+        XCTAssertEqual(FillRequest(field: .mnemonic, term: "actual", sentence: "", native: .turkish, target: .english).answerLanguage,
+                       .turkish, "Fill Missing checks the hook's language too")
+    }
+
+    func testTheLevelReachesTheModulesThatExplain() async {
+        for module in [ModuleType.definitionEN, .examplesEN] {
+            let prompt = module.userPrompt(term: "bank", mode: .word, detail: .short,
+                                           nativeLanguage: .turkish, targetLanguage: .english, level: .a2)
+            XCTAssertTrue(prompt.contains("A2 learner"), module.rawValue)
+        }
     }
 
     // MARK: - Collocations (.mixed): English structural labels, localized content

@@ -189,9 +189,13 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         switch self {
         case .meaningTR:
             return .native(nativeLanguage)
+        // v19 S1: the hook is a sound-alike in your own language (the
+        // keyword method), so it's written in it.
+        case .mnemonicEN:
+            return .native(nativeLanguage)
         case .collocations:
             return .mixed(native: nativeLanguage, target: targetLanguage)
-        case .definitionEN, .examplesEN, .etymologyEN, .pronunciationEN, .mnemonicEN,
+        case .definitionEN, .examplesEN, .etymologyEN, .pronunciationEN,
              .synonymsEN, .wordFamilyEN, .usageNotesEN:
             return .target(targetLanguage)
         }
@@ -224,12 +228,11 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
     /// Whether this module's prompt reads the sentence around the word —
     /// its answer then depends on that sentence (v19 S0: the cache keys it
     /// by the sentence too).
+    /// v19 S1: in word mode every module answers for the sense the word has
+    /// in its sentence ("bank" of a river has other collocations, another
+    /// word family and another origin than the money "bank").
     func usesContext(mode: ExplainMode) -> Bool {
-        guard mode == .word else { return false }
-        switch self {
-        case .definitionEN, .meaningTR, .synonymsEN, .usageNotesEN: return true
-        default: return false
-        }
+        mode == .word
     }
 
     func isEnabled(mode: ExplainMode) -> Bool {
@@ -367,69 +370,80 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         domain: DomainPreference = .general,
         context: String? = nil,
         nativeLanguage: Language = Language.storedNative,
-        targetLanguage: Language = Language.storedTarget
+        targetLanguage: Language = Language.storedTarget,
+        level: CEFRLevel = CEFRLevel.storedLearnerLevel
     ) -> String {
         let domainLine = domain != .general
             ? "\nDomain: \(domain.rawValue). Adapt the explanation."
             : ""
         let target = targetLanguage.rawValue
-        
+        let native = nativeLanguage.rawValue
+        let context = context.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
+
         let ctxBlock = context.map {
             """
             \nContext sentence: "\($0)"
             """
         } ?? ""
+        // v19 S1 (measured): modules that didn't read the sentence answered
+        // for another sense of the word — the money "bank" for a river bank.
+        let senseLine = context != nil ? "\nUse the sense the word has in the context sentence." : ""
+        // v19 S1: the reader's level; answers were written for advanced readers.
+        let levelLine = "\nThe reader is a \(level.rawValue) learner of \(target): use words a \(level.rawValue) learner knows."
 
         switch (self, mode) {
 
         // ──────────────────────────────────────
-        // MARK: Definition (EN)
+        // MARK: Definition
         // ──────────────────────────────────────
 
+        // Two paragraphs with a context sentence: `ContextAwareResultView`
+        // shows the first as "In This Context", the rest as "General Meaning".
         case (.definitionEN, .word):
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            Define it in \(target).
+            Define it in \(target), like a learner's dictionary: start with the part of speech in brackets, e.g. (verb), then plain words.\(levelLine)
             \(context != nil
-                ? "Write exactly 2 short paragraphs: first this context, then general meaning."
-                : (detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs."))
+                ? "Write exactly 2 short paragraphs. First: its meaning in this sentence, in one sentence. Second: its other common meanings, in one or two sentences."
+                : (detail == .short ? "Write one sentence for the main meaning." : "Write one sentence for the main meaning, then one or two for its other common meanings."))
             """
 
         case (.definitionEN, .sentence):
             return """
             Sentence: \(term)\(domainLine)
 
-            Explain this sentence in plain \(target).
+            Explain what this sentence means in plain \(target).\(levelLine)
+            Name any phrase or structure that makes it hard to read.
             \(detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs.")
             """
 
         // ──────────────────────────────────────
-        // MARK: Turkish Meaning (TR)
+        // MARK: Meaning in your language
         // ──────────────────────────────────────
 
         case (.meaningTR, .word):
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            Explain it in \(nativeLanguage.rawValue).
+            Give its meaning in \(native).
             \(nativeLanguage.promptInstruction)
             \(context != nil
-                ? "Write exactly 2 short paragraphs: first this context, then general meaning."
-                : (detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs."))
+                ? "Write exactly 2 short paragraphs. First: the \(native) equivalent for this sentence in quotes, then one sentence on why it fits — do not translate the whole sentence. Second: its other common meanings in \(native)."
+                : (detail == .short ? "Start with the \(native) equivalents in quotes, then one sentence." : "Start with the \(native) equivalents in quotes, then at most 2 short paragraphs."))
             """
 
         case (.meaningTR, .sentence):
             return """
             Sentence: \(term)\(domainLine)
 
-            Explain this sentence in \(nativeLanguage.rawValue).
+            Explain this sentence in \(native).
             \(nativeLanguage.promptInstruction)
             \(detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs.")
             """
 
         // ──────────────────────────────────────
-        // MARK: Collocations (EN+TR)
+        // MARK: Collocations
         // ──────────────────────────────────────
 
         // The literal `*Example:*` / `*Translation:*` labels are parser
@@ -437,22 +451,20 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
         // never localized; only the bracketed content follows the languages.
         case (.collocations, .word):
             let count = detail == .short ? 3 : 5
-            let native = nativeLanguage.rawValue
             return """
-            Word: \(term)\(domainLine)
+            Word: \(term)\(domainLine)\(ctxBlock)
 
-            List \(count) common collocations. Use exactly this format:
+            List \(count) common collocations.\(senseLine) Use exactly this format:
 
             N. **[collocation]:** [meaning in \(native), \(native) only]
-               - *Example:* "[one \(target) example sentence]"
+               - *Example:* "[one simple \(target) example sentence]"
                - *Translation:* "[\(native) translation of the example]"
 
-            Blank line between items. Start numbering at 1.
+            Fill in each [bracketed part] and leave the brackets out. Blank line between items. Start numbering at 1.
             """
 
         case (.collocations, .sentence):
             let count = detail == .short ? 2 : 4
-            let native = nativeLanguage.rawValue
             return """
             Sentence: \(term)\(domainLine)
 
@@ -462,19 +474,20 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
                - *Example:* "[one short \(target) example sentence using this collocation]"
                - *Translation:* "[\(native) translation of the example]"
 
-            Blank line between items. Start numbering at 1.
+            Fill in each [bracketed part] and leave the brackets out. Blank line between items. Start numbering at 1.
             """
 
         // ──────────────────────────────────────
-        // MARK: Examples (EN)
+        // MARK: Examples
         // ──────────────────────────────────────
 
         case (.examplesEN, .word):
             let count = detail == .short ? 3 : 5
             return """
-            \(term)\(domainLine)
+            Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            Write exactly \(count) example sentences using this word/phrase.
+            Write exactly \(count) new example sentences using it.\(senseLine)\(levelLine)
+            Keep them short and everyday.\(context != nil ? " Do not repeat the context sentence." : "")
             One sentence per line.
             """
 
@@ -483,30 +496,31 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
             return """
             \(term)\(domainLine)
 
-            Paraphrase this sentence \(count) different ways.
+            Paraphrase this sentence \(count) different ways.\(levelLine)
             One paraphrase per line.
             """
 
         // ──────────────────────────────────────
-        // MARK: Etymology (EN) — word only
+        // MARK: Etymology — word only
         // ──────────────────────────────────────
 
         case (.etymologyEN, .word):
             return """
-            \(term)
+            Word: \(term)\(ctxBlock)
 
-            Give the etymology of this word.
+            Give the etymology of this word.\(context != nil ? " If its senses come from different words, give the origin of the sense in the context sentence." : "")
+            Give only well-attested history. If the origin is uncertain, say so in one sentence instead of guessing.
             \(detail == .short ? "Write 1 short paragraph." : "Write at most 2 short paragraphs.")
             """
 
         // ──────────────────────────────────────
-        // MARK: Pronunciation (EN)
+        // MARK: Pronunciation
         // ──────────────────────────────────────
 
         case (.pronunciationEN, .word):
             return """
-            \(term)
-
+            \(term)\(ctxBlock)
+            \(context != nil ? "\nIf its pronunciation depends on the sense, use the sense in the context sentence.\n" : "")
             Output only: /IPA/ (RESPelling)
             """
 
@@ -520,19 +534,25 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
             """
 
         // ──────────────────────────────────────
-        // MARK: Mnemonic (EN) — word only
+        // MARK: Memory hook — word only
         // ──────────────────────────────────────
 
+        // v19 S1: the keyword method — a sound-alike in your language tied
+        // to the meaning by a picture. English sound-alikes in English
+        // ("actual sounds like act") helped a reader little.
         case (.mnemonicEN, .word):
             return """
-            \(term)
+            Word: \(term)\(ctxBlock)
 
-            Write a short mnemonic using sound similarity or a mini-story.
+            Write a memory hook in \(native) for this \(target) word.\(senseLine)
+            \(nativeLanguage.promptInstruction)
+            Find a \(native) word or phrase that sounds like "\(term)", put it in quotes, and link it to the meaning with one vivid picture.
+            Never use a \(native) look-alike whose meaning differs (a false friend) as if it meant the same; if the obvious sound-alike is one, warn about it in the hook.
             \(detail == .short ? "Use 1-2 sentences." : "Use at most 3 sentences.")
             """
 
         // ──────────────────────────────────────
-        // MARK: Synonyms & Antonyms (EN)
+        // MARK: Synonyms & Antonyms
         // ──────────────────────────────────────
 
         case (.synonymsEN, .word):
@@ -540,7 +560,7 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            List \(synCount) synonyms with a short nuance note for each.
+            List \(synCount) synonyms with a short nuance note for each, in simple words.\(senseLine)
             Format: word — note
             Then add a blank line and list 1-2 antonyms, each prefixed with "≠".
             Skip antonyms if none exist.
@@ -555,27 +575,28 @@ enum ModuleType: String, CaseIterable, Identifiable, Hashable, Codable {
             """
 
         // ──────────────────────────────────────
-        // MARK: Word Family (EN) — word only
+        // MARK: Word Family — word only
         // ──────────────────────────────────────
 
         case (.wordFamilyEN, .word):
             return """
-            Word/Phrase: \(term)
+            Word/Phrase: \(term)\(ctxBlock)
 
-            List common derived forms of this word.
+            List common words formed from the same root.\(senseLine) Only real, common words, each with its correct part of speech.
+            If it is a phrasal verb or an idiom, list instead 2–3 related expressions that share its key word and meaning area, marked (phrase).
             Format: (part of speech) form — one short example sentence
             \(detail == .short ? "Include the 3–4 most useful forms." : "Include all common forms: noun, verb, adjective, adverb, and any notable compounds.")
             """
 
         // ──────────────────────────────────────
-        // MARK: Usage Notes (EN)
+        // MARK: Usage Notes
         // ──────────────────────────────────────
 
         case (.usageNotesEN, .word):
             return """
             Word/Phrase: \(term)\(domainLine)\(ctxBlock)
 
-            Provide usage notes using exactly these labels, one per line:
+            Provide usage notes using exactly these labels, one per line.\(senseLine)
             FREQ: [very common / common / uncommon / rare] — brief reason
             REG: [formal / neutral / informal / slang] — typical context\(detail == .detailed ?
             """

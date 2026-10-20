@@ -30,7 +30,8 @@ struct FillRequest: Equatable {
     let target: Language
 
     /// The language the answer must be written in.
-    var answerLanguage: Language { field == .meaning ? native : target }
+    /// The memory hook is written in your language since v19 S1.
+    var answerLanguage: Language { field == .meaning || field == .mnemonic ? native : target }
 }
 
 struct FillResult: Equatable {

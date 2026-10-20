@@ -105,6 +105,7 @@ final class LearningLoopTests: XCTestCase {
         XCTAssertEqual(posts, 1, "announced when it becomes one, not on every lapse")
     }
 
+    /// The hook is in your language since v19 S1 (Turkish by default here).
     func testAMemoryHookComesFromTheProviderOnThisMacOnly() async throws {
         let store = makeStore()
         let enricher = WordEnricher(store: store, cefrEstimator: nil, observesSaves: true)
@@ -115,7 +116,7 @@ final class LearningLoopTests: XCTestCase {
             return FillBackends(
                 dictionary: { _ in nil },
                 onDevice: { request in onDeviceFields.append(request.field); return nil },
-                provider: (name: "LM Studio", ask: { _ in "Picture a jay that jeers at you from a fence." }),
+                provider: (name: "LM Studio", ask: { _ in "Çitin üstünde sana \"cır cır\" diye alay eden bir kuş hayal et." }),
                 level: nil
             )
         }
@@ -129,7 +130,7 @@ final class LearningLoopTests: XCTestCase {
             try await Task.sleep(for: .milliseconds(25))
         }
         let filled = try XCTUnwrap(store.word(withID: word.id))
-        XCTAssertEqual(FillField.mnemonic.value(in: filled), "Picture a jay that jeers at you from a fence.")
+        XCTAssertEqual(FillField.mnemonic.value(in: filled), "Çitin üstünde sana \"cır cır\" diye alay eden bir kuş hayal et.")
         XCTAssertEqual(filled.source(of: .mnemonic), .provider("LM Studio"))
         XCTAssertTrue(uses.contains(.onThisMac))
         XCTAssertFalse(uses.contains(.any), "never the cloud unasked")

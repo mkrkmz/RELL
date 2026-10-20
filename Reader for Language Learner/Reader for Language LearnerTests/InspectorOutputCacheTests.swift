@@ -63,7 +63,9 @@ final class InspectorOutputCacheTests: XCTestCase {
         return key
     }
 
-    func testAnswersThatReadTheSentenceAreKeptPerSentence() {
+    /// Since v19 S1 every word module reads the sentence, so each sentence
+    /// keeps its own answers.
+    func testAnswersAreKeptPerSentence() {
         let fileURL = makeTempFileURL()
         defer { try? FileManager.default.removeItem(at: fileURL) }
         let first = makeViewModel(fileURL: fileURL)
@@ -72,13 +74,13 @@ final class InspectorOutputCacheTests: XCTestCase {
         first.snapshotToCache(key: key(context: "The moon is in orbit."))
 
         let second = makeViewModel(fileURL: fileURL)
-        XCTAssertTrue(second.loadFromCache(key: key(context: "He fell into her orbit.")))
-        XCTAssertNil(second.outputs[.meaningTR], "another sentence: the contextual meaning is asked again")
-        XCTAssertEqual(second.outputs[.etymologyEN], "from Latin orbita", "the etymology doesn't depend on the sentence")
+        XCTAssertFalse(second.loadFromCache(key: key(context: "He fell into her orbit.")),
+                       "another sentence: its answers are asked again")
 
         let third = makeViewModel(fileURL: fileURL)
         XCTAssertTrue(third.loadFromCache(key: key(context: "The moon is in orbit.")))
         XCTAssertEqual(third.outputs[.meaningTR], "yörünge (in the first sentence)")
+        XCTAssertEqual(third.outputs[.etymologyEN], "from Latin orbita")
     }
 
     func testAWordWithoutASentenceKeepsEverythingTogether() {

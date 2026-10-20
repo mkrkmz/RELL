@@ -11,7 +11,7 @@ enum PromptTemplates {
 
     /// Bumped whenever a module's prompt changes (v19): part of the answer
     /// cache's key, so an answer to an older prompt isn't shown again.
-    static let revision = 1
+    static let revision = 3
 
     // MARK: - Output Format
 
