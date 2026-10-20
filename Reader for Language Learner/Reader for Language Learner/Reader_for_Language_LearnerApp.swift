@@ -149,6 +149,10 @@ struct Reader_for_Language_LearnerApp: App {
         // goes full screen. Same id as the old review window it replaces.
         Window("Study Room", id: StudyRoom.windowID) {
             StudyRoomView(store: savedWordsStore)
+                // v19 S3: the writing card reads the store and translates
+                // a sentence it saves.
+                .environment(savedWordsStore)
+                .environment(quickLookup)
                 .environment(encounterStore)
                 .environment(wordEnricher)
                 .environment(recentDocumentStore)

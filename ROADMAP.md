@@ -1,6 +1,6 @@
 # RELL Roadmap v19 — Kelimeden Cumleye (S0 + 6 sprint)
 
-**Durum: onaylandi (2026-10-19); S0 ve S1 kapandi, S2 kodlandi (canli tur bekliyor).**
+**Durum: onaylandi (2026-10-19); S0, S1 ve S2 kapandi; S3 kodlandi (canli tur bekliyor).**
 
 Olusturulma: 2026-10-19 (1.48.1 sonrasi). Amac: RELL okutuyor ve
 kelimeyi hatirlatiyor ama kullandirmiyor. Bu roadmap once mevcut
@@ -183,17 +183,33 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
       icindeki kayitli kelimeler ve notlar) ve "Cumleleri dahil et"
 - [x] Yedekler ve gizlilik: cumleler kelime dosyasinda, ceviri mevcut
       "Cumle cevirisi" satirinin yolundan gider; yeni dosya ya da hedef yok
-- [x] Kapi: tam paket 833 yesil; canli tur kullanicida
+- [x] Kapi: tam paket 833 yesil; canli tur kullanici onayindan gecti
+      (2026-10-20)
 
 ## Sprint 3 — "Kelimeyle cumle kur, okudugunu anla" (Must, **maketle baslar**)
 
-- [ ] **Cumle kurma** alistirmasi — kelimeyi kullanarak bir cumle yaz;
-      model duzeltir, neden oldugunu soyler, dogal bir ornek verir.
-      Zamanlamaya yazmaz
-- [ ] **Anlama kontrolu** — bolum sonunda (EPUB) ya da secilen sayfa
-      araliginda (PDF) uc kisa soru; cevap hedef dilde, icerik ve dil
-      icin geri bildirim; yalniz okunan kisma dayanir
-- [ ] Gizlilik tablosunda satirlar; kuyruk onceligi
+- [x] **Cumle kurma** — calisma odasinda "Cumle Kur" alistirmasi (3 / 5 / 10
+      kelime, varsayilan 5; once tekrari bekleyenler) ve kelime sayfasinda
+      "Cumle Kur". Kelime, kisa anlami ve kitaptaki cumlesi ustte; model
+      duzeltir, fark kelime kelime gosterilir; hukum (dogal / duzeltildi /
+      baska anlamda), ana dilde neden ve ayni anlamda dogal bir ornek.
+      Hukum modelin soylediginden degil gercek farktan cikar. Duzeltilmis
+      cumle tek tikla cumle karti olur. Oturum ozeti: ilk denemede dogal
+      olanlar ve en sik duzeltme. Zamanlamaya yazmaz
+- [x] Kelime sayfasinda "bu kelimenin gectigi cumleler"
+- [x] **Anlama kontrolu** — EPUB'da bolumun sonunda sakin bir teklif
+      (400 kelimeden kisa bolumde yok, bolum basina bir kez, ayarlardan
+      kapanir); "Bu bolum / Bu sayfa" panelinde her zaman. PDF'te aralik
+      oturumun basladigi sayfadan su anki sayfaya, en fazla 12 sayfa, ileri
+      hic gitmez. Uc soru (ana fikir, ayrinti, neden), cevap hedef dilde;
+      A1–A2'de istege bagli ana dilde (yalniz icerik). Her cevap icin icerik
+      hukmu, dil duzeltmesi, dayandigi cumle ve "Kitapta Goster"; kitapta
+      birebir bulunmayan alinti gosterilmez. Bos cevap "atlandi" sayilir.
+      Son sonuc panelde kalir. Zamanlamaya yazmaz
+- [x] Gizlilik tablosunda "Cumle kurma" ve "Anlama kontrolleri"; ikisi de
+      etkilesimli kuyrukta, sorular "Basla" ile uretilir (arka planda
+      hazirlanmaz). Etiketler (VERDICT / CORRECTED / WHY / EXAMPLE / TOPIC,
+      Q1–Q3, ANSWER / NOTE / QUOTE) Ingilizce ve sabit
 
 ## Sprint 4 — "Sesli tekrar" (Should, S0 denemesi gecerse, **maketle baslar**)
 

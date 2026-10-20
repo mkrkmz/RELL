@@ -139,7 +139,7 @@ struct ContentView: View {
     // (`the compiler is unable to type-check this expression in reasonable
     // time`) even though a warm local cache let it slide.
     var body: some View {
-        withHelpSheets(withCommandPalette(withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent)))))))))
+        withHelpSheets(withCommandPalette(withComprehension(withReadingLoop(withEncounterLog(withSpeechPlayback(withToast(withSheets(withDocumentAndEPUBSync(withNotifications(baseContent))))))))))
             .dataRecoveryAlert()
     }
 
@@ -627,6 +627,9 @@ struct ContentView: View {
                         }
                     }
                     .animation(DS.Animation.standard, value: readingLoop.recap)
+                    // v19 S3: at a chapter's end, a quiet offer to check.
+                    .overlay(alignment: .bottom) { comprehensionOfferCard }
+                    .animation(DS.Animation.standard, value: model.comprehensionOffer)
 
                     // The bottom lane (v18 S4): the sentence's translation, then
                     // the speech bar. The page gives them its height rather

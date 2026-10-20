@@ -305,8 +305,10 @@ final class QuizSessionTests: XCTestCase {
     func testMatchingModeDoesNotAffectTheSchedule() {
         XCTAssertFalse(QuizMode.matching.affectsSchedule)
         XCTAssertTrue(QuizMode.matching.isRoundBased)
+        // v19 S3: writing a sentence is practice too.
+        XCTAssertFalse(QuizMode.write.affectsSchedule)
         for mode in QuizMode.allCases where mode != .matching {
-            XCTAssertTrue(mode.affectsSchedule, "\(mode) should still schedule")
+            XCTAssertEqual(mode.affectsSchedule, mode != .write, "\(mode) should still schedule")
             XCTAssertFalse(mode.isRoundBased, "\(mode) asks one card at a time")
         }
     }

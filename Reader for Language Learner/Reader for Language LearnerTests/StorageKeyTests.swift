@@ -68,6 +68,11 @@ final class StorageKeyTests: XCTestCase {
             (StorageKey.learnerLevel, "learnerLevel"),
             (StorageKey.readingRecapEnabled, "readingRecapEnabled"),
             (StorageKey.chapterWarmUpEnabled, "chapterWarmUpEnabled"),
+            (StorageKey.comprehensionAnswersInNative, "comprehensionAnswersInNative"),
+            (StorageKey.comprehensionHistory, "comprehensionHistory"),
+            (StorageKey.comprehensionOfferEnabled, "comprehensionOfferEnabled"),
+            (StorageKey.sentenceWritingShowsBookSentence, "sentenceWritingShowsBookSentence"),
+            (StorageKey.sentenceWritingSize, "sentenceWritingSize"),
             (StorageKey.interlinearGlossEnabled, "interlinearGlossEnabled"),
             (StorageKey.grammarLensExpanded, "grammarLensExpanded"),
         ]

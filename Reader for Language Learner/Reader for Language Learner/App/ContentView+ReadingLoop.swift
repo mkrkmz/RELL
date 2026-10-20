@@ -210,7 +210,9 @@ extension ContentView {
                 notes: currentNoteCount,
                 saved: currentSavedWordCount,
                 isSaved: { term in savedWordsStore.lemmaMatchedWord(for: term) != nil },
-                onSave: saveWarmUpWord
+                onSave: saveWarmUpWord,
+                comprehension: comprehensionPanel,
+                onCheckStarted: { model.showWarmUp = false }
             )
         }
     }
@@ -375,6 +377,8 @@ private struct ChapterPanel: View {
     let saved: Int
     let isSaved: (String) -> Bool
     let onSave: (ChapterWarmUp.Word) -> Void
+    var comprehension: ComprehensionPanel?
+    var onCheckStarted: () -> Void = {}
 
     @State private var showingWords = false
 
@@ -429,6 +433,12 @@ private struct ChapterPanel: View {
 
             row("Notes") { Text("\(notes)") }
             row("Saved words") { Text("\(saved)") }
+
+            // v19 S3: three questions on what you've read.
+            if let comprehension {
+                Divider()
+                ComprehensionPanelRow(panel: comprehension, onStarted: onCheckStarted)
+            }
         }
         .font(DS.Typography.callout)
         .padding(DS.Spacing.lg)

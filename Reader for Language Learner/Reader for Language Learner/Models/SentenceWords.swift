@@ -38,6 +38,16 @@ enum SentenceWords {
 
     /// Words of `sentence` worth offering to save: not saved, four letters
     /// or more, not a common function word.
+    /// The saved sentences `word` appears in — on its page (v19 S3), newest first.
+    static func sentences(containing word: SavedWord, store: SavedWordsStore) -> [SavedWord] {
+        store.sentences
+            .filter { sentence in
+                let language = sentence.language.flatMap(Language.init(rawValue:))
+                return saved(in: sentence.term, store: store, language: language).contains { $0.id == word.id }
+            }
+            .sorted { $0.savedAt > $1.savedAt }
+    }
+
     static func candidates(in sentence: String, store: SavedWordsStore, language: Language? = nil) -> [String] {
         var seen = Set<String>()
         return tokens(in: sentence, store: store, language: language).compactMap { token in

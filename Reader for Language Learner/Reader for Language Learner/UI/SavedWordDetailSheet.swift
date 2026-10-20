@@ -36,6 +36,7 @@ struct SavedWordDetailSheet: View {
     @State private var editingField: FillField?
     @State private var editText = ""
     @State private var showDetails = false
+    @State private var showWriting = false
     @FocusState private var focusedField: FillField?
 
     /// Encounters shown before "Show all".
@@ -154,10 +155,45 @@ struct SavedWordDetailSheet: View {
                 cardSection
                 memoryCard
                 encountersSection
+                yourSentences
                 if !word.sentence.isEmpty { savedContext }
                 detailsSection
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .sheet(isPresented: $showWriting) {
+                SentenceWritingCard(word: current, onDone: { showWriting = false })
+                    .padding(DS.Spacing.lg)
+                    .frame(width: 560)
+                    .environment(store)
+            }
+        }
+    }
+
+    /// v19 S3: the saved sentences this word is in — ones you wrote with it
+    /// and ones you kept from a book.
+    @ViewBuilder
+    private var yourSentences: some View {
+        let sentences = SentenceWords.sentences(containing: word, store: store)
+        if !sentences.isEmpty {
+            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
+                Text("SENTENCES WITH THIS WORD").dsOverlineLabel()
+                ForEach(sentences.prefix(5)) { sentence in
+                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
+                        Text(WordPageModel.emphasized(sentence.term, term: word.term, language: language))
+                            .font(DS.Typography.callout)
+                            .foregroundStyle(DS.Color.textPrimary)
+                            .textSelection(.enabled)
+                        if let translation = sentence.translation {
+                            Text(translation)
+                                .font(DS.Typography.caption)
+                                .foregroundStyle(DS.Color.textSecondary)
+                        }
+                    }
+                    .padding(DS.Spacing.sm)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Color.hairline))
+                }
+            }
         }
     }
 
@@ -330,6 +366,13 @@ struct SavedWordDetailSheet: View {
                         .lineLimit(1)
                         .textSelection(.enabled)
                 }
+                Spacer(minLength: DS.Spacing.sm)
+                // v19 S3: write a sentence with it — practice, the schedule stays.
+                Button { showWriting = true } label: {
+                    Label("Write a Sentence", systemImage: "pencil.line")
+                }
+                .controlSize(.small)
+                .help("Use this word in a sentence of your own; the AI corrects it")
             }
             if let definition {
                 Text(definition)

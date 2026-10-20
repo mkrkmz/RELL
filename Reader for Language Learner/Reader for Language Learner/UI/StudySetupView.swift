@@ -21,6 +21,7 @@ struct StudySetupView: View {
 
     @AppStorage(StorageKey.studySessionSize) private var size = 20
     @AppStorage(StorageKey.studyNewLimit) private var newLimit = 5
+    @AppStorage(StorageKey.sentenceWritingSize) private var writeSize = SentenceWriting.defaultSize
     @State private var source: StudySource = .all
 
     static func document(_ recent: RecentDocument) -> BookIdentity.Document {
@@ -30,6 +31,14 @@ struct StudySetupView: View {
     private var plan: StudyPlan { StudyPlan(size: size, source: source, newLimit: newLimit) }
     private var queue: [SavedWord] { plan.queue(from: store.words) }
     private var practice: [SavedWord] { plan.practiceQueue(from: store.words) }
+
+    /// "Write a Sentence" (v19 S3): a few words — writing takes longer than
+    /// a card — waiting ones first, then any; never a saved sentence.
+    private var writingQueue: [SavedWord] {
+        let waiting = queue.filter { !$0.isSentence }
+        let words = waiting.isEmpty ? practice.filter { !$0.isSentence } : waiting
+        return Array(words.prefix(writeSize))
+    }
 
     private var bookWordCount: Int {
         guard let lastDocument else { return 0 }
@@ -112,9 +121,15 @@ struct StudySetupView: View {
         VStack(alignment: .leading, spacing: 0) {
             row(String(localized: "HOW MANY WORDS")) {
                 chips {
-                    ForEach(StudyPlan.sizeChoices, id: \.self) { choice in
-                        StudyChip(title: choice == 0 ? String(localized: "All waiting") : "\(choice)",
-                                  isOn: size == choice) { size = choice }
+                    if quizMode == .write {
+                        ForEach(SentenceWriting.sizeChoices, id: \.self) { choice in
+                            StudyChip(title: "\(choice)", isOn: writeSize == choice) { writeSize = choice }
+                        }
+                    } else {
+                        ForEach(StudyPlan.sizeChoices, id: \.self) { choice in
+                            StudyChip(title: choice == 0 ? String(localized: "All waiting") : "\(choice)",
+                                      isOn: size == choice) { size = choice }
+                        }
                     }
                 }
             } hint: {
@@ -160,7 +175,10 @@ struct StudySetupView: View {
                     }
                 }
             } hint: {
-                if !quizMode.affectsSchedule {
+                if quizMode == .write {
+                    Text("Practice: write a sentence with each word and the AI corrects it. Your review schedule stays as it is.")
+                        .fixedSize(horizontal: false, vertical: true)
+                } else if !quizMode.affectsSchedule {
                     Text("Practice: your review schedule stays as it is.")
                 } else if quizMode == .mixed {
                     VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
@@ -199,7 +217,20 @@ struct StudySetupView: View {
     @ViewBuilder
     private var startRow: some View {
         HStack(spacing: DS.Spacing.md) {
-            if !queue.isEmpty {
+            if quizMode == .write {
+                if writingQueue.isEmpty {
+                    Text("No words here yet.")
+                        .font(DS.Typography.callout)
+                        .foregroundStyle(DS.Color.textSecondary)
+                } else {
+                    Button(writingQueue.count == 1 ? String(localized: "Write with 1 word")
+                                                   : String(localized: "Write with \(writingQueue.count) words")) {
+                        onStart(writingQueue, true)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
+                }
+            } else if !queue.isEmpty {
                 Button(queue.count == 1 ? String(localized: "Start with 1 word") : String(localized: "Start with \(queue.count) words")) {
                     onStart(queue, false)
                 }
@@ -226,6 +257,11 @@ struct StudySetupView: View {
     }
 
     private var durationHint: String {
+        if quizMode == .write {
+            // About 70 seconds a sentence: writing, then reading the fix.
+            let minutes = max(1, Int((Double(writingQueue.count) * 70 / 60).rounded()))
+            return String(localized: "About \(minutes) min · waiting words first")
+        }
         // About 18 seconds a card, from the user's own review history pace.
         let minutes = max(1, Int((Double(queue.count) * 18 / 60).rounded()))
         return String(localized: "About \(minutes) min.")

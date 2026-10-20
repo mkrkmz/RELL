@@ -78,6 +78,8 @@ struct QuizView: View {
             // A grid of fewer than four pairs plays itself, so the mode is
             // only offered once enough saved words carry a definition.
             case .matching:  return matchableWords.count >= MatchingRound.minimumPairs
+            // Writing needs the room's large card (v19 S3).
+            case .write:     return style == .room
             default:         return true
             }
         }
@@ -136,7 +138,7 @@ struct QuizView: View {
             case .typed:          typedBody(word)
             case .listening:      listeningBody(word)
             // Round-based modes never reach the single-card frame.
-            case .matching, .mixed: EmptyView()
+            case .matching, .mixed, .write: EmptyView()
             }
 
             Spacer()

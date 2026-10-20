@@ -38,7 +38,7 @@ struct PrivacySummarySection: View {
         } header: {
             Text("Where Your Text Goes")
         } footer: {
-            Text("Only the selected word or sentence and its surrounding sentence are sent — never the whole book. A recap sends the last page or two you read; a warm-up sends a list of words from the chapter. If Apple's model declines, a recap or warm-up goes to your AI provider.")
+            Text("Only the selected word or sentence and its surrounding sentence are sent — never the whole book. A recap sends the last page or two you read; a warm-up sends a list of words from the chapter; a comprehension check sends the part of the chapter you've read, or the pages you chose. If Apple's model declines, a recap or warm-up goes to your AI provider.")
                 .foregroundStyle(DS.Color.textTertiary)
         }
     }
@@ -51,6 +51,9 @@ struct PrivacySummarySection: View {
             row("Ask AI and word levels", module: nil),
             row("Recaps and chapter warm-ups", module: nil),
             row("Grammar explanations", module: .etymologyEN),
+            // v19 S3: your sentence with the word; the part of the chapter you read.
+            row("Sentence writing", module: nil),
+            row("Comprehension checks", module: nil),
             translationRow,
         ] + ownModulesRow + [
             Row(feature: "Web article import",

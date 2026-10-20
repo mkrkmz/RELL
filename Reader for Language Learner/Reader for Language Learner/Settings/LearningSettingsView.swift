@@ -20,6 +20,7 @@ struct LearningSettingsView: View {
     @AppStorage(StorageKey.domainPreference) private var domainRaw = DomainPreference.general.rawValue
     @AppStorage(StorageKey.learnerLevel) private var learnerLevelRaw = CEFRLevel.defaultLearnerLevel.rawValue
     @AppStorage(StorageKey.readingRecapEnabled) private var readingRecapEnabled = true
+    @AppStorage(StorageKey.comprehensionOfferEnabled) private var comprehensionOfferEnabled = true
     @AppStorage(StorageKey.chapterWarmUpEnabled) private var chapterWarmUpEnabled = true
     @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
     @AppStorage(StorageKey.fillOnSave) private var fillOnSave = true
@@ -67,6 +68,14 @@ struct LearningSettingsView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Chapter Warm-Up")
                         Text("Pick out the hard words of each book chapter before you read it.")
+                            .font(DS.Typography.caption)
+                            .foregroundStyle(DS.Color.textTertiary)
+                    }
+                }
+                Toggle(isOn: $comprehensionOfferEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Comprehension Check at Chapter End")
+                        Text("When you finish a book chapter, offer three short questions on it. The chapter panel always has the check.")
                             .font(DS.Typography.caption)
                             .foregroundStyle(DS.Color.textTertiary)
                     }

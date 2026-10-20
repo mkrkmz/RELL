@@ -250,6 +250,8 @@ extension LLMRequestOrigin {
         case .rewrite:     return String(localized: "Simplify")
         case .retell:      return String(localized: "Retell")
         case .story:       return String(localized: "Story")
+        case .writing:     return String(localized: "Sentence writing")
+        case .comprehension: return String(localized: "Comprehension check")
         case .prewarm:     return String(localized: "Loading the model")
         case .speedTest:   return String(localized: "Speed test")
         case .custom:      return String(localized: "Own module")

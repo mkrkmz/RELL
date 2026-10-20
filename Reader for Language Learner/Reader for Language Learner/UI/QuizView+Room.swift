@@ -21,7 +21,13 @@ extension QuizView {
 
     @ViewBuilder
     var roomContent: some View {
-        if session.isFinished {
+        if session.isFinished, quizMode == .write {
+            WritingSummaryView(
+                session: session,
+                onMore: { withAnimation(DS.Animation.standard) { session.reset() } },
+                onClose: { onClose?() }
+            )
+        } else if session.isFinished {
             StudySummaryView(
                 session: session,
                 store: store,
@@ -47,8 +53,9 @@ extension QuizView {
     func beginRoom(with words: [SavedWord], practice: Bool) {
         session.optionsBuilder = { buildOptions(for: $0) }
         session.modeResolver = { stageMode(for: $0) }
-        session.introducesNewWords = !quizMode.isRoundBased
-        session.cram = practice
+        session.introducesNewWords = !quizMode.isRoundBased && quizMode != .write
+        // Writing is practice whatever the queue (v19 S3).
+        session.cram = practice || !quizMode.affectsSchedule
         let asked = words.filter(quizMode.asks)
         let run = quizMode.isRoundBased ? asked.filter { $0.usableDefinition != nil } : asked
         session.begin(with: run, mode: quizMode, shuffle: false)
@@ -75,6 +82,13 @@ extension QuizView {
             Group {
                 if quizMode.isRoundBased {
                     matchingRound
+                } else if quizMode == .write {
+                    cardFace(content: SentenceWritingCard(
+                        word: word,
+                        onChecked: { session.recordWriting($0) },
+                        onSaved: { session.noteWritingSaved() },
+                        onNext: { withAnimation(DS.Animation.springFast) { session.advanceWriting() } }
+                    ), isFront: true)
                 } else if session.isIntroducing {
                     introductionCard(for: word)
                 } else {
@@ -84,7 +98,7 @@ extension QuizView {
                     case .multipleChoice: multipleChoiceBody(word)
                     case .typed:          typedBody(word)
                     case .listening:      listeningBody(word)
-                    case .matching, .mixed: EmptyView()
+                    case .matching, .mixed, .write: EmptyView()
                     }
                 }
             }
@@ -143,7 +157,8 @@ extension QuizView {
 
     /// The card on screen has a text field for the answer.
     var isTypingAnswer: Bool {
-        !session.isFlipped && !session.isIntroducing && (cardMode == .typed || cardMode == .listening)
+        if quizMode == .write { return true }
+        return !session.isFlipped && !session.isIntroducing && (cardMode == .typed || cardMode == .listening)
     }
 
     func finishIntroduction() {
@@ -203,7 +218,10 @@ extension QuizView {
 
     private var roomKeyHints: some View {
         HStack(spacing: DS.Spacing.lg) {
-            if isTypingAnswer {
+            if quizMode == .write {
+                keyHint("⌘↩", String(localized: "check"))
+                keyHint("↩", String(localized: "next"))
+            } else if isTypingAnswer {
                 keyHint("↩", String(localized: "check"))
             } else if session.currentWord?.isSentence == true, !session.isFlipped {
                 keyHint("S", String(localized: "listen"))
@@ -414,13 +432,16 @@ extension QuizView {
     /// and in words — the level, and a streak of remembered answers.
     func roomBand(for word: SavedWord) -> some View {
         let isNew = !word.hasBeenReviewed
-        let colors: [Color] = word.isStruggling ? [DS.Color.danger, DS.Color.warning]
+        let writing = quizMode == .write
+        let colors: [Color] = writing ? [DS.Color.warning, DS.Color.danger.opacity(0.75)]
+            : word.isStruggling ? [DS.Color.danger, DS.Color.warning]
             : word.isSentence ? [DS.Color.violet, DS.Color.accent]
             : isNew ? [DS.Color.accent, DS.Color.violet] : [DS.Color.accent, DS.Color.accent.opacity(0.7)]
-        let title = word.isStruggling ? String(localized: "You keep forgetting · catch it this time")
+        let title = writing ? String(localized: "Write a Sentence")
+            : word.isStruggling ? String(localized: "You keep forgetting · catch it this time")
             : word.isSentence ? String(localized: "Sentence")
             : isNew ? String(localized: "New word") : String(localized: "Review")
-        let symbol = word.isStruggling ? "arrow.counterclockwise" : word.isSentence ? "quote.opening"
+        let symbol = writing ? "pencil.line" : word.isStruggling ? "arrow.counterclockwise" : word.isSentence ? "quote.opening"
             : isNew ? "sparkle" : "circle.fill"
         return HStack(spacing: DS.Spacing.sm) {
             Label(title, systemImage: symbol)

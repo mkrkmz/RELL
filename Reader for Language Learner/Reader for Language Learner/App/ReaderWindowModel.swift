@@ -65,6 +65,13 @@ final class ReaderWindowModel {
     var retellSource: String?
     /// "A story from your words" sheet (v13 Sprint 4).
     var showWordStory = false
+    /// v19 S3: the comprehension check on screen, the end-of-chapter offer
+    /// waiting at the page's foot, and the PDF page this session began on.
+    var comprehensionRequest: ComprehensionCheckSheet.Request?
+    var comprehensionOffer: ComprehensionOffer?
+    var pdfSessionStartPage: Int?
+    /// Chapters this window already considered for the offer.
+    @ObservationIgnored var comprehensionSkipKeys: Set<String> = []
     /// ⌘K (v13 Sprint 5).
     var showCommandPalette = false
     var showReadingAppearance = false

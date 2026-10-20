@@ -40,7 +40,7 @@ nonisolated enum LLMPriority: Int, Comparable, Sendable {
 extension LLMRequestOrigin {
     nonisolated var priority: LLMPriority {
         switch self {
-        case .module, .askAI, .grammar, .rewrite, .retell, .story, .custom: return .interactive
+        case .module, .askAI, .grammar, .rewrite, .retell, .story, .writing, .comprehension, .custom: return .interactive
         case .quickLookup, .cefr:                                  return .soon
         case .warmUp, .recap, .gloss, .prewarm, .speedTest:        return .background
         case .fill:                                                return .bulk

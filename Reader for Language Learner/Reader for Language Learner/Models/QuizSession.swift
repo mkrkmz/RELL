@@ -27,6 +27,9 @@ enum QuizMode: String, CaseIterable, Identifiable {
     /// A grid of terms and definitions to pair up — several words at once,
     /// rather than one card at a time.
     case matching = "Match"
+    /// Write a sentence with the word; the AI corrects it (v19 S3). Practice:
+    /// a sentence of yours isn't a recall to grade.
+    case write = "Write"
 
     var id: String { rawValue }
 
@@ -52,6 +55,9 @@ enum QuizMode: String, CaseIterable, Identifiable {
         !word.isSentence || self == .flashcard || self == .mixed
     }
 
+    /// The study room only: writing needs the room's large card and an AI.
+    var isRoomOnly: Bool { self == .write }
+
     /// Modes whose answer the app can check itself, rather than asking the
     /// user to judge their own recall.
     var isObjectivelyGraded: Bool {
@@ -64,7 +70,7 @@ enum QuizMode: String, CaseIterable, Identifiable {
     /// recalling it, and writing `good` to FSRS for that would stretch
     /// intervals the answer didn't earn — so the game practices without
     /// touching the schedule, the way cram does.
-    var affectsSchedule: Bool { self != .matching }
+    var affectsSchedule: Bool { self != .matching && self != .write }
 
     /// Whether the mode asks about several words at once.
     var isRoundBased: Bool { self == .matching }
@@ -76,6 +82,7 @@ enum QuizMode: String, CaseIterable, Identifiable {
         case .typed:          return "keyboard"
         case .listening:      return "ear"
         case .matching:       return "square.grid.2x2"
+        case .write:          return "pencil.line"
         case .mixed:          return "shuffle"
         }
     }
@@ -87,6 +94,7 @@ enum QuizMode: String, CaseIterable, Identifiable {
         case .typed:          return String(localized: "Type")
         case .listening:      return String(localized: "Listen")
         case .matching:       return String(localized: "Match")
+        case .write:          return String(localized: "Write a Sentence")
         case .mixed:          return String(localized: "By Stage")
         }
     }
@@ -219,6 +227,8 @@ final class QuizSession {
         correctCount = 0
         isFinished = false
         answers = []
+        writings = []
+        savedWritings = 0
         history = []
         introduced = []
         startedAt = Date()
@@ -266,6 +276,8 @@ final class QuizSession {
         currentIndex = 0
         isFinished = false
         answers = []
+        writings = []
+        savedWritings = 0
         history = []
         introduced = []
         startedAt = nil
@@ -274,6 +286,26 @@ final class QuizSession {
     /// Returns to the card stack after the results screen ("Review More").
     func resume() {
         isFinished = false
+    }
+
+    // MARK: - Writing (v19 S3)
+
+    /// The checked sentences of a "Write a Sentence" run, in order.
+    private(set) var writings: [SentenceWriting.Feedback] = []
+    /// How many of them were saved as sentence cards.
+    private(set) var savedWritings = 0
+
+    func recordWriting(_ feedback: SentenceWriting.Feedback) {
+        writings.append(feedback)
+    }
+
+    func noteWritingSaved() {
+        savedWritings += 1
+    }
+
+    /// Next word in a writing run — nothing reaches the store.
+    func advanceWriting() {
+        advanceRound(of: 1, mode: .write)
     }
 
     // MARK: - Scoring

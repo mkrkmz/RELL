@@ -127,26 +127,7 @@ struct RetellSheet: View {
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
     }
 
-    /// Removed: struck through and red. Added: bold and green. The strike
-    /// and the weight carry the meaning for readers who can't tell the colours.
-    private var diffText: AttributedString {
-        var result = AttributedString()
-        for (index, segment) in segments.enumerated() {
-            var part = AttributedString((index == 0 ? "" : " ") + segment.text)
-            switch segment.kind {
-            case .same:
-                part.foregroundColor = DS.Color.textPrimary
-            case .removed:
-                part.foregroundColor = DS.Color.danger
-                part.strikethroughStyle = .single
-            case .added:
-                part.foregroundColor = DS.Color.success
-                part.inlinePresentationIntent = .stronglyEmphasized
-            }
-            result += part
-        }
-        return result
-    }
+    private var diffText: AttributedString { WordDiff.attributed(segments) }
 
     private func isSaved(_ word: String) -> Bool {
         savedWordsStore.lemmaMatchedWord(for: word) != nil

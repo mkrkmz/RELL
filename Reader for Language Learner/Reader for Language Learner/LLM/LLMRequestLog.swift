@@ -29,6 +29,10 @@ nonisolated enum LLMRequestOrigin: String, Sendable, CaseIterable {
     case rewrite
     case retell
     case story
+    /// A sentence written with a saved word, checked (v19 S3).
+    case writing
+    /// The questions and the grading of a comprehension check (v19 S3).
+    case comprehension
     /// Loading the model before the first word (v17 S1).
     case prewarm
     /// Settings ▸ AI ▸ Speed (v17 S2).
@@ -41,7 +45,7 @@ nonisolated enum LLMRequestOrigin: String, Sendable, CaseIterable {
     /// on its own while you read.
     var isForeground: Bool {
         switch self {
-        case .module, .askAI, .quickLookup, .grammar, .rewrite, .retell, .story, .custom: return true
+        case .module, .askAI, .quickLookup, .grammar, .rewrite, .retell, .story, .writing, .comprehension, .custom: return true
         case .cefr, .fill, .warmUp, .recap, .gloss, .prewarm, .speedTest: return false
         }
     }
