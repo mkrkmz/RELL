@@ -84,9 +84,7 @@ final class DailyGoalTests: XCTestCase {
     // MARK: The log
 
     func testTheLogNeverLowersADay() throws {
-        let suite = "rell-goal-\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
+        let defaults = scratchDefaults()
         let today = day(0)
         DailyGoalLog.note(.half, for: today, defaults: defaults)
         DailyGoalLog.note(.full, for: today, defaults: defaults)
@@ -97,9 +95,7 @@ final class DailyGoalTests: XCTestCase {
     }
 
     func testTheStartIsSetOnceAndKept() throws {
-        let suite = "rell-goal-\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
+        let defaults = scratchDefaults()
         let first = DailyGoalLog.start(defaults: defaults, now: day(0))
         let later = DailyGoalLog.start(defaults: defaults, now: day(9))
         XCTAssertEqual(first, day(0))
@@ -120,13 +116,11 @@ final class DailyGoalTests: XCTestCase {
     // MARK: The interface language
 
     func testTheInterfaceLanguageIsRELLsOwnSetting() throws {
-        let suite = "rell-lang-\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
+        let defaults = scratchDefaults()
         InterfaceLanguage.german.store(defaults)
         XCTAssertEqual(defaults.array(forKey: "AppleLanguages") as? [String], ["de"])
         InterfaceLanguage.system.store(defaults)
-        XCTAssertNil(defaults.persistentDomain(forName: suite)?["AppleLanguages"])
+        XCTAssertNil(defaults.persistentDomain(forName: "rell-tests.DailyGoalTests")?["AppleLanguages"])
         XCTAssertTrue(InterfaceLanguage.spanish.isBeta)
         XCTAssertTrue(InterfaceLanguage.german.isBeta)
         XCTAssertFalse(InterfaceLanguage.turkish.isBeta)

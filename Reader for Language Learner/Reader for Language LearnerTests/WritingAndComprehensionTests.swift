@@ -252,9 +252,7 @@ final class WritingAndComprehensionTests: XCTestCase {
     // MARK: History
 
     func testTheLastCheckIsKeptAndAnOfferIsAskedOnce() throws {
-        let suite = "rell-comprehension-\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
+        let defaults = scratchDefaults()
         let key = ComprehensionHistory.key(book: "/books/harbour.epub", chapter: 2)
         XCTAssertEqual(key, "/books/harbour.epub#c2")
         XCTAssertEqual(ComprehensionHistory.key(book: "/books/a.pdf", chapter: nil), "/books/a.pdf#pdf")
@@ -271,9 +269,7 @@ final class WritingAndComprehensionTests: XCTestCase {
     }
 
     func testHistoryKeepsTheNewestOnly() throws {
-        let suite = "rell-comprehension-\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        addTeardownBlock { defaults.removePersistentDomain(forName: suite) }
+        let defaults = scratchDefaults()
         let start = Date(timeIntervalSince1970: 1_800_000_000)
         for index in 0...ComprehensionHistory.capacity {
             ComprehensionHistory.record(1, of: 3, for: "book#c\(index)", now: start.addingTimeInterval(Double(index)), defaults: defaults)

@@ -135,7 +135,6 @@ struct Reader_for_Language_LearnerApp: App {
                 .environment(epubBookmarkStore)
                 .environment(epubNoteStore)
                 .environment(sessionStore)
-                .environment(dailyGoal)
                 .environment(encounterStore)
                 .environment(recentDocumentStore)
                 .environment(coverStore)
@@ -192,7 +191,6 @@ struct Reader_for_Language_LearnerApp: App {
         ) {
             MenuBarQuickLookupView()
                 .environment(savedWordsStore)
-                .environment(dailyGoal)
                 .environment(quickLookup)
                 .rellAccentTint()
         }
@@ -210,12 +208,24 @@ struct Reader_for_Language_LearnerApp: App {
 private struct MenuBarQuickLookupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(SavedWordsStore.self) private var savedWordsStore
-    @Environment(DailyGoalTracker.self) private var dailyGoal
 
     var body: some View {
         VStack(spacing: 0) {
             QuickLookupPanelView(style: .menuBar, onDismiss: { dismiss() })
             // v19 S5: today's goal at a glance.
+            if let dailyGoal = DailyGoalTracker.current {
+                todayLine(dailyGoal)
+            }
+            // One due word, answerable without opening a window (v13 S5).
+            if !savedWordsStore.words.isEmpty {
+                Divider()
+                NextWordCard(store: savedWordsStore)
+            }
+        }
+    }
+
+    private func todayLine(_ dailyGoal: DailyGoalTracker) -> some View {
+        VStack(spacing: 0) {
             Divider()
             HStack(spacing: DS.Spacing.xs) {
                 Image(systemName: dailyGoal.todayStatus == .full ? "checkmark.circle.fill" : "target")
@@ -235,11 +245,6 @@ private struct MenuBarQuickLookupView: View {
             }
             .padding(.horizontal, DS.Spacing.md)
             .padding(.vertical, DS.Spacing.xs)
-            // One due word, answerable without opening a window (v13 S5).
-            if !savedWordsStore.words.isEmpty {
-                Divider()
-                NextWordCard(store: savedWordsStore)
-            }
         }
     }
 }

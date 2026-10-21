@@ -88,8 +88,12 @@ final class InspectorRunTests: XCTestCase {
                         provider: SlowProvider([], error: LLMClient.ClientError.serverNotReachable))
         await waitUntilIdle(viewModel, .etymologyEN)
 
+        // Compared whatever the interface language: the server's own error,
+        // with the reason it was needed around it.
         let message = viewModel.errors[.etymologyEN] ?? ""
-        XCTAssertTrue(message.contains("isn't reliable for this module"), message)
+        let plain = LLMErrorMessage.userMessage(for: LLMClient.ClientError.serverNotReachable)
+        XCTAssertTrue(message.contains(plain), message)
+        XCTAssertGreaterThan(message.count, plain.count + 20, "says why the server was needed")
         XCTAssertNil(viewModel.cache.get(key)?[.etymologyEN])
     }
 

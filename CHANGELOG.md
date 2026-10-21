@@ -4,6 +4,94 @@ All notable changes to RELL (Reader for Language Learner) are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com), and this
 project follows [Semantic Versioning](https://semver.org).
 
+## [1.49.0] - 2026-10-21
+
+From the word to the sentence. Roadmap v19 (Sprints 0–6): the modules
+answer for the sense the word has in your sentence, at your level; whole
+sentences are saved and studied by ear; you write sentences with your
+words and check what you understood at a chapter's end; you hear a
+sentence and say it back; and RELL speaks Spanish and German, keeps a
+two-part daily goal and works better with VoiceOver.
+
+### Added
+
+- **Save a sentence.** A selection of five words or more saves as a
+  sentence — Save Sentence on the selection bar, the right-click menu and
+  the Inspector card (⌘D). It keeps its source, its translation and its
+  module answers. The notebook lists sentences on their own, and a
+  sentence's page shows the words in it: saved ones with their status,
+  the others one click from saved, with the sentence as their context.
+- **A listen-and-understand card.** In the study room a saved sentence is
+  read aloud with its text blurred: T shows the text, Space the
+  translation, S reads it again, 1–4 grade it. Sentences are asked on
+  flashcards and By Stage, and have their own "Sentences" source.
+  Anki gets a sentence card (the translation and the saved words in it on
+  the back) and an "Include sentences" option.
+- **Write a Sentence.** A practice mode in the study room (3, 5 or 10
+  words, waiting ones first) and a button on each word's page: write a
+  sentence with the word and the AI corrects it word by word, says why in
+  your language and gives a natural example in the same sense. The
+  verdict — natural, corrected, or used in another sense — follows what
+  actually changed. The corrected sentence saves as a sentence card in one
+  click; the run ends with how many were natural first time and the fix
+  that came up most. A word's page lists the saved sentences it is in.
+- **What did you understand?** At the end of an EPUB chapter, a quiet
+  offer of three questions — the main idea, a detail and a why — on the
+  part you read (once per chapter, off in Settings); in a PDF, on the
+  pages since this session began (twelve at most, never ahead), from the
+  "This page" panel. Each answer gets a verdict on its content, the fixes
+  to its language and the sentence of the book it rests on, with Show in
+  Book. A quote the book doesn't contain is never shown. At A1–A2 you can
+  answer in your own language.
+- **Repeat aloud.** Select a sentence and press the microphone on the
+  selection bar (or Speech ▸ Repeat Selection Aloud, ⌃⌘R): RELL reads it,
+  you say it back, and the result shows word by word — said, missed, or
+  heard as something else, with what was heard under it. Also on a
+  flipped sentence card in the study room (R) and on a sentence's page.
+  Speech is recognised on this Mac only and never recorded or sent; a
+  saved sentence keeps only how many words matched. Where the language
+  has no on-device recognition, or access is refused, the microphone is
+  hidden and Settings ▸ Reading ▸ Repeating Aloud says why.
+- **Spanish and German.** RELL's interface in Español and Deutsch, marked
+  beta until a native speaker has reviewed them. Choose it in Settings ▸
+  Appearance ▸ Interface Language (it applies on the next launch);
+  Help ▸ Fix a Translation… opens a GitHub template with nothing about
+  you in it.
+- **A two-part daily goal.** Minutes of reading and a number of reviews
+  (default 20; with fewer cards due, done once none are left). The home
+  screen shows both, the goal streak and the last seven days. From now on
+  a day counts once both parts are done; days before keep the old rule,
+  so no streak resets. The reminder skips a day already done and says
+  what's left, and the menu bar shows today at a glance.
+
+### Changed
+
+- **Answers fit the sentence.** In word mode every module reads your
+  sentence and answers for that sense, at your level: definitions in a
+  learner's-dictionary style, the meaning as the equivalent in the
+  sentence with a short reason, memory hooks in your own language by the
+  keyword method (with a warning about false friends), word families
+  with related phrases for phrasal verbs and idioms, etymology only where
+  it's well known. Measured on a 30-item set: examples fit the sense 28
+  times out of 30 (18 before), collocations 26 of 29 (21), etymology
+  24 of 25 (20), memory hooks 22 of 24 (16), word family 15 of 24 (11).
+  Saved answers are keyed by the sentence and the prompt version, so an
+  old or general answer is never shown for a new sense.
+- **The hover balloon** shows the dictionary's short meaning, like the
+  word card.
+- **VoiceOver.** Fifteen controls that only answered a click — the zoom
+  percentage, the page number, bookmark, note and highlight rows, cards —
+  are now buttons to VoiceOver; a new study card, a finished Inspector
+  module and the results of writing, comprehension checks and repeating
+  aloud are announced.
+
+### Fixed
+
+- **Small local models cut etymologies short.** The token limits for
+  etymology and memory hooks are raised.
+- **Finding words saved twice** no longer holds up the notebook in a
+  large library: it runs off the main thread.
+
 ## [1.48.1] - 2026-10-16
 
 ### Changed

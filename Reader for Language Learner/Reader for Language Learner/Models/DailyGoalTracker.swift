@@ -32,10 +32,16 @@ final class DailyGoalTracker {
     /// nothing observable reports.
     private(set) var tick = 0
 
+    /// The app's tracker, set at launch. Read directly rather than through
+    /// the SwiftUI environment: one more environment value on the reader
+    /// window cost ~200 ms of cold launch in Debug (v19 S6, measured).
+    @ObservationIgnored nonisolated(unsafe) static weak var current: DailyGoalTracker?
+
     /// `keepsLog` false in a unit-test host: nothing is written, no reminder.
     init(sessions: ReadingSessionStore, words: SavedWordsStore, keepsLog: Bool = true) {
         self.sessions = sessions
         self.words = words
+        Self.current = self
         guard keepsLog else { return }
         _ = DailyGoalLog.start()
         timer = Task { [weak self] in

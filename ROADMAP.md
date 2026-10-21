@@ -1,6 +1,6 @@
 # RELL Roadmap v19 — Kelimeden Cumleye (S0 + 6 sprint)
 
-**Durum: onaylandi (2026-10-19); S0–S4 kapandi; S5 kodlandi (VoiceOver turu ve canli tur bekliyor).**
+**Durum: onaylandi (2026-10-19); S0–S5 kapandi; S6 kapanis tamam, 1.49.0 yayini onay bekliyor.**
 
 Olusturulma: 2026-10-19 (1.48.1 sonrasi). Amac: RELL okutuyor ve
 kelimeyi hatirlatiyor ama kullandirmiyor. Bu roadmap once mevcut
@@ -246,7 +246,8 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
       GitHub'da kisisel bilgi icermeyen bir sablon acar. Izin metinleri de
       uc dilde
 - [ ] Ceviri, ana dili Ispanyolca ve Almanca olan biri tarafindan gozden
-      gecirilir (beta etiketi o zaman kalkar)
+      gecirilir (beta etiketi o zaman kalkar) — surume tasinir, 1.49.0'da
+      beta olarak cikar
 - [x] **Gunluk hedef** — okuma (dakika) ve tekrar (10/20/30/50 kart ya da
       kapali, varsayilan 20); bekleyen kart hedeften azsa hepsi bitince
       tamam. Ana ekranda iki halka, hedef serisi ve son yedi gun (✓ / ½ /
@@ -263,12 +264,22 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
       VoiceOver'a duyurulur. Apple'in otomatik erisilebilirlik denetimi
       istege bagli UI testi olarak (`TEST_RUNNER_RELL_A11Y_AUDIT=1 make
       ui-test`)
-- [ ] VoiceOver ile canli tur (kullanici) ve bulunanlarin duzeltilmesi
+- [x] VoiceOver ve canli tur (Ispanyolca/Almanca gorunum, gunluk hedef)
+      kullanici onayindan gecti (2026-10-21); yeni bulgu yok
 
 ## Sprint 6 — "Kapanis"
 
-- [ ] Kapanis (Must): tam test, soguk acilis (1.48.1 ile yan yana), canli
-      tur, CHANGELOG 1.49.0 + Yenilikler 1.49
+- [x] Kapanis (Must): tam paket 884 yesil; CHANGELOG 1.49.0 ve dort dilde
+      Yenilikler 1.49; canli tur kullanici onayindan gecti
+- [x] Soguk acilis 1.48.1 ile yan yana (UI testi, ayni imza): once 0,37 →
+      0,61 sn gerileme bulundu. S3 ve S4 temizdi; S5'te gunluk hedef
+      takipcisinin okuma penceresinin SwiftUI ortamina eklenmesi Debug'da
+      ~200 ms ekliyordu (dil paketleri degil — olculdu). Takipci artik
+      ortamdan degil paylasilan ornekten okunuyor: 1.48.1 0,271 / 0,272 sn,
+      1.49.0 0,275 / 0,279 sn
+- [x] Testler arayuz dilinden bagimsiz (Turkce acilan test sureci bir
+      karsilastirmayi bozuyordu); ayar dosyasi birakan testler ortak
+      `scratchDefaults()` ile
 - [ ] **1.49.0** yayini (onayla)
 
 ---

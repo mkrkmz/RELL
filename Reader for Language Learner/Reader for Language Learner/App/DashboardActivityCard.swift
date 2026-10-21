@@ -17,7 +17,9 @@ struct DashboardActivityCard: View {
     let readingStreak: Int
     var streakAtRisk: Bool = false
 
-    @Environment(DailyGoalTracker.self) private var tracker: DailyGoalTracker?
+    /// The app's tracker (see `DailyGoalTracker.current` for why not the
+    /// environment); nil in previews and tests.
+    private var tracker: DailyGoalTracker? { DailyGoalTracker.current }
     @AppStorage(StorageKey.dailyReadingGoalMinutes) private var goalMinutes: Int = 20
     @AppStorage(StorageKey.dailyGoalReviews) private var goalReviews = DailyGoal.Targets.defaultReviews
 
