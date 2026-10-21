@@ -1,6 +1,6 @@
 # RELL Roadmap v19 — Kelimeden Cumleye (S0 + 6 sprint)
 
-**Durum: onaylandi (2026-10-19); S0–S5 kapandi; S6 kapanis tamam, 1.49.0 yayini onay bekliyor.**
+**Durum: onaylandi (2026-10-19); kapandi — **1.49.0** yayinlandi (2026-10-21).**
 
 Olusturulma: 2026-10-19 (1.48.1 sonrasi). Amac: RELL okutuyor ve
 kelimeyi hatirlatiyor ama kullandirmiyor. Bu roadmap once mevcut
@@ -280,7 +280,8 @@ Apple-Developer-kilitli kalemler (notarization, widget, CloudKit), iOS.
 - [x] Testler arayuz dilinden bagimsiz (Turkce acilan test sureci bir
       karsilastirmayi bozuyordu); ayar dosyasi birakan testler ortak
       `scratchDefaults()` ile
-- [ ] **1.49.0** yayini (onayla)
+- [x] **1.49.0** yayinlandi (2026-10-21, kullanici onayiyla): DMG ve zip,
+      surum notlari CHANGELOG'dan
 
 ---
 
