@@ -1,6 +1,6 @@
 # RELL Roadmap v20 — Tutarli Temel, Genis Okuma (S0 + 5 sprint)
 
-**Durum: onaylandi (2026-10-22); S0 basladi.**
+**Durum: onaylandi (2026-10-22); S0 kodlandi (UI testleri ve canli tur bekliyor).**
 
 Olusturulma: 2026-10-21 (1.49.0 sonrasi). Amac: v19'un eklediklerini
 tasarim sisteminin diline oturtmak, ardindan okuma ve konusma
@@ -96,27 +96,31 @@ sayfali EPUB, `.apkg` disa aktarma, Apple-Developer-kilitli kalemler
 
 ## Sprint 0 — "Tutarli temel" (Must)
 
-- [ ] **Tasarim denetimi bulgulari** — `design-plans/` 01–05 uygulanir;
-      her plan kendi dogrulama adimlariyla. 02 (bolum sonu teklifi alt
-      seride) pencere en kucuk boyuttayken `WindowLayoutTests` ile
-      denenir; yerlesim dongusu cikarsa durulur ve bildirilir
-- [ ] **`DESIGN.md` depoda** — commit'lenir; `CLAUDE.md`'deki tasarim
-      kurallari ona baglanir. Kucuk bir test `DESIGN.md`'deki bosluk ve
-      kose degerlerini `DS.Spacing` / `DS.Radius` ile karsilastirir; biri
-      degisip digeri unutulursa kirmizi
-- [ ] **Degrade kurali** — karar 2'ye gore `DS.Gradient` aciklamasi ve
-      `DESIGN.md`
-- [ ] **Test dili sabit** — test semasi ve `make ci-test` test surecini
-      Ingilizce calistirir; bugun gorunen metni dogrudan karsilastiran
-      testler taranir
-- [ ] **Buyuk dosyalar** — kelime sayfasi (994 satir; v19'da cumle
-      sayfasi, cumle kurma ve sesli tekrar eklendi), kelime deposu ve
-      kitaplik davranis degismeden bolunur
+- [x] **Tasarim denetimi bulgulari** — `design-plans/` 01–05 uygulandi:
+      1.49'un satir eylemleri sakin (Dinle, Daha Yavas, Yeniden Yaz,
+      Cumleyi Kaydet, Atla, Cumle Kur, Sesli Tekrar Et); bolum sonu
+      teklifi alt seritte; dinleme halkasi tokenle; "Cevabi kopyala" DS
+      ikon dugmesi; Inspector sonuc yuzeyleri `dsCard`. `WindowLayoutTests`
+      yesil
+- [x] **`DESIGN.md` depoda** — commit'lendi; gelistirici rehberi ona
+      baglandi. `DesignDocumentTests` bosluk ve kose adimlarini, iki sabit
+      tonu ve sayfa temasi tablosunu `DS` / `PageTheme` ile karsilastirir
+      (mutasyonla dogrulandi)
+- [x] **Degrade kurali** — karar 2'ye gore `DS.Gradient` aciklamasi ve
+      `DESIGN.md` guncellendi
+- [x] **Test dili sabit** — `make test`, `ci-test`, `ui-test` ve CI
+      `-testLanguage en -testRegion US` ile; arayuz dili testi uygulamanin
+      kendi ayarini okur (calismanin dil argumani onu golgelemez)
+- [x] **Buyuk dosyalar** — davranis degismeden bolundu: kelime sayfasi
+      994 → 605, kelime deposu 870 → 608, kitaplik 865 → 366; en buyuk
+      dosya artik 798 satir
 - [ ] **Erisilebilirlik denetimi bir kez** — istege bagli UI testi
       (`TEST_RUNNER_RELL_A11Y_AUDIT=1`) dort ekranda calistirilir;
-      cikan bulgular burada duzeltilir ya da S1'e yazilir
-- [ ] Kapi: tam paket yesil, acilis 1.49.0 ile yan yana, tasarim
-      denetimi okuma ekraninda tekrar (01–03 kapanmis olmali)
+      cikan bulgular burada duzeltilir ya da S1'e yazilir. Bekliyor: bu
+      Mac'te UI testlerinin otomasyon kipi kullanici dogrulamasi istiyor
+- [ ] Kapi: tam paket 888 yesil (CI yesil); acilis 1.49.0 ile yan yana ve
+      erisilebilirlik denetimi (ikisi de UI testi, kullanici dogrulamasi
+      bekliyor); tasarim denetimi okuma ekraninda tekrar; canli tur
 
 ## Sprint 1 — "Okuma araclari" (Should, **maketle baslar**)
 
