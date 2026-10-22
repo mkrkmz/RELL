@@ -21,6 +21,7 @@ test:
 		-project "$(PROJECT)" \
 		-scheme "$(SCHEME)" \
 		-destination '$(DESTINATION)' \
+		-testLanguage en -testRegion US \
 		-configuration $(CONFIG) \
 		$(SIGNING) \
 		-only-testing:"Reader for Language LearnerTests" \
@@ -36,6 +37,7 @@ ci-test:
 		-project "$(PROJECT)" \
 		-scheme "$(SCHEME)" \
 		-destination '$(DESTINATION)' \
+		-testLanguage en -testRegion US \
 		-configuration Debug \
 		-derivedDataPath build/ci \
 		$(SIGNING) \
@@ -52,6 +54,7 @@ ui-test:
 		-project "$(PROJECT)" \
 		-scheme "$(SCHEME)" \
 		-destination '$(DESTINATION)' \
+		-testLanguage en -testRegion US \
 		-configuration $(CONFIG) \
 		CODE_SIGN_IDENTITY="-" CODE_SIGNING_ALLOWED=YES \
 		-skip-testing:"Reader for Language LearnerTests" \

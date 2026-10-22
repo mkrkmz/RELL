@@ -198,9 +198,12 @@ struct SentenceWritingCard: View {
                     .foregroundStyle(DS.Color.textSecondary)
             }
             if let feedback {
+                // Actions in a row are quiet; Next / Done is the step on.
                 Button("Write Again") { writeAgain() }
+                    .buttonStyle(.dsQuiet)
                     .help("Try another sentence with this word")
                 Button(saved ? String(localized: "Saved") : String(localized: "Save Sentence")) { save(feedback) }
+                    .buttonStyle(.dsQuiet)
                     .disabled(saved)
                     .help("Keep the corrected sentence as a sentence card")
                 if let onNext {
@@ -215,6 +218,7 @@ struct SentenceWritingCard: View {
             } else {
                 if let onNext {
                     Button("Skip") { onNext() }
+                        .buttonStyle(.dsQuiet)
                         .help("Next word without writing")
                 }
                 Button("Check") { check() }

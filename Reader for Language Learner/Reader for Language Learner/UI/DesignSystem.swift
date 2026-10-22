@@ -241,9 +241,11 @@ enum DS {
 
     // MARK: - Gradients
 
-    /// The app's only gradients — exactly three call sites (dashboard hero
-    /// wash, goal ring, stats chart fade). Anything else stays flat; a new
-    /// gradient is a design decision, not a garnish.
+    /// The app's shared gradients (dashboard hero wash, goal ring, stats
+    /// chart fade). Besides these, only the study room's approved surfaces
+    /// use gradients — the card's band, the rating buttons, the summary's
+    /// ground (v18 S5, lively by decision; v20 S0). Anything else stays flat;
+    /// a new gradient is a design decision, not a garnish.
     enum Gradient {
         /// Subtle accent wash for a card face — barely-there, top-leading in.
         static var accentWash: LinearGradient {

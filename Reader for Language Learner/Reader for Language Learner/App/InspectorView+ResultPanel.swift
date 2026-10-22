@@ -262,8 +262,7 @@ extension InspectorView {
             }
             .textSelection(.enabled)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(DS.Color.cardInset)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+            .dsCard(padding: nil, surface: DS.Color.cardInset, radius: DS.Radius.lg, stroke: .none)
             .lineSpacing(4)
         } else if isLoading {
             loadingView
@@ -374,8 +373,7 @@ extension InspectorView {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DS.Color.cardInset)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+        .dsCard(padding: nil, surface: DS.Color.cardInset, radius: DS.Radius.lg, stroke: .none)
     }
 
     // MARK: - Empty Output View
@@ -400,8 +398,7 @@ extension InspectorView {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(DS.Color.cardInset)
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.lg))
+        .dsCard(padding: nil, surface: DS.Color.cardInset, radius: DS.Radius.lg, stroke: .none)
     }
 
     // MARK: - Error View

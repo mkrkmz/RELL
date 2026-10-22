@@ -86,7 +86,8 @@ extension ContentView {
             .padding(DS.Spacing.sm)
             .dsReadingOverlay(RoundedRectangle(cornerRadius: DS.Radius.md))
             .frame(maxWidth: 520)
-            .padding(DS.Spacing.md)
+            .padding(.horizontal, DS.Spacing.md)
+            .padding(.bottom, DS.Spacing.sm)
             .transition(.opacity.combined(with: .move(edge: .bottom)))
         }
     }

@@ -118,7 +118,9 @@ final class DailyGoalTests: XCTestCase {
     func testTheInterfaceLanguageIsRELLsOwnSetting() throws {
         let defaults = scratchDefaults()
         InterfaceLanguage.german.store(defaults)
-        XCTAssertEqual(defaults.array(forKey: "AppleLanguages") as? [String], ["de"])
+        // The persistent domain, not `array(forKey:)`: a test run's own
+        // -AppleLanguages argument would answer that first.
+        XCTAssertEqual(defaults.persistentDomain(forName: "rell-tests.DailyGoalTests")?["AppleLanguages"] as? [String], ["de"])
         InterfaceLanguage.system.store(defaults)
         XCTAssertNil(defaults.persistentDomain(forName: "rell-tests.DailyGoalTests")?["AppleLanguages"])
         XCTAssertTrue(InterfaceLanguage.spanish.isBeta)

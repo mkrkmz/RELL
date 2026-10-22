@@ -627,13 +627,14 @@ struct ContentView: View {
                         }
                     }
                     .animation(DS.Animation.standard, value: readingLoop.recap)
-                    // v19 S3: at a chapter's end, a quiet offer to check.
-                    .overlay(alignment: .bottom) { comprehensionOfferCard }
-                    .animation(DS.Animation.standard, value: model.comprehensionOffer)
 
                     // The bottom lane (v18 S4): the sentence's translation, then
                     // the speech bar. The page gives them its height rather
                     // than being covered by them.
+
+                    // v19 S3: at a chapter's end, a quiet offer to check — in
+                    // the lane, so it doesn't cover the last lines (v20 S0).
+                    comprehensionOfferCard
                     if sentenceTranslationEnabled, !chromeHidden, let sentence = translatableSentence {
                         SentenceTranslationStrip(
                             sentence: sentence,
@@ -654,6 +655,7 @@ struct ContentView: View {
                 }
         .animation(DS.Animation.standard, value: translatableSentence)
         .animation(DS.Animation.standard, value: model.repeatSentence)
+        .animation(DS.Animation.standard, value: model.comprehensionOffer)
         .animation(DS.Animation.respecting(DS.Animation.spring, reduceMotion: reduceMotion), value: speechManager.state == .idle)
         // Zen is edge to edge: the page meets the screen's edges.
         .padding(.top, zenMode ? 0 : DS.Spacing.sm)

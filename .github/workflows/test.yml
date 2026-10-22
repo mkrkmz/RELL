@@ -30,6 +30,7 @@ jobs:
             -project "Reader for Language Learner/Reader for Language Learner.xcodeproj" \
             -scheme "Reader for Language Learner" \
             -destination 'platform=macOS' \
+            -testLanguage en -testRegion US \
             -configuration Debug \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \

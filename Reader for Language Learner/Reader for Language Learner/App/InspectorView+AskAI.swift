@@ -98,11 +98,10 @@ extension InspectorView {
                     Button {
                         copyToClipboard(exchange.answer, showFeedback: true)
                     } label: {
-                        Image(systemName: "doc.on.doc")
-                            .font(DS.Typography.icon(9))
-                            .foregroundStyle(DS.Color.textTertiary)
+                        Label("Copy answer", systemImage: "doc.on.doc")
                     }
-                    .buttonStyle(.plain)
+                    // Like Copy result in the result header (v20 S0).
+                    .buttonStyle(.dsIcon)
                     .help("Copy answer")
                     .accessibilityLabel("Copy answer")
                 }

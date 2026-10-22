@@ -20,15 +20,15 @@ struct SavedWordDetailSheet: View {
     /// Bumped by the notebook's Return: focus moves to the card's first
     /// field (v18 S5).
     var focusRequest: Int = 0
-    @Environment(WordEncounterStore.self) private var encounterStore
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.openWindow) private var openWindow
+    @Environment(WordEncounterStore.self) var encounterStore
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.openWindow) var openWindow
     @Environment(WordEnricher.self) private var enricher: WordEnricher?
-    @Environment(QuickLookupService.self) private var quickLookup: QuickLookupService?
-    @State private var isTranslating = false
+    @Environment(QuickLookupService.self) var quickLookup: QuickLookupService?
+    @State var isTranslating = false
     @AppStorage(StorageKey.fillUsesProvider) private var fillUsesProvider = true
 
-    @State private var showAllEncounters = false
+    @State var showAllEncounters = false
     @State private var confirmDelete = false
     @State private var isFilling = false
     /// The last fill found nothing for the empty fields.
@@ -37,11 +37,11 @@ struct SavedWordDetailSheet: View {
     @State private var editText = ""
     @State private var showDetails = false
     @State private var showWriting = false
-    @State private var repeating = false
+    @State var repeating = false
     @FocusState private var focusedField: FillField?
 
     /// Encounters shown before "Show all".
-    private static let collapsedEncounterCount = 6
+    static let collapsedEncounterCount = 6
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -50,7 +50,7 @@ struct SavedWordDetailSheet: View {
         return f
     }()
 
-    private var language: Language {
+    var language: Language {
         word.language.flatMap(Language.init(rawValue:)) ?? Language.storedTarget
     }
 
@@ -112,7 +112,7 @@ struct SavedWordDetailSheet: View {
 
     /// The memory read-out follows the stored word in the pane: reviews
     /// happen elsewhere while it's open.
-    private var current: SavedWord {
+    var current: SavedWord {
         isPane ? (store.word(withID: word.id) ?? word) : word
     }
 
@@ -170,194 +170,6 @@ struct SavedWordDetailSheet: View {
         }
     }
 
-    /// v19 S3: the saved sentences this word is in — ones you wrote with it
-    /// and ones you kept from a book.
-    @ViewBuilder
-    private var yourSentences: some View {
-        let sentences = SentenceWords.sentences(containing: word, store: store)
-        if !sentences.isEmpty {
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                Text("SENTENCES WITH THIS WORD").dsOverlineLabel()
-                ForEach(sentences.prefix(5)) { sentence in
-                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                        Text(WordPageModel.emphasized(sentence.term, term: word.term, language: language))
-                            .font(DS.Typography.callout)
-                            .foregroundStyle(DS.Color.textPrimary)
-                            .textSelection(.enabled)
-                        if let translation = sentence.translation {
-                            Text(translation)
-                                .font(DS.Typography.caption)
-                                .foregroundStyle(DS.Color.textSecondary)
-                        }
-                    }
-                    .padding(DS.Spacing.sm)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Color.hairline))
-                }
-            }
-        }
-    }
-
-    // MARK: - Saying a sentence back (v19 S4)
-
-    /// "Say It Aloud" and the last result: how many words, which were hard.
-    @ViewBuilder
-    private var spokenRepetitionSection: some View {
-        if SpokenRepetitionRecognizer.isOffered(for: language) || current.spokenRepetition != nil {
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                Text("SAYING IT ALOUD").dsOverlineLabel()
-                if repeating {
-                    SpokenRepetitionView(
-                        sentence: word.term,
-                        language: language,
-                        onResult: { store.recordSpokenRepetition($0, for: word.id) },
-                        onClose: { repeating = false }
-                    )
-                    .padding(DS.Spacing.sm)
-                    .background(DS.Color.surfaceInset, in: RoundedRectangle(cornerRadius: DS.Radius.md))
-                } else {
-                    HStack(spacing: DS.Spacing.sm) {
-                        if let record = current.spokenRepetition {
-                            Text("Last: \(record.said) of \(record.total) words · \(record.date.formatted(date: .abbreviated, time: .omitted))")
-                                .font(DS.Typography.caption.weight(.semibold))
-                                .foregroundStyle(record.said == record.total ? DS.Color.success : DS.Color.warning)
-                            if !record.hardWords.isEmpty {
-                                Text("Hard: \(record.hardWords.joined(separator: ", "))")
-                                    .font(DS.Typography.caption)
-                                    .foregroundStyle(DS.Color.textSecondary)
-                                    .lineLimit(1)
-                            }
-                        }
-                        Spacer(minLength: DS.Spacing.sm)
-                        if SpokenRepetitionRecognizer.isOffered(for: language) {
-                            Button { repeating = true } label: {
-                                Label("Say It Aloud", systemImage: "mic")
-                            }
-                            .controlSize(.small)
-                            .help("Hear the sentence, then say it back")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - A saved sentence (v19 S2)
-
-    /// The sentence large, read aloud on request; its translation; the
-    /// words in it (saved ones with their status, others one click from
-    /// saved); memory; where it's from; details.
-    private var sentenceSections: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.lg) {
-            HStack(alignment: .firstTextBaseline, spacing: DS.Spacing.sm) {
-                Text(SentenceWords.marked(word.term, store: store, language: language))
-                    .font(DS.Typography.title)
-                    .fontDesign(.serif)
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
-                SpeakButton(text: word.term, size: 15, language: language)
-            }
-
-            VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                Text("TRANSLATION").dsOverlineLabel()
-                if let translation = current.translation {
-                    Text(translation)
-                        .font(DS.Typography.callout)
-                        .foregroundStyle(DS.Color.textSecondary)
-                        .textSelection(.enabled)
-                } else {
-                    HStack(spacing: DS.Spacing.sm) {
-                        Text("No translation yet")
-                            .font(DS.Typography.callout.italic())
-                            .foregroundStyle(DS.Color.textTertiary)
-                        Button {
-                            translate()
-                        } label: {
-                            Label(isTranslating ? "Translating…" : "Translate", systemImage: "character.bubble")
-                        }
-                        .buttonStyle(.dsQuiet)
-                        .disabled(quickLookup == nil || isTranslating)
-                    }
-                }
-            }
-
-            spokenRepetitionSection
-            sentenceWordsSection
-            memoryCard
-
-            if let pdf = word.pdfFilename {
-                VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-                    Text("WHERE YOU SAVED IT").dsOverlineLabel()
-                    Text(BookIdentity.displayTitle(pdf) + (word.pageNumber.map { " · \(String(localized: "p. \($0)"))" } ?? ""))
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.textTertiary)
-                }
-            }
-            detailsSection
-        }
-    }
-
-    private var sentenceWordsSection: some View {
-        let saved = SentenceWords.saved(in: word.term, store: store, language: language)
-        let candidates = SentenceWords.candidates(in: word.term, store: store, language: language)
-        return VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-            Text("WORDS IN IT").dsOverlineLabel()
-            if saved.isEmpty && candidates.isEmpty {
-                Text("No other words to save here.")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
-            ForEach(saved) { savedWord in
-                HStack(spacing: DS.Spacing.sm) {
-                    Text(savedWord.term).font(DS.Typography.callout.weight(.medium))
-                    if let meaning = SavedWordRow.oneLineMeaning(of: savedWord) {
-                        Text(MarkdownUtils.sanitizeLLMOutput(meaning))
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textSecondary)
-                            .lineLimit(1)
-                    }
-                    Spacer(minLength: DS.Spacing.xs)
-                    WordStatusBadge(status: WordStatus.of(savedWord))
-                }
-            }
-            ForEach(candidates, id: \.self) { candidate in
-                HStack(spacing: DS.Spacing.sm) {
-                    Text(candidate).font(DS.Typography.callout)
-                    Spacer(minLength: DS.Spacing.xs)
-                    Button {
-                        saveWord(candidate)
-                    } label: {
-                        Label("Save", systemImage: "plus")
-                    }
-                    .buttonStyle(.dsQuiet)
-                    .help("Save “\(candidate)” with this sentence")
-                }
-            }
-        }
-    }
-
-    /// A word of the sentence, saved with the sentence as its context.
-    private func saveWord(_ term: String) {
-        store.add(SavedWord(
-            term: term,
-            sentence: word.term,
-            pdfFilename: word.pdfFilename,
-            pageNumber: word.pageNumber,
-            mode: ExplainMode.word.rawValue,
-            language: word.language,
-            documentPath: word.documentPath
-        ))
-    }
-
-    private func translate() {
-        guard let quickLookup else { return }
-        isTranslating = true
-        Task {
-            await SentenceTranslation.fill(wordID: word.id, store: store, quickLookup: quickLookup)
-            isTranslating = false
-        }
-    }
 
     // MARK: - Sheet
 
@@ -417,7 +229,7 @@ struct SavedWordDetailSheet: View {
                 Button { showWriting = true } label: {
                     Label("Write a Sentence", systemImage: "pencil.line")
                 }
-                .controlSize(.small)
+                .buttonStyle(.dsQuiet)
                 .help("Use this word in a sentence of your own; the AI corrects it")
             }
             if let definition {
@@ -676,162 +488,10 @@ struct SavedWordDetailSheet: View {
         nothingMoreFound = false
     }
 
-    // MARK: - Memory
-
-    /// v18 S5: how well you remember it — the chance now in a number and a
-    /// word, when it comes back, and the last answers as marks.
-    private var memoryCard: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            Text("MEMORY").dsOverlineLabel()
-            HStack(spacing: DS.Spacing.lg) {
-                if let recall = WordPageModel.recallNow(current) {
-                    let strength = RecallStrength(recall)
-                    Gauge(value: recall) {
-                        EmptyView()
-                    } currentValueLabel: {
-                        Text(recall, format: .percent.precision(.fractionLength(0)))
-                            .font(DS.Typography.statNumber(12))
-                    }
-                    .gaugeStyle(.accessoryCircularCapacity)
-                    .tint(strength.color)
-                    .accessibilityLabel(Text("Chance you remember it now"))
-                    .accessibilityValue(Text("\(Int((recall * 100).rounded()))%, \(strength.title)"))
-
-                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                        Text("\(strength.title): you'd remember it now with a \(Int((recall * 100).rounded()))% chance")
-                            .font(DS.Typography.label)
-                            .foregroundStyle(DS.Color.textPrimary)
-                        nextReviewLine
-                    }
-                } else {
-                    Image(systemName: "sparkle")
-                        .font(DS.Typography.icon(20))
-                        .foregroundStyle(DS.Color.accent)
-                    VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                        Text("Not reviewed yet")
-                            .font(DS.Typography.label)
-                            .foregroundStyle(DS.Color.textPrimary)
-                        Text("Its first review will start tracking how well you remember it.")
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                    }
-                }
-                Spacer(minLength: 0)
-            }
-            let history = WordPageModel.recentAnswers(current)
-            if !history.isEmpty {
-                ReviewHistoryStrip(events: history)
-            }
-        }
-        .dsCard()
-    }
-
-    @ViewBuilder
-    private var nextReviewLine: some View {
-        if let next = current.nextReviewAt {
-            if next <= Date() {
-                Text("Due for review now")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.warning)
-            } else {
-                Text("Next review \(WordStatus.relative(next)) (\(next, format: .dateTime.weekday(.wide)))")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textSecondary)
-            }
-        }
-        Text("\(current.reviewCount) reviews · \(current.incorrectCount) times Again")
-            .font(DS.Typography.caption)
-            .foregroundStyle(DS.Color.textTertiary)
-    }
-
-    // MARK: - Encounters
-
-    private var encountersSection: some View {
-        let encounters = encounterStore.encounters(for: word.id)
-        let shown = showAllEncounters ? encounters : Array(encounters.prefix(Self.collapsedEncounterCount))
-        return VStack(alignment: .leading, spacing: DS.Spacing.sm) {
-            HStack {
-                Text("MET IN YOUR READING").dsOverlineLabel()
-                Spacer()
-                if let summary = WordPageModel.encounterSummary(encounters) {
-                    Text(summary)
-                        .font(DS.Typography.caption)
-                        .foregroundStyle(DS.Color.textSecondary)
-                }
-            }
-            if encounters.isEmpty {
-                Text("Not met again yet. Pages you read from now on are checked for this word, and every sentence it turns up in is collected here.")
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else {
-                // v18 S5: grouped by book, each with how often it turned up.
-                ForEach(WordPageModel.groupedByBook(shown, all: encounters)) { book in
-                    HStack {
-                        Text(book.title)
-                            .font(DS.Typography.caption.weight(.semibold))
-                            .foregroundStyle(DS.Color.textPrimary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Spacer()
-                        Text(book.times == 1 ? String(localized: "once") : String(localized: "\(book.times) times"))
-                            .font(DS.Typography.caption)
-                            .foregroundStyle(DS.Color.textTertiary)
-                            .monospacedDigit()
-                    }
-                    .padding(.top, DS.Spacing.xxs)
-                    ForEach(book.encounters) { encounter in
-                        EncounterRow(
-                            encounter: encounter,
-                            sentence: WordPageModel.emphasized(encounter.sentence, term: word.term, language: language),
-                            isAvailable: DocumentJump.isAvailable(encounter.documentPath),
-                            onOpen: { open(encounter) }
-                        )
-                    }
-                }
-                if encounters.count > Self.collapsedEncounterCount {
-                    Button(showAllEncounters ? "Show fewer" : "Show all \(encounters.count)") {
-                        withAnimation(DS.Animation.standard) { showAllEncounters.toggle() }
-                    }
-                    .buttonStyle(.link)
-                    .font(DS.Typography.caption)
-                }
-            }
-        }
-    }
-
-    private func open(_ encounter: WordEncounter) {
-        let location = DocumentLocation(
-            url: URL(fileURLWithPath: encounter.documentPath),
-            location: encounter.location,
-            isEPUB: encounter.isEPUB
-        )
-        DocumentJump.prepare(location)
-        if !isPane { dismiss() }   // in a window, dismiss would close it
-        openWindow(value: location.url)
-        DocumentJump.announce(location)
-    }
-
-    // MARK: - Saved context
-
-    private var savedContext: some View {
-        VStack(alignment: .leading, spacing: DS.Spacing.xs) {
-            Text("WHERE YOU SAVED IT").dsOverlineLabel()
-            Text(WordPageModel.emphasized(word.sentence, term: word.term, language: language))
-                .font(DS.Typography.callout)
-                .foregroundStyle(DS.Color.textPrimary)
-                .textSelection(.enabled)
-            if let pdf = word.pdfFilename {
-                Text(pdf + (word.pageNumber.map { " · \(String(localized: "p. \($0)"))" } ?? ""))
-                    .font(DS.Typography.caption)
-                    .foregroundStyle(DS.Color.textTertiary)
-            }
-        }
-    }
 
     // MARK: - Details
 
-    private var detailsSection: some View {
+    var detailsSection: some View {
         DisclosureGroup(isExpanded: $showDetails) {
             VStack(alignment: .leading, spacing: DS.Spacing.lg) {
                 VStack(alignment: .leading, spacing: DS.Spacing.xs) {
@@ -943,52 +603,3 @@ struct SavedWordDetailSheet: View {
     }
 }
 
-/// One sentence the word turned up in, and where. Clicking opens the book
-/// there; a document that's gone from disk shows the sentence but can't open.
-private struct EncounterRow: View {
-    let encounter: WordEncounter
-    let sentence: AttributedString
-    let isAvailable: Bool
-    let onOpen: () -> Void
-
-    @State private var isHovered = false
-
-    var body: some View {
-        Button(action: onOpen) {
-            VStack(alignment: .leading, spacing: DS.Spacing.xxs) {
-                Text(sentence)
-                    .font(DS.Typography.callout)
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                // The book's name is the heading above (v18 S5).
-                HStack(spacing: DS.Spacing.xs) {
-                    Image(systemName: encounter.isEPUB ? "book" : "doc.text")
-                        .font(DS.Typography.icon(10))
-                    Text(WordPageModel.locationLabel(encounter))
-                    Text("·")
-                    Text(encounter.date, format: .relative(presentation: .named))
-                    if encounter.occurrences > 1 {
-                        Text("· ×\(encounter.occurrences)")
-                    }
-                    Spacer(minLength: 0)
-                    if isAvailable && isHovered {
-                        Image(systemName: "arrow.up.forward")
-                            .font(DS.Typography.icon(10, weight: .semibold))
-                    }
-                }
-                .font(DS.Typography.caption)
-                .foregroundStyle(DS.Color.textTertiary)
-            }
-            .padding(DS.Spacing.sm)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(isHovered && isAvailable ? DS.Color.hoverOverlay : DS.Color.surfaceInset)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!isAvailable)
-        .onHover { isHovered = $0 }
-        .help(isAvailable ? Text("Open at this page") : Text("This document is no longer on this Mac"))
-    }
-}

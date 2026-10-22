@@ -205,8 +205,11 @@ struct SpokenRepetitionView: View {
             HStack(spacing: DS.Spacing.sm) {
                 scorePill(result)
                 Spacer(minLength: DS.Spacing.sm)
+                // Actions in a row are quiet; Say It Again is the step on.
                 Button { slower = false; read() } label: { Label("Listen", systemImage: "speaker.wave.2") }
+                    .buttonStyle(.dsQuiet)
                 Button { slower = true; read() } label: { Label("Slower", systemImage: "tortoise") }
+                    .buttonStyle(.dsQuiet)
                     .help("Read at three-quarter speed")
                 Button { listen() } label: { Label("Say It Again", systemImage: "mic.fill") }
                     .buttonStyle(.borderedProminent)
@@ -261,7 +264,7 @@ struct SpokenRepetitionView: View {
             .foregroundStyle(.white)
             .frame(width: 30, height: 30)
             .background(tint, in: Circle())
-            .overlay(Circle().strokeBorder(tint.opacity(ring ? 0.25 : 0), lineWidth: 5).padding(-5))
+            .overlay(Circle().strokeBorder(tint.opacity(ring ? 0.25 : 0), lineWidth: 5).padding(-(DS.Spacing.xs + DS.Spacing.hairline)))
             .accessibilityHidden(true)
     }
 

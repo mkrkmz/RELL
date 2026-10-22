@@ -168,6 +168,7 @@ On the Gray, Dark and Night themes, controls over the text use the dark colour s
 - Three shadows only: `DS.Shadow.subtle`, `card` and `float`. Surfaces floating over the text use `float`.
 - Glass (macOS 26) is for chrome with nothing to read behind it: the sidebar, the Inspector background, the Quick Lookup panel, toasts. On macOS 15 the same surfaces fall back to a material or a DS surface. Glass never sits over text being read.
 - Every card and panel uses the same hairline stroke weight (`DS.CardStroke`).
+- Gradients come from `DS.Gradient` (the dashboard's accent wash, the goal ring, chart fades). The study room is the one surface with its own: the card's band, the rating buttons and the summary's ground stay lively. Everywhere else surfaces are flat.
 
 ## Shapes
 
